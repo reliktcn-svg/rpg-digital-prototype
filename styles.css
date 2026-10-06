@@ -301,3 +301,21 @@ body:not(.game-running) .hero-option input{position:absolute;opacity:0;pointer-e
 .online-game #saveBtn,.online-game #loadBtn,.online-game #resetBtn{display:none}
 .online-not-my-turn #diceBlock,.online-not-my-turn #actionPanel,.online-not-my-turn #endTurnBtn{opacity:.48}
 @media(max-width:600px){.online-turn-banner{top:max(5px,env(safe-area-inset-top));font-size:11px;padding:7px 11px;max-width:94vw}}
+
+/* v0.6.3 — заметная очередь ходов на мобильных и ПК */
+.turn-order-banner{position:sticky;top:0;z-index:360;display:flex;align-items:stretch;gap:10px;padding:8px 12px;background:rgba(12,16,20,.96);border-bottom:1px solid #4a4130;backdrop-filter:blur(10px)}
+.turn-order-banner[hidden]{display:none}
+.turn-order-active{display:flex;flex-direction:column;justify-content:center;min-width:170px;padding:8px 14px;border:2px solid #d8ad45;border-radius:12px;background:#2a2416;box-shadow:inset 0 0 0 1px rgba(216,173,69,.22)}
+.turn-order-active small,.turn-order-next small{font-size:9px;letter-spacing:.12em;color:#b8a269;font-weight:900}
+.turn-order-active strong{font-size:24px;line-height:1.05;color:#ffd86a;letter-spacing:.04em}
+.turn-order-next{min-width:0;display:flex;flex:1;flex-direction:column;justify-content:center;padding:7px 10px}
+.turn-order-next span{font-size:12px;line-height:1.35;color:#c8d0d8;white-space:normal;overflow-wrap:anywhere}
+body.side-interaction-active .turn-order-banner{border-bottom-color:#49657a}
+@media(max-width:700px){
+  .turn-order-banner{gap:6px;padding:6px 8px}
+  .turn-order-active{min-width:118px;padding:7px 9px;border-radius:10px}
+  .turn-order-active strong{font-size:19px}
+  .turn-order-active small,.turn-order-next small{font-size:8px}
+  .turn-order-next{padding:5px 6px}
+  .turn-order-next span{font-size:10px}
+}

@@ -2,7 +2,7 @@
   const HEROES=[
     ['warrior','Воин','#4c83ff'],['dwarf','Дворф','#d34b45'],['mage','Маг','#9d5cff'],['archer','Лучник','#4db76d'],['rogue','Разбойник','#444b55']
   ];
-  let session={mode:null,code:null,playerId:null,playerSecret:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false};
+  let session={mode:null,code:null,playerId:null,playerSecret:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:''};
   const $=id=>document.getElementById(id);
   const overlay=$('onlineLobby');
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -32,7 +32,7 @@
     b.innerHTML=isMine?`Ваш ход · <b>${esc(heroName(mine))}</b>`:`Сейчас ходит <b>${esc(heroName(active))}</b> · ваш герой: ${esc(heroName(mine))}`;
   }
   function showHome(){
-    clearInterval(session.timer);clearInterval(session.gameTimer);session={mode:null,code:null,playerId:null,playerSecret:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false};
+    clearInterval(session.timer);clearInterval(session.gameTimer);session={mode:null,code:null,playerId:null,playerSecret:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:''};
     $('onlineHome').hidden=false;$('onlineRoom').hidden=true;showError('');document.body.classList.remove('online-game','online-not-my-turn');const b=$('onlineTurnBanner');if(b)b.hidden=true;
   }
   function renderRoom(){
@@ -56,7 +56,7 @@
   }
   function enterGame(state,revision){
     const e=engine();if(!e||!state)return;
-    e.applyState(state);session.gameEntered=true;session.lastRevision=Number(revision||0);session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(state);
+    e.applyState(state);e.setLocalHeroId?.(myHeroId());session.gameEntered=true;session.lastRevision=Number(revision||0);session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(state);
     overlay.hidden=true;document.body.classList.remove('net-lobby-open');updateTurnGuard();startGameSync();
   }
   async function ensureOnlineGame(){
@@ -95,13 +95,27 @@
     if(!session.gameEntered||session.syncBusy)return;
     const e=engine(),mine=myHeroId();if(!e||!mine)return;
     const local=e.exportState(),localSnap=snap(local),serverActor=session.lastServerActiveHero;
-    if(localSnap!==session.lastSnapshot&&serverActor===mine){
+    const side=e.exportSideState?.(mine)||null;
+    if(localSnap!==session.lastSnapshot&&(serverActor===mine||e.canOffturnSharedAction?.(mine))){
       session.syncBusy=true;
       try{
         const d=await api(`/api/rooms/${session.code}/game/state`,{method:'POST',body:JSON.stringify({...auth(),baseRevision:session.lastRevision,state:local})});
-        session.lastRevision=Number(d.revision||session.lastRevision+1);session.lastSnapshot=localSnap;session.lastServerActiveHero=activeHeroFromState(local);updateTurnGuard();
+        session.lastRevision=Number(d.revision||session.lastRevision+1);session.lastSnapshot=localSnap;session.lastServerActiveHero=activeHeroFromState(local);if(side)session.lastSideSnapshot=snap(side);updateTurnGuard();
       }catch(e2){console.warn('online push',e2);session.syncBusy=false;await pullGame(true);return}finally{session.syncBusy=false}
     }
+    const sideNow=e.exportSideState?.(mine)||null;
+    if(sideNow){
+      const ss=snap(sideNow);
+      if(ss!==session.lastSideSnapshot){
+        session.syncBusy=true;
+        try{
+          const d=await api(`/api/rooms/${session.code}/game/side`,{method:'POST',body:JSON.stringify({...auth(),side:sideNow})});
+          session.lastRevision=Number(d.revision||session.lastRevision+1);session.lastSideSnapshot=ss;
+        }catch(err){console.warn('online side push',err)}finally{session.syncBusy=false}
+      }
+      return;
+    }
+    session.lastSideSnapshot='';
     await pullGame(false);
   }
   function startGameSync(){clearInterval(session.gameTimer);session.gameTimer=setInterval(syncGame,650)}
@@ -125,9 +139,14 @@
     if(!session.gameEntered)return;
     const mine=myHeroId(),active=session.lastServerActiveHero||engine()?.currentPlayerId();if(!mine||mine===active)return;
     const t=e.target;if(!(t instanceof Element))return;
+    const sideMine=!!engine()?.sideInteractionActiveFor?.(mine),sharedDecision=!!engine()?.canOffturnSharedAction?.(mine);
+    if(sharedDecision&&t.closest('#actionPanel'))return;
+    if(sideMine&&t.closest('#modal,#sheetDrawer,#rollOverlay,#mobileHeroBtn,#mobileInventoryBtn'))return;
     if(t.closest('#mobileHeroBtn,#mobileInventoryBtn,#mobileJournalBtn,#inventoryBtn,#journalBtn,#sheetDrawer,#journalOverlay,.map-zoom-controls'))return;
-    if(t.closest('#gameSection,#overlay,#modal')){e.preventDefault();e.stopImmediatePropagation();updateTurnGuard()}
+    if(t.closest('#gameSection,#overlay,#modal,#rollOverlay')){e.preventDefault();e.stopImmediatePropagation();updateTurnGuard()}
   },true);
+
+  window.addEventListener('rpg-side-interaction-change',e=>{if(!session.gameEntered)return;if(e.detail?.active){session.lastSideSnapshot=''}else{session.lastSideSnapshot='';setTimeout(()=>pullGame(true),80)}});
 
   $('netCreate').onclick=createRoom;$('netJoin').onclick=joinRoom;$('netStart').onclick=startRoom;$('netBack').onclick=showHome;$('netLocal').onclick=localGame;
   $('netCodeInput').addEventListener('input',e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,6));

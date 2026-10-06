@@ -148,6 +148,33 @@ class Handler(SimpleHTTPRequestHandler):
                 if room.get('gameState') is None:
                     room['gameState']=game; room['gameRevision']=1; room['gameUpdatedAt']=int(time.time())
                 return self._json(200, {'revision':room['gameRevision'],'state':room['gameState']})
+        if p.endswith('/game/side') and p.startswith('/api/rooms/'):
+            code=p.split('/')[-3]; pid=body.get('playerId'); secret=body.get('playerSecret'); side=body.get('side') or {}
+            with LOCK:
+                room=ROOMS.get(code)
+                if not room: return self._json(404, {'error':'Комната не найдена'})
+                account=authorized_player(room,pid,secret)
+                if not account: return self._json(403, {'error':'Нет доступа'})
+                game=room.get('gameState')
+                if not room.get('started') or not isinstance(game,dict): return self._json(409, {'error':'Сетевая партия ещё не готова'})
+                owner=side.get('ownerId')
+                if not owner or owner!=account.get('heroId'): return self._json(403, {'error':'Фоновое действие разрешено только своему герою'})
+                current_players={q.get('id'):q for q in game.get('players',[]) if isinstance(q,dict)}
+                owner_cur=current_players.get(owner)
+                if not owner_cur: return self._json(409, {'error':'Герой не найден в партии'})
+                mutable={'gold','maxHp','currentHp','statuses','statusTimers','statusTickedTurn','backpack','pendingItems','equipment','temporaryEffects','combatEffects','itemUsage','locationVisits','discoveredLocations','reexploreRiskHex','notes','stats','areaHealingCooldown','scoutBootsUsedTurn'}
+                for incoming in side.get('players') or []:
+                    if not isinstance(incoming,dict): continue
+                    hid=incoming.get('id'); cur=current_players.get(hid)
+                    if not cur: continue
+                    # Помимо своего героя разрешаем менять только героя на том же гексе — это нужно для сделки между игроками.
+                    if hid!=owner and cur.get('hex')!=owner_cur.get('hex'): continue
+                    for key in mutable:
+                        if key in incoming: cur[key]=incoming[key]
+                if isinstance(side.get('decks'),dict): game['decks']=side['decks']
+                if isinstance(side.get('locations'),dict): game['locations']=side['locations']
+                room['gameRevision']=int(room.get('gameRevision') or 0)+1; room['gameUpdatedAt']=int(time.time())
+                return self._json(200, {'revision':room['gameRevision']})
         if p.endswith('/game/state') and p.startswith('/api/rooms/'):
             code=p.split('/')[-3]; pid=body.get('playerId'); secret=body.get('playerSecret'); game=body.get('state'); base=int(body.get('baseRevision') or 0)
             if not isinstance(game,dict): return self._json(400, {'error':'Некорректное состояние партии'})

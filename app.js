@@ -110,7 +110,7 @@
     modal:document.getElementById('modal'), modalContent:document.getElementById('modalContent'), modalClose:document.getElementById('modalClose'),
     sheetDrawer:document.getElementById('sheetDrawer'), sheetContent:document.getElementById('sheetContent'), sheetClose:document.getElementById('sheetClose'), sheetHeroTab:document.getElementById('sheetHeroTab'), sheetInventoryTab:document.getElementById('sheetInventoryTab'),
     rollOverlay:document.getElementById('rollOverlay'), rollPopupTitle:document.getElementById('rollPopupTitle'), rollPopupMain:document.getElementById('rollPopupMain'), rollPopupMath:document.getElementById('rollPopupMath'), rollPopupDetail:document.getElementById('rollPopupDetail'), rollPopupClose:document.getElementById('rollPopupClose'),
-    boardWrap:document.getElementById('boardWrap'), mapStage:document.getElementById('mapStage'), mapZoomIn:document.getElementById('mapZoomIn'), mapZoomOut:document.getElementById('mapZoomOut'), journalBtn:document.getElementById('journalBtn'), journalOverlay:document.getElementById('journalOverlay'), journalClose:document.getElementById('journalClose'), mobileHeroBtn:document.getElementById('mobileHeroBtn'), mobileInventoryBtn:document.getElementById('mobileInventoryBtn'), mobileJournalBtn:document.getElementById('mobileJournalBtn'), sheetMobileTitle:document.getElementById('sheetMobileTitle')
+    boardWrap:document.getElementById('boardWrap'), mapStage:document.getElementById('mapStage'), mapZoomIn:document.getElementById('mapZoomIn'), mapZoomOut:document.getElementById('mapZoomOut'), journalBtn:document.getElementById('journalBtn'), journalOverlay:document.getElementById('journalOverlay'), journalClose:document.getElementById('journalClose'), mobileHeroBtn:document.getElementById('mobileHeroBtn'), mobileInventoryBtn:document.getElementById('mobileInventoryBtn'), mobileJournalBtn:document.getElementById('mobileJournalBtn'), sheetMobileTitle:document.getElementById('sheetMobileTitle'), turnOrderBanner:document.getElementById('turnOrderBanner')
   };
 
   function shuffled(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -120,10 +120,28 @@
     const o={}; for(const k of ['exploreOuter','exploreHeart','lootOuter','lootHeart']) o[k]={draw:shuffled((DECK_IDS[k]||[]).filter(id=>!isPermanentLocationCardId(id))),discard:[]}; return o;
   }
   function freshState(){return {
-    version:'0.6.2', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
+    version:'0.6.3', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
     decks:initialDecks(), cleaned:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:2
   };}
   let state=freshState();
+  let sideInteraction=null;
+  let onlineLocalHeroId=null;
+  function beginSideInteraction(p,type,participantIds=[p?.id].filter(Boolean)){
+    if(!p)return;sideInteraction={ownerId:p.id,type,participantIds:[...new Set(participantIds.filter(Boolean))]};
+    document.body.classList.add('side-interaction-active');
+    window.dispatchEvent(new CustomEvent('rpg-side-interaction-change',{detail:{active:true,ownerId:p.id,type}}));
+  }
+  function endSideInteraction(){
+    if(!sideInteraction)return;const old=sideInteraction;sideInteraction=null;document.body.classList.remove('side-interaction-active');
+    window.dispatchEvent(new CustomEvent('rpg-side-interaction-change',{detail:{active:false,ownerId:old.ownerId,type:old.type}}));
+  }
+  function sideInteractionOwnerId(){return sideInteraction?.ownerId||null}
+  function sideInteractionActiveFor(heroId){return !!sideInteraction&&sideInteraction.ownerId===heroId}
+  function sideInteractionPayload(heroId){
+    if(!sideInteractionActiveFor(heroId))return null;
+    const ids=new Set(sideInteraction.participantIds||[heroId]);
+    return{type:sideInteraction.type,ownerId:heroId,players:state.players.filter(q=>ids.has(q.id)).map(cloneJson),decks:cloneJson(state.decks),locations:cloneJson(state.locations)};
+  }
   const HEX_DISTANCE_CACHE=new Map();
   function mapHexDistance(a,b){
     if(a===b)return 0;const key=a<b?`${a}|${b}`:`${b}|${a}`;if(HEX_DISTANCE_CACHE.has(key))return HEX_DISTANCE_CACHE.get(key);
@@ -399,7 +417,7 @@
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,potions:[null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:false,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats()}});
     generatePermanentLocations({preserve:false});
     state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(isMobileViewport()){els.sheetDrawer.hidden=true}else openCharacterSheet('overview',null,currentPlayer().id);setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
-    log(`<b>Партия v0.6.2 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`);
+    log(`<b>Партия v0.6.3 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`);
     state.order.forEach(id=>{const p=getPlayer(id);log(`Инициатива ${p.name}: D20 = <b>${p.initiative}</b>.`)});updateUI();renderBoard();
   }
 
@@ -598,10 +616,10 @@
     if(action.type==='explore'){beginExplore(action.deckKey);return}
     if(action.type==='visitLocation'){
       const p=currentPlayer(),hex=action.hex||p.hex;
-      if(state.locationActivationHex===hex){state.locationUsedThisTurn=true;state.locationActivationHex=null;visitLocation(hex,()=>{updateUI();renderBoard()})}
+      if(state.locationActivationHex===hex){state.locationUsedThisTurn=true;state.locationActivationHex=null;visitLocation(hex,()=>{updateUI();renderBoard()},{player:p,handoff:true})}
       return;
     }
-    if(action.type==='trade'){openTrade();return}
+    if(action.type==='trade'){openTrade(currentPlayer(),true);return}
     if(action.type==='build'){buildTerritory();return}
     if(action.type==='endTurn'){endTurn(false);return}
   }
@@ -617,6 +635,7 @@
     }
     setTradeOpportunityForArrival(p,final);state.locationActivationHex=consumeLocationEntry(p,final)?final:null;
     log(`${p.name} перемещается: <b>${movementPlanText(plan)}</b>.${crossed?' <b>Пересечена граница — движение закончено.</b>':''}`);
+    if(state.territories[final]?.owner===p.id){state.pendingMoveAction=null;updateUI();renderBoard();const why=state.territories[final]?.areaId?'остановка в своей области':'остановка на своей территории';setTimeout(()=>{if(!els.rollOverlay.hidden)advanceTurnWithSideInteraction(p,'territory',why,[p.id]);else advanceTurnState(p,why)},0);return false}
     if(state.locations[final]?.name==='Древний портал'){state.pendingMoveAction=null;handlePortalArrival(p,final,plan.cost,crossed);return false}
     updateUI();renderBoard();if(state.pendingMoveAction)setTimeout(runPendingMoveAction,0);return true;
   }
@@ -651,7 +670,7 @@
     p.hex=dest;revealLocationToPlayer(p,dest);recordLocationVisit(p,dest);state.portalPending=null;state.turnLocked=false;state.movePoints=remaining;setForeignTerritoryPending(p,dest);setTradeOpportunityForArrival(p,dest);
     log(`${p.name}: портал <b>${entryHex} → ${dest}</b>. Телепортация не расходует движение.${remaining>0?` Осталось движения: ${remaining}.`:''}`);
     if(remaining>0){state.turnMoved=false;state.movePending=false;state.moveOriginHex=dest;state.chosenPath=[dest];state.chosenMovePlan=null;refreshManualMoveReachable(p)}else{state.turnMoved=true;state.movePending=false;state.moveOriginHex=null;state.reachable=[];state.chosenPath=null;state.chosenMovePlan=null}
-    updateUI();renderBoard();
+    updateUI();renderBoard();setTimeout(()=>{if(currentPlayer()?.id===p.id)advanceTurnState(p,'использование Древнего портала')},0);
   }
   function selectPortalDestination(dest){
     const pp=state.portalPending;if(!pp||!pp.destinations?.includes(dest))return;
@@ -661,7 +680,7 @@
   function handlePortalArrival(p,entryHex,spentSteps,crossedBoundary){
     const portals=Object.entries(state.locations).filter(([h,v])=>v.name==='Древний портал'&&locationVisibleToPlayer(p,h)).map(([h])=>h);
     const destinations=portals.filter(h=>h!==entryHex);
-    if(!destinations.length){updateUI();renderBoard();return}
+    if(!destinations.length){updateUI();renderBoard();setTimeout(()=>{if(currentPlayer()?.id===p.id)advanceTurnState(p,'посещение Древнего портала')},0);return}
     const remaining=crossedBoundary?0:Math.max(0,state.movePoints-spentSteps);
     if(destinations.length===1){completePortalTeleport(p,entryHex,destinations[0],remaining);return}
     state.turnLocked=true;state.portalPending={heroId:p.id,entryHex,destinations:[...destinations],remaining};
@@ -672,12 +691,15 @@
   function requestPassagePermission(){
     const p=currentPlayer(),pend=state.foreignTerritoryPending;if(!pend||pend.heroId!==p.id)return;const owner=getPlayer(pend.ownerId);if(!owner)return;
     state.tributeConsentPending={kind:'passage',visitorId:p.id,ownerId:owner.id,hex:pend.hex};state.turnLocked=true;
-    const fake={id:'—',name:`Разрешение на проход · ${owner.name}`,category:'Решение владельца территории',deck:'Поле',fields:{'Территория':pend.hex,'Просит проход':p.name}};
-    showCard(fake,`<b>${p.name}</b> просит разрешение на проход по территории <b>${pend.hex}</b> без дани.<br><br><b>Разрешить проход?</b>`,[
-      {label:'Разрешить',className:'success',fn:()=>{state.tributeConsentPending=null;state.turnLocked=false;closeModal();log(`${owner.name} разрешает ${p.name} пройти по территории ${pend.hex} без дани.`);clearForeignTerritoryPending()}},
-      {label:'Запретить',className:'danger',fn:()=>{state.tributeConsentPending=null;state.turnLocked=false;closeModal();log(`${owner.name} не разрешает ${p.name} пройти по территории ${pend.hex}.`);updateUI();renderBoard()}}
-    ]);updateUI();
+    log(`${p.name} просит ${owner.name} разрешить бесплатный проход по территории ${pend.hex}. Ожидается решение владельца на его устройстве.`);updateUI();renderBoard();
   }
+  function resolvePassagePermission(allow){
+    const req=state.tributeConsentPending;if(!req)return;const owner=getPlayer(req.ownerId),visitor=getPlayer(req.visitorId);if(onlineLocalHeroId&&onlineLocalHeroId!==req.ownerId)return;
+    state.tributeConsentPending=null;state.turnLocked=false;
+    if(allow){log(`${owner?.name||'Владелец'} разрешает ${visitor?.name||'герою'} пройти по территории ${req.hex} без дани.`);clearForeignTerritoryPending()}
+    else{log(`${owner?.name||'Владелец'} не разрешает ${visitor?.name||'герою'} пройти по территории ${req.hex}.`);updateUI();renderBoard()}
+  }
+
 
   function recycleDiscardIntoDraw(deckKey){
     const d=state.decks[deckKey];if(!d||d.draw.length||!d.discard.length)return !!d?.draw?.length;
@@ -767,7 +789,7 @@
     if(card.category==='Ловушка'){resolveTrap(card);return}
     if(card.category==='Событие'){resolveEvent(card);return}
     if(card.category==='Постоянная локация'){resolvePermanentLocation(card);return}
-    if(card.category==='Темница'){p.inDungeon=true;p.dungeonCard=card.id;p.dungeonEnteredTurn=p.personalTurn;discardCard(deckKey,card);log(`<b>${p.name} попадает в Темницу.</b> Карта уходит в сброс. В ЭТОТ ход проверка выхода не выполняется; первая попытка будет в следующий личный ход.`);showCard(card,'Этот ход на этом заканчивается. Попытка выхода станет доступна только в следующий личный ход героя.',[{label:'Понятно',fn:()=>{closeModal();finishExplore(false,'Темница')}}]);return}
+    if(card.category==='Темница'){p.inDungeon=true;p.dungeonCard=card.id;p.dungeonEnteredTurn=p.personalTurn;discardCard(deckKey,card);log(`<b>${p.name} попадает в Темницу.</b> Карта уходит в сброс. В ЭТОТ ход проверка выхода не выполняется; первая попытка будет в следующий личный ход.`);showCard(card,'Герой попал в Темницу. После закрытия этого окна ход сразу перейдёт к следующему игроку; первая попытка выхода будет в следующий личный ход героя.',[{label:'Далее',fn:()=>{const actor=p;closeModal();finishExplore(false,'Темница');advanceTurnState(actor,'попадание в Темницу')}}]);return}
     if(card.category==='Элитная опасность'){
       state.exploration.elitePending=true;discardCard(deckKey,card);log('Следующий найденный враг будет <b>Элитной опасностью</b> и атакует первым.');
       showCard(card,'<b>Элитная опасность активирована.</b><br>Следующий найденный враг считается Элитной опасностью и атакует первым. Исследование продолжается до врага.',[{label:'Продолжить исследование',className:'danger',fn:()=>{closeModal();setTimeout(drawNextExplore,100)}}]);return
@@ -1016,15 +1038,15 @@
     state.locations[hex]={name:card.name,cardId:card.id};
     log(`На ${hex} открыта постоянная локация: <b>${card.name}</b>.`);
     if(card.name==='Древний портал'){
-      showCard(card,'Портал установлен на карте. Когда будет открыт второй портал, вход в один портал перенесёт героя в другой; при трёх и более будет предложен выбор гекса назначения.',[{label:'Продолжить',fn:()=>{closeModal();finishExplore(false,'Постоянная локация')}}]);
+      showCard(card,'Портал установлен на карте. Когда будет открыт второй портал, вход в один портал перенесёт героя в другой; при трёх и более будет предложен выбор гекса назначения. После закрытия окна ход перейдёт дальше.',[{label:'Продолжить',fn:()=>{closeModal();finishExplore(false,'Постоянная локация');advanceTurnState(p,'открытие постоянной локации — Древний портал')}}]);
       return;
     }
     // Открытие локации считается входом на её гекс. Возможность воспользоваться эффектом
     // существует сейчас, но простое стояние здесь в следующий ход новым посещением не является.
     ensurePlayerModel(p);p.locationVisits[hex]='cooldown';state.locationActivationHex=hex;
     showCard(card,`Локация установлена на ${hex}.<br><br><b>Вы хотите сейчас посетить локацию?</b>`,[
-      {label:'Да',className:'success',fn:()=>{state.locationUsedThisTurn=true;state.locationActivationHex=null;visitLocation(hex,()=>finishExplore(false,'Постоянная локация'))}},
-      {label:'Нет',className:'secondary',fn:()=>{state.locationActivationHex=null;closeModal();finishExplore(false,'Постоянная локация')}}
+      {label:'Да',className:'success',fn:()=>{state.locationUsedThisTurn=true;state.locationActivationHex=null;closeModal();finishExplore(false,'Постоянная локация');visitLocation(hex,()=>{}, {player:p,handoff:true})}},
+      {label:'Нет',className:'secondary',fn:()=>{state.locationActivationHex=null;closeModal();finishExplore(false,'Постоянная локация');advanceTurnState(p,'открытие постоянной локации')}}
     ]);
   }
 
@@ -1041,16 +1063,18 @@
     return{mode:ok?'normal':'cursed',roll:d,total,natural,title};
   }
 
-  function visitLocation(hex,onDone=()=>{}){
-    const p=currentPlayer(),loc=state.locations[hex];
+  function visitLocation(hex,onDone=()=>{},opts={}){
+    const p=opts.player||currentPlayer(),loc=state.locations[hex];
     if(!loc){onDone();return}
     closeModal();state.turnLocked=true;state.locationActivationHex=null;
-    const done=()=>{state.turnLocked=false;onDone();updateUI();renderBoard()};
-    if(loc.name==='Таверна'){visitTavern(p,{mode:'normal',roll:null,total:null,natural:null,title:'Таверна'},done);return}
+    const handed=!!opts.handoff;
+    const done=()=>{if(!handed)state.turnLocked=false;onDone();if(handed)endSideInteraction();updateUI();renderBoard()};
+    const handoff=()=>{if(handed)advanceTurnWithSideInteraction(p,'location',`посещение постоянной локации «${loc.name}»`,[p.id])};
+    if(loc.name==='Таверна'){visitTavern(p,{mode:'normal',roll:null,total:null,natural:null,title:'Таверна'},done);handoff();return}
     const result=locationMode(p,hex,loc.name);
-    if(loc.name==='Святилище'){visitShrine(p,result,done);return}
-    if(loc.name==='Торговец'){visitMerchant(p,result,done);return}
-    done();
+    if(loc.name==='Святилище'){visitShrine(p,result,done);handoff();return}
+    if(loc.name==='Торговец'){visitMerchant(p,result,done);handoff();return}
+    done();if(handed)advanceTurnState(p,`посещение постоянной локации «${loc.name}»`);
   }
 
   function visitShrine(p,result,onDone){
@@ -1152,7 +1176,7 @@
     els.modal.hidden=false;
     els.modalContent.querySelectorAll('[data-buy-index]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.buyIndex),entry=stock[i];if(!entry)return;const base=numericItemPrice(entry.card);if(base==null||itemType(entry.card)==='наёмник')return;const cost=base*plan.buyMultiplier;if(p.gold<cost)return;p.gold-=cost;p.pendingItems.push(entry.card.id);stock.splice(i,1);log(`${p.name} покупает у Торговца «${entry.card.name}» за ${cost} золота.`);showMerchantShop(p,stock,plan,onDone);updateUI()});
     els.modalContent.querySelectorAll('[data-sell-index]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.sellIndex),entry=sells[i];if(!entry)return;const chk=canSellMerchantItem(p,entry);if(!chk.ok)return;const base=numericItemPrice(entry.card),value=Math.floor(base*merchantSaleMultiplier(p,plan));if(!sourceRemove(p,entry.id,entry.ctx))return;delete p.itemUsage[entry.id];gainGold(p,value);returnCardToDeckRandom(deckKeyForCard(entry.card),entry.card);log(`${p.name} продаёт Торговцу «${entry.card.name}» за ${value} золота.`);showMerchantShop(p,stock,plan,onDone);updateUI();renderBoard()});
-    document.getElementById('merchantDone').onclick=()=>{for(const e of stock)returnCardToDeckRandom(e.key,e.card);closeModal();onDone();if(p.pendingItems.length)setTimeout(()=>openCharacterSheet('pending'),0)};
+    document.getElementById('merchantDone').onclick=()=>{for(const e of stock)returnCardToDeckRandom(e.key,e.card);closeModal();onDone();if(p.pendingItems.length)setTimeout(()=>openCharacterSheet('pending',null,p.id),0)};
   }
 
   function canExploreHere(p){if(!state.turnMoved||state.turnLocked||p.inDungeon||p.pendingItems?.length)return false;if(p.hex===MAP.bossHex)return false;if(state.locations[p.hex])return false;if(state.territories[p.hex])return false;if(p.hex===MAP.startHex)return false;if(state.cleaned[p.hex]&&state.clearedThisTurnHex===p.hex)return false;return true}
@@ -1248,8 +1272,8 @@
     if(els.sheetHeroTab){els.sheetHeroTab.classList.toggle('active',!inventory);els.sheetHeroTab.setAttribute('aria-selected',String(!inventory))}
     if(els.sheetInventoryTab){els.sheetInventoryTab.classList.toggle('active',inventory);els.sheetInventoryTab.setAttribute('aria-selected',String(inventory))}
   }
-  function openCharacterSheet(mode='overview',bonusKey=null,playerId=null){if(!state.started)return;const active=currentPlayer(),target=playerHardMode(active)?active.id:(playerId||state.inspectPlayerId||active.id);sheetView={mode,bonusKey,itemId:null,context:null,playerId:target};els.sheetDrawer.hidden=false;renderCharacterSheet(mode,bonusKey)}
-  function closeCharacterSheet(){if(state.started&&!isMobileViewport()){const active=currentPlayer(),target=playerHardMode(active)?active.id:(state.inspectPlayerId||active.id);sheetView={mode:'overview',bonusKey:null,itemId:null,context:null,playerId:target};els.sheetDrawer.hidden=false;renderCharacterSheet('overview');return}els.sheetDrawer.hidden=true;els.sheetContent.innerHTML='';sheetView={mode:'overview',bonusKey:null,itemId:null,context:null,playerId:null};updateSheetTabs('overview')}
+  function openCharacterSheet(mode='overview',bonusKey=null,playerId=null){if(!state.started)return;const active=currentPlayer(),sideTarget=sideInteractionOwnerId(),target=sideTarget||(playerHardMode(active)?active.id:(playerId||state.inspectPlayerId||active.id));sheetView={mode,bonusKey,itemId:null,context:null,playerId:target};els.sheetDrawer.hidden=false;renderCharacterSheet(mode,bonusKey)}
+  function closeCharacterSheet(){const sideOwner=sideInteractionOwnerId(),sidePlayer=sideOwner?getPlayer(sideOwner):null;if(sideInteraction?.type==='loot'&&sidePlayer&&!sidePlayer.pendingItems?.length)endSideInteraction();if(state.started&&!isMobileViewport()){const active=currentPlayer(),target=sideInteractionOwnerId()||(playerHardMode(active)?active.id:(state.inspectPlayerId||active.id));sheetView={mode:'overview',bonusKey:null,itemId:null,context:null,playerId:target};els.sheetDrawer.hidden=false;renderCharacterSheet('overview');return}els.sheetDrawer.hidden=true;els.sheetContent.innerHTML='';sheetView={mode:'overview',bonusKey:null,itemId:null,context:null,playerId:null};updateSheetTabs('overview')}
   function bonusBreakdownHtml(p,key){const src=modifierSources(p,key),total=modifierTotal(p,key),title=key==='defense'?'ЗЩ':statName(key);return `<div class="bonus-popover"><b>Модификатор ${title}: ${signed(total)}</b>${src.length?src.map(x=>`<div class="bonus-row"><span>${x.kind}: ${x.label}</span><b>${signed(x.amount)}</b></div>`).join(''):'<div class="muted small">Активных источников бонуса нет.</div>'}<div class="bonus-row total"><span>Итого</span><b>${signed(total)}</b></div></div>`}
   function restoreCombatModalIfNeeded(){if(state.combat)setTimeout(renderCombat,0)}
   function showHardModeCapacityWarning(p){
@@ -1393,7 +1417,7 @@
     if(seller&&isItemLocked(seller,e.id))return{ok:false,why:'Предмет заблокирован для продажи и сброса.'};
     return{ok:true,base};
   }
-  function tradeOpportunityPeople(){const active=currentPlayer();return state.players.filter(q=>q.id!==active.id&&q.hex===active.hex)}
+  function tradeOpportunityPeople(active=currentPlayer()){return state.players.filter(q=>q.id!==active.id&&q.hex===active.hex)}
   function tradeEntryMap(seller){return new Map(tradeSellEntries(seller).map(e=>[e.id,e]))}
   function tradeSelectionCheck(seller,selectedIds){
     ensurePlayerModel(seller);
@@ -1417,20 +1441,22 @@
     const max=entries.reduce((sum,e)=>sum+numericItemPrice(e.card),0);
     return{ok:true,entries,max};
   }
-  function openTrade(){
-    const active=currentPlayer(),others=tradeOpportunityPeople();
+  function openTrade(activeOverride=null,handoff=true){
+    const active=activeOverride||currentPlayer(),others=tradeOpportunityPeople(active);
     if(!others.length){state.tradeOpportunity=null;updateUI();return}
-    if(others.length===1){openTradeRoleChoice(others[0]);return}
+    const closeTrade=()=>{closeModal();endSideInteraction()};
+    if(handoff){beginSideInteraction(active,'trade',[active.id,...others.map(q=>q.id)]);advanceTurnState(active,'начало торговли с другим игроком')}
+    if(others.length===1){openTradeRoleChoice(others[0],active);return}
     const fake={id:'—',name:'Торговля между игроками',category:'Игроки',deck:'Поле',fields:{'Активный герой':active.name}};
-    showCard(fake,'С кем торговать?',others.map(other=>({label:other.name,className:'primary',fn:()=>{closeModal();openTradeRoleChoice(other)}})).concat([{label:'Закрыть',className:'secondary',fn:closeModal}]));
+    showCard(fake,'С кем торговать?',others.map(other=>({label:other.name,className:'primary',fn:()=>{closeModal();openTradeRoleChoice(other,active)}})).concat([{label:'Закрыть',className:'secondary',fn:closeTrade}]));
   }
-  function openTradeRoleChoice(other){
-    const active=currentPlayer();
+  function openTradeRoleChoice(other,activeOverride=null){
+    const active=activeOverride||getPlayer(sideInteractionOwnerId())||currentPlayer();
     els.modalContent.innerHTML=`<div class="card-kicker">Торговля между игроками</div><div class="card-title">${active.name} и ${other.name}</div><div class="card-field">Герои находятся на одном гексе <b>${active.hex}</b>. Выберите роль активного героя <b>${active.name}</b> в сделке.</div><div class="modal-actions"><button id="tradeRoleBuy" class="success">Покупка</button><button id="tradeRoleSell" class="primary">Продажа</button><button id="tradeRoleClose" class="secondary">Закрыть</button></div>`;
     els.modal.hidden=false;
     document.getElementById('tradeRoleBuy').onclick=()=>openTradeBuyerSelection(active,other,[]);
     document.getElementById('tradeRoleSell').onclick=()=>openTradeBuyerSelection(other,active,[]);
-    document.getElementById('tradeRoleClose').onclick=closeModal;
+    document.getElementById('tradeRoleClose').onclick=()=>{closeModal();endSideInteraction()};
   }
   function tradeSelectionCard(seller,e,selected){
     const chk=canPlayerTradeEntry(seller,e),price=numericItemPrice(e.card);
@@ -1446,8 +1472,8 @@
     els.modal.hidden=false;
     els.modalContent.querySelectorAll('[data-trade-toggle]').forEach(b=>b.onclick=()=>{const id=Number(b.dataset.tradeToggle);if(selected.has(id))selected.delete(id);else selected.add(id);openTradeBuyerSelection(buyer,seller,[...selected])});
     document.getElementById('tradeBuyerContinue').onclick=()=>openTradeSellerReview(buyer,seller,[...selected],null);
-    document.getElementById('tradeBuyerBack').onclick=()=>openTradeRoleChoice(buyer.id===currentPlayer().id?seller:buyer);
-    document.getElementById('tradeBuyerClose').onclick=closeModal;
+    document.getElementById('tradeBuyerBack').onclick=()=>{const active=getPlayer(sideInteractionOwnerId())||buyer;openTradeRoleChoice(active.id===buyer.id?seller:buyer,active)};
+    document.getElementById('tradeBuyerClose').onclick=()=>{closeModal();endSideInteraction()};
   }
   function tradeReviewItemsHtml(owner,entries,withRemove=false){
     return entries.map(e=>`<div class="merchant-card ${itemColorClass(owner,e.card)}"><div class="merchant-card-head"><div><small>№${e.card.id} · ${e.where}</small><b>${e.card.name}</b></div><div class="merchant-price">${numericItemPrice(e.card)} зол.</div></div><div class="card-fields compact">${itemFieldsHtml(e.card)}</div>${withRemove?`<button data-trade-remove="${e.id}" class="danger">🗑 Удалить из сделки</button>`:''}</div>`).join('');
@@ -1460,7 +1486,7 @@
     els.modal.hidden=false;
     const currentPrice=()=>{let v=Math.floor(Number(document.getElementById('tradeTotalPrice')?.value));if(!Number.isFinite(v))v=0;return Math.max(0,Math.min(max,v))};
     els.modalContent.querySelectorAll('[data-trade-remove]').forEach(b=>b.onclick=()=>{const id=Number(b.dataset.tradeRemove),next=selectedIds.filter(x=>Number(x)!==id);if(!next.length){openTradeBuyerSelection(buyer,seller,[]);return}openTradeSellerReview(buyer,seller,next,currentPrice())});
-    document.getElementById('tradeSellerReject').onclick=()=>{log(`${seller.name} отклоняет предложенную сделку с ${buyer.name}.`);closeModal()};
+    document.getElementById('tradeSellerReject').onclick=()=>{log(`${seller.name} отклоняет предложенную сделку с ${buyer.name}.`);closeModal();endSideInteraction()};
     document.getElementById('tradeSellerAccept').onclick=()=>openTradeBuyerFinal(buyer,seller,entries.map(e=>e.id),currentPrice());
   }
   function openTradeBuyerFinal(buyer,seller,selectedIds,price){
@@ -1469,7 +1495,7 @@
     price=Math.max(0,Math.min(check.max,Math.floor(Number(price)||0)));
     els.modalContent.innerHTML=`<div class="card-kicker">Торговля · подтверждение покупателя</div><div class="card-title">${buyer.name}: финальное предложение</div><div class="merchant-summary"><span>Продавец: <b>${seller.name}</b><strong class="trade-gold">${seller.gold} зол.</strong></span><span>Покупатель: <b>${buyer.name}</b><strong class="trade-gold">${buyer.gold} зол.</strong></span><span>Предметов: <b>${check.entries.length}</b></span><span>Цена сделки: <b>${price} зол.</b></span></div><div class="merchant-grid">${tradeReviewItemsHtml(seller,check.entries,false)}</div><div class="card-field" style="margin-top:14px"><b>Итого к оплате:</b> ${price} золота.${buyer.gold<price?`<br><span class="merchant-note">Недостаточно золота: у ${buyer.name} только ${buyer.gold}.</span>`:''}</div><div class="modal-actions"><button id="tradeBuyerAcceptFinal" class="success" ${buyer.gold<price?'disabled':''}>Сделка</button><button id="tradeBuyerRejectFinal" class="danger">Отклонить</button></div>`;
     els.modal.hidden=false;
-    document.getElementById('tradeBuyerRejectFinal').onclick=()=>{log(`${buyer.name} отклоняет финальное предложение ${seller.name}.`);closeModal()};
+    document.getElementById('tradeBuyerRejectFinal').onclick=()=>{log(`${buyer.name} отклоняет финальное предложение ${seller.name}.`);closeModal();endSideInteraction()};
     document.getElementById('tradeBuyerAcceptFinal').onclick=()=>executePlayerTrade(buyer,seller,selectedIds,price);
   }
   function executePlayerTrade(buyer,seller,selectedIds,price){
@@ -1488,8 +1514,8 @@
     buyer.gold-=price;gainGold(seller,price);ensurePlayerStats(buyer);ensurePlayerStats(seller);buyer.stats.playerTrades++;seller.stats.playerTrades++;
     for(const e of check.entries){buyer.pendingItems.push(e.id);delete seller.itemUsage[e.id]}
     log(`<b>Сделка:</b> ${buyer.name} покупает у ${seller.name} ${check.entries.length} предмет(а/ов) за ${price} золота: ${check.entries.map(e=>`«${e.card.name}»`).join(', ')}.`);
-    closeModal();updateUI();renderBoard();
-    if(buyer.id===currentPlayer().id)setTimeout(()=>openCharacterSheet('pending'),0);
+    closeModal();updateUI();renderBoard();endSideInteraction();
+    if(buyer.pendingItems?.length)setTimeout(()=>openCharacterSheet('pending',null,buyer.id),0);
   }
 
   // ========================= v0.5 — БОЕВАЯ СИСТЕМА =========================
@@ -1667,7 +1693,7 @@
   function combatDirectEnemyDamage(multiplier,reason,after){const c=state.combat;if(!c)return;const dr=rollExprDetailed(combatEnemy()?.fields?.['Урон']||'D4'),amount=dr.total*multiplier;c.pendingEnemyDamage={amount,original:amount,direct:true,label:reason,after};c.phase='enemy_damage';combatSetRoll(`${reason} · урон`,dr.total,`${combatEnemy()?.fields?.['Урон']} = ${dr.total}${multiplier>1?` · ×${multiplier}`:''}`,`Входящий урон: ${amount}`);combatPush(`${reason}: урон ${amount}.`);renderCombat()}
   function combatContinueAfterEnemyMiss(){const c=state.combat;if(!c||c.phase!=='enemy_miss')return;c.afterEnemyMiss=false;combatTickBuffsAtEnemyTurn();combatTickEnemyStatuses();if(c.enemyHp<=0){combatVictory();return}if(!state.combat)return;c.round++;combatRoundStartCheck();if(!state.combat)return;c.phase='hero_turn';renderCombat()}
   function combatEscapeDuring(){const c=state.combat,p=currentPlayer();if(!c||c.phase!=='hero_turn')return;if(c.freeEscape){c.freeEscape=false;combatPush('Разлом пути: побег во время боя без проверки.');finishCombatEscape('Разлом пути — побег без проверки',false);return}const rr=rollD20WithMode(combatHeroMode()),d=rr.chosen,dex=effectiveStat(p,'dex'),total=d+dex,natural=rr.mode==='normal'?(d===20?20:d===1?1:null):null;recordNatural(p,natural);consumeHeroMode();const outcome=natural===20?'nat20':natural===1?'nat1':total>=15?'success':'fail';c.pendingEscape={kind:'during',d,total,dex,outcome};c.phase='escape_result';combatSetRoll('Побег во время боя · D20',d,`${d} ${signed(dex)} = ${total}`,`Сложность 15${rr.rolls.length>1?` · броски ${rr.rolls.join(' / ')} · натуральные 1/20 не срабатывают`:''}`,natural);combatPush(`Побег во время боя: ${d} ${signed(dex)} = ${total}.`);renderCombat()}
-  function combatEscapeRewards(){const c=state.combat,p=currentPlayer(),e=combatEnemy(),baseGold=Number(e?.fields?.['Золото']||0),hunter=fullSetEquipped(p,'Охотника')&&/(звер|чудовищ)/.test(combatEnemyType()),gold=hunter?baseGold*2:baseGold;gainGold(p,gold);const base=mandatoryLootCount(e,c),lootKey=c.deckKey==='exploreHeart'?'lootHeart':'lootOuter';for(let i=0;i<base;i++){const loot=drawCard(lootKey);if(loot)receiveTreasure(p,loot)}if(!c.isBoss)discardCard(c.deckKey,e);state.combat=null;state.turnLocked=false;closeModal();finishExplore(false,'Натуральная 20 при побеге во время боя');if(p.pendingItems.length)setTimeout(()=>openCharacterSheet('pending'),0);setTimeout(()=>endTurn(true),0)}
+  function combatEscapeRewards(){const c=state.combat,p=currentPlayer(),e=combatEnemy(),baseGold=Number(e?.fields?.['Золото']||0),hunter=fullSetEquipped(p,'Охотника')&&/(звер|чудовищ)/.test(combatEnemyType()),gold=hunter?baseGold*2:baseGold;gainGold(p,gold);const base=mandatoryLootCount(e,c),lootKey=c.deckKey==='exploreHeart'?'lootHeart':'lootOuter';for(let i=0;i<base;i++){const loot=drawCard(lootKey);if(loot)receiveTreasure(p,loot)}if(!c.isBoss)discardCard(c.deckKey,e);state.combat=null;state.turnLocked=false;closeModal();finishExplore(false,'Натуральная 20 при побеге во время боя');if(p.pendingItems.length){advanceTurnWithSideInteraction(p,'loot','завершение боя и получение тайников',[p.id]);setTimeout(()=>openCharacterSheet('pending',null,p.id),0)}else setTimeout(()=>advanceTurnState(p,'завершение боя'),0)}
   function combatHeroDeath(reason){const c=state.combat,p=currentPlayer(),e=combatEnemy();if(c&&p&&fullSetEquipped(p,'Феникса')&&!combatUsed('set:Феникса')){combatMarkUsed('set:Феникса');p.currentHp=Math.max(1,Math.ceil(p.maxHp/2));combatSetRoll('Полный сет Феникса','↻','Возрождение',`ЗД ${p.currentHp}/${p.maxHp}`);combatPush(`Полный сет Феникса: ${p.name} возрождается с ${p.currentHp}/${p.maxHp} ЗД.`);c.phase='post_damage';renderCombat();updateUI();return false}if(c&&e&&!c.isBoss)discardCard(c.deckKey,e);state.combat=null;closeModal();handleDeath(p,e);return true}
   function combatVictory(){const c=state.combat,p=currentPlayer(),e=combatEnemy();if(!c||!e)return;
     recordEnemyVictory(p,e,c);
@@ -1686,7 +1712,7 @@
     closeModal();updateUI();
     showRollPopup('Результаты боя','✓',`<b>${p.name}</b> победил врага «<b>${e.name}</b>».<br>Заработано золота: <b>${goldEarned}</b>`,`Поиск дополнительного тайника: D20 <b>${d}</b> ${signed(wis)} МУД = <b>${total}</b> · <b>${rollResult}</b>${naturalText}<br><b>${p.name}</b> нашёл <b>${totalLoot}</b> ${lootWord(totalLoot)}.${damageText}`,null,()=>{if(searchDamage&&p.currentHp<=0){state.combat=null;handleDeath(p);return}finishCombatVictory()},'Разобрать тайники');
   }
-  function finishCombatVictory(){const c=state.combat,p=currentPlayer();if(!c||c.phase!=='victory')return;if(c.isBoss){state.combat=null;state.exploration=null;state.gameOver={winnerId:p.id,heroName:p.name,round:state.round,personalTurn:p.personalTurn};state.turnLocked=true;state.reachable=[];state.movePending=false;state.chosenPath=null;state.chosenMovePlan=null;closeModal();closeCharacterSheet();log(`<b>Партия завершена.</b> Победитель — ${p.name}.`);updateUI();renderBoard();showGameOverPopup(p);return}state.combat=null;state.turnLocked=false;closeModal();finishExplore(true,'Враг побеждён');updateUI();renderBoard();if(p.pendingItems.length)setTimeout(()=>openCharacterSheet('pending'),0)}
+  function finishCombatVictory(){const c=state.combat,p=currentPlayer();if(!c||c.phase!=='victory')return;if(c.isBoss){state.combat=null;state.exploration=null;state.gameOver={winnerId:p.id,heroName:p.name,round:state.round,personalTurn:p.personalTurn};state.turnLocked=true;state.reachable=[];state.movePending=false;state.chosenPath=null;state.chosenMovePlan=null;closeModal();closeCharacterSheet();log(`<b>Партия завершена.</b> Победитель — ${p.name}.`);updateUI();renderBoard();showGameOverPopup(p);return}state.combat=null;state.turnLocked=false;closeModal();finishExplore(true,'Враг побеждён');if(p.pendingItems.length){advanceTurnWithSideInteraction(p,'loot','победа над врагом',[p.id]);setTimeout(()=>openCharacterSheet('pending',null,p.id),0)}else advanceTurnState(p,'победа над врагом')}
   function useHeroCombatAbility(){const c=state.combat,p=currentPlayer();if(!c||c.heroAbilityUsed)return;let ok=false;
     if(p.id==='warrior'&&c.phase==='enemy_damage'&&c.pendingEnemyDamage){const r=rollExprDetailed('D4');c.pendingEnemyDamage.amount=Math.max(0,c.pendingEnemyDamage.amount-r.total);combatSetRoll('Железная стойкость · D4',r.total,`D4 = ${r.total}`,`Входящий урон теперь ${c.pendingEnemyDamage.amount}`);ok=true}
     if(p.id==='dwarf'&&c.phase==='enemy_damage'&&c.pendingEnemyDamage){const r=rollExprDetailed('D6');c.pendingEnemyDamage.amount=Math.max(0,c.pendingEnemyDamage.amount-r.total);combatSetRoll('Каменная кровь · D6',r.total,`D6 = ${r.total}`,`Входящий урон теперь ${c.pendingEnemyDamage.amount}`);ok=true}
@@ -1777,11 +1803,11 @@
 
 
   function updateActionPanel(){
-    if(!state.started)return;const p=currentPlayer();els.actionPanel.innerHTML='';
+    if(!state.started){renderTurnOrderBanner();return}const p=currentPlayer();renderTurnOrderBanner();els.actionPanel.innerHTML='';
     if(state.gameOver){const winner=getPlayer(state.gameOver.winnerId)||p;addActionBox('Партия завершена',`<b>${winner.name}</b> победил Владыку Сердца Тьмы. Дальнейшие ходы заблокированы.`,[{label:'Показать итог партии',className:'success',fn:()=>showGameOverPopup(winner)}]);return}
     if(state.combat){addActionBox('Идёт бой',`Враг: <b>${combatEnemy()?.name||'—'}</b>. Вернитесь в окно боя для продолжения.`,[{label:'Вернуться в бой',className:'danger',fn:renderCombat},{label:'Герой',className:'secondary',fn:()=>openCharacterSheet('overview')}]);return}
     if(state.portalPending){addActionBox('Древний портал',`Выберите выход прямо на карте. Доступные порталы подсвечены <b>фиолетовой границей</b>: ${state.portalPending.destinations.join(', ')}.`,[]);return}
-    if(state.tributeConsentPending){addActionBox('Решение владельца территории','Ожидается решение владельца: разрешить ли бесплатный проход по его территории.',[]);return}
+    if(state.tributeConsentPending){const req=state.tributeConsentPending,owner=getPlayer(req.ownerId),visitor=getPlayer(req.visitorId),mine=!onlineLocalHeroId||onlineLocalHeroId===req.ownerId;if(mine)addActionBox('Запрос на бесплатный проход',`<b>${visitor?.name||'Игрок'}</b> просит пройти бесплатно по территории <b>${req.hex}</b>. Решение принимает ${owner?.name||'владелец'}.`,[{label:'Разрешить проход',className:'success',fn:()=>resolvePassagePermission(true)},{label:'Отказать',className:'danger',fn:()=>resolvePassagePermission(false)}]);else addActionBox('Ожидание владельца территории',`Запрос отправлен игроку <b>${owner?.name||'владелец'}</b>. Пока он не ответит, движение приостановлено.`,[]);return}
     if(p.pendingItems?.length){addActionBox('Нужно разобрать тайники',`У героя осталось неразобранных предметов: ${p.pendingItems.length}. Пока каждый из них не будет надет, помещён в рюкзак или сброшен, продолжать ход нельзя.`,[{label:'Разобрать тайники',className:'primary',fn:()=>openCharacterSheet('pending')}]);return}
     if(p.inDungeon){if(dungeonExitAvailable(p))showDungeonActions(p);else showDungeonWaiting(p);return}
     if(state.movePending){
@@ -1839,7 +1865,7 @@
         {label:'Попросить пройти бесплатно',className:'success',fn:requestPassagePermission}
       ]);
     }
-    const sameHexHeroes=state.players.filter(q=>q.id!==p.id&&q.hex===p.hex);if(sameHexHeroes.length&&!state.foreignTerritoryPending)addActionBox('Торговля между игроками',`На гексе вместе с ${p.name} находится: <b>${sameHexHeroes.map(q=>q.name).join(', ')}</b>. Пока герои остаются на одном гексе, торговля доступна в ход любого из них.`,[{label:'Начать торговлю',className:'primary',fn:openTrade}]);
+    const sameHexHeroes=state.players.filter(q=>q.id!==p.id&&q.hex===p.hex);if(sameHexHeroes.length&&!state.foreignTerritoryPending)addActionBox('Торговля между игроками',`На гексе вместе с ${p.name} находится: <b>${sameHexHeroes.map(q=>q.name).join(', ')}</b>. Пока герои остаются на одном гексе, торговля доступна в ход любого из них.`,[{label:'Начать торговлю',className:'primary',fn:()=>openTrade(p,true)}]);
     if(foreign&&foreign.heroId===p.id&&foreign.hex===p.hex)return;
     const build=canBuildAt(p);
     if(build.ok&&!state.turnLocked){addActionBox('Строительство',`Очищенный гекс ${p.hex}. Стоимость: ${build.cost} золота.`,[{label:`Построить за ${build.cost}`,className:'success',fn:buildTerritory}])}
@@ -1850,7 +1876,7 @@
       const loc=state.locations[p.hex];
       const actions=[];
       const canUseNow=loc.name!=='Древний портал'&&state.locationActivationHex===p.hex;
-      if(canUseNow)actions.push({label:'Посетить локацию',className:'primary',fn:()=>{state.locationUsedThisTurn=true;state.locationActivationHex=null;visitLocation(p.hex,()=>{updateUI();renderBoard()})}});
+      if(canUseNow)actions.push({label:'Посетить локацию',className:'primary',fn:()=>{state.locationUsedThisTurn=true;state.locationActivationHex=null;visitLocation(p.hex,()=>{updateUI();renderBoard()},{player:p,handoff:true})}});
       let note='';
       if(loc.name==='Древний портал')note=' Портал активируется при остановке на его гексе.';
       else if(canUseNow)note=' Вы только что вошли на гекс и можете воспользоваться локацией.';
@@ -1872,6 +1898,16 @@
     ensurePlayerModel(p);let died=false;for(const st of ['Яд','Горение']){let n=p.statusTimers?.[st]||0;if(!p.statuses.includes(st)||n<=0)continue;if(st==='Горение'&&p.statusTickedTurn?.[st]===p.personalTurn)continue;recordDamageTaken(p,2);p.currentHp-=2;n--;p.statusTimers[st]=n;log(`${p.name}: в конце хода «${st}» наносит <b>2 урона</b>. Осталось ЗД ${Math.max(0,p.currentHp)}/${p.maxHp}; длительность ${n}.`);if(n<=0)removeStatus(p,st);if(p.currentHp<=0){handleDeath(p);died=true;break}}return died
   }
 
+  function advanceTurnState(p,reason=''){
+    if(!p||!state.started||state.gameOver)return;
+    applyEndTurnPeriodicEffects(p);tickTurnEffects(p);refreshLocationRevisitsAtEndTurn(p);refreshAreaVisitsAtEndTurn(p);p.personalTurn++;
+    state.currentIndex++;if(state.currentIndex>=state.order.length){state.currentIndex=0;state.round++;log(`<b>Раунд ${state.round}</b>.`)}
+    state.rolled=false;state.die=null;state.movePoints=0;state.reachable=[];state.chosenPath=null;state.chosenMovePlan=null;state.turnMoved=false;state.movePending=false;state.moveOriginHex=null;state.moveTransit=null;state.pendingMoveAction=null;state.turnLocked=false;state.exploration=null;state.locationUsedThisTurn=false;state.locationActivationHex=null;state.clearedThisTurnHex=null;state.foreignTerritoryPending=null;state.tributeConsentPending=null;state.tradeOpportunity=null;state.inspectPlayerId=null;state.mapHighlight=null;
+    if(reason)log(`<b>${p.name}: ход завершён автоматически</b> — ${reason}. Следующий: <b>${currentPlayer()?.name||'—'}</b>.`);
+    updateUI();renderBoard();
+  }
+  function advanceTurnWithSideInteraction(p,type,reason,participantIds=[p?.id].filter(Boolean)){beginSideInteraction(p,type,participantIds);advanceTurnState(p,reason)}
+
   function endTurn(force=false){
     if(!state.started||state.gameOver)return;const p=currentPlayer();if(state.turnLocked&&!force)return;
     if(!force&&state.movePending){commitPendingMove({type:'endTurn'});return;}
@@ -1879,12 +1915,19 @@
     if(!force&&state.foreignTerritoryPending?.heroId===p.id){alert('Сначала разрешите взаимодействие с чужой территорией: дань, избегание дани, разрешение на проход или захват.');return}
     if(!force&&currentHexNeedsResolution(p)){alert(`Сначала исследуйте гекс ${p.hex}. На неисследованном гексе завершить ход нельзя.`);return}
     if(!force&&!state.rolled&&!state.turnMoved&&!p.inDungeon){if(!confirm('Вы точно хотите завершить ход, не бросая кубик движения?'))return}
-    applyEndTurnPeriodicEffects(p);tickTurnEffects(p);refreshLocationRevisitsAtEndTurn(p);refreshAreaVisitsAtEndTurn(p);p.personalTurn++;state.currentIndex++;if(state.currentIndex>=state.order.length){state.currentIndex=0;state.round++;log(`<b>Раунд ${state.round}</b>.`)}
-    state.rolled=false;state.die=null;state.movePoints=0;state.reachable=[];state.chosenPath=null;state.chosenMovePlan=null;state.turnMoved=false;state.movePending=false;state.moveOriginHex=null;state.moveTransit=null;state.pendingMoveAction=null;state.turnLocked=false;state.exploration=null;state.locationUsedThisTurn=false;state.locationActivationHex=null;state.clearedThisTurnHex=null;state.foreignTerritoryPending=null;state.tributeConsentPending=null;state.tradeOpportunity=null;state.inspectPlayerId=null;state.mapHighlight=null;closeCharacterSheet();updateUI();renderBoard();
+    advanceTurnState(p);closeCharacterSheet();
+  }
+
+  function renderTurnOrderBanner(){
+    if(!els.turnOrderBanner)return;
+    if(!state.started||!state.order?.length){els.turnOrderBanner.hidden=true;return}
+    const active=currentPlayer(),rot=[];for(let n=1;n<state.order.length;n++)rot.push(getPlayer(state.order[(state.currentIndex+n)%state.order.length]));
+    els.turnOrderBanner.hidden=false;
+    els.turnOrderBanner.innerHTML=`<div class="turn-order-active"><small>СЕЙЧАС ХОДИТ</small><strong>${String(active?.name||'—').toUpperCase()}</strong></div><div class="turn-order-next"><small>ДАЛЬШЕ</small><span>${rot.map(q=>q?.name||'—').join(' → ')}</span></div>`;
   }
 
   function updateUI(){
-    if(!state.started)return;const p=currentPlayer();
+    if(!state.started){renderTurnOrderBanner();return}const p=currentPlayer();renderTurnOrderBanner();
     ensurePlayerModel(p);els.turnCard.innerHTML=`<div class="turn-name" style="color:${p.color}">${p.name}</div><div>Личный ход: <b>${p.personalTurn}</b> · Раунд: <b>${state.round}</b></div><div>Позиция: <b>${p.hex}</b></div><div class="turn-meta">${regionName(MAP.hexes[p.hex].region)}</div><div class="statline"><span class="pill">ЗД ${p.currentHp}/${p.maxHp}</span><span class="pill">${statDisplay(p,'defense')}</span><span class="pill">Урон ${currentHeroDamage(p)}</span><span class="pill">${statDisplay(p,'str')}</span><span class="pill">${statDisplay(p,'dex')}</span><span class="pill">${statDisplay(p,'wis')}</span><span class="pill">${statDisplay(p,'cha')}</span><span class="pill">Золото ${p.gold}</span><button class="pill map-highlight-trigger" data-map-highlight="territories">Территории ${Object.values(state.territories).filter(t=>t.owner===p.id).length}</button><button class="pill map-highlight-trigger" data-map-highlight="areas">Области ${state.areas.filter(a=>a.owner===p.id).length}</button></div>${p.statuses.length?`<div class="turn-meta">Эффекты: ${statusSummary(p)}</div>`:''}${activeEffectRows(p).filter(x=>x.kind!=='Негативный эффект').length?`<div class="turn-meta">Активно: ${activeEffectRows(p).filter(x=>x.kind!=='Негативный эффект').map(x=>x.label).join(' · ')}</div>`:''}${p.inDungeon?'<div class="error"><b>Герой в Темнице.</b></div>':''}`;els.turnCard.querySelectorAll('[data-bonus-key]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();openCharacterSheet('overview',b.dataset.bonusKey)}));els.turnCard.querySelectorAll('[data-map-highlight]').forEach(b=>{const type=b.dataset.mapHighlight;const set=()=>{state.mapHighlight={type,playerId:p.id};renderBoard()};const clear=()=>{if(state.mapHighlight?.type===type&&state.mapHighlight?.playerId===p.id){state.mapHighlight=null;renderBoard()}};b.addEventListener('mouseenter',set);b.addEventListener('mouseleave',clear);b.addEventListener('click',e=>{e.stopPropagation();if(state.mapHighlight?.type===type&&state.mapHighlight?.playerId===p.id)state.mapHighlight=null;else state.mapHighlight={type,playerId:p.id};renderBoard()})});
     els.diceResult.textContent=state.die??'—';els.moveRollBtn.disabled=!!state.gameOver||state.rolled||p.inDungeon||state.turnLocked||p.pendingItems.length>0||!!state.combat;const unresolvedHex=currentHexNeedsResolution(p);els.endTurnBtn.disabled=!!state.gameOver||!!state.combat||state.turnLocked||(p.inDungeon&&dungeonExitAvailable(p))||p.pendingItems.length>0||unresolvedHex||state.foreignTerritoryPending?.heroId===p.id||!!state.tributeConsentPending;
     els.moveHint.hidden=false;
@@ -1924,9 +1967,9 @@
     if(!state.started){applyMapZoom(false);return}const groups={};state.players.forEach(p=>(groups[p.hex]??=[]).push(p));Object.entries(groups).forEach(([hex,ps])=>{const h=MAP.hexes[hex],n=ps.length;ps.forEach((p,i)=>{const a=n===1?0:Math.PI*2*i/n,rad=n===1?0:24,x=h.x+Math.cos(a)*rad,y=h.y+Math.sin(a)*rad;if(p.id===currentPlayer().id)els.overlay.appendChild(svgEl('circle',{cx:x,cy:y,r:25,class:'current-ring'}));els.overlay.appendChild(svgEl('circle',{cx:x,cy:y,r:17,fill:p.color,class:'player-marker'}));const t=svgEl('text',{x,y:y+1,class:'marker-label'});t.textContent=p.initial;els.overlay.appendChild(t)})});applyMapZoom(false)
   }
 
-  function saveGame(){if(!state.started)return;localStorage.setItem('rpgDigitalPrototypeV062',JSON.stringify(state));log('Партия v0.6.2 сохранена в браузере.')}
+  function saveGame(){if(!state.started)return;localStorage.setItem('rpgDigitalPrototypeV063',JSON.stringify(state));log('Партия v0.6.3 сохранена в браузере.')}
   function loadGame(){
-    const raw=localStorage.getItem('rpgDigitalPrototypeV062')||localStorage.getItem('rpgDigitalPrototypeV060')||localStorage.getItem('rpgDigitalPrototypeV0522')||localStorage.getItem('rpgDigitalPrototypeV0521')||localStorage.getItem('rpgDigitalPrototypeV0520')||localStorage.getItem('rpgDigitalPrototypeV0519')||localStorage.getItem('rpgDigitalPrototypeV0518')||localStorage.getItem('rpgDigitalPrototypeV0517')||localStorage.getItem('rpgDigitalPrototypeV0516')||localStorage.getItem('rpgDigitalPrototypeV0515')||localStorage.getItem('rpgDigitalPrototypeV0514')||localStorage.getItem('rpgDigitalPrototypeV0513')||localStorage.getItem('rpgDigitalPrototypeV0512')||localStorage.getItem('rpgDigitalPrototypeV0511')||localStorage.getItem('rpgDigitalPrototypeV0510')||localStorage.getItem('rpgDigitalPrototypeV059')||localStorage.getItem('rpgDigitalPrototypeV058')||localStorage.getItem('rpgDigitalPrototypeV057')||localStorage.getItem('rpgDigitalPrototypeV056')||localStorage.getItem('rpgDigitalPrototypeV055')||localStorage.getItem('rpgDigitalPrototypeV054')||localStorage.getItem('rpgDigitalPrototypeV053')||localStorage.getItem('rpgDigitalPrototypeV052')||localStorage.getItem('rpgDigitalPrototypeV051')||localStorage.getItem('rpgDigitalPrototypeV050')||localStorage.getItem('rpgDigitalPrototypeV045')||localStorage.getItem('rpgDigitalPrototypeV044')||localStorage.getItem('rpgDigitalPrototypeV043')||localStorage.getItem('rpgDigitalPrototypeV042')||localStorage.getItem('rpgDigitalPrototypeV041')||localStorage.getItem('rpgDigitalPrototypeV040')||localStorage.getItem('rpgDigitalPrototypeV033')||localStorage.getItem('rpgDigitalPrototypeV032');
+    const raw=localStorage.getItem('rpgDigitalPrototypeV063')||localStorage.getItem('rpgDigitalPrototypeV062')||localStorage.getItem('rpgDigitalPrototypeV060')||localStorage.getItem('rpgDigitalPrototypeV0522')||localStorage.getItem('rpgDigitalPrototypeV0521')||localStorage.getItem('rpgDigitalPrototypeV0520')||localStorage.getItem('rpgDigitalPrototypeV0519')||localStorage.getItem('rpgDigitalPrototypeV0518')||localStorage.getItem('rpgDigitalPrototypeV0517')||localStorage.getItem('rpgDigitalPrototypeV0516')||localStorage.getItem('rpgDigitalPrototypeV0515')||localStorage.getItem('rpgDigitalPrototypeV0514')||localStorage.getItem('rpgDigitalPrototypeV0513')||localStorage.getItem('rpgDigitalPrototypeV0512')||localStorage.getItem('rpgDigitalPrototypeV0511')||localStorage.getItem('rpgDigitalPrototypeV0510')||localStorage.getItem('rpgDigitalPrototypeV059')||localStorage.getItem('rpgDigitalPrototypeV058')||localStorage.getItem('rpgDigitalPrototypeV057')||localStorage.getItem('rpgDigitalPrototypeV056')||localStorage.getItem('rpgDigitalPrototypeV055')||localStorage.getItem('rpgDigitalPrototypeV054')||localStorage.getItem('rpgDigitalPrototypeV053')||localStorage.getItem('rpgDigitalPrototypeV052')||localStorage.getItem('rpgDigitalPrototypeV051')||localStorage.getItem('rpgDigitalPrototypeV050')||localStorage.getItem('rpgDigitalPrototypeV045')||localStorage.getItem('rpgDigitalPrototypeV044')||localStorage.getItem('rpgDigitalPrototypeV043')||localStorage.getItem('rpgDigitalPrototypeV042')||localStorage.getItem('rpgDigitalPrototypeV041')||localStorage.getItem('rpgDigitalPrototypeV040')||localStorage.getItem('rpgDigitalPrototypeV033')||localStorage.getItem('rpgDigitalPrototypeV032');
     if(!raw){alert('Сохранённой партии пока нет.');return}
     try{
       state=JSON.parse(raw);if(!state.locations)state.locations={};if(!state.territories)state.territories={};if(!state.areas)state.areas=[];stripPermanentLocationCardsFromDecks(state.decks);
@@ -1935,7 +1978,7 @@
       const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
-      state.version='0.6.2';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.2.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
+      state.version='0.6.3';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.3.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
     }catch(e){console.error(e);alert('Не удалось загрузить сохранение.')}
   }
   function cloneJson(v){return JSON.parse(JSON.stringify(v))}
@@ -1951,7 +1994,7 @@
     if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
-    state.version='0.6.2';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    state.version='0.6.3';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){
@@ -1963,25 +2006,25 @@
   }
   function startOnlineGame(heroIds){startGame(heroIds);return exportOnlineState()}
 
-  function resetGame(){if(!confirm('Сбросить текущую партию?'))return;state=freshState();document.body.classList.remove('game-running');rollPopupQueue.length=0;rollPopupAfterClose=null;if(els.journalOverlay)els.journalOverlay.hidden=true;if(els.rollOverlay)els.rollOverlay.hidden=true;els.setupSection.hidden=false;els.gameSection.hidden=true;els.saveBtn.disabled=true;els.inventoryBtn.hidden=true;els.log.innerHTML='';closeModal();closeCharacterSheet();renderBoard()}
+  function resetGame(){if(!confirm('Сбросить текущую партию?'))return;endSideInteraction();state=freshState();document.body.classList.remove('game-running');rollPopupQueue.length=0;rollPopupAfterClose=null;if(els.journalOverlay)els.journalOverlay.hidden=true;if(els.rollOverlay)els.rollOverlay.hidden=true;els.setupSection.hidden=false;els.gameSection.hidden=true;els.saveBtn.disabled=true;els.inventoryBtn.hidden=true;els.log.innerHTML='';closeModal();closeCharacterSheet();renderBoard()}
 
   if(els.sheetHeroTab)els.sheetHeroTab.addEventListener('click',()=>{if(state.started)openCharacterSheet('overview',null,sheetView.playerId||currentPlayer().id)});
   if(els.sheetInventoryTab)els.sheetInventoryTab.addEventListener('click',()=>{if(state.started)openCharacterSheet('inventory',null,sheetView.playerId||currentPlayer().id)});
-  if(els.rollPopupClose)els.rollPopupClose.addEventListener('click',()=>{els.rollOverlay.hidden=true;const after=rollPopupAfterClose;rollPopupAfterClose=null;els.rollPopupClose.textContent='Продолжить';if(after)after();showNextRollPopup()});
+  if(els.rollPopupClose)els.rollPopupClose.addEventListener('click',()=>{els.rollOverlay.hidden=true;const after=rollPopupAfterClose;rollPopupAfterClose=null;els.rollPopupClose.textContent='Продолжить';if(after)after();showNextRollPopup();if(sideInteraction?.type==='territory'&&els.rollOverlay.hidden&&!rollPopupQueue.length)endSideInteraction()});
   if(els.journalBtn)els.journalBtn.addEventListener('click',()=>{els.journalOverlay.hidden=false});
   if(els.journalClose)els.journalClose.addEventListener('click',()=>{els.journalOverlay.hidden=true});
   if(els.journalOverlay)els.journalOverlay.addEventListener('click',e=>{if(e.target===els.journalOverlay)els.journalOverlay.hidden=true});
   if(els.mapZoomIn)els.mapZoomIn.addEventListener('click',()=>changeMapZoom(.1));
   if(els.mapZoomOut)els.mapZoomOut.addEventListener('click',()=>changeMapZoom(-.1));
-  if(els.mobileHeroBtn)els.mobileHeroBtn.addEventListener('click',()=>openCharacterSheet('overview'));
-  if(els.mobileInventoryBtn)els.mobileInventoryBtn.addEventListener('click',()=>openCharacterSheet('inventory'));
+  if(els.mobileHeroBtn)els.mobileHeroBtn.addEventListener('click',()=>openCharacterSheet('overview',null,sideInteractionOwnerId()||currentPlayer()?.id));
+  if(els.mobileInventoryBtn)els.mobileInventoryBtn.addEventListener('click',()=>openCharacterSheet('inventory',null,sideInteractionOwnerId()||currentPlayer()?.id));
   if(els.mobileJournalBtn)els.mobileJournalBtn.addEventListener('click',()=>{els.journalOverlay.hidden=false});
   let resizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{applyMapZoom(false);if(state.started&&isMobileViewport()&&els.sheetDrawer.hidden)centerMapOnPlayer(mapFocusPlayer(),'auto')},120)});
   let pinchStartDist=0,pinchStartZoom=1;const touchDistance=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);if(els.boardWrap){els.boardWrap.addEventListener('touchstart',e=>{if(e.touches.length===2){pinchStartDist=touchDistance(e.touches);pinchStartZoom=Number(state.mapZoom||1)}},{passive:true});els.boardWrap.addEventListener('touchmove',e=>{if(e.touches.length===2&&pinchStartDist>0){e.preventDefault();const ratio=touchDistance(e.touches)/pinchStartDist;state.mapZoom=Math.round(clamp(pinchStartZoom*ratio,.6,2)*20)/20;applyMapZoom(false)}},{passive:false});els.boardWrap.addEventListener('touchend',e=>{if(e.touches.length<2)pinchStartDist=0},{passive:true})}
   if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
   els.startBtn.addEventListener('click',startGame);els.moveRollBtn.addEventListener('click',rollMove);els.endTurnBtn.addEventListener('click',()=>endTurn(false));els.saveBtn.addEventListener('click',saveGame);els.loadBtn.addEventListener('click',loadGame);els.resetBtn.addEventListener('click',resetGame);els.inventoryBtn.addEventListener('click',()=>openCharacterSheet('overview'));els.sheetClose.addEventListener('click',closeCharacterSheet);els.modalClose.addEventListener('click',()=>{if(!state.turnLocked)closeModal()});
   window.__RPG_DEBUG__={getState:()=>state,setState:v=>{state=v},freshState,HEROES,CARD_BY_ID,combatStart,combatFight,combatHeroAttack,finalizeHeroAttackRoll,applyHeroDamageNow,combatEnemyTurn,finalizeEnemyAttackRoll,acceptEnemyDamage,combatContinueAfterEnemyMiss,renderCombat,currentPlayer,getPlayer,ensurePlayerModel,supportedCombatEffect,applyCombatItemEffect,useHeroCombatAbility,combatReactionList,fullSetEquipped,completeSetNames,itemColorClass,mandatoryLootCount,setBonusActionInfo,useSetBonus,showRollPopup,heroImmuneStatus,combatPassiveDamageBonus,combatHeroDeath,combatVictory,merchantSaleMultiplier,decorateNegativeEffects,generatePermanentLocations,locationVisibleToPlayer,revealLocationToPlayer,ensureTavernMercenary,restockTavernIfVacant,visitTavern,attemptDungeonExit,beginBonusExplorationTurnAfterDungeon,gameOverStats,showGameOverPopup,renderBoard,updateUI};
-  window.__RPG_ONLINE__={startWithHeroes:startOnlineGame,exportState:exportOnlineState,applyState:applyOnlineState,currentPlayerId:()=>currentPlayer()?.id||null,isStarted:()=>!!state.started};
+  window.__RPG_ONLINE__={startWithHeroes:startOnlineGame,exportState:exportOnlineState,applyState:applyOnlineState,currentPlayerId:()=>currentPlayer()?.id||null,isStarted:()=>!!state.started,sideInteractionOwnerId,sideInteractionActiveFor,exportSideState:sideInteractionPayload,endSideInteraction,setLocalHeroId:id=>{onlineLocalHeroId=id||null;updateUI()},canOffturnSharedAction:id=>!!id&&state.tributeConsentPending?.ownerId===id};
   decorateNegativeEffects(document.body);negativeEffectObserver.observe(document.body,{childList:true,subtree:true});
   renderBoard();
 })();
