@@ -210,7 +210,7 @@
     return getPlayer(state.inspectPlayerId)||active;
   }
   function sheetPlayer(){return getPlayer(sheetView.playerId)||currentPlayer()}
-  function sheetReadOnly(){const p=sheetPlayer(),active=currentPlayer();return !!p&&!!active&&p.id!==active.id}
+  function sheetReadOnly(){const p=sheetPlayer(),active=currentPlayer();return !!p&&!!active&&p.id!==active.id&&!sideInteractionActiveFor(p.id)}
   function regionName(r){return r==='kingdom'?'Территории королевства':r==='cursed'?'Проклятые территории':'Сердце тьмы'}
   function statName(k){return ({str:'СИЛ',dex:'ЛОВ',wis:'МУД',cha:'ХАР'})[k]||k}
   function statKeyFromText(s=''){if(s.includes('СИЛ'))return 'str';if(s.includes('ЛОВ'))return 'dex';if(s.includes('МУД'))return 'wis';if(s.includes('ХАР'))return 'cha';return null}
@@ -1316,7 +1316,7 @@
   function renderPending(p){ensurePlayerModel(p);updateSheetTabs('pending');const items=p.pendingItems.map(id=>itemCard(id)).filter(Boolean);els.sheetContent.innerHTML=`<div class="sheet-nav"><button class="ghost" id="sheetBack">← Инвентарь</button><b>Неразобранные тайники: ${items.length}</b></div>${items.length?`<div class="item-list">${items.map(c=>{const price=numericItemPrice(c);return `<button class="item-row pending ${itemColorClass(p,c)}" data-item-id="${c.id}"><span><b>${c.name}</b><small>${c.category} · №${c.id}${price!=null?` · стоимость: ${price} зол.`:''}</small></span><span>›</span></button>`}).join('')}</div>`:'<div class="empty-box">Неразобранных тайников нет.</div>'}`;document.getElementById('sheetBack').onclick=()=>renderCharacterSheet('inventory');els.sheetContent.querySelectorAll('[data-item-id]').forEach(b=>b.onclick=()=>showItemInSheet(Number(b.dataset.itemId),{where:'pending'}))}
   function showItemInSheet(id,context){const pid=sheetView.playerId||currentPlayer().id;sheetView={mode:'item',bonusKey:null,itemId:id,context,playerId:pid};updateSheetTabs('item');renderItemDetail(getPlayer(pid)||currentPlayer(),id,context)}
   function itemFieldsHtml(card){return displayCardFieldEntries(card).map(([k,v])=>`<div class="card-field"><b>${k}:</b> ${v.replace(/\n/g,'<br>')}</div>`).join('')}
-  function renderItemDetail(p,id,ctx){const card=itemCard(id);if(!card){renderCharacterSheet('inventory');return}const readOnly=p.id!==currentPlayer().id,equip=canEquipCard(p,card),slots=targetSlots(card),actions=[],outside=readOnly?{supported:false,enabled:false,why:''}:supportedOutsideEffect(p,card,ctx),canLock=!readOnly&&ctx?.where!=='pending',locked=canLock&&isItemLocked(p,id);
+  function renderItemDetail(p,id,ctx){const card=itemCard(id);if(!card){renderCharacterSheet('inventory');return}const readOnly=p.id!==currentPlayer().id&&!sideInteractionActiveFor(p.id),equip=canEquipCard(p,card),slots=targetSlots(card),actions=[],outside=readOnly?{supported:false,enabled:false,why:''}:supportedOutsideEffect(p,card,ctx),canLock=!readOnly&&ctx?.where!=='pending',locked=canLock&&isItemLocked(p,id);
     if(inCombat()){
       if(ctx?.where==='equipment'){const battle=supportedCombatEffect(p,card,ctx);if(battle.supported)actions.push({label:'Применить эффект',cls:'success',disabled:!battle.enabled,title:battle.why,fn:()=>applyCombatItemEffect(p,id,ctx)});const setName=card.fields?.['Сет'],setInfo=setName?setBonusActionInfo(p,setName):null;if(setInfo?.supported&&setName==='Тени')actions.push({label:'Применить бонус полного сета',cls:'success',disabled:!setInfo.enabled,title:setInfo.why,fn:()=>useSetBonus(p,setName)});}if(ctx?.where==='backpack'&&itemType(card)==='зелье'&&slots.length)actions.push({label:'Положить в быстрый слот',cls:'success',fn:()=>requestEquip(p,id,ctx)});
     }else if(outside.supported)actions.push({label:'Применить эффект',cls:'success',disabled:!outside.enabled,title:outside.why,fn:()=>applyItemEffect(p,id,ctx)});
@@ -1923,7 +1923,7 @@
     if(!state.started||!state.order?.length){els.turnOrderBanner.hidden=true;return}
     const active=currentPlayer(),rot=[];for(let n=1;n<state.order.length;n++)rot.push(getPlayer(state.order[(state.currentIndex+n)%state.order.length]));
     els.turnOrderBanner.hidden=false;
-    els.turnOrderBanner.innerHTML=`<div class="turn-order-active"><small>СЕЙЧАС ХОДИТ</small><strong>${String(active?.name||'—').toUpperCase()}</strong></div><div class="turn-order-next"><small>ДАЛЬШЕ</small><span>${rot.map(q=>q?.name||'—').join(' → ')}</span></div>`;
+    els.turnOrderBanner.innerHTML=`<div class="turn-order-active"><small>СЕЙЧАС ХОДИТ</small><strong>${String(active?.name||'—').toUpperCase()}</strong></div><div class="turn-order-next"><small>ДАЛЬШЕ</small><span>${rot.map(q=>q?.name||'—').join(' → ')}</span></div><button class="turn-order-journal" type="button">Журнал</button>`;const journal=els.turnOrderBanner.querySelector('.turn-order-journal');if(journal)journal.onclick=()=>{els.journalOverlay.hidden=false};
   }
 
   function updateUI(){
