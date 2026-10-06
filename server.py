@@ -29,7 +29,13 @@ def public_room(room):
             {'id':p['id'],'name':p['name'],'heroId':p.get('heroId'),'host':p.get('host',False)}
             for p in room['players'].values()
         ],
+        'gameReady': room.get('gameState') is not None,
+        'gameRevision': int(room.get('gameRevision') or 0),
     }
+
+def authorized_player(room, pid, secret):
+    pl=room.get('players',{}).get(pid)
+    return pl if pl and pl.get('secret')==secret else None
 
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -57,6 +63,18 @@ class Handler(SimpleHTTPRequestHandler):
         p=urllib.parse.urlparse(self.path)
         if p.path == '/api/health':
             return self._json(200, {'ok':True,'rooms':len(ROOMS)})
+        if p.path.startswith('/api/rooms/') and p.path.endswith('/game'):
+            parts=[x for x in p.path.split('/') if x]
+            code=parts[2] if len(parts)>=4 else ''
+            q=urllib.parse.parse_qs(p.query)
+            pid=(q.get('playerId') or [''])[0]; secret=(q.get('playerSecret') or [''])[0]
+            with LOCK:
+                room=ROOMS.get(code)
+                if not room: return self._json(404, {'error':'Комната не найдена'})
+                if not authorized_player(room,pid,secret): return self._json(403, {'error':'Нет доступа'})
+                if not room.get('started'): return self._json(409, {'error':'Партия ещё не началась'})
+                if room.get('gameState') is None: return self._json(202, {'ready':False,'revision':int(room.get('gameRevision') or 0)})
+                return self._json(200, {'ready':True,'revision':int(room.get('gameRevision') or 0),'state':room.get('gameState')})
         if p.path.startswith('/api/rooms/'):
             code=p.path.split('/')[-1]
             with LOCK:
@@ -74,7 +92,8 @@ class Handler(SimpleHTTPRequestHandler):
             with LOCK:
                 ROOMS[code]={
                     'code':code,'createdAt':int(time.time()),'started':False,'hostId':pid,
-                    'players':{pid:{'id':pid,'secret':secret,'name':name,'heroId':None,'host':True}}
+                    'players':{pid:{'id':pid,'secret':secret,'name':name,'heroId':None,'host':True}},
+                    'gameState':None,'gameRevision':0,'gameUpdatedAt':None
                 }
                 data=public_room(ROOMS[code])
             return self._json(201, {'room':data,'playerId':pid,'playerSecret':secret})
@@ -117,6 +136,30 @@ class Handler(SimpleHTTPRequestHandler):
                 room['started']=True
                 data=public_room(room)
             return self._json(200, {'room':data})
+        if p.endswith('/game/init') and p.startswith('/api/rooms/'):
+            code=p.split('/')[-3]; pid=body.get('playerId'); secret=body.get('playerSecret'); game=body.get('state')
+            if not isinstance(game,dict): return self._json(400, {'error':'Некорректное состояние партии'})
+            with LOCK:
+                room=ROOMS.get(code)
+                if not room: return self._json(404, {'error':'Комната не найдена'})
+                pl=authorized_player(room,pid,secret)
+                if not pl or pid!=room.get('hostId'): return self._json(403, {'error':'Инициализировать партию может только хозяин'})
+                if not room.get('started'): return self._json(409, {'error':'Сначала запустите комнату'})
+                if room.get('gameState') is None:
+                    room['gameState']=game; room['gameRevision']=1; room['gameUpdatedAt']=int(time.time())
+                return self._json(200, {'revision':room['gameRevision'],'state':room['gameState']})
+        if p.endswith('/game/state') and p.startswith('/api/rooms/'):
+            code=p.split('/')[-3]; pid=body.get('playerId'); secret=body.get('playerSecret'); game=body.get('state'); base=int(body.get('baseRevision') or 0)
+            if not isinstance(game,dict): return self._json(400, {'error':'Некорректное состояние партии'})
+            with LOCK:
+                room=ROOMS.get(code)
+                if not room: return self._json(404, {'error':'Комната не найдена'})
+                if not authorized_player(room,pid,secret): return self._json(403, {'error':'Нет доступа'})
+                if not room.get('started') or room.get('gameState') is None: return self._json(409, {'error':'Сетевая партия ещё не готова'})
+                if base!=int(room.get('gameRevision') or 0):
+                    return self._json(409, {'error':'Состояние партии уже изменилось','revision':room.get('gameRevision')})
+                room['gameState']=game; room['gameRevision']=base+1; room['gameUpdatedAt']=int(time.time())
+                return self._json(200, {'revision':room['gameRevision']})
         return self._json(404, {'error':'Неизвестный запрос'})
 
 if __name__ == '__main__':
