@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#111418" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <title>RPG Digital Prototype v0.6.1 Online Lobby</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  
+  <div id="onlineLobby" class="online-lobby" hidden>
+    <div class="online-lobby-card">
+      <div class="eyebrow">RPG ONLINE</div>
+      <h2>Сетевая партия</h2>
+      <div id="onlineHome">
+        <label class="net-label">Ваше имя<input id="netName" maxlength="24" placeholder="Игрок" /></label>
+        <button id="netCreate" class="primary wide" type="button">Создать комнату</button>
+        <div class="net-or">или</div>
+        <label class="net-label">Код комнаты<input id="netCodeInput" inputmode="numeric" maxlength="6" placeholder="000000" /></label>
+        <button id="netJoin" class="secondary wide" type="button">Присоединиться</button>
+        <button id="netLocal" class="ghost wide" type="button">Локальная игра на этом устройстве</button>
+      </div>
+      <div id="onlineRoom" hidden>
+        <div class="net-code-box"><span>КОД КОМНАТЫ</span><strong id="roomCode">------</strong><small id="roomWho"></small></div>
+        <h3>Игроки</h3><div id="roomPlayers" class="net-players"></div>
+        <h3>Выберите героя</h3><div id="netHeroPicker" class="net-hero-picker"></div>
+        <div id="roomStatus" class="hint"></div>
+        <button id="netStart" class="primary wide" type="button">Начать сетевую игру</button>
+        <button id="netBack" class="ghost wide" type="button">Назад</button>
+      </div>
+      <div id="onlineError" class="error"></div>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">RPG DIGITAL PROTOTYPE</div>
+      <h1>Прототип v0.6.1 · Online Lobby</h1>
+      <div class="header-tools">
+        <button id="journalBtn" class="journal-top" type="button">Журнал</button>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="inventoryBtn" class="inventory-top" hidden aria-hidden="true">Герой / Инвентарь</button>
+      <button id="saveBtn" class="ghost" disabled>Сохранить</button>
+      <button id="loadBtn" class="ghost">Загрузить</button>
+      <button id="resetBtn" class="danger">Сбросить</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel side-panel">
+      <section id="setupSection">
+        <div class="setup-kicker">НАЧАЛО ПАРТИИ</div>
+        <h2>Выбор героев</h2>
+        <p class="muted setup-copy">Выберите от 2 до 5 героев. На телефоне каждый герой отображается отдельной карточкой.</p>
+        <div id="heroPicker" class="hero-picker"></div>
+        <button id="startBtn" class="primary wide">Начать партию</button>
+        <div id="setupError" class="error"></div>
+      </section>
+
+      <section id="gameSection" hidden>
+        <div class="mobile-quick-actions" aria-label="Быстрые действия">
+          <button id="mobileHeroBtn" class="secondary" type="button">Герой</button>
+          <button id="mobileInventoryBtn" class="secondary" type="button">Инвентарь</button>
+          <button id="mobileJournalBtn" class="ghost" type="button">Журнал</button>
+        </div>
+        <div id="turnCard" class="turn-card" hidden></div>
+        <div id="diceBlock">
+          <div class="dice-row">
+            <button id="moveRollBtn" class="primary">Бросить D6</button>
+            <div id="diceResult" class="dice">—</div>
+          </div>
+          <div id="moveHint" class="hint">Сначала брось кубик движения.</div>
+        </div>
+
+        <div id="actionPanel" class="action-panel"></div>
+        <button id="endTurnBtn" class="wide" disabled>Завершить ход</button>
+
+        <div class="separator"></div>
+        <h3>Очередность</h3>
+        <div id="initiativeList" class="initiative-list"></div>
+      </section>
+    </aside>
+
+    <section class="board-panel">
+      <div class="map-zoom-controls" aria-label="Масштаб карты">
+        <button id="mapZoomIn" type="button" title="Увеличить карту на 10%">+</button>
+        <button id="mapZoomOut" type="button" title="Уменьшить карту на 10%">−</button>
+      </div>
+      <div id="boardWrap" class="board-wrap">
+        <div class="map-stage" id="mapStage">
+          <img src="assets/map.png" alt="Игровая карта" id="mapImage" />
+          <svg id="overlay" viewBox="0 0 2481 1754" preserveAspectRatio="none" aria-label="Игровое поле"></svg>
+        </div>
+      </div>
+      <div class="board-footer">
+        <span><b>Подсказка:</b> зелёные гексы доступны для движения. Значки на поле показывают постоянные локации и территории.</span>
+        <span id="hoverInfo">Гекс: —</span>
+      </div>
+    </section>
+  </main>
+
+  <aside id="sheetDrawer" class="sheet-drawer" hidden>
+    <div class="sheet-drawer-head">
+      <div id="sheetMobileTitle" class="sheet-mobile-title">Герой</div>
+      <div class="sheet-tabs" role="tablist" aria-label="Панель героя">
+        <button id="sheetHeroTab" class="sheet-tab active" type="button" role="tab" aria-selected="true">ГЕРОЙ</button>
+        <button id="sheetInventoryTab" class="sheet-tab" type="button" role="tab" aria-selected="false">ИНВЕНТАРЬ</button>
+      </div>
+      <button id="sheetClose" class="sheet-close" aria-label="Закрыть">×</button>
+    </div>
+    <div id="sheetContent" class="sheet-content"></div>
+  </aside>
+
+  <div id="journalOverlay" class="journal-overlay" hidden>
+    <div class="journal-card">
+      <div class="journal-head"><div><div class="eyebrow">RPG DIGITAL PROTOTYPE</div><b>Журнал партии</b></div><button id="journalClose" class="sheet-close" aria-label="Закрыть журнал">×</button></div>
+      <div id="log" class="log journal-log"></div>
+    </div>
+  </div>
+
+  <div id="modal" class="modal" hidden>
+    <div class="modal-card">
+      <button id="modalClose" class="modal-close" aria-label="Закрыть">×</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+
+  <div id="rollOverlay" class="roll-overlay" hidden>
+    <div class="roll-popup-card">
+      <div id="rollPopupTitle" class="roll-popup-title">Проверка</div>
+      <div id="rollPopupMain" class="roll-popup-main">—</div>
+      <div id="rollPopupMath" class="roll-popup-math"></div>
+      <div id="rollPopupDetail" class="roll-popup-detail"></div>
+      <button id="rollPopupClose" class="primary">Продолжить</button>
+    </div>
+  </div>
+
+  <script src="map-data.js"></script>
+  <script src="cards-data.js"></script>
+  <script src="app.js"></script>
+  <script src="network-lobby.js"></script>
+</body>
+</html>
