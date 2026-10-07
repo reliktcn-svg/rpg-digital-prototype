@@ -484,3 +484,16 @@ body.game-running #initiativeList{display:none!important}
     right:var(--sheet-w)!important;
   }
 }
+
+/* v0.6.34 — наблюдение за боем, скрытие окна боя и стабильная зона броска */
+.combat-hide{margin-left:auto;min-width:96px;padding:4px 9px;font-size:9px;border-color:#52606c;color:#d7dfe6}
+.combat-restore-button{position:fixed;z-index:545;top:168px;left:50%;transform:translateX(-50%);padding:8px 14px;border:1px solid #b99145;background:#6f5424;color:#ffe59a;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.46);font-size:11px;font-weight:900;letter-spacing:.03em}
+.combat-restore-button[hidden]{display:none!important}
+.combat-observer-view .combat-actions,.combat-observer-view .combat-sheet-actions,.combat-observer-view .combat-reactions,.combat-observer-view .combat-effects-manual,.combat-observer-view .combat-pending{display:none!important}
+body.game-running .combat-shell>.combat-dice-stage{height:130px!important;min-height:130px!important;max-height:130px!important;overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center}
+body.game-running .combat-shell>.combat-dice-stage .combat-dice-detail{max-width:96%;max-height:30px;overflow:auto;text-align:center}
+@media(max-width:900px), (pointer:coarse){
+  .combat-restore-button{top:calc(82px + env(safe-area-inset-top,0px));left:auto;right:8px;transform:none;padding:7px 10px;font-size:9px}
+  body.game-running .combat-shell>.combat-dice-stage{height:116px!important;min-height:116px!important;max-height:116px!important}
+  .combat-hide{min-width:78px;padding:4px 7px;font-size:8px}
+}

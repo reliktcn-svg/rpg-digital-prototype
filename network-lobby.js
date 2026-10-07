@@ -2,12 +2,22 @@
   const HEROES=[
     ['warrior','Воин','#4c83ff'],['dwarf','Дворф','#d34b45'],['mage','Маг','#9d5cff'],['archer','Лучник','#4db76d'],['rogue','Разбойник','#444b55']
   ];
-  let session={mode:null,code:null,playerId:null,playerSecret:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:''};
+  let session={mode:null,code:null,playerId:null,playerSecret:null,recoveryKey:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:''};
   const SESSION_KEY='rpg-online-session';
+  const RECOVERY_KEY='rpg-online-recovery-v0634';
   const LEGACY_SESSION_KEYS=['rpg-online-session-v0632'];
-  function saveResumeSession(){try{if(!session.code||!session.playerId||!session.playerSecret)return;localStorage.setItem(SESSION_KEY,JSON.stringify({code:session.code,playerId:session.playerId,playerSecret:session.playerSecret,name:myPlayer()?.name||$('netName')?.value||'',savedAt:Date.now()}));renderResumeButton()}catch{}}
+  function saveResumeSession(){try{if(!session.code||!session.playerId||!session.playerSecret)return;localStorage.setItem(SESSION_KEY,JSON.stringify({code:session.code,playerId:session.playerId,playerSecret:session.playerSecret,recoveryKey:session.recoveryKey||session.room?.recoveryKey||null,name:myPlayer()?.name||$('netName')?.value||'',savedAt:Date.now()}));saveRecoverySnapshot();renderResumeButton()}catch{}}
   function readResumeSession(){try{const keys=[SESSION_KEY,...LEGACY_SESSION_KEYS];for(const k of keys){const raw=localStorage.getItem(k);if(raw){const v=JSON.parse(raw);if(v?.code&&v?.playerId&&v?.playerSecret){if(k!==SESSION_KEY)localStorage.setItem(SESSION_KEY,raw);return v}}}return null}catch{return null}}
-  function clearResumeSession(){try{localStorage.removeItem(SESSION_KEY);for(const k of LEGACY_SESSION_KEYS)localStorage.removeItem(k)}catch{}renderResumeButton()}
+  function readRecoverySnapshot(){try{const raw=localStorage.getItem(RECOVERY_KEY);return raw?JSON.parse(raw):null}catch{return null}}
+  function saveRecoverySnapshot(stateOverride){try{
+    if(!session.code||!session.playerId||!session.playerSecret||!session.room)return;
+    const rkey=session.recoveryKey||session.room?.recoveryKey;if(!rkey)return;
+    session.recoveryKey=rkey;
+    const st=stateOverride!==undefined?stateOverride:(session.gameEntered?exported():null);
+    const room={code:session.room.code,started:!!session.room.started,createdAt:session.room.createdAt||Math.floor(Date.now()/1000),lastActiveAt:session.room.lastActiveAt||Math.floor(Date.now()/1000),hardMode:!!session.room.hardMode,gameRevision:Number(session.lastRevision||session.room.gameRevision||0),players:(session.room.players||[]).map(p=>({id:p.id,name:p.name,heroId:p.heroId||null,host:!!p.host}))};
+    localStorage.setItem(RECOVERY_KEY,JSON.stringify({code:session.code,recoveryKey:rkey,playerId:session.playerId,playerSecret:session.playerSecret,lastActiveAt:Number(room.lastActiveAt||0),savedAt:Date.now(),revision:Number(session.lastRevision||room.gameRevision||0),room,state:st||null}));
+  }catch{}}
+  function clearResumeSession(){try{localStorage.removeItem(SESSION_KEY);localStorage.removeItem(RECOVERY_KEY);for(const k of LEGACY_SESSION_KEYS)localStorage.removeItem(k)}catch{}renderResumeButton()}
   function renderResumeButton(){const b=$('netResume');if(!b)return;const x=readResumeSession();b.hidden=!x?.code;b.textContent=x?.code?`Продолжить партию · код ${x.code}`:'Продолжить последнюю партию'}
   function setRoomCodeUi(){const b=$('turnOrderBanner');if(b){if(session.code)b.dataset.roomCode=session.code;else delete b.dataset.roomCode}window.__RPG_ROOM_CODE__=session.code||'';engine()?.refreshUI?.()}
   const $=id=>document.getElementById(id);
@@ -26,6 +36,11 @@
   function exported(){const e=engine();return e?e.exportState():null}
   function snap(st){try{return JSON.stringify(st)}catch{return ''}}
   function auth(){return{playerId:session.playerId,playerSecret:session.playerSecret}}
+  function acceptRoom(room){session.room=room;if(room?.recoveryKey)session.recoveryKey=room.recoveryKey;saveResumeSession();return room}
+  function validRecoveryFor(code){const x=readRecoverySnapshot();if(!x||String(x.code)!==String(code)||!x.recoveryKey)return null;const last=Number(x.lastActiveAt||0);if(!last||Math.floor(Date.now()/1000)-last>10800)return null;return x}
+  async function recoverSession(saved){const recovery=validRecoveryFor(saved?.code);const recoveryKey=saved?.recoveryKey||recovery?.recoveryKey;if(!recoveryKey)throw Object.assign(new Error('Нет актуального снимка партии для восстановления.'),{status:404});
+    const d=await api(`/api/rooms/${saved.code}/resume`,{method:'POST',body:JSON.stringify({playerId:saved.playerId,playerSecret:saved.playerSecret,recoveryKey,recovery})});acceptRoom(d.room);return d;
+  }
 
   function ensureTurnBanner(){
     let b=$('onlineTurnBanner');if(b)return b;
@@ -39,7 +54,7 @@
     b.innerHTML=isMine?`Ваш ход · <b>${esc(heroName(mine))}</b>`:`Сейчас ходит <b>${esc(heroName(active))}</b> · ваш герой: ${esc(heroName(mine))}`;
   }
   function showHome(){
-    clearInterval(session.timer);clearInterval(session.gameTimer);session={mode:null,code:null,playerId:null,playerSecret:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:''};
+    clearInterval(session.timer);clearInterval(session.gameTimer);session={mode:null,code:null,playerId:null,playerSecret:null,recoveryKey:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:''};
     $('onlineHome').hidden=false;$('onlineRoom').hidden=true;showError('');document.body.classList.remove('online-game','online-not-my-turn');const b=$('onlineTurnBanner');if(b)b.hidden=true;const q=$('turnOrderBanner');if(q)delete q.dataset.roomCode;window.__RPG_ROOM_CODE__='';renderResumeButton();
   }
   function renderRoom(){
@@ -67,7 +82,7 @@
   }
   function enterGame(state,revision){
     const e=engine();if(!e||!state)return;
-    if(session.code){const q=$('turnOrderBanner');if(q)q.dataset.roomCode=session.code;window.__RPG_ROOM_CODE__=session.code}saveResumeSession();e.applyState(state);e.setLocalHeroId?.(myHeroId());session.gameEntered=true;session.lastRevision=Number(revision||0);session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(state);
+    if(session.code){const q=$('turnOrderBanner');if(q)q.dataset.roomCode=session.code;window.__RPG_ROOM_CODE__=session.code}if(session.room?.recoveryKey)session.recoveryKey=session.room.recoveryKey;e.applyState(state);e.setLocalHeroId?.(myHeroId());session.gameEntered=true;session.lastRevision=Number(revision||0);session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(state);saveResumeSession();saveRecoverySnapshot(e.exportState());
     overlay.hidden=true;document.body.classList.remove('net-lobby-open');updateTurnGuard();startGameSync();
   }
   async function ensureOnlineGame(){
@@ -90,7 +105,7 @@
   async function refresh(){
     if(!session.code)return;
     const qs=session.playerId&&session.playerSecret?`?playerId=${encodeURIComponent(session.playerId)}&playerSecret=${encodeURIComponent(session.playerSecret)}`:'';
-    try{session.room=await api(`/api/rooms/${session.code}${qs}`);if(!session.gameEntered)renderRoom();if(session.room.started)await ensureOnlineGame()}catch(e){if(e.status===404){clearResumeSession()}showError(e.message)}
+    try{acceptRoom(await api(`/api/rooms/${session.code}${qs}`));if(!session.gameEntered)renderRoom();if(session.room.started)await ensureOnlineGame()}catch(e){if(e.status===404&&session.playerId&&session.playerSecret){try{const saved={code:session.code,playerId:session.playerId,playerSecret:session.playerSecret,recoveryKey:session.recoveryKey};await recoverSession(saved);if(!session.gameEntered)renderRoom();if(session.room.started)await ensureOnlineGame();showError('');return}catch(re){showError(re.message);return}}showError(e.message)}
   }
   function poll(){clearInterval(session.timer);session.timer=setInterval(refresh,900)}
   async function pullGame(force=false){
@@ -99,7 +114,7 @@
     try{
       const d=await fetchGame();if(!d.ready)return;
       if(force||Number(d.revision)>session.lastRevision){
-        engine().applyState(d.state);session.lastRevision=Number(d.revision||0);session.lastSnapshot=snap(engine().exportState());session.lastServerActiveHero=activeHeroFromState(d.state);updateTurnGuard();
+        engine().applyState(d.state);session.lastRevision=Number(d.revision||0);session.lastSnapshot=snap(engine().exportState());session.lastServerActiveHero=activeHeroFromState(d.state);saveRecoverySnapshot(d.state);updateTurnGuard();
       }
     }catch(e){if(e.status!==202)console.warn('online pull',e)}finally{session.syncBusy=false}
   }
@@ -112,7 +127,7 @@
       session.syncBusy=true;
       try{
         const d=await api(`/api/rooms/${session.code}/game/state`,{method:'POST',body:JSON.stringify({...auth(),baseRevision:session.lastRevision,state:local})});
-        session.lastRevision=Number(d.revision||session.lastRevision+1);session.lastSnapshot=localSnap;session.lastServerActiveHero=activeHeroFromState(local);if(side)session.lastSideSnapshot=snap(side);updateTurnGuard();
+        session.lastRevision=Number(d.revision||session.lastRevision+1);session.lastSnapshot=localSnap;session.lastServerActiveHero=activeHeroFromState(local);if(side)session.lastSideSnapshot=snap(side);saveRecoverySnapshot(local);updateTurnGuard();
       }catch(e2){console.warn('online push',e2);session.syncBusy=false;await pullGame(true);return}finally{session.syncBusy=false}
     }
     const sideNow=e.exportSideState?.(mine)||null;
@@ -122,7 +137,7 @@
         session.syncBusy=true;
         try{
           const d=await api(`/api/rooms/${session.code}/game/side`,{method:'POST',body:JSON.stringify({...auth(),side:sideNow})});
-          session.lastRevision=Number(d.revision||session.lastRevision+1);session.lastSideSnapshot=ss;
+          session.lastRevision=Number(d.revision||session.lastRevision+1);session.lastSideSnapshot=ss;saveRecoverySnapshot(e.exportState());
         }catch(err){console.warn('online side push',err)}finally{session.syncBusy=false}
       }
       if(sideNow.type!=='offturnInventory')return;
@@ -134,28 +149,28 @@
   function startGameSync(){clearInterval(session.gameTimer);session.gameTimer=setInterval(syncGame,650)}
   async function createRoom(){
     const name=$('netName').value.trim()||'Хозяин';showError('');
-    try{const d=await api('/api/rooms',{method:'POST',body:JSON.stringify({name})});Object.assign(session,{mode:'online',code:d.room.code,playerId:d.playerId,playerSecret:d.playerSecret,room:d.room});saveResumeSession();renderRoom();poll()}catch(e){showError(e.message)}
+    try{const d=await api('/api/rooms',{method:'POST',body:JSON.stringify({name})});Object.assign(session,{mode:'online',code:d.room.code,playerId:d.playerId,playerSecret:d.playerSecret,recoveryKey:d.room.recoveryKey||null,room:d.room});saveResumeSession();renderRoom();poll()}catch(e){showError(e.message)}
   }
   async function joinRoom(){
     const name=$('netName').value.trim()||'Игрок',code=$('netCodeInput').value.replace(/\D/g,'').slice(0,6);if(code.length!==6)return showError('Введите 6-значный код комнаты.');
-    showError('');try{const d=await api(`/api/rooms/${code}/join`,{method:'POST',body:JSON.stringify({name})});Object.assign(session,{mode:'online',code:d.room.code,playerId:d.playerId,playerSecret:d.playerSecret,room:d.room});saveResumeSession();renderRoom();poll()}catch(e){showError(e.message)}
+    showError('');try{const d=await api(`/api/rooms/${code}/join`,{method:'POST',body:JSON.stringify({name})});Object.assign(session,{mode:'online',code:d.room.code,playerId:d.playerId,playerSecret:d.playerSecret,recoveryKey:d.room.recoveryKey||null,room:d.room});saveResumeSession();renderRoom();poll()}catch(e){showError(e.message)}
   }
   async function selectHero(heroId){
-    try{const d=await api(`/api/rooms/${session.code}/select`,{method:'POST',body:JSON.stringify({...auth(),heroId})});session.room=d.room;saveResumeSession();renderRoom()}catch(e){showError(e.message);refresh()}
+    try{const d=await api(`/api/rooms/${session.code}/select`,{method:'POST',body:JSON.stringify({...auth(),heroId})});acceptRoom(d.room);renderRoom()}catch(e){showError(e.message);refresh()}
   }
   async function setRoomMode(hardMode){
-    try{const d=await api(`/api/rooms/${session.code}/mode`,{method:'POST',body:JSON.stringify({...auth(),hardMode:!!hardMode})});session.room=d.room;renderRoom()}catch(e){showError(e.message);refresh()}
+    try{const d=await api(`/api/rooms/${session.code}/mode`,{method:'POST',body:JSON.stringify({...auth(),hardMode:!!hardMode})});acceptRoom(d.room);renderRoom()}catch(e){showError(e.message);refresh()}
   }
   async function startRoom(){
-    try{const d=await api(`/api/rooms/${session.code}/start`,{method:'POST',body:JSON.stringify(auth())});session.room=d.room;saveResumeSession();renderRoom();await ensureOnlineGame()}catch(e){showError(e.message)}
+    try{const d=await api(`/api/rooms/${session.code}/start`,{method:'POST',body:JSON.stringify(auth())});acceptRoom(d.room);renderRoom();await ensureOnlineGame()}catch(e){showError(e.message)}
   }
   async function resumeRoom(){
     const saved=readResumeSession();if(!saved?.code||!saved?.playerId||!saved?.playerSecret)return showError('Нет сохранённого подключения.');
     showError('Подключаемся к сохранённой партии…');
     try{
-      const room=await api(`/api/rooms/${saved.code}?playerId=${encodeURIComponent(saved.playerId)}&playerSecret=${encodeURIComponent(saved.playerSecret)}`);const me=room.players?.find(p=>p.id===saved.playerId);if(!me){clearResumeSession();throw new Error('Сохранённый игрок больше не найден в этой комнате.')}
-      Object.assign(session,{mode:'online',code:saved.code,playerId:saved.playerId,playerSecret:saved.playerSecret,room});if($('netName'))$('netName').value=me.name||saved.name||'';saveResumeSession();renderRoom();poll();if(room.started)await ensureOnlineGame();showError('');
-    }catch(err){if(err.status===404||err.status===403)clearResumeSession();showError(`Не удалось продолжить партию: ${err.message}`)}
+      const d=await recoverSession(saved),room=d.room,me=room.players?.find(p=>p.id===saved.playerId);if(!me){clearResumeSession();throw new Error('Сохранённый игрок больше не найден в этой комнате.')}
+      Object.assign(session,{mode:'online',code:saved.code,playerId:saved.playerId,playerSecret:saved.playerSecret,recoveryKey:room.recoveryKey||saved.recoveryKey||session.recoveryKey,room});if($('netName'))$('netName').value=me.name||saved.name||'';saveResumeSession();renderRoom();poll();if(room.started)await ensureOnlineGame();showError(d.revived?'Партия восстановлена после перезапуска сервера.':'');
+    }catch(err){if(err.status===410||err.status===403)clearResumeSession();showError(`Не удалось продолжить партию: ${err.message}`)}
   }
   function localGame(){clearInterval(session.timer);clearInterval(session.gameTimer);overlay.hidden=true;document.body.classList.remove('net-lobby-open')}
 
@@ -163,8 +178,10 @@
     if(!session.gameEntered)return;
     const mine=myHeroId(),active=session.lastServerActiveHero||engine()?.currentPlayerId();if(!mine||mine===active)return;
     const t=e.target;if(!(t instanceof Element))return;
-    const sideMine=!!engine()?.sideInteractionActiveFor?.(mine),sharedDecision=!!engine()?.canOffturnSharedAction?.(mine);
+    const eng=engine(),sideMine=!!eng?.sideInteractionActiveFor?.(mine),sharedDecision=!!eng?.canOffturnSharedAction?.(mine),modalAllowed=!!eng?.canOffturnModalActionFor?.(mine);
     if(sharedDecision&&t.closest('#actionPanel'))return;
+    if(modalAllowed&&t.closest('#modal'))return;
+    if(t.closest('#combatHide,#combatJournalToggle,#combatRestoreButton'))return;
     if(sideMine&&t.closest('#modal,#sheetDrawer,#rollOverlay,#mobileHeroBtn,#mobileInventoryBtn'))return;
     if(t.closest('#mobileHeroBtn,#mobileInventoryBtn,#mobileJournalBtn,#inventoryBtn,#journalBtn,#sheetDrawer,#journalOverlay,.map-zoom-controls'))return;
     if(t.closest('#gameSection,#overlay,#modal,#rollOverlay')){e.preventDefault();e.stopImmediatePropagation();updateTurnGuard()}
