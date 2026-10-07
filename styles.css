@@ -497,3 +497,75 @@ body.game-running .combat-shell>.combat-dice-stage .combat-dice-detail{max-width
   body.game-running .combat-shell>.combat-dice-stage{height:116px!important;min-height:116px!important;max-height:116px!important}
   .combat-hide{min-width:78px;padding:4px 7px;font-size:8px}
 }
+
+/* v0.6.35 — стабильная центральная колонка боя, мобильные переключатели карты и компактная торговля */
+.map-highlight-trigger.map-highlight-active,
+[data-sheet-map-highlight].map-highlight-active,
+.map-highlight-trigger[aria-pressed="true"],
+[data-sheet-map-highlight][aria-pressed="true"]{
+  border-color:#b287ff!important;
+  background:#3a285a!important;
+  color:#f0e4ff!important;
+  box-shadow:0 0 0 1px rgba(178,135,255,.28) inset,0 0 14px rgba(145,88,220,.22)
+}
+
+@media (min-width:901px) and (pointer:fine){
+  /* Левую колонку во время боя больше не убираем: геометрия карты всегда одна и та же. */
+  body.game-running.combat-active .side-panel{display:block!important;visibility:visible!important}
+  body.game-running.combat-active .layout{
+    grid-template-columns:300px minmax(620px,1fr)!important;
+    padding-left:12px!important;
+    padding-right:calc(var(--sheet-w) + 12px)!important;
+  }
+  body.game-running.combat-active .side-panel #diceBlock,
+  body.game-running.combat-active .side-panel #actionPanel,
+  body.game-running.combat-active .side-panel #endTurnBtn{
+    pointer-events:none!important;
+    opacity:.46!important;
+  }
+  /* И владелец боя, и наблюдатель открываются строго в центральной области карты. */
+  body.game-running.combat-active .modal:has(.combat-shell){
+    top:154px!important;
+    bottom:0!important;
+    left:312px!important;
+    right:var(--sheet-w)!important;
+    padding:12px 16px 18px!important;
+    align-items:start!important;
+    justify-items:center!important;
+  }
+  body.game-running.combat-active .modal-card:has(.combat-shell){
+    width:min(820px,100%)!important;
+    max-width:100%!important;
+    height:calc(100vh - 174px)!important;
+    max-height:calc(100vh - 174px)!important;
+    min-height:0!important;
+    overflow:auto!important;
+  }
+  /* Кнопка восстановления боя тоже привязана к центру игровой колонки, а не всего экрана. */
+  body.game-running .combat-restore-button{
+    left:calc((100vw - var(--sheet-w) + 312px) / 2)!important;
+    transform:translateX(-50%)!important;
+  }
+  /* Окна торговли не вылезают под правый лист героя. */
+  body.game-running .modal-card:has(.player-trade-shell),
+  body.game-running .modal-card:has(#tradeRoleBuy),
+  body.game-running .modal-card:has(#tradeBuyerContinue),
+  body.game-running .modal-card:has(#tradeSellerAccept),
+  body.game-running .modal-card:has(#tradeBuyerAcceptFinal){
+    width:min(720px,100%)!important;
+    max-width:100%!important;
+    max-height:calc(100vh - 184px)!important;
+    overflow:auto!important;
+  }
+  .player-trade-shell .merchant-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .player-trade-shell .trade-price-field input{width:150px;max-width:45%}
+}
+@media (min-width:901px) and (max-width:1320px) and (pointer:fine){
+  body.game-running.combat-active .layout{grid-template-columns:270px minmax(560px,1fr)!important}
+  body.game-running.combat-active .modal:has(.combat-shell){left:282px!important}
+  body.game-running .combat-restore-button{left:calc((100vw - var(--sheet-w) + 282px) / 2)!important}
+}
+@media(max-width:900px), (pointer:coarse){
+  .player-trade-shell .merchant-grid{grid-template-columns:1fr!important}
+  .map-highlight-trigger,[data-sheet-map-highlight]{touch-action:manipulation}
+}

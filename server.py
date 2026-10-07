@@ -261,6 +261,7 @@ class Handler(SimpleHTTPRequestHandler):
                 owner_cur=current_players.get(owner)
                 if not owner_cur: return self._json(409, {'error':'Герой не найден в партии'})
                 mutable={'gold','maxHp','currentHp','statuses','statusTimers','statusTickedTurn','backpack','pendingItems','equipment','temporaryEffects','combatEffects','itemUsage','lockedItems','locationVisits','discoveredLocations','reexploreRiskHex','notes','stats','areaHealingCooldown','scoutBootsUsedTurn'}
+                changed_by_hero={}
                 for incoming in side.get('players') or []:
                     if not isinstance(incoming,dict): continue
                     hid=incoming.get('id'); cur=current_players.get(hid)
@@ -268,12 +269,48 @@ class Handler(SimpleHTTPRequestHandler):
                     # Помимо своего героя разрешаем менять только героя на том же гексе — это нужно для сделки между игроками.
                     if hid!=owner and cur.get('hex')!=owner_cur.get('hex'): continue
                     for key in mutable:
-                        if key in incoming: cur[key]=incoming[key]
+                        if key in incoming and cur.get(key)!=incoming[key]:
+                            cur[key]=incoming[key]
+                            changed_by_hero.setdefault(hid,{})[key]=incoming[key]
                 if isinstance(side.get('decks'),dict): game['decks']=side['decks']
                 if isinstance(side.get('locations'),dict): game['locations']=side['locations']
                 if isinstance(side.get('journal'),list):
                     incoming={'journal':side.get('journal')}; merge_journal(game,incoming); game['journal']=incoming['journal']
-                room['gameRevision']=int(room.get('gameRevision') or 0)+1; room['gameUpdatedAt']=int(time.time())
+                # Уведомление о построенной территории закрывает только построивший герой.
+                if 'territoryBuiltNotice' in side:
+                    existing_notice=game.get('territoryBuiltNotice')
+                    incoming_notice=side.get('territoryBuiltNotice')
+                    if isinstance(existing_notice,dict) and existing_notice.get('heroId')==owner:
+                        if incoming_notice is None or (isinstance(incoming_notice,dict) and incoming_notice.get('heroId')==owner):
+                            game['territoryBuiltNotice']=incoming_notice
+                # Сетевая торговля — двустороннее состояние. Менять её может только участник сделки.
+                if 'tradeDeal' in side:
+                    incoming_deal=side.get('tradeDeal')
+                    current_deal=game.get('tradeDeal')
+                    allowed=False
+                    if isinstance(incoming_deal,dict):
+                        participants=[incoming_deal.get('buyerId'),incoming_deal.get('sellerId')]
+                        current_rev=int(current_deal.get('rev') or 0) if isinstance(current_deal,dict) else -1
+                        incoming_rev=int(incoming_deal.get('rev') or 0)
+                        allowed=owner in participants and all(x in current_players for x in participants if x) and incoming_rev>=current_rev
+                        if allowed and incoming_deal.get('stage')=='closed': game['tradeDeal']=None
+                        elif allowed: game['tradeDeal']=incoming_deal
+                    elif incoming_deal is None and isinstance(current_deal,dict):
+                        allowed=owner in [current_deal.get('buyerId'),current_deal.get('sellerId')]
+                        if allowed: game['tradeDeal']=None
+                # Запоминаем только реально изменённые side-поля. Следующий full-state от другого
+                # героя не должен откатить инвентарь/торговлю назад из-за устаревшего снимка.
+                if changed_by_hero:
+                    overlays=room.setdefault('sidePlayerOverrides',{})
+                    deal_rev=int((side.get('tradeDeal') or {}).get('rev') or 0) if isinstance(side.get('tradeDeal'),dict) else 0
+                    for hid,changes in changed_by_hero.items():
+                        entry=overlays.setdefault(hid,{'fields':{},'dealRev':0})
+                        entry.setdefault('fields',{}).update(changes)
+                        if deal_rev: entry['dealRev']=max(int(entry.get('dealRev') or 0),deal_rev)
+                # Важно: side-sync НЕ меняет основную gameRevision. Иначе фоновая работа
+                # инвентаря/торговли создаёт 409 для активного игрока и теряются бой/переход хода.
+                # Клиенты всё равно видят side-изменения по сравнению снимка gameState.
+                room['gameUpdatedAt']=int(time.time())
                 return self._json(200, {'revision':room['gameRevision']})
         if p.endswith('/game/state') and p.startswith('/api/rooms/'):
             code=p.split('/')[-3]; pid=body.get('playerId'); secret=body.get('playerSecret'); game=body.get('state'); base=int(body.get('baseRevision') or 0)
@@ -286,7 +323,32 @@ class Handler(SimpleHTTPRequestHandler):
                 if not room.get('started') or room.get('gameState') is None: return self._json(409, {'error':'Сетевая партия ещё не готова'})
                 if base!=int(room.get('gameRevision') or 0):
                     return self._json(409, {'error':'Состояние партии уже изменилось','revision':room.get('gameRevision')})
-                merge_journal(room.get('gameState') or {}, game)
+                existing=room.get('gameState') or {}
+                account=authorized_player(room,pid,secret) or {}
+                actor=account.get('heroId')
+                existing_deal=existing.get('tradeDeal') if isinstance(existing,dict) else None
+                incoming_deal=game.get('tradeDeal') if isinstance(game,dict) else None
+                existing_deal_rev=int(existing_deal.get('rev') or 0) if isinstance(existing_deal,dict) else -1
+                incoming_deal_rev=int(incoming_deal.get('rev') or 0) if isinstance(incoming_deal,dict) else -1
+                # Если фоновая торговля успела продвинуться после последнего снимка активного игрока,
+                # сохраняем более свежую сделку, а не стираем её устаревшим full-state.
+                if existing_deal_rev>incoming_deal_rev:
+                    game['tradeDeal']=existing_deal
+                incoming_players={q.get('id'):q for q in game.get('players',[]) if isinstance(q,dict)}
+                overlays=room.get('sidePlayerOverrides') or {}
+                for hid,entry in list(overlays.items()):
+                    inc=incoming_players.get(hid)
+                    if not inc or not isinstance(entry,dict): continue
+                    overlay_deal_rev=int(entry.get('dealRev') or 0)
+                    # Свой full-state очищает старый обычный off-turn overlay. Торговый overlay
+                    # очищается только если клиент уже видел не менее свежую версию сделки.
+                    caught_up=(hid==actor and (not overlay_deal_rev or incoming_deal_rev>=overlay_deal_rev))
+                    if caught_up:
+                        overlays.pop(hid,None);continue
+                    for key,value in (entry.get('fields') or {}).items(): inc[key]=value
+                if overlays: room['sidePlayerOverrides']=overlays
+                else: room.pop('sidePlayerOverrides',None)
+                merge_journal(existing, game)
                 room['gameState']=game; room['gameRevision']=base+1; room['gameUpdatedAt']=int(time.time())
                 return self._json(200, {'revision':room['gameRevision']})
         return self._json(404, {'error':'Неизвестный запрос'})

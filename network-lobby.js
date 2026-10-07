@@ -4,11 +4,12 @@
   ];
   let session={mode:null,code:null,playerId:null,playerSecret:null,recoveryKey:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:''};
   const SESSION_KEY='rpg-online-session';
-  const RECOVERY_KEY='rpg-online-recovery-v0634';
+  const RECOVERY_KEY='rpg-online-recovery-v0635';
+  const LEGACY_RECOVERY_KEYS=['rpg-online-recovery-v0634'];
   const LEGACY_SESSION_KEYS=['rpg-online-session-v0632'];
   function saveResumeSession(){try{if(!session.code||!session.playerId||!session.playerSecret)return;localStorage.setItem(SESSION_KEY,JSON.stringify({code:session.code,playerId:session.playerId,playerSecret:session.playerSecret,recoveryKey:session.recoveryKey||session.room?.recoveryKey||null,name:myPlayer()?.name||$('netName')?.value||'',savedAt:Date.now()}));saveRecoverySnapshot();renderResumeButton()}catch{}}
   function readResumeSession(){try{const keys=[SESSION_KEY,...LEGACY_SESSION_KEYS];for(const k of keys){const raw=localStorage.getItem(k);if(raw){const v=JSON.parse(raw);if(v?.code&&v?.playerId&&v?.playerSecret){if(k!==SESSION_KEY)localStorage.setItem(SESSION_KEY,raw);return v}}}return null}catch{return null}}
-  function readRecoverySnapshot(){try{const raw=localStorage.getItem(RECOVERY_KEY);return raw?JSON.parse(raw):null}catch{return null}}
+  function readRecoverySnapshot(){try{for(const k of [RECOVERY_KEY,...LEGACY_RECOVERY_KEYS]){const raw=localStorage.getItem(k);if(raw){const v=JSON.parse(raw);if(k!==RECOVERY_KEY)localStorage.setItem(RECOVERY_KEY,raw);return v}}return null}catch{return null}}
   function saveRecoverySnapshot(stateOverride){try{
     if(!session.code||!session.playerId||!session.playerSecret||!session.room)return;
     const rkey=session.recoveryKey||session.room?.recoveryKey;if(!rkey)return;
@@ -17,7 +18,7 @@
     const room={code:session.room.code,started:!!session.room.started,createdAt:session.room.createdAt||Math.floor(Date.now()/1000),lastActiveAt:session.room.lastActiveAt||Math.floor(Date.now()/1000),hardMode:!!session.room.hardMode,gameRevision:Number(session.lastRevision||session.room.gameRevision||0),players:(session.room.players||[]).map(p=>({id:p.id,name:p.name,heroId:p.heroId||null,host:!!p.host}))};
     localStorage.setItem(RECOVERY_KEY,JSON.stringify({code:session.code,recoveryKey:rkey,playerId:session.playerId,playerSecret:session.playerSecret,lastActiveAt:Number(room.lastActiveAt||0),savedAt:Date.now(),revision:Number(session.lastRevision||room.gameRevision||0),room,state:st||null}));
   }catch{}}
-  function clearResumeSession(){try{localStorage.removeItem(SESSION_KEY);localStorage.removeItem(RECOVERY_KEY);for(const k of LEGACY_SESSION_KEYS)localStorage.removeItem(k)}catch{}renderResumeButton()}
+  function clearResumeSession(){try{localStorage.removeItem(SESSION_KEY);localStorage.removeItem(RECOVERY_KEY);for(const k of LEGACY_RECOVERY_KEYS)localStorage.removeItem(k);for(const k of LEGACY_SESSION_KEYS)localStorage.removeItem(k)}catch{}renderResumeButton()}
   function renderResumeButton(){const b=$('netResume');if(!b)return;const x=readResumeSession();b.hidden=!x?.code;b.textContent=x?.code?`Продолжить партию · код ${x.code}`:'Продолжить последнюю партию'}
   function setRoomCodeUi(){const b=$('turnOrderBanner');if(b){if(session.code)b.dataset.roomCode=session.code;else delete b.dataset.roomCode}window.__RPG_ROOM_CODE__=session.code||'';engine()?.refreshUI?.()}
   const $=id=>document.getElementById(id);
@@ -35,6 +36,7 @@
   function activeHeroFromState(st){return st?.order?.[st?.currentIndex??0]||null}
   function exported(){const e=engine();return e?e.exportState():null}
   function snap(st){try{return JSON.stringify(st)}catch{return ''}}
+  function sideSnap(e=engine(),heroId=myHeroId()){try{return snap(e?.exportSideState?.(heroId)||null)}catch{return ''}}
   function auth(){return{playerId:session.playerId,playerSecret:session.playerSecret}}
   function acceptRoom(room){session.room=room;if(room?.recoveryKey)session.recoveryKey=room.recoveryKey;saveResumeSession();return room}
   function validRecoveryFor(code){const x=readRecoverySnapshot();if(!x||String(x.code)!==String(code)||!x.recoveryKey)return null;const last=Number(x.lastActiveAt||0);if(!last||Math.floor(Date.now()/1000)-last>10800)return null;return x}
@@ -82,7 +84,7 @@
   }
   function enterGame(state,revision){
     const e=engine();if(!e||!state)return;
-    if(session.code){const q=$('turnOrderBanner');if(q)q.dataset.roomCode=session.code;window.__RPG_ROOM_CODE__=session.code}if(session.room?.recoveryKey)session.recoveryKey=session.room.recoveryKey;e.applyState(state);e.setLocalHeroId?.(myHeroId());session.gameEntered=true;session.lastRevision=Number(revision||0);session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(state);saveResumeSession();saveRecoverySnapshot(e.exportState());
+    if(session.code){const q=$('turnOrderBanner');if(q)q.dataset.roomCode=session.code;window.__RPG_ROOM_CODE__=session.code}if(session.room?.recoveryKey)session.recoveryKey=session.room.recoveryKey;e.applyState(state);e.setLocalHeroId?.(myHeroId());session.gameEntered=true;session.lastRevision=Number(revision||0);session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(state);session.lastSideSnapshot=sideSnap(e,myHeroId());saveResumeSession();saveRecoverySnapshot(e.exportState());
     overlay.hidden=true;document.body.classList.remove('net-lobby-open');updateTurnGuard();startGameSync();
   }
   async function ensureOnlineGame(){
@@ -112,9 +114,11 @@
     if(!session.gameEntered||session.syncBusy)return;
     session.syncBusy=true;
     try{
-      const d=await fetchGame();if(!d.ready)return;
-      if(force||Number(d.revision)>session.lastRevision){
-        engine().applyState(d.state);session.lastRevision=Number(d.revision||0);session.lastSnapshot=snap(engine().exportState());session.lastServerActiveHero=activeHeroFromState(d.state);saveRecoverySnapshot(d.state);updateTurnGuard();
+      const d=await fetchGame();if(!d.ready)return;const remoteRevision=Number(d.revision||0),remoteSnap=snap(d.state);
+      // Side-sync (инвентарь/торговля) больше не двигает основную ревизию партии,
+      // поэтому сравниваем не только revision, но и само серверное состояние.
+      if(force||remoteRevision>session.lastRevision||remoteSnap!==session.lastSnapshot){
+        const e=engine();e.applyState(d.state);session.lastRevision=remoteRevision;session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(d.state);session.lastSideSnapshot=sideSnap(e,myHeroId());saveRecoverySnapshot(d.state);updateTurnGuard();
       }
     }catch(e){if(e.status!==202)console.warn('online pull',e)}finally{session.syncBusy=false}
   }
@@ -127,7 +131,7 @@
       session.syncBusy=true;
       try{
         const d=await api(`/api/rooms/${session.code}/game/state`,{method:'POST',body:JSON.stringify({...auth(),baseRevision:session.lastRevision,state:local})});
-        session.lastRevision=Number(d.revision||session.lastRevision+1);session.lastSnapshot=localSnap;session.lastServerActiveHero=activeHeroFromState(local);if(side)session.lastSideSnapshot=snap(side);saveRecoverySnapshot(local);updateTurnGuard();
+        session.lastRevision=Number(d.revision||session.lastRevision+1);session.lastSnapshot=localSnap;session.lastServerActiveHero=activeHeroFromState(local);session.lastSideSnapshot=sideSnap(e,mine);saveRecoverySnapshot(local);updateTurnGuard();
       }catch(e2){console.warn('online push',e2);session.syncBusy=false;await pullGame(true);return}finally{session.syncBusy=false}
     }
     const sideNow=e.exportSideState?.(mine)||null;
@@ -137,16 +141,18 @@
         session.syncBusy=true;
         try{
           const d=await api(`/api/rooms/${session.code}/game/side`,{method:'POST',body:JSON.stringify({...auth(),side:sideNow})});
-          session.lastRevision=Number(d.revision||session.lastRevision+1);session.lastSideSnapshot=ss;saveRecoverySnapshot(e.exportState());
+          session.lastRevision=Number(d.revision??session.lastRevision);session.lastSideSnapshot=ss;saveRecoverySnapshot(e.exportState());
         }catch(err){console.warn('online side push',err)}finally{session.syncBusy=false}
       }
-      if(sideNow.type!=='offturnInventory')return;
-      await pullGame(true);return;
+      // После любого фонового изменения сразу забираем объединённое состояние сервера.
+      // Это одновременно доставляет торговые подтверждения и не даёт клиенту повторно
+      // отправлять только что полученный side-state.
+      await pullGame(false);return;
     }
     session.lastSideSnapshot='';
     await pullGame(false);
   }
-  function startGameSync(){clearInterval(session.gameTimer);session.gameTimer=setInterval(syncGame,650)}
+  function startGameSync(){clearInterval(session.gameTimer);session.gameTimer=setInterval(syncGame,400);setTimeout(syncGame,80)}
   async function createRoom(){
     const name=$('netName').value.trim()||'Хозяин';showError('');
     try{const d=await api('/api/rooms',{method:'POST',body:JSON.stringify({name})});Object.assign(session,{mode:'online',code:d.room.code,playerId:d.playerId,playerSecret:d.playerSecret,recoveryKey:d.room.recoveryKey||null,room:d.room});saveResumeSession();renderRoom();poll()}catch(e){showError(e.message)}
