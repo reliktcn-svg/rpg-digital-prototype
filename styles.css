@@ -569,3 +569,48 @@ body.game-running .combat-shell>.combat-dice-stage .combat-dice-detail{max-width
   .player-trade-shell .merchant-grid{grid-template-columns:1fr!important}
   .map-highlight-trigger,[data-sheet-map-highlight]{touch-action:manipulation}
 }
+
+
+/* v0.6.37 — торговля/Торговец строго в центральной игровой колонке */
+@media (min-width:901px) and (pointer:fine){
+  body.game-running .modal:has(.merchant-summary),
+  body.game-running .modal:has(.player-trade-shell),
+  body.game-running .modal:has(#tradeRoleBuy),
+  body.game-running .modal:has(#tradeBuyerContinue),
+  body.game-running .modal:has(#tradeSellerAccept),
+  body.game-running .modal:has(#tradeBuyerAcceptFinal){
+    top:154px!important;
+    bottom:0!important;
+    left:312px!important;
+    right:var(--sheet-w)!important;
+    padding:12px 16px 18px!important;
+    align-items:start!important;
+    justify-items:center!important;
+  }
+  body.game-running .modal-card:has(.merchant-summary),
+  body.game-running .modal-card:has(.player-trade-shell),
+  body.game-running .modal-card:has(#tradeRoleBuy),
+  body.game-running .modal-card:has(#tradeBuyerContinue),
+  body.game-running .modal-card:has(#tradeSellerAccept),
+  body.game-running .modal-card:has(#tradeBuyerAcceptFinal){
+    width:min(720px,100%)!important;
+    max-width:100%!important;
+    max-height:calc(100vh - 174px)!important;
+    margin:0!important;
+    overflow:auto!important;
+  }
+  .combat-enemy-effects{margin-top:8px;padding:6px 8px;border:1px solid #6b3d3d;border-radius:8px;background:#231718;font-size:11px;color:#ffb8a8}
+}
+@media (min-width:901px) and (max-width:1320px) and (pointer:fine){
+  body.game-running .modal:has(.merchant-summary),
+  body.game-running .modal:has(.player-trade-shell),
+  body.game-running .modal:has(#tradeRoleBuy),
+  body.game-running .modal:has(#tradeBuyerContinue),
+  body.game-running .modal:has(#tradeSellerAccept),
+  body.game-running .modal:has(#tradeBuyerAcceptFinal){
+    left:282px!important;
+  }
+}
+@media(max-width:900px), (pointer:coarse){
+  .combat-enemy-effects{margin-top:6px;padding:5px 7px;border:1px solid #6b3d3d;border-radius:8px;background:#231718;font-size:10px;color:#ffb8a8}
+}

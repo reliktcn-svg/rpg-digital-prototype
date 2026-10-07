@@ -1,4 +1,4 @@
-RPG Digital Prototype v0.6.36 — Online Flow Alpha
+RPG Digital Prototype v0.6.37 — Online Flow Alpha
 
 Публичная ветка: GitHub + Render.
 
