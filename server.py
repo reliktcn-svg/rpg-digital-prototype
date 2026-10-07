@@ -189,7 +189,7 @@ class Handler(SimpleHTTPRequestHandler):
                 current_players={q.get('id'):q for q in game.get('players',[]) if isinstance(q,dict)}
                 owner_cur=current_players.get(owner)
                 if not owner_cur: return self._json(409, {'error':'Герой не найден в партии'})
-                mutable={'gold','maxHp','currentHp','statuses','statusTimers','statusTickedTurn','backpack','pendingItems','equipment','temporaryEffects','combatEffects','itemUsage','locationVisits','discoveredLocations','reexploreRiskHex','notes','stats','areaHealingCooldown','scoutBootsUsedTurn'}
+                mutable={'gold','maxHp','currentHp','statuses','statusTimers','statusTickedTurn','backpack','pendingItems','equipment','temporaryEffects','combatEffects','itemUsage','lockedItems','locationVisits','discoveredLocations','reexploreRiskHex','notes','stats','areaHealingCooldown','scoutBootsUsedTurn'}
                 for incoming in side.get('players') or []:
                     if not isinstance(incoming,dict): continue
                     hid=incoming.get('id'); cur=current_players.get(hid)

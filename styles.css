@@ -402,3 +402,52 @@ body.game-running .modal-card:has(.combat-shell){max-height:calc(100vh - 102px)}
   .journal-filter{min-height:42px;font-size:12px}
   .net-mode-picker{grid-template-columns:1fr 1fr}
 }
+
+/* v0.6.32 — desktop overlay placement, room code, reconnect, simplified queue */
+.resume-game{background:#173322;border-color:#3f8e5d;color:#bff0ce}
+.resume-game:hover:not(:disabled){background:#1d402a}
+.turn-order-code{align-self:center;margin-left:auto;padding:4px 7px;border:1px solid #4a5360;border-radius:7px;background:#11161b;color:#aeb8c2;font-size:9px;letter-spacing:.08em;font-weight:900;white-space:nowrap}
+body.game-running #gameSection>.separator,
+body.game-running #gameSection>h3,
+body.game-running #initiativeList{display:none!important}
+
+/* На ПК все модальные окна работают внутри центральной области карты и начинаются ниже панели очереди + верхней шапки. */
+@media (min-width:901px) and (pointer:fine){
+  body.game-running .modal,
+  body.game-running .roll-overlay{
+    top:154px!important;
+    bottom:0!important;
+    left:312px!important;
+    right:var(--sheet-w)!important;
+    padding:14px 16px 18px!important;
+  }
+  body.game-running .modal:not(:has(.combat-shell)),
+  body.game-running .roll-overlay{place-items:center!important}
+  body.game-running .modal:has(.combat-shell){
+    top:154px!important;
+    left:312px!important;
+    right:var(--sheet-w)!important;
+    align-items:start!important;
+    justify-items:center!important;
+    padding-top:12px!important;
+  }
+  body.game-running .modal-card:has(.combat-shell){
+    max-height:calc(100vh - 174px)!important;
+  }
+  body.game-running .journal-overlay{
+    top:154px!important;
+    left:312px!important;
+    right:var(--sheet-w)!important;
+    bottom:0!important;
+  }
+}
+@media (min-width:901px) and (max-width:1320px) and (pointer:fine){
+  body.game-running .modal,
+  body.game-running .roll-overlay,
+  body.game-running .modal:has(.combat-shell),
+  body.game-running .journal-overlay{left:282px!important}
+}
+
+@media(max-width:900px), (pointer:coarse){
+  .turn-order-code{position:absolute;right:7px;top:calc(env(safe-area-inset-top,0px) + 2px);bottom:auto;margin:0;padding:2px 5px;font-size:7px;line-height:1.1;background:#0f1418;border-color:#39424c;z-index:2}
+}

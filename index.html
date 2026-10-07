@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <title>RPG Digital Prototype v0.6.31 Online Flow Alpha</title>
+  <title>RPG Digital Prototype v0.6.32 Online Flow Alpha</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -19,6 +19,7 @@
       <h2>Сетевая партия</h2>
       <div id="onlineHome">
         <label class="net-label">Ваше имя<input id="netName" maxlength="24" placeholder="Игрок" /></label>
+        <button id="netResume" class="resume-game wide" type="button" hidden>Продолжить последнюю партию</button>
         <button id="netCreate" class="primary wide" type="button">Создать комнату</button>
         <div class="net-or">или</div>
         <label class="net-label">Код комнаты<input id="netCodeInput" inputmode="numeric" maxlength="6" placeholder="000000" /></label>
@@ -48,7 +49,7 @@
   <header class="topbar">
     <div>
       <div class="eyebrow">RPG DIGITAL PROTOTYPE</div>
-      <h1>Прототип v0.6.31 · Online Flow Alpha</h1>
+      <h1>Прототип v0.6.32 · Online Flow Alpha</h1>
       <div class="header-tools">
         <button id="journalBtn" class="journal-top" type="button">Журнал</button>
       </div>

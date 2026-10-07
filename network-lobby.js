@@ -3,6 +3,13 @@
     ['warrior','Воин','#4c83ff'],['dwarf','Дворф','#d34b45'],['mage','Маг','#9d5cff'],['archer','Лучник','#4db76d'],['rogue','Разбойник','#444b55']
   ];
   let session={mode:null,code:null,playerId:null,playerSecret:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:''};
+  const SESSION_KEY='rpg-online-session';
+  const LEGACY_SESSION_KEYS=['rpg-online-session-v0632'];
+  function saveResumeSession(){try{if(!session.code||!session.playerId||!session.playerSecret)return;localStorage.setItem(SESSION_KEY,JSON.stringify({code:session.code,playerId:session.playerId,playerSecret:session.playerSecret,name:myPlayer()?.name||$('netName')?.value||'',savedAt:Date.now()}));renderResumeButton()}catch{}}
+  function readResumeSession(){try{const keys=[SESSION_KEY,...LEGACY_SESSION_KEYS];for(const k of keys){const raw=localStorage.getItem(k);if(raw){const v=JSON.parse(raw);if(v?.code&&v?.playerId&&v?.playerSecret){if(k!==SESSION_KEY)localStorage.setItem(SESSION_KEY,raw);return v}}}return null}catch{return null}}
+  function clearResumeSession(){try{localStorage.removeItem(SESSION_KEY);for(const k of LEGACY_SESSION_KEYS)localStorage.removeItem(k)}catch{}renderResumeButton()}
+  function renderResumeButton(){const b=$('netResume');if(!b)return;const x=readResumeSession();b.hidden=!x?.code;b.textContent=x?.code?`Продолжить партию · код ${x.code}`:'Продолжить последнюю партию'}
+  function setRoomCodeUi(){const b=$('turnOrderBanner');if(b){if(session.code)b.dataset.roomCode=session.code;else delete b.dataset.roomCode}window.__RPG_ROOM_CODE__=session.code||'';engine()?.refreshUI?.()}
   const $=id=>document.getElementById(id);
   const overlay=$('onlineLobby');
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -26,14 +33,14 @@
   }
   function updateTurnGuard(){
     if(!session.gameEntered)return;
-    const b=ensureTurnBanner(),mine=myHeroId(),active=session.lastServerActiveHero||engine()?.currentPlayerId(),isMine=!!mine&&active===mine;
+    const b=ensureTurnBanner(),mine=myHeroId(),active=session.lastServerActiveHero||engine()?.currentPlayerId(),isMine=!!mine&&active===mine;if(session.code){const q=$('turnOrderBanner');if(q&&q.dataset.roomCode!==session.code){q.dataset.roomCode=session.code;window.__RPG_ROOM_CODE__=session.code;engine()?.refreshUI?.()}else window.__RPG_ROOM_CODE__=session.code}
     document.body.classList.add('online-game');document.body.classList.toggle('online-not-my-turn',!isMine);
     b.hidden=false;b.classList.toggle('mine',isMine);
     b.innerHTML=isMine?`Ваш ход · <b>${esc(heroName(mine))}</b>`:`Сейчас ходит <b>${esc(heroName(active))}</b> · ваш герой: ${esc(heroName(mine))}`;
   }
   function showHome(){
     clearInterval(session.timer);clearInterval(session.gameTimer);session={mode:null,code:null,playerId:null,playerSecret:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:''};
-    $('onlineHome').hidden=false;$('onlineRoom').hidden=true;showError('');document.body.classList.remove('online-game','online-not-my-turn');const b=$('onlineTurnBanner');if(b)b.hidden=true;
+    $('onlineHome').hidden=false;$('onlineRoom').hidden=true;showError('');document.body.classList.remove('online-game','online-not-my-turn');const b=$('onlineTurnBanner');if(b)b.hidden=true;const q=$('turnOrderBanner');if(q)delete q.dataset.roomCode;window.__RPG_ROOM_CODE__='';renderResumeButton();
   }
   function renderRoom(){
     const r=session.room;if(!r)return;
@@ -60,7 +67,7 @@
   }
   function enterGame(state,revision){
     const e=engine();if(!e||!state)return;
-    e.applyState(state);e.setLocalHeroId?.(myHeroId());session.gameEntered=true;session.lastRevision=Number(revision||0);session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(state);
+    if(session.code){const q=$('turnOrderBanner');if(q)q.dataset.roomCode=session.code;window.__RPG_ROOM_CODE__=session.code}saveResumeSession();e.applyState(state);e.setLocalHeroId?.(myHeroId());session.gameEntered=true;session.lastRevision=Number(revision||0);session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(state);
     overlay.hidden=true;document.body.classList.remove('net-lobby-open');updateTurnGuard();startGameSync();
   }
   async function ensureOnlineGame(){
@@ -117,7 +124,8 @@
           session.lastRevision=Number(d.revision||session.lastRevision+1);session.lastSideSnapshot=ss;
         }catch(err){console.warn('online side push',err)}finally{session.syncBusy=false}
       }
-      return;
+      if(sideNow.type!=='offturnInventory')return;
+      await pullGame(true);return;
     }
     session.lastSideSnapshot='';
     await pullGame(false);
@@ -125,20 +133,28 @@
   function startGameSync(){clearInterval(session.gameTimer);session.gameTimer=setInterval(syncGame,650)}
   async function createRoom(){
     const name=$('netName').value.trim()||'Хозяин';showError('');
-    try{const d=await api('/api/rooms',{method:'POST',body:JSON.stringify({name})});Object.assign(session,{mode:'online',code:d.room.code,playerId:d.playerId,playerSecret:d.playerSecret,room:d.room});renderRoom();poll()}catch(e){showError(e.message)}
+    try{const d=await api('/api/rooms',{method:'POST',body:JSON.stringify({name})});Object.assign(session,{mode:'online',code:d.room.code,playerId:d.playerId,playerSecret:d.playerSecret,room:d.room});saveResumeSession();renderRoom();poll()}catch(e){showError(e.message)}
   }
   async function joinRoom(){
     const name=$('netName').value.trim()||'Игрок',code=$('netCodeInput').value.replace(/\D/g,'').slice(0,6);if(code.length!==6)return showError('Введите 6-значный код комнаты.');
-    showError('');try{const d=await api(`/api/rooms/${code}/join`,{method:'POST',body:JSON.stringify({name})});Object.assign(session,{mode:'online',code:d.room.code,playerId:d.playerId,playerSecret:d.playerSecret,room:d.room});renderRoom();poll()}catch(e){showError(e.message)}
+    showError('');try{const d=await api(`/api/rooms/${code}/join`,{method:'POST',body:JSON.stringify({name})});Object.assign(session,{mode:'online',code:d.room.code,playerId:d.playerId,playerSecret:d.playerSecret,room:d.room});saveResumeSession();renderRoom();poll()}catch(e){showError(e.message)}
   }
   async function selectHero(heroId){
-    try{const d=await api(`/api/rooms/${session.code}/select`,{method:'POST',body:JSON.stringify({...auth(),heroId})});session.room=d.room;renderRoom()}catch(e){showError(e.message);refresh()}
+    try{const d=await api(`/api/rooms/${session.code}/select`,{method:'POST',body:JSON.stringify({...auth(),heroId})});session.room=d.room;saveResumeSession();renderRoom()}catch(e){showError(e.message);refresh()}
   }
   async function setRoomMode(hardMode){
     try{const d=await api(`/api/rooms/${session.code}/mode`,{method:'POST',body:JSON.stringify({...auth(),hardMode:!!hardMode})});session.room=d.room;renderRoom()}catch(e){showError(e.message);refresh()}
   }
   async function startRoom(){
-    try{const d=await api(`/api/rooms/${session.code}/start`,{method:'POST',body:JSON.stringify(auth())});session.room=d.room;renderRoom();await ensureOnlineGame()}catch(e){showError(e.message)}
+    try{const d=await api(`/api/rooms/${session.code}/start`,{method:'POST',body:JSON.stringify(auth())});session.room=d.room;saveResumeSession();renderRoom();await ensureOnlineGame()}catch(e){showError(e.message)}
+  }
+  async function resumeRoom(){
+    const saved=readResumeSession();if(!saved?.code||!saved?.playerId||!saved?.playerSecret)return showError('Нет сохранённого подключения.');
+    showError('Подключаемся к сохранённой партии…');
+    try{
+      const room=await api(`/api/rooms/${saved.code}`);const me=room.players?.find(p=>p.id===saved.playerId);if(!me){clearResumeSession();throw new Error('Сохранённый игрок больше не найден в этой комнате.')}
+      Object.assign(session,{mode:'online',code:saved.code,playerId:saved.playerId,playerSecret:saved.playerSecret,room});if($('netName'))$('netName').value=me.name||saved.name||'';saveResumeSession();renderRoom();poll();if(room.started)await ensureOnlineGame();showError('');
+    }catch(err){if(err.status===404||err.status===403)clearResumeSession();showError(`Не удалось продолжить партию: ${err.message}`)}
   }
   function localGame(){clearInterval(session.timer);clearInterval(session.gameTimer);overlay.hidden=true;document.body.classList.remove('net-lobby-open')}
 
@@ -155,7 +171,7 @@
 
   window.addEventListener('rpg-side-interaction-change',e=>{if(!session.gameEntered)return;if(e.detail?.active){session.lastSideSnapshot=''}else{session.lastSideSnapshot='';setTimeout(()=>pullGame(true),80)}});
 
-  $('netCreate').onclick=createRoom;$('netJoin').onclick=joinRoom;$('netStart').onclick=startRoom;$('netBack').onclick=showHome;$('netLocal').onclick=localGame;
+  $('netCreate').onclick=createRoom;$('netJoin').onclick=joinRoom;$('netResume').onclick=resumeRoom;$('netStart').onclick=startRoom;$('netBack').onclick=showHome;$('netLocal').onclick=localGame;
   $('netCodeInput').addEventListener('input',e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,6));
   document.body.classList.add('net-lobby-open');overlay.hidden=false;showHome();
 })();

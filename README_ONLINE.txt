@@ -1,4 +1,4 @@
-RPG Digital Prototype v0.6.1 — Online Lobby Alpha
+RPG Digital Prototype v0.6.32 — Online Flow Alpha
 
 ЭТАП v0.6.1:
 - создание сетевой комнаты;
