@@ -89,7 +89,8 @@
   }
   async function refresh(){
     if(!session.code)return;
-    try{session.room=await api(`/api/rooms/${session.code}`);if(!session.gameEntered)renderRoom();if(session.room.started)await ensureOnlineGame()}catch(e){showError(e.message)}
+    const qs=session.playerId&&session.playerSecret?`?playerId=${encodeURIComponent(session.playerId)}&playerSecret=${encodeURIComponent(session.playerSecret)}`:'';
+    try{session.room=await api(`/api/rooms/${session.code}${qs}`);if(!session.gameEntered)renderRoom();if(session.room.started)await ensureOnlineGame()}catch(e){if(e.status===404){clearResumeSession()}showError(e.message)}
   }
   function poll(){clearInterval(session.timer);session.timer=setInterval(refresh,900)}
   async function pullGame(force=false){
@@ -152,7 +153,7 @@
     const saved=readResumeSession();if(!saved?.code||!saved?.playerId||!saved?.playerSecret)return showError('Нет сохранённого подключения.');
     showError('Подключаемся к сохранённой партии…');
     try{
-      const room=await api(`/api/rooms/${saved.code}`);const me=room.players?.find(p=>p.id===saved.playerId);if(!me){clearResumeSession();throw new Error('Сохранённый игрок больше не найден в этой комнате.')}
+      const room=await api(`/api/rooms/${saved.code}?playerId=${encodeURIComponent(saved.playerId)}&playerSecret=${encodeURIComponent(saved.playerSecret)}`);const me=room.players?.find(p=>p.id===saved.playerId);if(!me){clearResumeSession();throw new Error('Сохранённый игрок больше не найден в этой комнате.')}
       Object.assign(session,{mode:'online',code:saved.code,playerId:saved.playerId,playerSecret:saved.playerSecret,room});if($('netName'))$('netName').value=me.name||saved.name||'';saveResumeSession();renderRoom();poll();if(room.started)await ensureOnlineGame();showError('');
     }catch(err){if(err.status===404||err.status===403)clearResumeSession();showError(`Не удалось продолжить партию: ${err.message}`)}
   }

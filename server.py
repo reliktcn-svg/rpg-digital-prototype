@@ -5,6 +5,7 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 ROOT = os.path.dirname(os.path.abspath(__file__))
 ROOMS = {}
 LOCK = threading.RLock()
+ROOM_IDLE_TTL = max(30, int(os.environ.get('RPG_ROOM_IDLE_TTL', '120')))
 
 HERO_IDS = ['warrior','dwarf','mage','archer','rogue']
 
@@ -20,6 +21,20 @@ def room_code():
             if c not in ROOMS:
                 return c
 
+
+def touch_room(room):
+    room['lastActiveAt']=int(time.time())
+
+def cleanup_rooms(now=None):
+    # Комната живёт, пока хотя бы одно устройство продолжает heartbeat/polling.
+    # Если от всех игроков нет активности дольше TTL, партия считается закрытой
+    # и удаляется вместе с серверным снимком состояния.
+    now=int(now or time.time())
+    stale=[code for code,room in ROOMS.items() if now-int(room.get('lastActiveAt') or room.get('createdAt') or now)>ROOM_IDLE_TTL]
+    for code in stale:
+        ROOMS.pop(code,None)
+    return stale
+
 def public_room(room):
     return {
         'code': room['code'],
@@ -32,6 +47,7 @@ def public_room(room):
         'hardMode': bool(room.get('hardMode', False)),
         'gameReady': room.get('gameState') is not None,
         'gameRevision': int(room.get('gameRevision') or 0),
+        'roomIdleTtl': ROOM_IDLE_TTL,
     }
 
 def authorized_player(room, pid, secret):
@@ -76,6 +92,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         p=urllib.parse.urlparse(self.path)
+        with LOCK: cleanup_rooms()
         if p.path == '/api/health':
             return self._json(200, {'ok':True,'rooms':len(ROOMS)})
         if p.path.startswith('/api/rooms/') and p.path.endswith('/game'):
@@ -87,19 +104,23 @@ class Handler(SimpleHTTPRequestHandler):
                 room=ROOMS.get(code)
                 if not room: return self._json(404, {'error':'Комната не найдена'})
                 if not authorized_player(room,pid,secret): return self._json(403, {'error':'Нет доступа'})
+                touch_room(room)
                 if not room.get('started'): return self._json(409, {'error':'Партия ещё не началась'})
                 if room.get('gameState') is None: return self._json(202, {'ready':False,'revision':int(room.get('gameRevision') or 0)})
                 return self._json(200, {'ready':True,'revision':int(room.get('gameRevision') or 0),'state':room.get('gameState')})
         if p.path.startswith('/api/rooms/'):
-            code=p.path.split('/')[-1]
+            code=p.path.split('/')[-1]; q=urllib.parse.parse_qs(p.query)
+            pid=(q.get('playerId') or [''])[0]; secret=(q.get('playerSecret') or [''])[0]
             with LOCK:
                 room=ROOMS.get(code)
                 if not room: return self._json(404, {'error':'Комната не найдена'})
+                if pid and secret and authorized_player(room,pid,secret): touch_room(room)
                 return self._json(200, public_room(room))
         return super().do_GET()
 
     def do_POST(self):
         p=urllib.parse.urlparse(self.path).path
+        with LOCK: cleanup_rooms()
         body=self._body()
         if p == '/api/rooms':
             code=room_code(); pid=token(12); secret=token(24)
@@ -108,7 +129,7 @@ class Handler(SimpleHTTPRequestHandler):
                 ROOMS[code]={
                     'code':code,'createdAt':int(time.time()),'started':False,'hostId':pid,'hardMode':False,
                     'players':{pid:{'id':pid,'secret':secret,'name':name,'heroId':None,'host':True}},
-                    'gameState':None,'gameRevision':0,'gameUpdatedAt':None
+                    'gameState':None,'gameRevision':0,'gameUpdatedAt':None,'lastActiveAt':int(time.time())
                 }
                 data=public_room(ROOMS[code])
             return self._json(201, {'room':data,'playerId':pid,'playerSecret':secret})
@@ -121,7 +142,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if len(room['players'])>=5: return self._json(409, {'error':'В комнате уже 5 игроков'})
                 pid=token(12); secret=token(24)
                 room['players'][pid]={'id':pid,'secret':secret,'name':name,'heroId':None,'host':False}
-                data=public_room(room)
+                touch_room(room); data=public_room(room)
             return self._json(200, {'room':data,'playerId':pid,'playerSecret':secret})
         if p.endswith('/select') and p.startswith('/api/rooms/'):
             code=p.split('/')[-2]; pid=body.get('playerId'); secret=body.get('playerSecret'); hero=body.get('heroId')
@@ -131,6 +152,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if not room: return self._json(404, {'error':'Комната не найдена'})
                 pl=room['players'].get(pid)
                 if not pl or pl.get('secret')!=secret: return self._json(403, {'error':'Нет доступа'})
+                touch_room(room)
                 for q in room['players'].values():
                     if q['id']!=pid and q.get('heroId')==hero:
                         return self._json(409, {'error':'Этот герой уже занят'})
@@ -145,6 +167,7 @@ class Handler(SimpleHTTPRequestHandler):
                 pl=room['players'].get(pid)
                 if not pl or pl.get('secret')!=secret or pid!=room['hostId']:
                     return self._json(403, {'error':'Режим партии может менять только хозяин'})
+                touch_room(room)
                 if room.get('started'): return self._json(409, {'error':'После старта режим партии изменить нельзя'})
                 room['hardMode']=hard
                 data=public_room(room)
@@ -157,6 +180,7 @@ class Handler(SimpleHTTPRequestHandler):
                 pl=room['players'].get(pid)
                 if not pl or pl.get('secret')!=secret or pid!=room['hostId']:
                     return self._json(403, {'error':'Начать игру может только хозяин'})
+                touch_room(room)
                 players=list(room['players'].values())
                 if len(players)<2: return self._json(409, {'error':'Нужно минимум 2 игрока'})
                 if any(not q.get('heroId') for q in players): return self._json(409, {'error':'Не все игроки выбрали героя'})
@@ -171,6 +195,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if not room: return self._json(404, {'error':'Комната не найдена'})
                 pl=authorized_player(room,pid,secret)
                 if not pl or pid!=room.get('hostId'): return self._json(403, {'error':'Инициализировать партию может только хозяин'})
+                touch_room(room)
                 if not room.get('started'): return self._json(409, {'error':'Сначала запустите комнату'})
                 if room.get('gameState') is None:
                     room['gameState']=game; room['gameRevision']=1; room['gameUpdatedAt']=int(time.time())
@@ -182,6 +207,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if not room: return self._json(404, {'error':'Комната не найдена'})
                 account=authorized_player(room,pid,secret)
                 if not account: return self._json(403, {'error':'Нет доступа'})
+                touch_room(room)
                 game=room.get('gameState')
                 if not room.get('started') or not isinstance(game,dict): return self._json(409, {'error':'Сетевая партия ещё не готова'})
                 owner=side.get('ownerId')
@@ -211,6 +237,7 @@ class Handler(SimpleHTTPRequestHandler):
                 room=ROOMS.get(code)
                 if not room: return self._json(404, {'error':'Комната не найдена'})
                 if not authorized_player(room,pid,secret): return self._json(403, {'error':'Нет доступа'})
+                touch_room(room)
                 if not room.get('started') or room.get('gameState') is None: return self._json(409, {'error':'Сетевая партия ещё не готова'})
                 if base!=int(room.get('gameRevision') or 0):
                     return self._json(409, {'error':'Состояние партии уже изменилось','revision':room.get('gameRevision')})

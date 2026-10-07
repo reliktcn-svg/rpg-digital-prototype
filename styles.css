@@ -451,3 +451,36 @@ body.game-running #initiativeList{display:none!important}
 @media(max-width:900px), (pointer:coarse){
   .turn-order-code{position:absolute;right:7px;top:calc(env(safe-area-inset-top,0px) + 2px);bottom:auto;margin:0;padding:2px 5px;font-size:7px;line-height:1.1;background:#0f1418;border-color:#39424c;z-index:2}
 }
+
+
+/* v0.6.33 — бой без левой панели, центрирование по карте, номер комнаты в журнале */
+.journal-head #journalTitle{display:block;line-height:1.35}
+@media (min-width:901px) and (pointer:fine){
+  body.game-running.combat-active .side-panel{display:none!important}
+  body.game-running.combat-active .layout{
+    grid-template-columns:minmax(620px,1fr)!important;
+    padding-left:12px!important;
+    padding-right:calc(var(--sheet-w) + 12px)!important;
+  }
+  body.game-running.combat-active .modal:has(.combat-shell){
+    left:12px!important;
+    right:var(--sheet-w)!important;
+    top:154px!important;
+    bottom:0!important;
+    align-items:start!important;
+    justify-items:center!important;
+    padding:12px 16px 18px!important;
+  }
+  body.game-running.combat-active .modal-card:has(.combat-shell){
+    width:min(900px,96vw)!important;
+    max-width:calc(100vw - var(--sheet-w) - 48px)!important;
+  }
+}
+@media (min-width:901px) and (pointer:fine){
+  body.game-running.combat-active .modal,
+  body.game-running.combat-active .roll-overlay,
+  body.game-running.combat-active .journal-overlay{
+    left:12px!important;
+    right:var(--sheet-w)!important;
+  }
+}
