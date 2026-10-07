@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <title>RPG Digital Prototype v0.6.3 Online Flow Alpha · Patch 1</title>
+  <title>RPG Digital Prototype v0.6.31 Online Flow Alpha</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -29,6 +29,12 @@
         <div class="net-code-box"><span>КОД КОМНАТЫ</span><strong id="roomCode">------</strong><small id="roomWho"></small></div>
         <h3>Игроки</h3><div id="roomPlayers" class="net-players"></div>
         <h3>Выберите героя</h3><div id="netHeroPicker" class="net-hero-picker"></div>
+        <h3>Режим партии</h3>
+        <div class="net-mode-picker" aria-label="Режим партии">
+          <button id="netModeNormal" class="net-mode selected" type="button">Обычный</button>
+          <button id="netModeHard" class="net-mode" type="button">Сложный</button>
+        </div>
+        <div id="roomModeHint" class="hint net-mode-hint"></div>
         <div id="roomStatus" class="hint"></div>
         <button id="netStart" class="primary wide" type="button">Начать сетевую игру</button>
         <button id="netBack" class="ghost wide" type="button">Назад</button>
@@ -42,7 +48,7 @@
   <header class="topbar">
     <div>
       <div class="eyebrow">RPG DIGITAL PROTOTYPE</div>
-      <h1>Прототип v0.6.3 · Online Flow Alpha · Patch 1</h1>
+      <h1>Прототип v0.6.31 · Online Flow Alpha</h1>
       <div class="header-tools">
         <button id="journalBtn" class="journal-top" type="button">Журнал</button>
       </div>
@@ -102,7 +108,7 @@
         </div>
       </div>
       <div class="board-footer">
-        <span><b>Подсказка:</b> зелёные гексы доступны для движения. Значки на поле показывают постоянные локации и территории.</span>
+        <span><b>Подсказка:</b> зелёные гексы доступны для движения. Значки на поле показывают постоянные локации и территории. Зелёная галочка — очищенный свободный гекс; решётка — герой в Темнице.</span>
         <span id="hoverInfo">Гекс: —</span>
       </div>
     </section>
@@ -123,6 +129,10 @@
   <div id="journalOverlay" class="journal-overlay" hidden>
     <div class="journal-card">
       <div class="journal-head"><div><div class="eyebrow">RPG DIGITAL PROTOTYPE</div><b>Журнал партии</b></div><button id="journalClose" class="sheet-close" aria-label="Закрыть журнал">×</button></div>
+      <div class="journal-filters" role="group" aria-label="Фильтр журнала">
+        <button id="journalMine" class="journal-filter active" type="button">Мои действия</button>
+        <button id="journalAll" class="journal-filter" type="button">Все игроки</button>
+      </div>
       <div id="log" class="log journal-log"></div>
     </div>
   </div>

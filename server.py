@@ -29,6 +29,7 @@ def public_room(room):
             {'id':p['id'],'name':p['name'],'heroId':p.get('heroId'),'host':p.get('host',False)}
             for p in room['players'].values()
         ],
+        'hardMode': bool(room.get('hardMode', False)),
         'gameReady': room.get('gameState') is not None,
         'gameRevision': int(room.get('gameRevision') or 0),
     }
@@ -36,6 +37,20 @@ def public_room(room):
 def authorized_player(room, pid, secret):
     pl=room.get('players',{}).get(pid)
     return pl if pl and pl.get('secret')==secret else None
+
+def merge_journal(existing_game, incoming_game, limit=600):
+    existing = existing_game.get('journal', []) if isinstance(existing_game, dict) else []
+    incoming = incoming_game.get('journal', []) if isinstance(incoming_game, dict) else []
+    by_id = {}
+    for entry in list(existing) + list(incoming):
+        if not isinstance(entry, dict):
+            continue
+        key = str(entry.get('id') or f"legacy-{entry.get('ts','')}-{entry.get('time','')}-{entry.get('html','')}")
+        by_id[key] = entry
+    merged = sorted(by_id.values(), key=lambda e: (int(e.get('ts') or 0), str(e.get('id') or '')))[-limit:]
+    if isinstance(incoming_game, dict):
+        incoming_game['journal'] = merged
+    return merged
 
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -91,7 +106,7 @@ class Handler(SimpleHTTPRequestHandler):
             name=(body.get('name') or 'Хозяин').strip()[:24] or 'Хозяин'
             with LOCK:
                 ROOMS[code]={
-                    'code':code,'createdAt':int(time.time()),'started':False,'hostId':pid,
+                    'code':code,'createdAt':int(time.time()),'started':False,'hostId':pid,'hardMode':False,
                     'players':{pid:{'id':pid,'secret':secret,'name':name,'heroId':None,'host':True}},
                     'gameState':None,'gameRevision':0,'gameUpdatedAt':None
                 }
@@ -120,6 +135,18 @@ class Handler(SimpleHTTPRequestHandler):
                     if q['id']!=pid and q.get('heroId')==hero:
                         return self._json(409, {'error':'Этот герой уже занят'})
                 pl['heroId']=hero
+                data=public_room(room)
+            return self._json(200, {'room':data})
+        if p.endswith('/mode') and p.startswith('/api/rooms/'):
+            code=p.split('/')[-2]; pid=body.get('playerId'); secret=body.get('playerSecret'); hard=bool(body.get('hardMode'))
+            with LOCK:
+                room=ROOMS.get(code)
+                if not room: return self._json(404, {'error':'Комната не найдена'})
+                pl=room['players'].get(pid)
+                if not pl or pl.get('secret')!=secret or pid!=room['hostId']:
+                    return self._json(403, {'error':'Режим партии может менять только хозяин'})
+                if room.get('started'): return self._json(409, {'error':'После старта режим партии изменить нельзя'})
+                room['hardMode']=hard
                 data=public_room(room)
             return self._json(200, {'room':data})
         if p.endswith('/start') and p.startswith('/api/rooms/'):
@@ -173,6 +200,8 @@ class Handler(SimpleHTTPRequestHandler):
                         if key in incoming: cur[key]=incoming[key]
                 if isinstance(side.get('decks'),dict): game['decks']=side['decks']
                 if isinstance(side.get('locations'),dict): game['locations']=side['locations']
+                if isinstance(side.get('journal'),list):
+                    incoming={'journal':side.get('journal')}; merge_journal(game,incoming); game['journal']=incoming['journal']
                 room['gameRevision']=int(room.get('gameRevision') or 0)+1; room['gameUpdatedAt']=int(time.time())
                 return self._json(200, {'revision':room['gameRevision']})
         if p.endswith('/game/state') and p.startswith('/api/rooms/'):
@@ -185,6 +214,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if not room.get('started') or room.get('gameState') is None: return self._json(409, {'error':'Сетевая партия ещё не готова'})
                 if base!=int(room.get('gameRevision') or 0):
                     return self._json(409, {'error':'Состояние партии уже изменилось','revision':room.get('gameRevision')})
+                merge_journal(room.get('gameState') or {}, game)
                 room['gameState']=game; room['gameRevision']=base+1; room['gameUpdatedAt']=int(time.time())
                 return self._json(200, {'revision':room['gameRevision']})
         return self._json(404, {'error':'Неизвестный запрос'})

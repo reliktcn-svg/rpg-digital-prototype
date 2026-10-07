@@ -47,9 +47,13 @@
       return `<button class="net-hero ${mine?'selected':''}" data-hero="${id}" ${disabled||r.started?'disabled':''} style="--hc:${color}"><span class="net-hero-dot"></span><b>${name}</b><small>${disabled?'занят: '+esc(owner.name):mine?'выбран вами':'свободен'}</small></button>`;
     }).join('');
     $('netHeroPicker').querySelectorAll('[data-hero]').forEach(b=>b.onclick=()=>selectHero(b.dataset.hero));
-    const isHost=!!me?.host, ready=r.players.length>=2&&r.players.every(p=>p.heroId);
+    const isHost=!!me?.host, ready=r.players.length>=2&&r.players.every(p=>p.heroId),hard=!!r.hardMode;
+    const normalBtn=$('netModeNormal'),hardBtn=$('netModeHard');
+    if(normalBtn){normalBtn.classList.toggle('selected',!hard);normalBtn.disabled=!isHost||r.started;normalBtn.onclick=()=>setRoomMode(false)}
+    if(hardBtn){hardBtn.classList.toggle('selected',hard);hardBtn.disabled=!isHost||r.started;hardBtn.onclick=()=>setRoomMode(true)}
+    if($('roomModeHint'))$('roomModeHint').textContent=`Режим партии: ${hard?'СЛОЖНЫЙ':'ОБЫЧНЫЙ'}. ${isHost&&!r.started?'Выбор хозяина применяется ко всем героям и блокируется после старта.':'Изменить режим во время партии нельзя.'}`;
     $('netStart').hidden=!isHost;$('netStart').disabled=!ready||r.started;$('netStart').textContent=r.started?'Комната запущена':'Начать сетевую игру';
-    $('roomStatus').textContent=r.started?(r.gameReady?'Общая партия создана. Открываем карту…':'Комната запущена. Хозяин создаёт общую карту…'):ready?'Все готовы. Хозяин может начать.':`Игроков: ${r.players.length}/5. Нужно минимум 2 и каждый выбирает героя.`;
+    $('roomStatus').textContent=r.started?(r.gameReady?'Общая партия создана. Открываем карту…':'Комната запущена. Хозяин создаёт общую карту…'):ready?`Все готовы. Хозяин может начать · ${hard?'сложный':'обычный'} режим.`:`Игроков: ${r.players.length}/5. Нужно минимум 2 и каждый выбирает героя.`;
   }
   async function fetchGame(){
     return api(`/api/rooms/${session.code}/game?playerId=${encodeURIComponent(session.playerId)}&playerSecret=${encodeURIComponent(session.playerSecret)}`);
@@ -70,7 +74,7 @@
     const me=myPlayer();
     if(me?.host&&!session.gameEntered){
       try{
-        const ids=session.room.players.map(p=>p.heroId).filter(Boolean),initial=e.startWithHeroes(ids);
+        const ids=session.room.players.map(p=>p.heroId).filter(Boolean),initial=e.startWithHeroes(ids,{hardMode:!!session.room.hardMode});
         const d=await api(`/api/rooms/${session.code}/game/init`,{method:'POST',body:JSON.stringify({...auth(),state:initial})});
         enterGame(d.state,d.revision);
       }catch(err){showError(err.message)}
@@ -129,6 +133,9 @@
   }
   async function selectHero(heroId){
     try{const d=await api(`/api/rooms/${session.code}/select`,{method:'POST',body:JSON.stringify({...auth(),heroId})});session.room=d.room;renderRoom()}catch(e){showError(e.message);refresh()}
+  }
+  async function setRoomMode(hardMode){
+    try{const d=await api(`/api/rooms/${session.code}/mode`,{method:'POST',body:JSON.stringify({...auth(),hardMode:!!hardMode})});session.room=d.room;renderRoom()}catch(e){showError(e.message);refresh()}
   }
   async function startRoom(){
     try{const d=await api(`/api/rooms/${session.code}/start`,{method:'POST',body:JSON.stringify(auth())});session.room=d.room;renderRoom();await ensureOnlineGame()}catch(e){showError(e.message)}
