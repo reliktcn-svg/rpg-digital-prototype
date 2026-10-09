@@ -1,4 +1,4 @@
-RPG Digital Prototype v0.6.37 Online Flow Alpha
+RPG Digital Prototype v0.6.38 Online Flow Alpha
 Тайники: редакция v0.53
 
 Основа: полностью играбельная v0.5.19.

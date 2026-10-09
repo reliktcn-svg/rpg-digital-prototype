@@ -614,3 +614,105 @@ body.game-running .combat-shell>.combat-dice-stage .combat-dice-detail{max-width
 @media(max-width:900px), (pointer:coarse){
   .combat-enemy-effects{margin-top:6px;padding:5px 7px;border:1px solid #6b3d3d;border-radius:8px;background:#231718;font-size:10px;color:#ffb8a8}
 }
+
+/* v0.6.38 — окна результата/после боя центрируются в центральной колонке карты.
+   Пока победа ожидает подтверждения, body.combat-active остаётся включённым:
+   старое правило раздвигало overlay до левого края (12px) и смещало окно. */
+@media (min-width:901px) and (pointer:fine){
+  body.game-running #rollOverlay.battle-results-popup,
+  body.game-running #modal.post-combat-prompt{
+    position:fixed!important;
+    top:154px!important;
+    bottom:0!important;
+    left:312px!important;
+    right:var(--sheet-w)!important;
+    padding:12px 16px 18px!important;
+    display:grid;
+    place-items:center!important;
+    z-index:550;
+  }
+  body.game-running #rollOverlay.battle-results-popup .roll-popup-card{
+    width:min(440px,100%);
+    min-height:320px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    margin:0;
+  }
+  #rollOverlay.battle-results-popup .roll-popup-main{margin:0}
+  #rollOverlay.battle-results-popup .roll-popup-detail{margin:0 0 6px}
+  body.game-running #modal.post-combat-prompt .modal-card{
+    width:min(440px,100%)!important;
+    max-width:100%!important;
+    min-height:320px;
+    max-height:calc(100vh - 184px)!important;
+    margin:0!important;
+    padding:24px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:auto;
+  }
+  #modal.post-combat-prompt #modalContent{width:100%;text-align:center}
+  #modal.post-combat-prompt .modal-actions{justify-content:center}
+}
+@media (min-width:901px) and (max-width:1320px) and (pointer:fine){
+  body.game-running #rollOverlay.battle-results-popup,
+  body.game-running #modal.post-combat-prompt{left:282px!important}
+}
+
+/* Мобильная шапка боя: только режим/наблюдение, раунд и скрытие.
+   Фиксируем три колонки: метки никогда не растягиваются до круглых блоков
+   и не накладываются одна на другую на узком телефоне. */
+@media (max-width:900px), (pointer:coarse){
+  body.game-running .combat-summary{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto auto;
+    align-items:center;
+    column-gap:6px;
+    row-gap:0;
+    width:100%;
+    min-width:0;
+  }
+  body.game-running .combat-summary .combat-mode-badge{
+    display:flex;
+    align-items:center;
+    min-width:0;
+    max-width:100%;
+    min-height:37px;
+    padding:5px 8px;
+    line-height:1.3;
+    border-radius:10px;
+    font-size:9px;
+    white-space:normal;
+    overflow-wrap:normal;
+  }
+  body.game-running .combat-summary .combat-pill{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-width:59px;
+    width:max-content;
+    min-height:37px;
+    padding:6px 7px;
+    border-radius:10px;
+    line-height:1.2;
+    font-size:9px;
+    white-space:nowrap;
+  }
+  body.game-running .combat-summary .combat-hide{
+    justify-self:end;
+    margin:0;
+    min-width:76px;
+    min-height:42px;
+    padding:6px 7px;
+    font-size:9px;
+    white-space:nowrap;
+  }
+}
+/* Явный приоритет hidden: служебное display:grid для центрирования не
+   должно оставлять окно видимым после закрытия. */
+body.game-running #rollOverlay[hidden],
+body.game-running #modal[hidden]{display:none!important}

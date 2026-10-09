@@ -1,4 +1,4 @@
-RPG Digital Prototype v0.6.37 — Online Flow Alpha
+RPG Digital Prototype v0.6.38 — Online Flow Alpha
 
 Эта версия продолжает v0.6.1 Internet Lobby Alpha.
 
