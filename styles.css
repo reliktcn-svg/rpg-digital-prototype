@@ -716,3 +716,59 @@ body.game-running .combat-shell>.combat-dice-stage .combat-dice-detail{max-width
    должно оставлять окно видимым после закрытия. */
 body.game-running #rollOverlay[hidden],
 body.game-running #modal[hidden]{display:none!important}
+
+/* v0.6.40 — компактная однострочная шапка боя на телефоне */
+@media (max-width:900px), (pointer:coarse){
+  body.game-running .combat-summary{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto auto!important;
+    grid-template-rows:minmax(40px,auto)!important;
+    align-items:center!important;
+    gap:5px!important;
+    flex-wrap:nowrap!important;
+    width:100%;
+  }
+  body.game-running .combat-summary>:not(.combat-mode-badge):not(.combat-pill):not(.combat-hide){display:none!important}
+  body.game-running .combat-summary .combat-mode-badge{
+    grid-column:1;grid-row:1;min-width:0;min-height:40px;
+    width:100%;padding:5px 7px;line-height:1.2;
+    font-size:clamp(8px,2.2vw,10px);letter-spacing:0;
+    border-radius:9px;white-space:normal;overflow:hidden;
+    overflow-wrap:anywhere;max-height:46px;
+  }
+  body.game-running .combat-summary .combat-pill{
+    grid-column:2;grid-row:1;min-width:0;min-height:40px;
+    width:auto;padding:5px 7px;font-size:10px;border-radius:9px;
+    white-space:nowrap;
+  }
+  body.game-running .combat-summary .combat-hide{
+    grid-column:3;grid-row:1;justify-self:end;margin:0;
+    min-width:78px;min-height:40px;
+    padding:6px 8px;font-size:10px;border-radius:9px;
+    white-space:nowrap;
+  }
+}
+/* Во всех этапах торговли визуально отделяем надетые вещи от рюкзака. */
+.trade-backpack-divider{
+  grid-column:1/-1;display:flex;align-items:center;gap:10px;
+  margin:6px 0 3px;color:#b8c9d7;font-size:12px;font-weight:900;
+  letter-spacing:.05em;white-space:nowrap;
+}
+.trade-backpack-divider::before,.trade-backpack-divider::after{
+  content:"";height:1px;flex:1 1 auto;min-width:6px;
+  background:linear-gradient(90deg,#466377,#8196a7,#466377);
+}
+
+/* v0.6.41: center result windows within the actual middle column. */
+@media(min-width:901px) and (pointer:fine){
+ body.game-running #rollOverlay.battle-results-popup,
+ body.game-running #modal.post-combat-prompt{
+   left:calc(312px + 0px)!important;right:var(--sheet-w)!important;top:150px!important;bottom:0!important;
+   padding:12px!important;place-items:center!important;
+ }
+ body.game-running #rollOverlay.battle-results-popup .roll-popup-card,
+ body.game-running #modal.post-combat-prompt .modal-card{margin:auto!important;max-width:min(440px,100%)!important}
+}
+@media(min-width:901px) and (max-width:1320px) and (pointer:fine){
+ body.game-running #rollOverlay.battle-results-popup,body.game-running #modal.post-combat-prompt{left:312px!important}
+}

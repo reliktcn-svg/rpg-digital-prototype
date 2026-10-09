@@ -117,6 +117,12 @@
       const d=await fetchGame();if(!d.ready)return;const remoteRevision=Number(d.revision||0),remoteSnap=snap(d.state);
       // Side-sync (инвентарь/торговля) больше не двигает основную ревизию партии,
       // поэтому сравниваем не только revision, но и само серверное состояние.
+      // A local sale/equip/loot change has not yet been acknowledged by the server.
+      // Do not replace the local snapshot with an older poll response.
+      const current=engine()?.exportState?.();
+      const unsent=current&&snap(current)!==session.lastSnapshot;
+      const dirtySide=sideSnap(engine(),myHeroId())!==session.lastSideSnapshot;
+      if(unsent&&!force&&(session.lastServerActiveHero===myHeroId()||engine()?.canOffturnSharedAction?.(myHeroId())||dirtySide))return;
       if(force||remoteRevision>session.lastRevision||remoteSnap!==session.lastSnapshot){
         const e=engine();e.applyState(d.state);session.lastRevision=remoteRevision;session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(d.state);session.lastSideSnapshot=sideSnap(e,myHeroId());saveRecoverySnapshot(d.state);updateTurnGuard();
       }
@@ -133,6 +139,9 @@
         const d=await api(`/api/rooms/${session.code}/game/state`,{method:'POST',body:JSON.stringify({...auth(),baseRevision:session.lastRevision,state:local})});
         session.lastRevision=Number(d.revision||session.lastRevision+1);session.lastSnapshot=localSnap;session.lastServerActiveHero=activeHeroFromState(local);session.lastSideSnapshot=sideSnap(e,mine);saveRecoverySnapshot(local);updateTurnGuard();
       }catch(e2){console.warn('online push',e2);session.syncBusy=false;await pullGame(true);return}finally{session.syncBusy=false}
+      // User made more sales/moves while the request was in flight.
+      // Keep the local state intact and commit it on the next tick.
+      if(snap(e.exportState())!==localSnap){queueMicrotask(syncGame);return;}
     }
     const sideNow=e.exportSideState?.(mine)||null;
     if(sideNow){
@@ -152,6 +161,8 @@
     session.lastSideSnapshot='';
     await pullGame(false);
   }
+  let localMutationTimer=null;
+  window.addEventListener('rpg-local-mutation',()=>{if(!session.gameEntered)return;clearTimeout(localMutationTimer);localMutationTimer=setTimeout(syncGame,30)});
   function startGameSync(){clearInterval(session.gameTimer);session.gameTimer=setInterval(syncGame,400);setTimeout(syncGame,80)}
   async function createRoom(){
     const name=$('netName').value.trim()||'Хозяин';showError('');

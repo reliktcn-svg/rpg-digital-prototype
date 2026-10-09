@@ -54,11 +54,6 @@
     kingdom:{'Таверна':4,'Торговец':4,'Святилище':4,'Древний портал':4},
     cursed:{'Таверна':2,'Торговец':2,'Святилище':2,'Древний портал':2}
   };
-  const LOCATION_DISTANCE_CHANCE={
-    different:{1:50,2:60,3:70,4:75,5:80,6:85,7:90,8:95,9:98,10:100},
-    same:{1:5,2:10,3:20,4:25,5:30,6:40,7:50,8:70,9:90,10:100},
-    portal:{1:.5,2:2,3:5,4:8,5:10,6:12,7:15,8:20,9:25,10:30,11:40,12:50,13:100}
-  };
   const NEGATIVE_EFFECT_INFO={
     'Страх':'−1 МУД. В следующем бою враг атакует первым. Снимается эффектами очищения или в Святилище.',
     'Проклятие':'−1 СИЛ, ЛОВ, МУД и ХАР. Кубик лечения уменьшается на одну ступень: D12→D10→D8→D6→D4→1.',
@@ -116,26 +111,47 @@
   function shuffled(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
   function isPermanentLocationCardId(id){return CARD_BY_ID[Number(id)]?.category==='Постоянная локация'}
   function stripPermanentLocationCardsFromDecks(decks){if(!decks)return;for(const d of Object.values(decks)){if(!d)continue;d.draw=(d.draw||[]).filter(id=>!isPermanentLocationCardId(id));d.discard=(d.discard||[]).filter(id=>!isPermanentLocationCardId(id))}}
+  // Эти карты НИКОГДА не выдаются из внешних тайников, даже если старая
+  // сетевая партия сохранила их там до исправления правил.
+  const HEART_ONLY_LOOT_IDS=new Set([193,296,300,...CARDS.filter(c=>c.category==='Наёмники'&&/(эпичес|легендар|элитн)/i.test(c.fields?.['Редкость']||'')).map(c=>c.id)]);
+  function heartOnlyLoot(card){return !!card&&HEART_ONLY_LOOT_IDS.has(Number(card.id))}
   function normalizeLegendaryHeartLoot(decks){
     if(!decks?.lootOuter||!decks?.lootHeart)return;
-    // Эпические наёмники №325–328 доступны только из тайников Сердца тьмы.
-    // Уже полученных персонажами наёмников не трогаем — переносим лишь карты из колод.
-    let moved=false;
-    for(const id of [296,300,325,326,327,328]){
+    for(const id of HEART_ONLY_LOOT_IDS){
       let found=false;
-      for(const part of ['draw','discard']){const arr=decks.lootOuter[part]||[];const before=arr.length;decks.lootOuter[part]=arr.filter(x=>Number(x)!==id);if(decks.lootOuter[part].length<before)found=true}
+      for(const part of ['draw','discard']){
+        const source=decks.lootOuter[part]||[];
+        const filtered=source.filter(x=>Number(x)!==id);
+        if(filtered.length!==source.length){decks.lootOuter[part]=filtered;found=true}
+      }
       const already=['draw','discard'].some(part=>(decks.lootHeart[part]||[]).some(x=>Number(x)===id));
-      if(found&&!already){decks.lootHeart.draw.push(id);moved=true}
+      // Не создаём дубликат: если карта уже у героя, она не лежит ни в одной колоде.
+      if(found&&!already)decks.lootHeart.draw.push(id);
     }
-    // При сетевой синхронизации не перемешиваем уже готовую колоду повторно.
-    if(moved)decks.lootHeart.draw=shuffled(decks.lootHeart.draw||[]);
+    // Без повторного shuffle: все клиенты одной сетевой комнаты должны получать
+    // одинаковую миграцию, а не разные случайные порядки колоды.
+
+  }
+  // Старые локации могут хранить уже выбранного запрещённого наёмника.
+  function normalizeTavernMercenaries(){
+    for(const [hex,loc] of Object.entries(state.locations||{})){
+      if(loc?.name!=='Таверна'||!loc.tavernMercenaryId)continue;
+      const merc=itemCard(loc.tavernMercenaryId),region=MAP.hexes?.[hex]?.region;
+      if(merc&&itemType(merc)==='наёмник'&&region!=='cursed'&&
+         (heartOnlyLoot(merc)||merc.deck==='Тайники Сердца тьмы')){
+        const heart=state.decks?.lootHeart;
+        if(heart&&!['draw','discard'].some(part=>(heart[part]||[]).some(id=>Number(id)===merc.id)))heart.draw.push(merc.id);
+        delete loc.tavernMercenaryId;delete loc.tavernMercenaryDeckKey;
+        loc.tavernNeedsRestock=false;
+      }
+    }
   }
   function initialDecks(){
-    const o={}; for(const k of ['exploreOuter','exploreHeart','lootOuter','lootHeart']) o[k]={draw:shuffled((DECK_IDS[k]||[]).filter(id=>!isPermanentLocationCardId(id))),discard:[]}; return o;
+    const o={}; for(const k of ['exploreOuter','exploreHeart','lootOuter','lootHeart']) o[k]={draw:shuffled((DECK_IDS[k]||[]).filter(id=>!isPermanentLocationCardId(id)&&!(k==='lootOuter'&&HEART_ONLY_LOOT_IDS.has(Number(id))))),discard:[]}; return o;
   }
   function freshState(){return {
-    version:'0.6.38', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
-    decks:initialDecks(), cleaned:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, tradeDeal:null, dungeonEntryNotice:null, territoryBuiltNotice:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:2, sharedDifficulty:null, journal:[]
+    version:'0.6.41', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
+    decks:initialDecks(), cleaned:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, tradeDeal:null, dungeonEntryNotice:null, territoryBuiltNotice:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:3, sharedDifficulty:null, journal:[]
   };}
   let state=freshState();
   let sideInteraction=null;
@@ -194,40 +210,30 @@
     if(a===b)return 0;const key=a<b?`${a}|${b}`:`${b}|${a}`;if(HEX_DISTANCE_CACHE.has(key))return HEX_DISTANCE_CACHE.get(key);
     const seen=new Set([a]),q=[[a,0]];while(q.length){const [h,d]=q.shift();for(const n of MAP.hexes[h]?.neighbors||[]){if(n===b){HEX_DISTANCE_CACHE.set(key,d+1);return d+1}if(!seen.has(n)){seen.add(n);q.push([n,d+1])}}}HEX_DISTANCE_CACHE.set(key,999);return 999;
   }
-  function locationSpacingChance(a,b,d){
-    let table;if(a==='Древний портал'&&b==='Древний портал')table=LOCATION_DISTANCE_CHANCE.portal;else if(a===b)table=LOCATION_DISTANCE_CHANCE.same;else table=LOCATION_DISTANCE_CHANCE.different;
-    const keys=Object.keys(table).map(Number).sort((x,y)=>x-y);for(const k of keys)if(d<=k)return Number(table[k]);return 100;
-  }
   function locationCandidateEligible(hex,region){
-    const h=MAP.hexes[hex];if(!h||h.region!==region||hex===MAP.startHex||hex===MAP.bossHex)return false;if(state.locations[hex]||state.territories[hex])return false;if(state.cleaned?.[hex])return false;if((state.players||[]).some(p=>p.hex===hex))return false;return true;
-  }
-  function locationCandidateAccepted(hex,name){
-    let cap=100;for(const [otherHex,loc] of Object.entries(state.locations||{}))cap=Math.min(cap,locationSpacingChance(name,loc.name,mapHexDistance(hex,otherHex)));return Math.random()*100<=cap;
-  }
-  function missingLocationTokens(region){
-    const wanted=PERMANENT_LOCATION_COUNTS[region]||{},tokens=[];for(const [name,count] of Object.entries(wanted)){const have=Object.entries(state.locations||{}).filter(([hex,l])=>MAP.hexes[hex]?.region===region&&l.name===name).length;for(let i=have;i<count;i++)tokens.push(name)}return tokens;
-  }
-  function placePermanentLocationsInRegion(region){
-    const missing=missingLocationTokens(region);if(!missing.length)return true;
-    const baseline=new Set(Object.keys(state.locations||{}));
-    for(let attempt=0;attempt<250;attempt++){
-      for(const hex of Object.keys(state.locations||{}))if(!baseline.has(hex))delete state.locations[hex];
-      let ok=true;for(const name of shuffled(missing)){
-        const candidates=shuffled(Object.keys(MAP.hexes).filter(hex=>locationCandidateEligible(hex,region)));let chosen=null;
-        for(const hex of candidates)if(locationCandidateAccepted(hex,name)){chosen=hex;break}
-        if(!chosen){ok=false;break}
-        state.locations[chosen]={name,cardId:LOCATION_CARD_ID[name],generated:true};
-      }
-      if(ok)return true;
-    }
-    for(const hex of Object.keys(state.locations||{}))if(!baseline.has(hex))delete state.locations[hex];
-    return false;
+    const h=MAP.hexes[hex];
+    if(!h||h.region!==region||hex===MAP.startHex||hex===MAP.bossHex)return false;
+    if(state.locations[hex]||state.territories[hex]||state.cleaned?.[hex])return false;
+    if((state.players||[]).some(p=>p.hex===hex))return false;
+    return true;
   }
   function generatePermanentLocations({preserve=true}={}){
-    stripPermanentLocationCardsFromDecks(state.decks);normalizeLegendaryHeartLoot(state.decks);if(!preserve)state.locations={};
-    const okKingdom=placePermanentLocationsInRegion('kingdom'),okCursed=placePermanentLocationsInRegion('cursed');state.locationPlacementVersion=2;
-    if(!okKingdom||!okCursed)console.warn('Не удалось полностью разместить постоянные локации по заданным вероятностям.',{okKingdom,okCursed});
-    return okKingdom&&okCursed;
+    stripPermanentLocationCardsFromDecks(state.decks);
+    normalizeLegendaryHeartLoot(state.decks);
+    if(!preserve)state.locations={};
+    const placement=window.RPG_LOCATION_PLACEMENT?.plan({
+      map:MAP,counts:PERMANENT_LOCATION_COUNTS,existing:state.locations,
+      eligible:locationCandidateEligible,distance:mapHexDistance,attempts:14
+    });
+    if(!placement?.ok){
+      console.error('Не удалось распределить постоянные локации по пространственным зонам.',placement?.reason);
+      return false;
+    }
+    for(const [hex,loc] of Object.entries(placement.placements)){
+      state.locations[hex]={name:loc.name,cardId:LOCATION_CARD_ID[loc.name],generated:true};
+    }
+    state.locationPlacementVersion=3;
+    return true;
   }
   function locationVisibleToPlayer(p,hex){if(!state.locations?.[hex])return false;if(!p)return true;ensurePlayerModel(p);return !playerHardMode(p)||!!p.discoveredLocations?.[hex]}
   function revealLocationToPlayer(p,hex){const loc=state.locations?.[hex];if(!p||!loc)return false;ensurePlayerModel(p);if(p.discoveredLocations[hex])return false;p.discoveredLocations[hex]=true;log(`${p.name} открывает постоянную локацию на ${hex}: <b>${loc.name}</b>.`);return true}
@@ -301,7 +307,7 @@
     const used=healingExprFor(p,expr),total=/^\d*D\d+$/i.test(used)?rollDiceText(used):Number(used)||0;
     return{total,used,original:String(expr||''),reduced:used!==String(expr||'').toUpperCase()};
   }
-  function removeStatus(p,status){ensurePlayerModel(p);p.statuses=(p.statuses||[]).filter(x=>x!==status);delete p.statusTimers[status];delete p.statusTickedTurn[status];if(state.combat?.heroStatusTimers)delete state.combat.heroStatusTimers[status]}
+  function removeStatus(p,status){ensurePlayerModel(p);p.statuses=(p.statuses||[]).filter(x=>x!==status);delete p.statusTimers[status];delete p.statusTickedTurn[status];if(state.combat?.heroStatusTimers)delete state.combat.heroStatusTimers[status];if(state.combat?.lastAppliedHeroStatus===status)state.combat.lastAppliedHeroStatus=null}
   function statusLabel(p,status){ensurePlayerModel(p);const n=p.statusTimers?.[status];return n!=null?`${status} (${n} х.)`:status}
   function statusSummary(p){return (p.statuses||[]).map(st=>statusLabel(p,st)).join(', ')}
   function activeEffectRows(p){
@@ -488,7 +494,7 @@
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,potions:[null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:sharedHard,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats(),territoryBuildSeq:{kingdom:0,cursed:0}}});
     generatePermanentLocations({preserve:false});
     state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(isMobileViewport()){els.sheetDrawer.hidden=true}else openCharacterSheet('overview',null,currentPlayer().id);setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
-    log(`<b>Партия v0.6.38 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
+    log(`<b>Партия v0.6.41 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
     state.order.forEach(id=>{const p=getPlayer(id);log(`Инициатива ${p.name}: D20 = <b>${p.initiative}</b>.`,p.id)});updateUI();renderBoard();
   }
 
@@ -594,7 +600,7 @@
   function locationVisitStatus(p,hex){ensurePlayerModel(p);return p.locationVisits?.[hex]||'ready'}
   function canActivateLocationOnEntry(p,hex){
     const loc=state.locations[hex];if(!loc||loc.name==='Древний портал')return false;
-    const st=locationVisitStatus(p,hex);return st==='ready';
+    const st=locationVisitStatus(p,hex);return st==='ready'||st==='left';
   }
   function consumeLocationEntry(p,hex){
     ensurePlayerModel(p);if(!state.locations[hex]||state.locations[hex].name==='Древний портал')return false;
@@ -606,7 +612,7 @@
   }
   function refreshLocationRevisitsAtEndTurn(p){
     ensurePlayerModel(p);for(const [hex,st] of Object.entries(p.locationVisits||{})){
-      if(st==='left'&&p.hex!==hex)p.locationVisits[hex]='ready';
+      if((st==='left'||st==='cooldown')&&p.hex!==hex)p.locationVisits[hex]='ready';
     }
   }
 
@@ -727,7 +733,7 @@
     const p=currentPlayer(),plan=state.chosenMovePlan||movementPlan(state.moveOriginHex||p.hex,p.hex,state.movePoints,p),realPath=plan?.path;
     if(!plan||!Array.isArray(realPath)||realPath.length<2){state.movePending=false;state.chosenMovePlan=null;if(state.pendingMoveAction)setTimeout(runPendingMoveAction,0);return true}
     const startHex=realPath[0],final=realPath.at(-1);
-    if(final!==startHex)markLocationDeparture(p,startHex);
+    if(final!==startHex){markLocationDeparture(p,startHex);for(const h of realPath.slice(1,-1))markLocationDeparture(p,h);}
     if(plan.jumpUsed){
       p.scoutBootsUsedTurn=p.personalTurn;const jump=plan.segments.find(seg=>seg.jump);
       if(jump)log(`${p.name}: <b>Сапоги следопыта</b> — перепрыгнут гекс ${jump.over}: ${jump.from} ⇢ ${jump.to}. Стоимость: 2 единицы движения.`);
@@ -779,15 +785,24 @@
     return true;
   }
   function drawCard(deckKey){
-    const d=state.decks[deckKey]; if(!d)return null;
+    if(deckKey==='lootOuter')normalizeLegendaryHeartLoot(state.decks);
+    const d=state.decks[deckKey];if(!d)return null;
     if(!d.draw.length&&!recycleDiscardIntoDraw(deckKey))return null;
-    const id=d.draw.pop();return CARD_BY_ID[id]||null;
+    const id=d.draw.pop(),card=CARD_BY_ID[id]||null;
+    // Защита и на выдаче: карточка из неправильной колоды не попадёт герою.
+    if(deckKey==='lootOuter'&&heartOnlyLoot(card)){
+      returnCardToDeckRandom('lootHeart',card);
+      return drawCard('lootOuter');
+    }
+    return card;
   }
-  function discardCard(deckKey,card){if(card&&state.decks[deckKey])state.decks[deckKey].discard.push(card.id)}
+  function discardCard(deckKey,card){if(!card)return;const key=deckKey==='lootOuter'&&heartOnlyLoot(card)?'lootHeart':deckKey;if(state.decks[key])state.decks[key].discard.push(card.id)}
   function returnCardToDeckRandom(deckKey,card){
-    if(!card||!state.decks[deckKey])return;
-    state.decks[deckKey].draw.push(card.id);
-    state.decks[deckKey].draw=shuffled(state.decks[deckKey].draw);
+    if(!card)return;
+    const key=deckKey==='lootOuter'&&heartOnlyLoot(card)?'lootHeart':deckKey;
+    if(!state.decks[key])return;
+    state.decks[key].draw.push(card.id);
+    state.decks[key].draw=shuffled(state.decks[key].draw);
   }
   function deckKeyForCard(card){if(card?.id===281||card?.category==='Босс')return'boss';if(card.deck==='Исследования внешних регионов')return'exploreOuter';if(card.deck==='Исследования Сердца тьмы')return'exploreHeart';if(card.deck==='Тайники внешних регионов')return'lootOuter';return'lootHeart'}
   function cleanCardFieldValue(v){return String(v??'').split(/\n={5,}/)[0].trim()}
@@ -832,12 +847,17 @@
     drawNextExplore();
   }
   function maybeUseTrackerBeforeExplore(p,deckKey){
-    if(Number(getSlotId(p,'mercenary'))!==198||p.trackerUsedTurn===p.personalTurn)return false;
-    const next=peekExploreTop(deckKey);if(!next)return false;p.trackerUsedTurn=p.personalTurn;
-    const tracker=itemCard(198),preview=`<div class="recon-preview"><div class="card-kicker">Верхняя карта · №${next.id}</div><div class="card-title">${next.name}</div><div class="card-fields">${itemFieldsHtml(next)}</div></div>`;
-    showCard(tracker,`<b>Следопыт</b> используется один раз за личный ход героя и смотрит верхнюю карту выбранной колоды исследования независимо от региона.<br>${preview}<br><b>Сыграть карту или замешать её обратно?</b>`,[
-      {label:'Сыграть',className:'success',fn:()=>{const d=state.decks[deckKey];if(d.draw[d.draw.length-1]===next.id)d.draw.pop();closeModal();log(`Следопыт ${p.name}: сыграна верхняя карта №${next.id} «${next.name}».`);log(`Открыта карта №${next.id} «<b>${next.name}</b>» (${next.category}).`);resolveExploreCard(next)}},
-      {label:'Замешать обратно',className:'secondary',fn:()=>{state.decks[deckKey].draw=shuffled(state.decks[deckKey].draw);closeModal();log(`Следопыт ${p.name}: верхняя карта «${next.name}» замешана обратно в ${DECK_NAMES[deckKey]}.`);setTimeout(drawNextExplore,80)}}
+    const hasAmulet=Number(getSlotId(p,'amulet'))===176;
+    const hasTracker=Number(getSlotId(p,'mercenary'))===198&&p.trackerUsedTurn!==p.personalTurn;
+    if(!hasAmulet&&!hasTracker)return false;
+    // Эффект амулета действует перед КАЖДЫМ исследованием в любом регионе.
+    // Следопыт-наёмник сохраняет собственное ограничение один раз за личный ход.
+    const next=peekExploreTop(deckKey);if(!next)return false;
+    const tracker=itemCard(hasAmulet?176:198);if(!hasAmulet)p.trackerUsedTurn=p.personalTurn;
+    const preview=`<div class="recon-preview"><div class="card-kicker">Верхняя карта · №${next.id}</div><div class="card-title">${next.name}</div><div class="card-fields">${itemFieldsHtml(next)}</div></div>`;
+    showCard(tracker,`<b>${hasAmulet?'Амулет следопыта':'Следопыт'}</b> позволяет посмотреть верхнюю карту выбранной колоды исследования в любом регионе.${hasAmulet?'':' Эффект наёмника действует один раз за личный ход.'}<br>${preview}<br><b>Сыграть карту или замешать её обратно?</b>`,[
+      {label:'Сыграть',className:'success',fn:()=>{const d=state.decks[deckKey];if(d.draw[d.draw.length-1]===next.id)d.draw.pop();closeModal();log(`${tracker.name} · ${p.name}: сыграна верхняя карта №${next.id} «${next.name}».`);log(`Открыта карта №${next.id} «<b>${next.name}</b>» (${next.category}).`);resolveExploreCard(next)}},
+      {label:'Замешать обратно',className:'secondary',fn:()=>{state.decks[deckKey].draw=shuffled(state.decks[deckKey].draw);closeModal();log(`${tracker.name} · ${p.name}: верхняя карта «${next.name}» замешана обратно в ${DECK_NAMES[deckKey]}.`);setTimeout(drawNextExplore,80)}}
     ]);return true;
   }
   function drawNextExplore(){
@@ -1179,24 +1199,25 @@
 
   function takeMercenaryFromDeck(deckKey,{allowLegendary=false,allowEpic=false}={}){
     const d=state.decks?.[deckKey];if(!d)return null;const options=[];
-    for(const sourceName of ['draw','discard']){const source=d[sourceName]||[];for(let i=0;i<source.length;i++){const card=itemCard(source[i]),legendary=String(card?.fields?.['Редкость']||'').toLowerCase().includes('легендар');const epic=String(card?.fields?.['Редкость']||'').toLowerCase().includes('эпичес');if(card&&itemType(card)==='наёмник'&&(allowLegendary||!legendary)&&(allowEpic||!epic))options.push({sourceName,index:i,card})}}
+    for(const sourceName of ['draw','discard']){const source=d[sourceName]||[];for(let i=0;i<source.length;i++){const card=itemCard(source[i]),legendary=String(card?.fields?.['Редкость']||'').toLowerCase().includes('легендар');const epic=/(эпичес|элитн)/.test(String(card?.fields?.['Редкость']||'').toLowerCase());if(card&&itemType(card)==='наёмник'&&(allowLegendary||!legendary)&&(allowEpic||!epic))options.push({sourceName,index:i,card})}}
     if(!options.length)return null;const pick=options[Math.floor(Math.random()*options.length)],source=d[pick.sourceName];source.splice(pick.index,1);return{card:pick.card,key:deckKey};
   }
   function ensureTavernMercenary(hex){
     const loc=state.locations?.[hex];if(!loc||loc.name!=='Таверна')return null;
     const region=MAP.hexes?.[hex]?.region,heartRegion=region==='heart_of_darkness';
     const existing=itemCard(loc.tavernMercenaryId);
-    // Старые комнаты могли предложить эпического наёмника в обычной Таверне.
-    // Не оставляем его там: возвращаем в колоду Сердца тьмы до найма.
-    const rare=String(existing?.fields?.['Редкость']||'').toLowerCase();
-    if(existing&&itemType(existing)==='наёмник'&&!heartRegion&&/(эпичес|легендар)/.test(rare)){
+    // В обычной Таверне — только наёмники внешней колоды. Эпические и
+    // элитные допустимы в Проклятых территориях, если пришли из колоды Сердца.
+    const unsuitable=existing&&itemType(existing)==='наёмник'&&region!=='cursed'&&
+      (existing.deck==='Тайники Сердца тьмы'||heartOnlyLoot(existing));
+    if(unsuitable){
       returnCardToDeckRandom('lootHeart',existing);
       delete loc.tavernMercenaryId;delete loc.tavernMercenaryDeckKey;loc.tavernNeedsRestock=false;
     }else if(existing&&itemType(existing)==='наёмник')return{card:existing,key:loc.tavernMercenaryDeckKey||deckKeyForCard(existing)};
     if(loc.tavernNeedsRestock)return null;
     delete loc.tavernMercenaryId;delete loc.tavernMercenaryDeckKey;
-    const keys=region==='cursed'?['lootHeart','lootOuter']:['lootOuter','lootHeart'];
-    for(const key of keys){const entry=takeMercenaryFromDeck(key,{allowLegendary:heartRegion,allowEpic:heartRegion});if(entry){loc.tavernMercenaryId=entry.card.id;loc.tavernMercenaryDeckKey=entry.key;return entry}}
+    const keys=region==='cursed'?['lootHeart','lootOuter']:['lootOuter'];
+    for(const key of keys){const entry=takeMercenaryFromDeck(key,{allowLegendary:false,allowEpic:region==='cursed'});if(entry){loc.tavernMercenaryId=entry.card.id;loc.tavernMercenaryDeckKey=entry.key;return entry}}
     return null;
   }
   function renderTavernVisit(p,hex,onDone,session){
@@ -1228,6 +1249,13 @@
     if(Number(getSlotId(p,'artifact'))===192){plan.decks.push(region==='cursed'?'lootHeart':'lootOuter');plan.label+=' · Купеческая грамота +1 карта'}return plan;
   }
   function numericItemPrice(card){const raw=card?.fields?.['Цена'];const n=Number(raw);return Number.isFinite(n)?n:null}
+  function merchantBuyPrice(card){
+    const price=numericItemPrice(card);if(price!=null)return price;
+    const type=itemType(card);
+    if(type==='наёмник'){const x=Number(card.fields?.['Цена найма']);return Number.isFinite(x)&&x>0?x:null;}
+    if(type==='ценность'){const m=String(card.fields?.['Эффект']||'').match(/получи\s+(\d+)\s+золота/i);return m?Number(m[1]):null;}
+    return null;
+  }
   function merchantSaleMultiplier(p,plan){return equippedEntries(p).some(e=>Number(e.id)===242)?1:Number(plan?.saleMultiplier??.5)}
   function merchantSaleLabel(p,plan){return equippedEntries(p).some(e=>Number(e.id)===242)?`${plan.label} · Кольцо купца: продажа 100%`:plan.label}
   function merchantSellEntries(p){
@@ -1251,13 +1279,23 @@
   }
   function showMerchantShop(p,stock,plan,onDone){
     const saleMultiplier=merchantSaleMultiplier(p,plan),saleLabel=merchantSaleLabel(p,plan);
-    const stockHtml=stock.length?stock.map((e,i)=>{const c=e.card,base=numericItemPrice(c),type=itemType(c),buyable=base!=null&&type!=='наёмник',cost=buyable?base*plan.buyMultiplier:null;let why='';if(type==='наёмник')why='Наёмников у Торговца покупать нельзя.';else if(base==null)why='Цена отсутствует или требует утверждения.';return `<div class="merchant-card ${itemColorClass(p,c)}"><div class="merchant-card-head"><div><small>№${c.id} · ${c.fields?.['Тип']||c.category}</small><b>${c.name}</b></div><div class="merchant-price">${buyable?`${cost} зол.`:'—'}</div></div><div class="card-fields compact">${itemFieldsHtml(c)}</div><button data-buy-index="${i}" class="success" ${!buyable||p.gold<cost?'disabled':''}>${buyable?`Купить за ${cost}`:'Недоступно'}</button>${why?`<div class="merchant-note">${why}</div>`:''}</div>`}).join(''):'<div class="empty-box">Ассортимент пуст.</div>';
+    const stockHtml=stock.length?stock.map((e,i)=>{const c=e.card,base=merchantBuyPrice(c),type=itemType(c),buyable=base!=null,cost=buyable?Math.ceil(base*plan.buyMultiplier):null;let why='';if(base==null)why='Цена отсутствует или требует утверждения.';return `<div class="merchant-card ${itemColorClass(p,c)}"><div class="merchant-card-head"><div><small>№${c.id} · ${c.fields?.['Тип']||c.category}</small><b>${c.name}</b></div><div class="merchant-price">${buyable?`${cost} зол.`:'—'}</div></div><div class="card-fields compact">${itemFieldsHtml(c)}</div><button data-buy-index="${i}" class="success" ${!buyable||p.gold<cost?'disabled':''}>${buyable?`Купить за ${cost}`:'Недоступно'}</button>${why?`<div class="merchant-note">${why}</div>`:''}</div>`}).join(''):'<div class="empty-box">Ассортимент пуст.</div>';
     const sells=merchantSellEntries(p);
     const sellHtml=sells.length?sells.map((e,i)=>{const chk=canSellMerchantItem(p,e),base=numericItemPrice(e.card),value=base==null?null:Math.floor(base*saleMultiplier);return `<div class="merchant-sell-row ${itemColorClass(p,e.card)}"><div><b>${e.card.name}</b><small>${e.where}${base!=null?` · цена ${base}`:''}</small></div><button data-sell-index="${i}" class="secondary" ${!chk.ok?'disabled':''}>${value!=null?`Продать за ${value}`:'Нет цены'}</button>${!chk.ok?`<span class="merchant-note">${chk.why}</span>`:''}</div>`}).join(''):'<div class="empty-box">Нет предметов для продажи.</div>';
     els.modalContent.innerHTML=`<div class="card-kicker">Постоянная локация · Торговец</div><div class="card-title">${plan.locationTitle||'Торговец'}</div><div class="merchant-summary"><span>Золото: <b>${p.gold}</b></span><span>${saleLabel}</span><span>Продажа: <b>${Math.round(saleMultiplier*100)}%</b></span><span>Покупка: <b>${Math.round(plan.buyMultiplier*100)}%</b></span></div><h3>Купить</h3><div class="merchant-grid">${stockHtml}</div><h3 style="margin-top:18px">Продать</h3><div class="merchant-sell-list">${sellHtml}</div><div class="modal-actions"><button id="merchantDone" class="success">Готово</button></div>`;
     els.modal.hidden=false;
-    els.modalContent.querySelectorAll('[data-buy-index]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.buyIndex),entry=stock[i];if(!entry)return;const base=numericItemPrice(entry.card);if(base==null||itemType(entry.card)==='наёмник')return;const cost=base*plan.buyMultiplier;if(p.gold<cost)return;p.gold-=cost;p.pendingItems.push(entry.card.id);stock.splice(i,1);log(`${p.name} покупает у Торговца «${entry.card.name}» за ${cost} золота.`);showMerchantShop(p,stock,plan,onDone);updateUI()});
-    els.modalContent.querySelectorAll('[data-sell-index]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.sellIndex),entry=sells[i];if(!entry)return;const chk=canSellMerchantItem(p,entry);if(!chk.ok)return;const base=numericItemPrice(entry.card),value=Math.floor(base*merchantSaleMultiplier(p,plan));if(!sourceRemove(p,entry.id,entry.ctx))return;delete p.itemUsage[entry.id];gainGold(p,value);returnCardToDeckRandom(deckKeyForCard(entry.card),entry.card);log(`${p.name} продаёт Торговцу «${entry.card.name}» за ${value} золота.`);showMerchantShop(p,stock,plan,onDone);updateUI();renderBoard()});
+    els.modalContent.querySelectorAll('[data-buy-index]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.buyIndex),entry=stock[i];if(!entry)return;const base=merchantBuyPrice(entry.card);if(base==null)return;const cost=Math.ceil(base*plan.buyMultiplier);if(p.gold<cost)return;
+      const kind=itemType(entry.card);
+      if(kind==='наёмник'){
+        const old=getSlotId(p,'mercenary');if(old&&isItemLocked(p,old)){alert('Текущий наёмник заблокирован.');return}
+        if(old&&!confirm(`Заменить наёмника «${itemCard(old)?.name}»? Старый уйдёт в сброс.`))return;
+        if(old)discardHeldCard(itemCard(old));
+        setSlotId(p,'mercenary',entry.card.id);
+      }else if(kind==='ценность'){
+        applyTreasureImmediate(p,entry.card);discardHeldCard(entry.card);
+      }else p.pendingItems.push(entry.card.id);
+      p.gold-=cost;stock.splice(i,1);log(`${p.name} покупает у Торговца «${entry.card.name}» за ${cost} золота.`);window.dispatchEvent(new Event('rpg-local-mutation'));showMerchantShop(p,stock,plan,onDone);updateUI()});
+    els.modalContent.querySelectorAll('[data-sell-index]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.sellIndex),entry=sells[i];if(!entry)return;const chk=canSellMerchantItem(p,entry);if(!chk.ok)return;const base=numericItemPrice(entry.card),value=Math.floor(base*merchantSaleMultiplier(p,plan));if(!sourceRemove(p,entry.id,entry.ctx))return;delete p.itemUsage[entry.id];gainGold(p,value);returnCardToDeckRandom(deckKeyForCard(entry.card),entry.card);log(`${p.name} продаёт Торговцу «${entry.card.name}» за ${value} золота.`);window.dispatchEvent(new Event('rpg-local-mutation'));showMerchantShop(p,stock,plan,onDone);updateUI();renderBoard()});
     document.getElementById('merchantDone').onclick=()=>{for(const e of stock)returnCardToDeckRandom(e.key,e.card);closeModal();onDone();if(p.pendingItems.length)setTimeout(()=>openCharacterSheet('pending',null,p.id),0)};
   }
 
@@ -1390,7 +1428,8 @@
     if([174,226,263,169].includes(id)&&!equipped)return{supported:true,enabled:false,why:'Этот эффект работает только когда предмет экипирован.'};
     if([174,263].includes(id))return{supported:true,enabled:!useBlocked(p,id)&&p.statuses.length>0,why:useBlocked(p,id)?'Эффект уже использован. Восстановится после посещения Святилища.':(!p.statuses.length?'Нет негативных эффектов для снятия.':'')};
     if(id===226){const has=p.statuses.length>0;return{supported:true,enabled:!useBlocked(p,id)&&has,why:useBlocked(p,id)?'Эффект уже использован. Восстановится после посещения Святилища.':(!has?'Нет негативных эффектов для снятия.':'')}}
-    if(id===193)return{supported:true,enabled:false,why:'Фляга вечного глотка используется только во время боя.'};
+    if([193,345,346].includes(id))return{supported:true,enabled:false,why:'Этот артефакт используется только во время боя.'};
+    if(id===347)return{supported:true,enabled:equipped&&!useBlocked(p,id)&&p.currentHp<p.maxHp,why:!equipped?'Наденьте амулет в слот артефакта.':useBlocked(p,id)?'Эффект восстанавливается при следующем посещении Святилища.':p.currentHp>=p.maxHp?'ЗД уже полные.':''};
     if(id===169){const portals=Object.entries(state.locations||{}).filter(([,v])=>v.name==='Древний портал').map(([h])=>h),ownTurn=currentPlayer()?.id===p.id;return{supported:true,enabled:ownTurn&&equipped&&!useBlocked(p,id)&&portals.length>0&&!state.turnLocked,why:!ownTurn?'Перемещение через Кольцо портала доступно только в свой ход.':!equipped?'Кольцо должно быть экипировано.':useBlocked(p,id)?'Эффект восстановится после посещения Святилища.':(!portals.length?'На поле нет порталов.':(state.turnLocked?'Сейчас перемещение недоступно.':''))}}
     if(t==='зелье'){
       if(/восстанови\s+(?:\d+D\d+|D\d+)\s+ЗД/i.test(eff))return{supported:true,enabled:p.currentHp<p.maxHp,why:p.currentHp>=p.maxHp?'ЗД уже полностью восстановлены.':''};
@@ -1401,15 +1440,16 @@
     }
     return{supported:false,enabled:false,why:''};
   }
-  function chooseStatusForItem(p,card,ctx,allowed=null,after=null){const statuses=p.statuses.filter(s=>!allowed||allowed.includes(s));if(!statuses.length){alert('Нет подходящего негативного эффекта.');return}els.sheetContent.innerHTML=`<div class="sheet-nav"><button class="ghost" id="cancelUseItem">← К предмету</button><b>${card.name}</b></div><div class="notice">Выберите эффект, который нужно снять.</div><div class="item-list" id="statusUseList"></div>`;document.getElementById('cancelUseItem').onclick=()=>showItemInSheet(card.id,ctx);const box=document.getElementById('statusUseList');for(const st of statuses){const b=document.createElement('button');b.className='item-row';b.innerHTML=`<span><b>${st}</b><small>Снять негативный эффект</small></span><span>›</span>`;b.onclick=()=>{removeStatus(p,st);if(after)after();log(`${p.name}: «${card.name}» снимает эффект <b>${st}</b>.`);renderCharacterSheet('overview');updateUI()};box.appendChild(b)}}
+  function chooseStatusForItem(p,card,ctx,allowed=null,after=null){const statuses=p.statuses.filter(s=>!allowed||allowed.includes(s));if(!statuses.length){alert('Нет подходящего негативного эффекта.');return}els.sheetContent.innerHTML=`<div class="sheet-nav"><button class="ghost" id="cancelUseItem">← К предмету</button><b>${card.name}</b></div><div class="notice">Выберите эффект, который нужно снять.</div><div class="item-list" id="statusUseList"></div>`;document.getElementById('cancelUseItem').onclick=()=>showItemInSheet(card.id,ctx);const box=document.getElementById('statusUseList');for(const st of statuses){const b=document.createElement('button');b.className='item-row';b.innerHTML=`<span><b>${st}</b><small>Снять негативный эффект</small></span><span>›</span>`;b.onclick=()=>{removeStatus(p,st);if(after)after();log(`${p.name}: «${card.name}» снимает эффект <b>${st}</b>.`);window.dispatchEvent(new Event('rpg-local-mutation'));renderCharacterSheet('overview');updateUI()};box.appendChild(b)}}
   function applyItemEffect(p,id,ctx){
     if(heroIsActiveCombatant(p))return applyCombatItemEffect(p,id,ctx);
     const card=itemCard(id);if(!card)return;const info=supportedOutsideEffect(p,card,ctx);if(!info.enabled){if(info.why)alert(info.why);return}const eff=String(card.fields?.['Эффект']||''),t=itemType(card);
+    if(id===347){const hr=rollHealing(p,'D10'),before=p.currentHp;heal(p,hr.total);useMark(p,id,'shrine');log(`${p.name}: Амулет жизни восстанавливает ${p.currentHp-before} ЗД (D10=${hr.total}).`);window.dispatchEvent(new Event('rpg-local-mutation'));renderCharacterSheet('overview');updateUI();return;}
     if([174,263].includes(id)){chooseStatusForItem(p,card,ctx,null,()=>useMark(p,id,'shrine'));return}
     if(id===226){chooseStatusForItem(p,card,ctx,null,()=>useMark(p,id,'shrine'));return}
     if(id===169){const portals=Object.entries(state.locations||{}).filter(([,v])=>v.name==='Древний портал').map(([h])=>h);if(!portals.length)return;useMark(p,id,'shrine');state.turnLocked=true;state.portalPending={heroId:p.id,entryHex:p.hex,destinations:[...portals],remaining:0};log(`${p.name}: «${card.name}» — выберите любой портал на карте.`);closeCharacterSheet();updateUI();renderBoard();return}
     if(t==='зелье'){
-      let m;if((m=eff.match(/восстанови\s+((?:\d+D\d+)|D\d+)\s+ЗД/i))){const hr=rollHealing(p,m[1]),v=hr.total,healed=heal(p,v);consumeHeldItem(p,id,ctx);log(`${p.name} использует «${card.name}» и восстанавливает ${healed.restored} ЗД.`);renderCharacterSheet('overview');updateUI();return}
+      let m;if((m=eff.match(/восстанови\s+((?:\d+D\d+)|D\d+)\s+ЗД/i))){const hr=rollHealing(p,m[1]),v=hr.total,healed=heal(p,v);consumeHeldItem(p,id,ctx);log(`${p.name} использует «${card.name}» и восстанавливает ${healed.restored} ЗД.`);window.dispatchEvent(new Event('rpg-local-mutation'));renderCharacterSheet('overview');updateUI();return}
       if(/сними\s+1\s+негативный эффект/i.test(eff)){chooseStatusForItem(p,card,ctx,null,()=>consumeHeldItem(p,id,ctx));return}
       if((m=eff.match(/на\s+(\d+)\s+хода?.*\+2\s+ЗЩ/i))){p.temporaryEffects.push({key:'defense',amount:2,label:card.name,turnsRemaining:Number(m[1]),sourceCardId:id});consumeHeldItem(p,id,ctx);log(`${p.name} использует «${card.name}»: +2 ЗЩ на ${m[1]} хода.`);renderCharacterSheet('overview');updateUI();return}
       if((m=eff.match(/на\s+(\d+)\s+хода?.*\+2\s+к атаке/i))){p.combatEffects.push({type:'attackBonus',amount:2,label:card.name,turnsRemaining:Number(m[1]),sourceCardId:id});consumeHeldItem(p,id,ctx);log(`${p.name} использует «${card.name}»: +2 к атаке на ${m[1]} хода (боевой эффект сохранён).`);renderCharacterSheet('overview');updateUI();return}
@@ -1498,13 +1538,13 @@
     }
     renderCharacterSheet(fallback);
   }
-  function claimValueTreasure(p,id,ctx){const card=itemCard(id);if(!card||itemType(card)!=='ценность')return;sourceRemove(p,id,ctx);applyTreasureImmediate(p,card);discardHeldCard(card);log(`${p.name} забирает содержимое тайника «${card.name}».`);renderAfterPendingResolution(p,ctx,'inventory');updateUI()}
-  function moveToBackpack(p,id,ctx){if(!hasBackpackRoom(p)){alert('Рюкзак заполнен.');return}sourceRemove(p,id,ctx);p.backpack.push(id);log(`${p.name}: «${itemCard(id)?.name}» помещён в рюкзак.`);renderAfterPendingResolution(p,ctx,'backpack');updateUI()}
-  function unequipToPending(p,id,ctx){if(ctx?.slot==='artifact'&&id===191&&p.backpack.length>baseBackpackCapacity(p)){alert(`Сначала освободите рюкзак: без Журнала странника вместимость станет ${baseBackpackCapacity(p)}.`);return}sourceRemove(p,id,ctx);p.pendingItems.push(id);log(`${p.name} снимает «${itemCard(id)?.name}». Предмет оставлен в неразобранных.`);renderCharacterSheet('pending');updateUI()}
-  function unequipToBackpack(p,id,ctx){if(!canUnequipToBackpack(p,id,ctx.slot)){alert('Недостаточно места в рюкзаке.');return}sourceRemove(p,id,ctx);p.backpack.push(id);log(`${p.name}: «${itemCard(id)?.name}» снят и помещён в рюкзак.`);renderCharacterSheet('backpack');updateUI()}
-  function discardItem(p,id,ctx){const card=itemCard(id);if(isItemLocked(p,id)){alert('Предмет заблокирован для продажи и сброса.');return}if(!confirm(`Сбросить «${card?.name||id}»?`))return;if(ctx?.where==='equipment'&&ctx.slot==='artifact'&&id===191&&p.backpack.length>baseBackpackCapacity(p)){alert(`Нельзя сбросить Журнал странника, пока в рюкзаке больше ${baseBackpackCapacity(p)} предметов.`);return}sourceRemove(p,id,ctx);discardHeldCard(card);log(`${p.name} сбрасывает «${card?.name||id}».`);renderAfterPendingResolution(p,ctx,'inventory');updateUI()}
-  function requestEquip(p,id,ctx){const card=itemCard(id),check=canEquipCard(p,card),heroCombat=heroIsActiveCombatant(p);if(!check.ok){alert(check.why);return}if(heroCombat&&itemType(card)!=='зелье'){alert('Во время боя менять оружие, броню, кольца, амулеты, артефакты и наёмника нельзя. Разрешено только перекладывать зелья из рюкзака в быстрые слоты.');return}if(heroCombat&&ctx?.where!=='backpack'){alert('Во время боя в быстрые слоты можно перекладывать только зелья из рюкзака.');return}const slots=targetSlots(card);if(!slots.length)return;const empty=slots.find(s=>getSlotId(p,s)==null);if(empty){const r=equipTransaction(p,id,ctx,empty,'backpack');if(!r.ok){alert(r.why);return}if(heroCombat&&itemType(card)==='зелье'){state.combat.potionUnlockRound=state.combat.potionUnlockRound||{};state.combat.potionUnlockRound[id]=state.combat.round+1;combatPush(`«${card.name}» переложено из рюкзака в быстрый слот. Оно станет доступно в следующий боевой ход героя.`);renderCombat()}renderAfterPendingResolution(p,ctx,'inventory');updateUI();return}if(slots.length===1){renderReplaceChoice(p,id,ctx,slots[0]);return}els.sheetContent.innerHTML=`<div class="sheet-nav"><button class="ghost" id="cancelEquip">← К предмету</button><b>Выберите слот для замены</b></div><div class="replace-list">${slots.map(s=>{const c=itemCard(getSlotId(p,s));return `<button class="item-row ${c?itemColorClass(p,c):''}" data-replace-slot="${s}"><span><b>${SLOT_LABELS[s]}</b><small>${c?.name||'пусто'}${c?.fields?.['Эффект']?` · ${c.fields['Эффект']}`:''}</small></span><span>›</span></button>`}).join('')}</div>`;document.getElementById('cancelEquip').onclick=()=>showItemInSheet(id,ctx);els.sheetContent.querySelectorAll('[data-replace-slot]').forEach(b=>b.onclick=()=>renderReplaceChoice(p,id,ctx,b.dataset.replaceSlot))}
-  function renderReplaceChoice(p,id,ctx,slot){const oldId=getSlotId(p,slot),old=itemCard(oldId),card=itemCard(id),heroCombat=heroIsActiveCombatant(p);els.sheetContent.innerHTML=`<div class="sheet-nav"><button class="ghost" id="cancelReplace">← Назад</button><b>Замена: ${SLOT_LABELS[slot]}</b></div><div class="compare-box compare-rich"><div class="compare-item-card ${old?itemColorClass(p,old):''}"><small>Сейчас</small><b>${old?.name||'—'}</b>${old?`<div class="card-fields compact">${itemFieldsHtml(old)}</div>`:''}</div><div class="compare-arrow">→</div><div class="compare-item-card ${card?itemColorClass(p,card):''}"><small>Новый</small><b>${card?.name||'—'}</b>${card?`<div class="card-fields compact">${itemFieldsHtml(card)}</div>`:''}</div></div><div class="modal-actions" id="replaceActions"></div>`;document.getElementById('cancelReplace').onclick=()=>showItemInSheet(id,ctx);const box=document.getElementById('replaceActions');const add=(label,cls,mode)=>{const b=document.createElement('button');b.textContent=label;b.className=cls;if(mode==='discard'&&isItemLocked(p,oldId)){b.disabled=true;b.title='Предмет заблокирован для продажи и сброса.'}b.onclick=()=>{if(mode==='discard'&&isItemLocked(p,oldId)){alert('Предмет заблокирован для продажи и сброса.');return}const r=equipTransaction(p,id,ctx,slot,mode);if(!r.ok){alert(r.why);return}if(heroCombat&&itemType(card)==='зелье'&&ctx?.where==='backpack'){state.combat.potionUnlockRound=state.combat.potionUnlockRound||{};state.combat.potionUnlockRound[id]=state.combat.round+1;combatPush(`«${card.name}» переложено из рюкзака в быстрый слот. Оно станет доступно в следующий боевой ход героя.`);renderCombat()}renderAfterPendingResolution(p,ctx,'inventory');updateUI()};box.appendChild(b)};if(slot==='mercenary'){const b=document.createElement('button');b.textContent='Взять нового наёмника, старого распустить';b.className='success';if(isItemLocked(p,oldId)){b.disabled=true;b.title='Предмет заблокирован для продажи и сброса.'}b.onclick=()=>{if(isItemLocked(p,oldId)){alert('Предмет заблокирован для продажи и сброса.');return}const r=equipTransaction(p,id,ctx,slot,'discard');if(!r.ok){alert(r.why);return}renderAfterPendingResolution(p,ctx,'inventory');updateUI()};box.appendChild(b);return}add('Заменить, старый в рюкзак','success','backpack');add('Заменить и сбросить старый','danger','discard');}
+  function claimValueTreasure(p,id,ctx){const card=itemCard(id);if(!card||itemType(card)!=='ценность')return;sourceRemove(p,id,ctx);applyTreasureImmediate(p,card);discardHeldCard(card);log(`${p.name} забирает содержимое тайника «${card.name}».`);window.dispatchEvent(new Event('rpg-local-mutation'));renderAfterPendingResolution(p,ctx,'inventory');updateUI()}
+  function moveToBackpack(p,id,ctx){if(!hasBackpackRoom(p)){alert('Рюкзак заполнен.');return}sourceRemove(p,id,ctx);p.backpack.push(id);log(`${p.name}: «${itemCard(id)?.name}» помещён в рюкзак.`);window.dispatchEvent(new Event('rpg-local-mutation'));renderAfterPendingResolution(p,ctx,'backpack');updateUI()}
+  function unequipToPending(p,id,ctx){if(ctx?.slot==='artifact'&&id===191&&p.backpack.length>baseBackpackCapacity(p)){alert(`Сначала освободите рюкзак: без Журнала странника вместимость станет ${baseBackpackCapacity(p)}.`);return}sourceRemove(p,id,ctx);p.pendingItems.push(id);log(`${p.name} снимает «${itemCard(id)?.name}». Предмет оставлен в неразобранных.`);window.dispatchEvent(new Event('rpg-local-mutation'));renderCharacterSheet('pending');updateUI()}
+  function unequipToBackpack(p,id,ctx){if(!canUnequipToBackpack(p,id,ctx.slot)){alert('Недостаточно места в рюкзаке.');return}sourceRemove(p,id,ctx);p.backpack.push(id);log(`${p.name}: «${itemCard(id)?.name}» снят и помещён в рюкзак.`);window.dispatchEvent(new Event('rpg-local-mutation'));renderCharacterSheet('backpack');updateUI()}
+  function discardItem(p,id,ctx){const card=itemCard(id);if(isItemLocked(p,id)){alert('Предмет заблокирован для продажи и сброса.');return}if(!confirm(`Сбросить «${card?.name||id}»?`))return;if(ctx?.where==='equipment'&&ctx.slot==='artifact'&&id===191&&p.backpack.length>baseBackpackCapacity(p)){alert(`Нельзя сбросить Журнал странника, пока в рюкзаке больше ${baseBackpackCapacity(p)} предметов.`);return}sourceRemove(p,id,ctx);discardHeldCard(card);log(`${p.name} сбрасывает «${card?.name||id}».`);window.dispatchEvent(new Event('rpg-local-mutation'));renderAfterPendingResolution(p,ctx,'inventory');updateUI()}
+  function requestEquip(p,id,ctx){const card=itemCard(id),check=canEquipCard(p,card),heroCombat=heroIsActiveCombatant(p);if(!check.ok){alert(check.why);return}if(heroCombat&&itemType(card)!=='зелье'){alert('Во время боя менять оружие, броню, кольца, амулеты, артефакты и наёмника нельзя. Разрешено только перекладывать зелья из рюкзака в быстрые слоты.');return}if(heroCombat&&ctx?.where!=='backpack'){alert('Во время боя в быстрые слоты можно перекладывать только зелья из рюкзака.');return}const slots=targetSlots(card);if(!slots.length)return;const empty=slots.find(s=>getSlotId(p,s)==null);if(empty){const r=equipTransaction(p,id,ctx,empty,'backpack');if(!r.ok){alert(r.why);return}if(heroCombat&&itemType(card)==='зелье'){state.combat.potionUnlockRound=state.combat.potionUnlockRound||{};state.combat.potionUnlockRound[id]=state.combat.round+1;combatPush(`«${card.name}» переложено из рюкзака в быстрый слот. Оно станет доступно в следующий боевой ход героя.`);renderCombat()}window.dispatchEvent(new Event('rpg-local-mutation'));renderAfterPendingResolution(p,ctx,'inventory');updateUI();return}if(slots.length===1){renderReplaceChoice(p,id,ctx,slots[0]);return}els.sheetContent.innerHTML=`<div class="sheet-nav"><button class="ghost" id="cancelEquip">← К предмету</button><b>Выберите слот для замены</b></div><div class="replace-list">${slots.map(s=>{const c=itemCard(getSlotId(p,s));return `<button class="item-row ${c?itemColorClass(p,c):''}" data-replace-slot="${s}"><span><b>${SLOT_LABELS[s]}</b><small>${c?.name||'пусто'}${c?.fields?.['Эффект']?` · ${c.fields['Эффект']}`:''}</small></span><span>›</span></button>`}).join('')}</div>`;document.getElementById('cancelEquip').onclick=()=>showItemInSheet(id,ctx);els.sheetContent.querySelectorAll('[data-replace-slot]').forEach(b=>b.onclick=()=>renderReplaceChoice(p,id,ctx,b.dataset.replaceSlot))}
+  function renderReplaceChoice(p,id,ctx,slot){const oldId=getSlotId(p,slot),old=itemCard(oldId),card=itemCard(id),heroCombat=heroIsActiveCombatant(p);els.sheetContent.innerHTML=`<div class="sheet-nav"><button class="ghost" id="cancelReplace">← Назад</button><b>Замена: ${SLOT_LABELS[slot]}</b></div><div class="compare-box compare-rich"><div class="compare-item-card ${old?itemColorClass(p,old):''}"><small>Сейчас</small><b>${old?.name||'—'}</b>${old?`<div class="card-fields compact">${itemFieldsHtml(old)}</div>`:''}</div><div class="compare-arrow">→</div><div class="compare-item-card ${card?itemColorClass(p,card):''}"><small>Новый</small><b>${card?.name||'—'}</b>${card?`<div class="card-fields compact">${itemFieldsHtml(card)}</div>`:''}</div></div><div class="modal-actions" id="replaceActions"></div>`;document.getElementById('cancelReplace').onclick=()=>showItemInSheet(id,ctx);const box=document.getElementById('replaceActions');const add=(label,cls,mode)=>{const b=document.createElement('button');b.textContent=label;b.className=cls;if(mode==='discard'&&isItemLocked(p,oldId)){b.disabled=true;b.title='Предмет заблокирован для продажи и сброса.'}b.onclick=()=>{if(mode==='discard'&&isItemLocked(p,oldId)){alert('Предмет заблокирован для продажи и сброса.');return}const r=equipTransaction(p,id,ctx,slot,mode);if(!r.ok){alert(r.why);return}if(heroCombat&&itemType(card)==='зелье'&&ctx?.where==='backpack'){state.combat.potionUnlockRound=state.combat.potionUnlockRound||{};state.combat.potionUnlockRound[id]=state.combat.round+1;combatPush(`«${card.name}» переложено из рюкзака в быстрый слот. Оно станет доступно в следующий боевой ход героя.`);renderCombat()}window.dispatchEvent(new Event('rpg-local-mutation'));renderAfterPendingResolution(p,ctx,'inventory');updateUI()};box.appendChild(b)};if(slot==='mercenary'){const b=document.createElement('button');b.textContent='Взять нового наёмника, старого распустить';b.className='success';if(isItemLocked(p,oldId)){b.disabled=true;b.title='Предмет заблокирован для продажи и сброса.'}b.onclick=()=>{if(isItemLocked(p,oldId)){alert('Предмет заблокирован для продажи и сброса.');return}const r=equipTransaction(p,id,ctx,slot,'discard');if(!r.ok){alert(r.why);return}window.dispatchEvent(new Event('rpg-local-mutation'));renderAfterPendingResolution(p,ctx,'inventory');updateUI()};box.appendChild(b);return}add('Заменить, старый в рюкзак','success','backpack');add('Заменить и сбросить старый','danger','discard');}
   function territoryFullCost(hex){return MAP.hexes[hex]?.region==='cursed'?20:10}
   function fullAreaForTerritory(hex){const t=state.territories[hex];if(!t?.areaId)return null;return state.areas.find(a=>a.id===t.areaId&&a.owner===t.owner)||null}
   function tributeCostFor(hex){const base=MAP.hexes[hex]?.region==='cursed'?10:5;return fullAreaForTerritory(hex)?base*2:base}
@@ -1612,6 +1652,13 @@
     document.getElementById('tradeRoleSell').onclick=()=>{if(onlineLocalHeroId){startOnlineTradeDeal(other,active,'seller_offer');return}openTradeBuyerSelection(other,active,[])};
     document.getElementById('tradeRoleClose').onclick=()=>{closeModal();endSideInteraction()};
   }
+  function tradeGroupedCards(entries,renderEntry){
+    const equipped=entries.filter(e=>e.ctx?.where==='equipment');
+    const backpack=entries.filter(e=>e.ctx?.where==='backpack');
+    const other=entries.filter(e=>e.ctx?.where!=='equipment'&&e.ctx?.where!=='backpack');
+    const line=backpack.length?'<div class="trade-backpack-divider" role="separator"><span>Рюкзак</span></div>':'';
+    return equipped.map(renderEntry).join('')+line+backpack.map(renderEntry).join('')+other.map(renderEntry).join('');
+  }
   function tradeSelectionCard(seller,e,selected){
     const chk=canPlayerTradeEntry(seller,e),price=numericItemPrice(e.card);
     return `<div class="merchant-card ${itemColorClass(seller,e.card)} ${selected?'trade-selected':''}"><div class="merchant-card-head"><div><small>№${e.card.id} · ${e.where}</small><b>${e.card.name}</b></div><div class="merchant-price">${price==null?'—':price+' зол.'}</div></div><div class="card-fields compact">${itemFieldsHtml(e.card)}</div><button data-trade-toggle="${e.id}" class="${selected?'danger':'success'}" ${!chk.ok?'disabled':''}>${selected?'Убрать':'Добавить'}</button>${!chk.ok?`<div class="merchant-note">${chk.why}</div>`:''}</div>`;
@@ -1622,7 +1669,7 @@
     const liveIds=new Set(entries.map(e=>Number(e.id)));for(const id of [...selected])if(!liveIds.has(id))selected.delete(id);
     const selectedEntries=entries.filter(e=>selected.has(Number(e.id)));
     const max=selectedEntries.reduce((sum,e)=>sum+(numericItemPrice(e.card)||0),0);
-    els.modalContent.innerHTML=`<div class="card-kicker">Торговля · выбор покупателя</div><div class="card-title">${buyer.name} выбирает предметы у ${seller.name}</div><div class="merchant-summary"><span>Покупатель: <b>${buyer.name}</b><strong class="trade-gold">${buyer.gold} зол.</strong></span><span>Продавец: <b>${seller.name}</b><strong class="trade-gold">${seller.gold} зол.</strong></span><span>Выбрано: <b>${selected.size}</b></span><span>Максимум сделки: <b>${max} зол.</b></span></div><div class="merchant-grid">${entries.length?entries.map(e=>tradeSelectionCard(seller,e,selected.has(Number(e.id)))).join(''):'<div class="empty-box">У продавца нет предметов для торговли.</div>'}</div><div class="modal-actions"><button id="tradeBuyerContinue" class="success" ${selected.size?'':'disabled'}>Купить выбранное (${selected.size})</button><button id="tradeBuyerBack" class="secondary">Назад</button><button id="tradeBuyerClose" class="secondary">Закрыть</button></div>`;
+    els.modalContent.innerHTML=`<div class="card-kicker">Торговля · выбор покупателя</div><div class="card-title">${buyer.name} выбирает предметы у ${seller.name}</div><div class="merchant-summary"><span>Покупатель: <b>${buyer.name}</b><strong class="trade-gold">${buyer.gold} зол.</strong></span><span>Продавец: <b>${seller.name}</b><strong class="trade-gold">${seller.gold} зол.</strong></span><span>Выбрано: <b>${selected.size}</b></span><span>Максимум сделки: <b>${max} зол.</b></span></div><div class="merchant-grid">${entries.length?tradeGroupedCards(entries,e=>tradeSelectionCard(seller,e,selected.has(Number(e.id)))):'<div class="empty-box">У продавца нет предметов для торговли.</div>'}</div><div class="modal-actions"><button id="tradeBuyerContinue" class="success" ${selected.size?'':'disabled'}>Купить выбранное (${selected.size})</button><button id="tradeBuyerBack" class="secondary">Назад</button><button id="tradeBuyerClose" class="secondary">Закрыть</button></div>`;
     els.modal.hidden=false;
     els.modalContent.querySelectorAll('[data-trade-toggle]').forEach(b=>b.onclick=()=>{const id=Number(b.dataset.tradeToggle);if(selected.has(id))selected.delete(id);else selected.add(id);openTradeBuyerSelection(buyer,seller,[...selected])});
     document.getElementById('tradeBuyerContinue').onclick=()=>openTradeSellerReview(buyer,seller,[...selected],null);
@@ -1630,7 +1677,7 @@
     document.getElementById('tradeBuyerClose').onclick=()=>{closeModal();endSideInteraction()};
   }
   function tradeReviewItemsHtml(owner,entries,withRemove=false){
-    return entries.map(e=>`<div class="merchant-card ${itemColorClass(owner,e.card)}"><div class="merchant-card-head"><div><small>№${e.card.id} · ${e.where}</small><b>${e.card.name}</b></div><div class="merchant-price">${numericItemPrice(e.card)} зол.</div></div><div class="card-fields compact">${itemFieldsHtml(e.card)}</div>${withRemove?`<button data-trade-remove="${e.id}" class="danger">🗑 Удалить из сделки</button>`:''}</div>`).join('');
+    return tradeGroupedCards(entries,e=>`<div class="merchant-card ${itemColorClass(owner,e.card)}"><div class="merchant-card-head"><div><small>№${e.card.id} · ${e.where}</small><b>${e.card.name}</b></div><div class="merchant-price">${numericItemPrice(e.card)} зол.</div></div><div class="card-fields compact">${itemFieldsHtml(e.card)}</div>${withRemove?`<button data-trade-remove="${e.id}" class="danger">🗑 Удалить из сделки</button>`:''}</div>`);
   }
   function openTradeSellerReview(buyer,seller,selectedIds,proposedPrice=null){
     const check=tradeSelectionCheck(seller,selectedIds);
@@ -1697,7 +1744,7 @@
     const buyer=getPlayer(deal.buyerId),seller=getPlayer(deal.sellerId);if(!buyer||!seller)return rejectOnlineTrade('Один из участников сделки больше недоступен.');
     const selected=new Set((selectedIds??deal.selectedIds??[]).map(Number)),entries=tradeSellEntries(seller),live=new Set(entries.map(e=>Number(e.id)));for(const id of [...selected])if(!live.has(id))selected.delete(id);
     const selectedEntries=entries.filter(e=>selected.has(Number(e.id))),max=selectedEntries.reduce((sum,e)=>sum+(numericItemPrice(e.card)||0),0);
-    els.modalContent.innerHTML=onlineTradeShell(deal,'buyer_select',`<div class="card-kicker">Сетевая торговля · выбор покупателя</div><div class="card-title">${buyer.name} выбирает предметы у ${seller.name}</div><div class="merchant-summary"><span>Покупатель: <b>${buyer.name}</b><strong class="trade-gold">${buyer.gold} зол.</strong></span><span>Продавец: <b>${seller.name}</b><strong class="trade-gold">${seller.gold} зол.</strong></span><span>Выбрано: <b>${selected.size}</b></span><span>Максимум: <b>${max} зол.</b></span></div><div class="merchant-grid">${entries.length?entries.map(e=>tradeSelectionCard(seller,e,selected.has(Number(e.id)))).join(''):'<div class="empty-box">У продавца нет предметов для торговли.</div>'}</div><div class="modal-actions"><button id="onlineTradeBuyerSend" class="success" ${selected.size?'':'disabled'}>Отправить продавцу (${selected.size})</button><button id="onlineTradeCancel" class="danger">Отменить сделку</button></div>`);
+    els.modalContent.innerHTML=onlineTradeShell(deal,'buyer_select',`<div class="card-kicker">Сетевая торговля · выбор покупателя</div><div class="card-title">${buyer.name} выбирает предметы у ${seller.name}</div><div class="merchant-summary"><span>Покупатель: <b>${buyer.name}</b><strong class="trade-gold">${buyer.gold} зол.</strong></span><span>Продавец: <b>${seller.name}</b><strong class="trade-gold">${seller.gold} зол.</strong></span><span>Выбрано: <b>${selected.size}</b></span><span>Максимум: <b>${max} зол.</b></span></div><div class="merchant-grid">${entries.length?tradeGroupedCards(entries,e=>tradeSelectionCard(seller,e,selected.has(Number(e.id)))):'<div class="empty-box">У продавца нет предметов для торговли.</div>'}</div><div class="modal-actions"><button id="onlineTradeBuyerSend" class="success" ${selected.size?'':'disabled'}>Отправить продавцу (${selected.size})</button><button id="onlineTradeCancel" class="danger">Отменить сделку</button></div>`);
     prepareOnlineTradeModal(buyer.id,()=>rejectOnlineTrade(`${buyer.name} отменил сделку.`));
     els.modalContent.querySelectorAll('[data-trade-toggle]').forEach(b=>b.onclick=()=>{const id=Number(b.dataset.tradeToggle);if(selected.has(id))selected.delete(id);else selected.add(id);renderOnlineTradeBuyerSelection(deal,[...selected])});
     document.getElementById('onlineTradeBuyerSend').onclick=()=>{const live=state.tradeDeal?.id===deal.id?state.tradeDeal:null,sellerNow=live?getPlayer(live.sellerId):null;if(!live||!sellerNow)return closeModal();const check=tradeSelectionCheck(sellerNow,[...selected]);if(!check.ok){alert(check.why);renderOnlineTradeBuyerSelection(live,check.entries.map(e=>e.id));return}setOnlineTradeStage(live,'seller_review',{selectedIds:check.entries.map(e=>Number(e.id)),price:check.max,acks:{}})};
@@ -1708,7 +1755,7 @@
     const buyer=getPlayer(deal.buyerId),seller=getPlayer(deal.sellerId);if(!buyer||!seller)return rejectOnlineTrade('Один из участников сделки больше недоступен.');
     const selected=new Set((selectedIds??deal.selectedIds??[]).map(Number)),entries=tradeSellEntries(seller),live=new Set(entries.map(e=>Number(e.id)));for(const id of [...selected])if(!live.has(id))selected.delete(id);
     const chosen=entries.filter(e=>selected.has(Number(e.id))),max=chosen.reduce((sum,e)=>sum+(numericItemPrice(e.card)||0),0);
-    els.modalContent.innerHTML=onlineTradeShell(deal,'seller_offer',`<div class="card-kicker">Сетевая торговля · предложение продавца</div><div class="card-title">${seller.name}: выберите предметы для ${buyer.name}</div><div class="merchant-summary"><span>Продавец: <b>${seller.name}</b><strong class="trade-gold">${seller.gold} зол.</strong></span><span>Покупатель: <b>${buyer.name}</b><strong class="trade-gold">${buyer.gold} зол.</strong></span><span>Выбрано: <b>${selected.size}</b></span><span>Максимум: <b>${max} зол.</b></span></div><div class="merchant-grid">${entries.length?entries.map(e=>tradeSelectionCard(seller,e,selected.has(Number(e.id)))).join(''):'<div class="empty-box">Нет предметов для торговли.</div>'}</div><div class="modal-actions"><button id="onlineTradeSellerOfferNext" class="success" ${selected.size?'':'disabled'}>Продолжить (${selected.size})</button><button id="onlineTradeCancel" class="danger">Отменить сделку</button></div>`);
+    els.modalContent.innerHTML=onlineTradeShell(deal,'seller_offer',`<div class="card-kicker">Сетевая торговля · предложение продавца</div><div class="card-title">${seller.name}: выберите предметы для ${buyer.name}</div><div class="merchant-summary"><span>Продавец: <b>${seller.name}</b><strong class="trade-gold">${seller.gold} зол.</strong></span><span>Покупатель: <b>${buyer.name}</b><strong class="trade-gold">${buyer.gold} зол.</strong></span><span>Выбрано: <b>${selected.size}</b></span><span>Максимум: <b>${max} зол.</b></span></div><div class="merchant-grid">${entries.length?tradeGroupedCards(entries,e=>tradeSelectionCard(seller,e,selected.has(Number(e.id)))):'<div class="empty-box">Нет предметов для торговли.</div>'}</div><div class="modal-actions"><button id="onlineTradeSellerOfferNext" class="success" ${selected.size?'':'disabled'}>Продолжить (${selected.size})</button><button id="onlineTradeCancel" class="danger">Отменить сделку</button></div>`);
     prepareOnlineTradeModal(seller.id,()=>rejectOnlineTrade(`${seller.name} отменил сделку.`));
     els.modalContent.querySelectorAll('[data-trade-toggle]').forEach(b=>b.onclick=()=>{const id=Number(b.dataset.tradeToggle);if(selected.has(id))selected.delete(id);else selected.add(id);renderOnlineTradeSellerOffer(deal,[...selected])});
     document.getElementById('onlineTradeSellerOfferNext').onclick=()=>{const live=state.tradeDeal?.id===deal.id?state.tradeDeal:null,sellerNow=live?getPlayer(live.sellerId):null;if(!live||!sellerNow)return closeModal();const check=tradeSelectionCheck(sellerNow,[...selected]);if(!check.ok){alert(check.why);return}live.selectedIds=check.entries.map(e=>Number(e.id));live.price=check.max;live.stage='seller_review';tradeDealTouch(live);renderOnlineTradeSellerReview(live,live.selectedIds,live.price)};
@@ -1901,7 +1948,7 @@
     if(!hit){c.afterEnemyMiss=false;if(combatEnemy()?.id===46&&!combatUsed('enemy46miss')){combatMarkUsed('enemy46miss');combatApplyHeroStatus(p,'Усталость')}if(a.profile.weapon?.id===218)c.nextHeroAttackBonus=(c.nextHeroAttackBonus||0)+1;combatPush(`${p.name} промахивается.`);combatTickBuffsAtHeroAttack();combatTickHeroStatuses();if(!state.combat)return;combatTickEnemyStatuses();if(c.enemyHp<=0){combatVictory();return}c.phase='enemy_ready';renderCombat();return}
     const dmg=rollExprDetailed(a.profile.damage),pass=combatPassiveDamageBonus(p,a.profile);let amount=dmg.total+pass.flat,detail=[`${dmg.expr}: ${dmg.text}`];for(const die of pass.dice){const r=rollExprDetailed(die);amount+=r.total;detail.push(`${die}: ${r.total}`)}let multiplier=1;
     if(natural===20){combatPush('<b>Натуральная 20 героя:</b> автоматическое попадание; срабатывают эффект героя и оружия.');const h=p.id;if(h==='warrior'){c.heroAdvantage+=2;combatPush('Боевой напор: преимущество на 2 следующие атаки.')}else if(h==='dwarf'){combatApplyEnemyStatus('Оглушение',1)}else if(h==='archer'){multiplier*=2;combatPush('Двойная стрела: урон этой атаки ×2.')}else if(h==='rogue'){multiplier*=2;combatApplyEnemyStatus('Кровотечение',3);combatPush('Кровоточащий удар: урон ×2 и Кровотечение.')}else if(h==='mage'){c.pendingMageNat20=true}}
-    const wid=a.profile.weapon?.id;if(wid){if((wid===142&&natural===20)||(wid===217&&natural===20)||(wid===220&&natural===20)||(wid===333&&d>=18))combatApplyEnemyStatus('Оглушение',1);if((wid===145&&natural===20)||(wid===215&&natural===20))combatApplyEnemyStatus('Яд',3);if((wid===146&&natural===20)||(wid===218&&d>=18)||(wid===211&&d>=19)||(wid===212&&((p.currentHp<=p.maxHp/2&&d>=19)||natural===20)))combatApplyEnemyStatus(wid===212?'Горение':'Кровотечение',3);if(wid===219&&natural===20){const r=rollExprDetailed('D6');amount+=r.total;detail.push(`Чёрный лук D6: ${r.total}`)}if(wid===220&&d>=18){const r=rollExprDetailed('D4');amount+=r.total;detail.push(`Книга молний D4: ${r.total}`)}if(wid===333&&d>=18){const r=rollExprDetailed('D4');amount+=r.total;detail.push(`Громовой Разлом D4: ${r.total}`)}if(wid===335&&!c.fateRiftTriggered){c.fateRiftTriggered=true;c.fateRiftReady=true;combatPush('Разлом Судьбы: следующая атака +3 к атаке и +D6 урона.')}}
+    const wid=a.profile.weapon?.id;if(wid){if((wid===142&&natural===20)||(wid===217&&natural===20)||(wid===220&&natural===20)||(wid===333&&d>=18))combatApplyEnemyStatus('Оглушение',1);if((wid===145&&natural===20)||(wid===215&&natural===20))combatApplyEnemyStatus('Яд',3);if((wid===146&&d>=18)||(wid===218&&d>=18)||(wid===211&&d>=19)||(wid===212&&((p.currentHp<=p.maxHp/2&&d>=19)||natural===20)))combatApplyEnemyStatus(wid===212?'Горение':'Кровотечение',3);if(wid===219&&natural===20){const r=rollExprDetailed('D6');amount+=r.total;detail.push(`Чёрный лук D6: ${r.total}`)}if(wid===220&&d>=18){const r=rollExprDetailed('D4');amount+=r.total;detail.push(`Книга молний D4: ${r.total}`)}if(wid===333&&d>=18){const r=rollExprDetailed('D4');amount+=r.total;detail.push(`Громовой Разлом D4: ${r.total}`)}if(wid===335&&!c.fateRiftTriggered){c.fateRiftTriggered=true;c.fateRiftReady=true;combatPush('Разлом Судьбы: следующая атака +3 к атаке и +D6 урона.')}}
     if((c.firstHeroDamageMultiplier||1)>1){multiplier*=c.firstHeroDamageMultiplier;combatPush(`${c.firstHeroDamageMultiplierLabel||'Чёрная игла'}: первый урон героя ×${c.firstHeroDamageMultiplier}.`);c.firstHeroDamageMultiplier=1;c.firstHeroDamageMultiplierLabel=null}multiplier*=Math.max(1,Number(c.heroDamageMultiplier||1));amount*=multiplier;if(p.id==='rogue')amount=Math.max(2,amount);c.pendingHeroDamage={amount,base:dmg.total,multiplier,detail,profile:a.profile};c.phase='hero_damage';combatSetRoll(`Урон героя · ${a.profile.damage}`,dmg.total,`${dmg.expr} = ${dmg.total}${multiplier>1?` · ×${multiplier}`:''}`,`Текущий урон: ${amount}${detail.length>1?' · '+detail.slice(1).join(' · '):''}`);combatPush(`Бросок урона: ${dmg.text}; текущий урон ${amount}.`);
     if(c.pendingMageNat20){c.phase='mage_nat20'}renderCombat();
   }
@@ -1910,7 +1957,7 @@
   function applyHeroDamageNow(){const c=state.combat,p=currentPlayer();if(!c||c.phase!=='hero_damage'||!c.pendingHeroDamage)return;const pd=c.pendingHeroDamage,red=enemyDamageReduction(pd.amount,pd.profile),amount=red.amount;recordDamageDealt(p,amount);c.enemyHp-=amount;c.heroSuccessfulHits++;combatPush(`${combatEnemy()?.name} получает ${amount} урона${red.reduction?` (уменьшено на ${red.reduction})`:''}. Осталось ${Math.max(0,c.enemyHp)}/${c.enemyMaxHp}.`);c.pendingHeroDamage=null;
     if(c.enemyHp<=0){combatVictory();return}combatTickBuffsAtHeroAttack();combatTickHeroStatuses();if(!state.combat)return;combatTickEnemyStatuses();if(c.enemyHp<=0){combatVictory();return}c.phase='enemy_ready';renderCombat()}
   function combatTickEnemyStatuses(){const c=state.combat,p=currentPlayer();if(!c)return;for(const [key,label] of [['enemyBleed','Кровотечение'],['enemyBurn','Горение']]){if(c[key]>0){recordDamageDealt(p,2);c.enemyHp-=2;c[key]--;combatPush(`${combatEnemy()?.name}: ${label} наносит 2 урона. Осталось ${Math.max(0,c.enemyHp)} ЗД.`)}}}
-  function combatTickHeroStatuses(){const c=state.combat,p=currentPlayer();if(!c)return;ensurePlayerModel(p);for(const label of ['Кровотечение','Горение']){let n=p.statusTimers?.[label]??c.heroStatusTimers?.[label]??0;if(n>0&&p.statuses.includes(label)){recordDamageTaken(p,2);p.currentHp-=2;n--;p.statusTimers[label]=n;c.heroStatusTimers[label]=n;p.statusTickedTurn[label]=p.personalTurn;combatPush(`${p.name}: ${label} наносит 2 урона. Осталось ${Math.max(0,p.currentHp)} ЗД; длительность ${n}.`);if(n<=0)removeStatus(p,label)}}if(p.currentHp<=0)combatHeroDeath('периодический урон')}
+  function combatTickHeroStatuses(){const c=state.combat,p=currentPlayer();if(!c)return;ensurePlayerModel(p);for(const label of ['Кровотечение','Горение']){if(!p.statuses.includes(label)){delete p.statusTimers[label];delete c.heroStatusTimers?.[label];continue;}let n=p.statusTimers?.[label]??0;if(n>0&&p.statuses.includes(label)){recordDamageTaken(p,2);p.currentHp-=2;n--;p.statusTimers[label]=n;c.heroStatusTimers[label]=n;p.statusTickedTurn[label]=p.personalTurn;combatPush(`${p.name}: ${label} наносит 2 урона. Осталось ${Math.max(0,p.currentHp)} ЗД; длительность ${n}.`);if(n<=0)removeStatus(p,label)}}if(p.currentHp<=0)combatHeroDeath('периодический урон')}
   function combatEnemyTurn(){const c=state.combat,p=currentPlayer(),e=combatEnemy();if(!c||c.phase!=='enemy_ready')return;if(c.enemyStunned>0){c.enemyStunned--;combatPush(`${e.name} пропускает атаку из-за Оглушения.`);combatTickBuffsAtEnemyTurn();if(c.enemyHp<=0){combatVictory();return}c.round++;combatRoundStartCheck();if(!state.combat)return;c.phase='hero_turn';renderCombat();return}
     const mode=combatEnemyMode(),rr=rollD20WithMode(mode),bonus=combatEnemyAttackModifier(p),total=rr.chosen+bonus,target=combatEffectiveDefense(p),natural=rr.mode==='normal'?(rr.chosen===20?20:rr.chosen===1?1:null):null;consumeEnemyMode();c.enemyAttackCount++;c.enemyAttackRoll={rolls:rr.rolls,chosen:rr.chosen,mode,bonus,total,target,natural};c.phase='enemy_roll';combatSetRoll(`Атака врага · D20`,rr.chosen,`${rr.chosen} ${signed(bonus)} = ${total}`,`против ЗЩ ${target}${rr.rolls.length>1?` · броски ${rr.rolls.join(' / ')} · натуральные 1/20 не срабатывают`:''}`,natural);combatPush(`${e.name}: D20 ${rr.rolls.join('/')} → ${rr.chosen} ${signed(bonus)} = ${total} против ЗЩ ${target}.`);renderCombat();
   }
@@ -1972,8 +2019,8 @@
     if(!ok){alert('Сейчас эту способность применить нельзя.');return}c.heroAbilityUsed=true;combatPush(`${p.name} использует способность «${HERO_COMBAT[p.id].ability}».`);renderCombat();updateUI()}
   function combatEnemyHealFromHeroHealing(amount){const c=state.combat,e=combatEnemy();if(c&&e?.id===37&&amount>0){c.enemyHp=Math.min(c.enemyMaxHp,c.enemyHp+1);combatPush(`${e.name}: герой лечится — враг восстанавливает 1 ЗД.`)}}
   function supportedCombatEffect(p,card,ctx){if(!state.combat||!card||ctx?.where!=='equipment')return{supported:false,enabled:false,why:''};const c=state.combat,id=card.id,t=itemType(card);if(t==='зелье'){if(!['potion0','potion1'].includes(ctx.slot))return{supported:true,enabled:false,why:'В бою зелья используются только из быстрых слотов.'};const unlock=c.potionUnlockRound?.[id];if(unlock!=null&&c.round<unlock)return{supported:true,enabled:false,why:`Это зелье переложено из рюкзака в этом боевом ходу. Оно станет доступно в боевом раунде ${unlock}.`};if(unlock!=null&&c.round>=unlock)delete c.potionUnlockRound[id];const eff=String(card.fields?.['Эффект']||'');if(/восстанови\s+(?:\d+D\d+|D\d+)\s+ЗД/i.test(eff))return{supported:true,enabled:['hero_turn','post_damage'].includes(c.phase)&&p.currentHp<p.maxHp,why:p.currentHp>=p.maxHp?'ЗД уже полные.':(!['hero_turn','post_damage'].includes(c.phase)?'Лечение доступно в свой боевой ход до атаки или после принятого урона; во время принятия урона оно заблокировано.':'')};if(/сними\s+1\s+негативный эффект/i.test(eff))return{supported:true,enabled:p.statuses.length>0,why:p.statuses.length?'':'Нет негативных эффектов.'};if(/\+(?:2|3)\s+к атаке|\+D4\s+урона/i.test(eff))return{supported:true,enabled:c.phase==='hero_turn',why:c.phase==='hero_turn'?'':'Это зелье нужно выпить до броска атаки.'};if(/\+(?:2|3)\s+ЗЩ/i.test(eff))return{supported:true,enabled:['hero_turn','enemy_ready'].includes(c.phase),why:['hero_turn','enemy_ready'].includes(c.phase)?'':'Зелье защиты нужно выпить до броска атаки врага.'};return{supported:true,enabled:false,why:'Сейчас эффект зелья неприменим.'}}
-    const activeIds=[147,149,153,157,159,166,168,173,174,194,193,200,223,225,226,227,233,244,245,246,248,261,262,263,265,196,197,266,267,268,325,326,328,329,330,332,342];if(!activeIds.includes(id))return{supported:false,enabled:false,why:''};if(combatUsed(`item:${id}`))return{supported:true,enabled:false,why:'Эффект уже использован в этом бою.'};if(id===194&&useBlocked(p,id))return{supported:true,enabled:false,why:'Камень удачи уже использован. Он восстановится после посещения постоянной локации или своей территории.'};if([174,175,226,263].includes(id)&&useBlocked(p,id))return{supported:true,enabled:false,why:'Эффект уже использован и восстановится после соответствующей локации.'};let enabled=false;
-    if([196,266,159,233,261,325,329,342].includes(id))enabled=c.phase==='enemy_damage'&&!!c.pendingEnemyDamage;if(id===157)enabled=c.phase==='enemy_damage'&&!!c.pendingEnemyDamage&&c.pendingEnemyDamage.enemyRollTotal===combatEffectiveDefense(p);if([200,267,246,328,332].includes(id))enabled=c.phase==='hero_damage'&&!!c.pendingHeroDamage;if(id===149){const n=Number(c.attackRoll?.chosen||0);enabled=c.phase==='hero_damage'&&!!c.pendingHeroDamage&&n>=10&&n<=20;}if(id===265)enabled=c.phase==='hero_damage'&&!!c.pendingHeroDamage&&/(босс|демон|нежить|проклят)/.test(combatEnemyType());if([197,268,193,326,330].includes(id))enabled=['hero_turn','post_damage'].includes(c.phase)&&p.currentHp<p.maxHp;if(id===248)enabled=['hero_turn','hero_roll','hero_damage','enemy_ready','enemy_damage','enemy_miss'].includes(c.phase)&&p.statuses.length>0;if([166,244,147,153,194].includes(id))enabled=c.phase==='hero_roll'&&!!c.attackRoll;if(id===153&&enabled){const a=c.attackRoll;enabled=(a.chosen===1?true:a.total<a.target)}if(id===223)enabled=c.phase==='pre';if(id===168)enabled=c.phase==='enemy_damage'&&['Яд','Кровотечение'].includes(c.lastAppliedHeroStatus);if(id===225)enabled=c.phase==='enemy_damage'&&['Яд','Кровотечение','Горение'].includes(c.lastAppliedHeroStatus);if(id===245)enabled=c.phase==='enemy_damage'&&!!c.lastAppliedHeroStatus;if(id===173)enabled=c.phase==='enemy_miss'&&c.afterEnemyMiss;if(id===262)enabled=c.phase==='enemy_damage'&&!!c.pendingEnemyDamage;if([174,263].includes(id))enabled=p.statuses.length>0;if(id===175)enabled=p.statuses.includes('Усталость');if(id===226)enabled=p.statuses.length>0;if(id===227)enabled=p.statuses.includes('Оглушение')||c.lastAppliedHeroStatus==='Оглушение'||c.heroStunned>0;return{supported:true,enabled,why:enabled?'':'Условие эффекта сейчас не выполнено.'}}
+    const activeIds=[147,149,153,157,159,166,168,173,174,194,193,345,346,347,200,223,225,226,227,233,244,245,246,248,261,262,263,265,196,197,266,267,268,325,326,328,329,330,332,342];if(!activeIds.includes(id))return{supported:false,enabled:false,why:''};if(combatUsed(`item:${id}`))return{supported:true,enabled:false,why:'Эффект уже использован в этом бою.'};if(id===194&&useBlocked(p,id))return{supported:true,enabled:false,why:'Камень удачи уже использован. Он восстановится после посещения постоянной локации или своей территории.'};if([174,175,226,263].includes(id)&&useBlocked(p,id))return{supported:true,enabled:false,why:'Эффект уже использован и восстановится после соответствующей локации.'};let enabled=false;
+    if([196,266,159,233,261,325,329,342].includes(id))enabled=c.phase==='enemy_damage'&&!!c.pendingEnemyDamage;if(id===157)enabled=c.phase==='enemy_damage'&&!!c.pendingEnemyDamage&&c.pendingEnemyDamage.enemyRollTotal===combatEffectiveDefense(p);if([200,267,246,328,332].includes(id))enabled=c.phase==='hero_damage'&&!!c.pendingHeroDamage;if(id===149){const n=Number(c.attackRoll?.chosen||0);enabled=c.phase==='hero_damage'&&!!c.pendingHeroDamage&&n>=10&&n<=20;}if(id===265)enabled=c.phase==='hero_damage'&&!!c.pendingHeroDamage&&/(босс|демон|нежить|проклят)/.test(combatEnemyType());if([197,268,193,345,346,347,326,330].includes(id))enabled=['hero_turn','post_damage'].includes(c.phase)&&p.currentHp<p.maxHp;if(id===248)enabled=['hero_turn','hero_roll','hero_damage','enemy_ready','enemy_damage','enemy_miss'].includes(c.phase)&&p.statuses.length>0;if([166,244,147,153,194].includes(id))enabled=c.phase==='hero_roll'&&!!c.attackRoll;if(id===153&&enabled){const a=c.attackRoll;enabled=(a.chosen===1?true:a.total<a.target)}if(id===223)enabled=c.phase==='pre';if(id===168)enabled=c.phase==='enemy_damage'&&['Яд','Кровотечение'].includes(c.lastAppliedHeroStatus);if(id===225)enabled=c.phase==='enemy_damage'&&['Яд','Кровотечение','Горение'].includes(c.lastAppliedHeroStatus);if(id===245)enabled=c.phase==='enemy_damage'&&!!c.lastAppliedHeroStatus;if(id===173)enabled=c.phase==='enemy_miss'&&c.afterEnemyMiss;if(id===262)enabled=c.phase==='enemy_damage'&&!!c.pendingEnemyDamage;if(id===347)enabled=!useBlocked(p,id)&&p.currentHp<p.maxHp;if([174,263].includes(id))enabled=p.statuses.length>0;if(id===175)enabled=p.statuses.includes('Усталость');if(id===226)enabled=p.statuses.length>0;if(id===227)enabled=p.statuses.includes('Оглушение')||c.lastAppliedHeroStatus==='Оглушение'||c.heroStunned>0;return{supported:true,enabled,why:enabled?'':'Условие эффекта сейчас не выполнено.'}}
   function chooseCombatCleanseStatus(status){const c=state.combat,p=currentPlayer();if(!c?.pendingCleanse)return;const q=c.pendingCleanse;if(!q.options.includes(status))return;const card=itemCard(q.id);removeStatus(p,status);if(q.consume!==false)consumeHeldItem(p,q.id,q.ctx);else{if(q.markReset)useMark(p,q.id,q.markReset);combatMarkUsed(`item:${q.id}`)}combatPush(`${card?.name||'Очищение'}: снят эффект «${status}».`);c.pendingCleanse=null;c.phase=q.returnPhase;combatSetRoll(card?.name||'Очищение','✓','Негативный эффект снят',status);if(!els.sheetDrawer.hidden)renderCharacterSheet(sheetView.mode,sheetView.bonusKey);renderCombat();updateUI()}
 
   function applyCombatItemEffect(p,id,ctx){const c=state.combat,card=itemCard(id),info=supportedCombatEffect(p,card,ctx);if(!c||!info.enabled){if(info?.why)alert(info.why);return}const eff=String(card.fields?.['Эффект']||''),t=itemType(card);
@@ -1988,7 +2035,7 @@
     else if(id===149){const r=rollExprDetailed('D4');c.pendingHeroDamage.amount+=r.total;combatApplyEnemyStatus('Горение',3);combatSetRoll(`${card.name} · D4`,r.total,`D4 = ${r.total}`,`+D4 урона и Горение · текущий урон ${c.pendingHeroDamage.amount}`)}
     else if(id===246){const hr=rollHealing(p,'D4'),before=p.currentHp;heal(p,hr.total);const restored=p.currentHp-before;combatEnemyHealFromHeroHealing(restored);combatSetRoll(`${card.name} · ${hr.used}`,hr.total,`${hr.used} = ${hr.total}`,`Восстановлено ${restored} ЗД · ЗД ${p.currentHp}/${p.maxHp}`)}
     else if(id===265){const r=rollExprDetailed('D12');c.pendingHeroDamage.amount+=r.total;combatSetRoll(`${card.name} · D12`,r.total,`D12 = ${r.total}`,`Текущий урон ${c.pendingHeroDamage.amount}`)}
-    else if([197,268,193,326,330].includes(id)){const die=id===197||id===193?'D6':id===268?'D8':id===326?'D12':'2D8',hr=rollHealing(p,die),before=p.currentHp;heal(p,hr.total);const restored=p.currentHp-before;combatEnemyHealFromHeroHealing(restored);combatSetRoll(`${card.name} · ${hr.used}`,hr.total,`${hr.used} = ${hr.total}`,`Восстановлено ${restored} ЗД · ЗД ${p.currentHp}/${p.maxHp}`);combatPush(`${card.name}: восстановлено ${restored} ЗД.`)}
+    else if([197,268,193,345,346,347,326,330].includes(id)){const die=id===345?'D4':id===347?'D10':id===193?'D8':id===197||id===346?'D6':id===268?'D8':id===326?'D12':'2D8';if(id===347)useMark(p,id,'shrine');const hr=rollHealing(p,die),before=p.currentHp;heal(p,hr.total);const restored=p.currentHp-before;combatEnemyHealFromHeroHealing(restored);combatSetRoll(`${card.name} · ${hr.used}`,hr.total,`${hr.used} = ${hr.total}`,`Восстановлено ${restored} ЗД · ЗД ${p.currentHp}/${p.maxHp}`);combatPush(`${card.name}: восстановлено ${restored} ЗД.`)}
     else if(id===248){const d=rand(20),wis=effectiveStat(p,'wis'),tot=d+wis,natural=d===20?20:d===1?1:null,ok=d===20?true:d===1?false:tot>=10;combatSetRoll(`${card.name} · МУД 10+`,d,`${d} ${signed(wis)} = ${tot}`,ok?'Успех':'Провал',natural);announceCheck(card.name,d,'МУД',wis,tot,10,ok,natural);if(ok){const st=p.statuses[0];if(st)removeStatus(p,st)}}
     else if(id===166){c.attackRoll.bonus+=3;c.attackRoll.total+=3;combatSetRoll(`${card.name} · +3`,c.attackRoll.chosen,`${c.attackRoll.chosen} ${signed(c.attackRoll.bonus)} = ${c.attackRoll.total}`,`против ЗЩ ${c.attackRoll.target}`,c.attackRoll.natural)}
     else if(id===244){c.attackRoll.bonus+=5;c.attackRoll.total+=5;combatSetRoll(`${card.name} · +5`,c.attackRoll.chosen,`${c.attackRoll.chosen} ${signed(c.attackRoll.bonus)} = ${c.attackRoll.total}`,`против ЗЩ ${c.attackRoll.target}`,c.attackRoll.chosen)}
@@ -2233,18 +2280,18 @@
     const groups={};state.players.forEach(p=>(groups[p.hex]??=[]).push(p));Object.entries(groups).forEach(([hex,ps])=>{const h=MAP.hexes[hex],n=ps.length;ps.forEach((p,i)=>{const a=n===1?0:Math.PI*2*i/n,rad=n===1?0:24,x=h.x+Math.cos(a)*rad,y=h.y+Math.sin(a)*rad;if(p.id===currentPlayer().id)els.overlay.appendChild(svgEl('circle',{cx:x,cy:y,r:25,class:'current-ring'}));els.overlay.appendChild(svgEl('circle',{cx:x,cy:y,r:17,fill:p.color,class:'player-marker'}));const t=svgEl('text',{x,y:y+1,class:'marker-label'});t.textContent=p.initial;els.overlay.appendChild(t)})});applyMapZoom(false)
   }
 
-  function saveGame(){if(!state.started)return;localStorage.setItem('rpgDigitalPrototypeV0638',JSON.stringify(state));log('Партия v0.6.38 сохранена в браузере.')}
+  function saveGame(){if(!state.started)return;localStorage.setItem('rpgDigitalPrototypeV0639',JSON.stringify(state));log('Партия v0.6.40 сохранена в браузере.')}
   function loadGame(){
-    const raw=localStorage.getItem('rpgDigitalPrototypeV0638')||localStorage.getItem('rpgDigitalPrototypeV0637')||localStorage.getItem('rpgDigitalPrototypeV0636')||localStorage.getItem('rpgDigitalPrototypeV0635')||localStorage.getItem('rpgDigitalPrototypeV0634')||localStorage.getItem('rpgDigitalPrototypeV0633')||localStorage.getItem('rpgDigitalPrototypeV0632')||localStorage.getItem('rpgDigitalPrototypeV0631')||localStorage.getItem('rpgDigitalPrototypeV063')||localStorage.getItem('rpgDigitalPrototypeV062')||localStorage.getItem('rpgDigitalPrototypeV060')||localStorage.getItem('rpgDigitalPrototypeV0522')||localStorage.getItem('rpgDigitalPrototypeV0521')||localStorage.getItem('rpgDigitalPrototypeV0520')||localStorage.getItem('rpgDigitalPrototypeV0519')||localStorage.getItem('rpgDigitalPrototypeV0518')||localStorage.getItem('rpgDigitalPrototypeV0517')||localStorage.getItem('rpgDigitalPrototypeV0516')||localStorage.getItem('rpgDigitalPrototypeV0515')||localStorage.getItem('rpgDigitalPrototypeV0514')||localStorage.getItem('rpgDigitalPrototypeV0513')||localStorage.getItem('rpgDigitalPrototypeV0512')||localStorage.getItem('rpgDigitalPrototypeV0511')||localStorage.getItem('rpgDigitalPrototypeV0510')||localStorage.getItem('rpgDigitalPrototypeV059')||localStorage.getItem('rpgDigitalPrototypeV058')||localStorage.getItem('rpgDigitalPrototypeV057')||localStorage.getItem('rpgDigitalPrototypeV056')||localStorage.getItem('rpgDigitalPrototypeV055')||localStorage.getItem('rpgDigitalPrototypeV054')||localStorage.getItem('rpgDigitalPrototypeV053')||localStorage.getItem('rpgDigitalPrototypeV052')||localStorage.getItem('rpgDigitalPrototypeV051')||localStorage.getItem('rpgDigitalPrototypeV050')||localStorage.getItem('rpgDigitalPrototypeV045')||localStorage.getItem('rpgDigitalPrototypeV044')||localStorage.getItem('rpgDigitalPrototypeV043')||localStorage.getItem('rpgDigitalPrototypeV042')||localStorage.getItem('rpgDigitalPrototypeV041')||localStorage.getItem('rpgDigitalPrototypeV040')||localStorage.getItem('rpgDigitalPrototypeV033')||localStorage.getItem('rpgDigitalPrototypeV032');
+    const raw=localStorage.getItem('rpgDigitalPrototypeV0639')||localStorage.getItem('rpgDigitalPrototypeV0638')||localStorage.getItem('rpgDigitalPrototypeV0637')||localStorage.getItem('rpgDigitalPrototypeV0636')||localStorage.getItem('rpgDigitalPrototypeV0635')||localStorage.getItem('rpgDigitalPrototypeV0634')||localStorage.getItem('rpgDigitalPrototypeV0633')||localStorage.getItem('rpgDigitalPrototypeV0632')||localStorage.getItem('rpgDigitalPrototypeV0631')||localStorage.getItem('rpgDigitalPrototypeV063')||localStorage.getItem('rpgDigitalPrototypeV062')||localStorage.getItem('rpgDigitalPrototypeV060')||localStorage.getItem('rpgDigitalPrototypeV0522')||localStorage.getItem('rpgDigitalPrototypeV0521')||localStorage.getItem('rpgDigitalPrototypeV0520')||localStorage.getItem('rpgDigitalPrototypeV0519')||localStorage.getItem('rpgDigitalPrototypeV0518')||localStorage.getItem('rpgDigitalPrototypeV0517')||localStorage.getItem('rpgDigitalPrototypeV0516')||localStorage.getItem('rpgDigitalPrototypeV0515')||localStorage.getItem('rpgDigitalPrototypeV0514')||localStorage.getItem('rpgDigitalPrototypeV0513')||localStorage.getItem('rpgDigitalPrototypeV0512')||localStorage.getItem('rpgDigitalPrototypeV0511')||localStorage.getItem('rpgDigitalPrototypeV0510')||localStorage.getItem('rpgDigitalPrototypeV059')||localStorage.getItem('rpgDigitalPrototypeV058')||localStorage.getItem('rpgDigitalPrototypeV057')||localStorage.getItem('rpgDigitalPrototypeV056')||localStorage.getItem('rpgDigitalPrototypeV055')||localStorage.getItem('rpgDigitalPrototypeV054')||localStorage.getItem('rpgDigitalPrototypeV053')||localStorage.getItem('rpgDigitalPrototypeV052')||localStorage.getItem('rpgDigitalPrototypeV051')||localStorage.getItem('rpgDigitalPrototypeV050')||localStorage.getItem('rpgDigitalPrototypeV045')||localStorage.getItem('rpgDigitalPrototypeV044')||localStorage.getItem('rpgDigitalPrototypeV043')||localStorage.getItem('rpgDigitalPrototypeV042')||localStorage.getItem('rpgDigitalPrototypeV041')||localStorage.getItem('rpgDigitalPrototypeV040')||localStorage.getItem('rpgDigitalPrototypeV033')||localStorage.getItem('rpgDigitalPrototypeV032');
     if(!raw){alert('Сохранённой партии пока нет.');return}
     try{
-      state=JSON.parse(raw);if(!state.locations)state.locations={};if(!state.territories)state.territories={};if(!state.areas)state.areas=[];stripPermanentLocationCardsFromDecks(state.decks);normalizeLegendaryHeartLoot(state.decks);
+      state=JSON.parse(raw);if(!state.locations)state.locations={};if(!state.territories)state.territories={};if(!state.areas)state.areas=[];stripPermanentLocationCardsFromDecks(state.decks);normalizeLegendaryHeartLoot(state.decks);normalizeTavernMercenaries();
       if(state.locationUsedThisTurn==null)state.locationUsedThisTurn=false;if(state.locationActivationHex===undefined)state.locationActivationHex=null;if(state.portalPending==null)state.portalPending=null;if(state.clearedThisTurnHex===undefined)state.clearedThisTurnHex=null;if(state.foreignTerritoryPending===undefined)state.foreignTerritoryPending=null;if(state.tradeOpportunity===undefined)state.tradeOpportunity=null;if(state.tradeDeal===undefined)state.tradeDeal=null;if(state.tributeConsentPending===undefined)state.tributeConsentPending=null;if(state.dungeonEntryNotice===undefined)state.dungeonEntryNotice=null;state.territoryBuiltNotice=null;if(state.movePending===undefined)state.movePending=false;if(state.moveOriginHex===undefined)state.moveOriginHex=null;if(state.moveTransit===undefined)state.moveTransit=null;if(state.pendingMoveAction===undefined)state.pendingMoveAction=null;if(state.chosenMovePlan===undefined)state.chosenMovePlan=null;if(state.inspectPlayerId===undefined)state.inspectPlayerId=null;if(state.mapHighlight===undefined)state.mapHighlight=null;if(state.mapZoom===undefined)state.mapZoom=1;if(state.gameOver===undefined)state.gameOver=false;if(state.sharedDifficulty===undefined)state.sharedDifficulty=null;if(!Array.isArray(state.journal))state.journal=[];
       if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
       const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
-      state.version='0.6.38';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.38.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
+      state.version='0.6.40';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.40.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
     }catch(e){console.error(e);alert('Не удалось загрузить сохранение.')}
   }
   function cloneJson(v){return JSON.parse(JSON.stringify(v))}
@@ -2255,12 +2302,12 @@
     return out;
   }
   function normalizeIncomingState(next){
-    state=cloneJson(next||freshState());if(!state.locations)state.locations={};if(!state.territories)state.territories={};if(!state.areas)state.areas=[];stripPermanentLocationCardsFromDecks(state.decks);normalizeLegendaryHeartLoot(state.decks);
+    state=cloneJson(next||freshState());if(!state.locations)state.locations={};if(!state.territories)state.territories={};if(!state.areas)state.areas=[];stripPermanentLocationCardsFromDecks(state.decks);normalizeLegendaryHeartLoot(state.decks);normalizeTavernMercenaries();
     if(state.locationUsedThisTurn==null)state.locationUsedThisTurn=false;if(state.locationActivationHex===undefined)state.locationActivationHex=null;if(state.portalPending==null)state.portalPending=null;if(state.clearedThisTurnHex===undefined)state.clearedThisTurnHex=null;if(state.foreignTerritoryPending===undefined)state.foreignTerritoryPending=null;if(state.tradeOpportunity===undefined)state.tradeOpportunity=null;if(state.tradeDeal===undefined)state.tradeDeal=null;if(state.tributeConsentPending===undefined)state.tributeConsentPending=null;if(state.dungeonEntryNotice===undefined)state.dungeonEntryNotice=null;state.territoryBuiltNotice=null;if(state.movePending===undefined)state.movePending=false;if(state.moveOriginHex===undefined)state.moveOriginHex=null;if(state.moveTransit===undefined)state.moveTransit=null;if(state.pendingMoveAction===undefined)state.pendingMoveAction=null;if(state.chosenMovePlan===undefined)state.chosenMovePlan=null;if(state.inspectPlayerId===undefined)state.inspectPlayerId=null;if(state.mapHighlight===undefined)state.mapHighlight=null;if(state.mapZoom===undefined)state.mapZoom=1;if(state.gameOver===undefined)state.gameOver=false;if(state.sharedDifficulty===undefined)state.sharedDifficulty=null;if(!Array.isArray(state.journal))state.journal=[];
     if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
-    state.version='0.6.38';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    state.version='0.6.40';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){
