@@ -161,6 +161,39 @@
     session.lastSideSnapshot='';
     await pullGame(false);
   }
+  // Явная надёжная фиксация операций торговца: не позволяем закрыть окно,
+  // пока последняя версия золота, инвентаря и колод не записана сервером.
+  async function flushMerchant(ownerId){
+    if(!session.gameEntered)return true;
+    if(!ownerId||ownerId!==myHeroId())throw new Error('Недоступно сохранение для другого героя.');
+    const started=Date.now();
+    while(session.syncBusy){
+      if(Date.now()-started>15000)throw new Error('Сервер долго занят. Попробуйте снова.');
+      await new Promise(resolve=>setTimeout(resolve,45));
+    }
+    session.syncBusy=true;
+    try{
+      const e=engine();let retries=0;
+      while(retries++<4){
+        const before=e?.exportSideState?.(ownerId);
+        if(!before||before.ownerId!==ownerId)throw new Error('Торговая сессия уже закрыта.');
+        await api(`/api/rooms/${session.code}/game/side`,{method:'POST',body:JSON.stringify({...auth(),side:before})});
+        // Не только ответ 200: считываем состояние с сервера и сверяем
+        // деньги/предметы с последним подтверждаемым действием.
+        const verified=await fetchGame();
+        const wanted=(before.players||[]).find(p=>p.id===ownerId);
+        const actual=(verified.state?.players||[]).find(p=>p.id===ownerId);
+        const fields=['gold','backpack','equipment','pendingItems','itemUsage'];
+        const matched=!!wanted&&!!actual&&fields.every(key=>snap(wanted[key]??null)===snap(actual[key]??null));
+        if(!matched)continue;
+        session.lastSideSnapshot=snap(before);
+        saveRecoverySnapshot(e.exportState());
+        if(snap(e.exportSideState?.(ownerId))===snap(before))return true;
+      }
+      throw new Error('Данные изменились во время сохранения. Повторите попытку.');
+    }finally{session.syncBusy=false}
+  }
+  window.__RPG_NET_FLUSH_MERCHANT__=flushMerchant;
   let localMutationTimer=null;
   window.addEventListener('rpg-local-mutation',()=>{if(!session.gameEntered)return;clearTimeout(localMutationTimer);localMutationTimer=setTimeout(syncGame,30)});
   function startGameSync(){clearInterval(session.gameTimer);session.gameTimer=setInterval(syncGame,400);setTimeout(syncGame,80)}
