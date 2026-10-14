@@ -111,7 +111,7 @@ class Handler(SimpleHTTPRequestHandler):
                 touch_room(room)
                 if not room.get('started'): return self._json(409, {'error':'Партия ещё не началась'})
                 if room.get('gameState') is None: return self._json(202, {'ready':False,'revision':int(room.get('gameRevision') or 0)})
-                return self._json(200, {'ready':True,'revision':int(room.get('gameRevision') or 0),'state':room.get('gameState')})
+                return self._json(200, {'ready':True,'revision':int(room.get('gameRevision') or 0),'state':room.get('gameState'),'sideVersions':{hid:int(entry.get('seq') or 0) for hid,entry in (room.get('sidePlayerOverrides') or {}).items()}})
         if p.path.startswith('/api/rooms/'):
             code=p.path.split('/')[-1]; q=urllib.parse.parse_qs(p.query)
             pid=(q.get('playerId') or [''])[0]; secret=(q.get('playerSecret') or [''])[0]
@@ -301,17 +301,20 @@ class Handler(SimpleHTTPRequestHandler):
                 # Запоминаем только реально изменённые side-поля. Следующий full-state от другого
                 # героя не должен откатить инвентарь/торговлю назад из-за устаревшего снимка.
                 if changed_by_hero:
+                    room['sideMutationCounter']=int(room.get('sideMutationCounter') or 0)+1
+                    side_seq=room['sideMutationCounter']
                     overlays=room.setdefault('sidePlayerOverrides',{})
                     deal_rev=int((side.get('tradeDeal') or {}).get('rev') or 0) if isinstance(side.get('tradeDeal'),dict) else 0
                     for hid,changes in changed_by_hero.items():
                         entry=overlays.setdefault(hid,{'fields':{},'dealRev':0})
                         entry.setdefault('fields',{}).update(changes)
+                        entry['seq']=side_seq
                         if deal_rev: entry['dealRev']=max(int(entry.get('dealRev') or 0),deal_rev)
                 # Важно: side-sync НЕ меняет основную gameRevision. Иначе фоновая работа
                 # инвентаря/торговли создаёт 409 для активного игрока и теряются бой/переход хода.
                 # Клиенты всё равно видят side-изменения по сравнению снимка gameState.
                 room['gameUpdatedAt']=int(time.time())
-                return self._json(200, {'revision':room['gameRevision']})
+                return self._json(200, {'revision':room['gameRevision'],'sideVersions':{hid:int(entry.get('seq') or 0) for hid,entry in (room.get('sidePlayerOverrides') or {}).items()}})
         if p.endswith('/game/state') and p.startswith('/api/rooms/'):
             code=p.split('/')[-3]; pid=body.get('playerId'); secret=body.get('playerSecret'); game=body.get('state'); base=int(body.get('baseRevision') or 0)
             if not isinstance(game,dict): return self._json(400, {'error':'Некорректное состояние партии'})
@@ -326,6 +329,14 @@ class Handler(SimpleHTTPRequestHandler):
                 existing=room.get('gameState') or {}
                 account=authorized_player(room,pid,secret) or {}
                 actor=account.get('heroId')
+                order=existing.get('order') or []
+                ix=int(existing.get('currentIndex') or 0)
+                active=order[ix % len(order)] if order else None
+                dungeon=existing.get('dungeonEntryNotice') or {}
+                tribute=existing.get('tributeConsentPending') or {}
+                can_offturn=(isinstance(dungeon,dict) and dungeon.get('heroId')==actor) or (isinstance(tribute,dict) and tribute.get('ownerId')==actor)
+                if active and actor!=active and not can_offturn:
+                    return self._json(409, {'error':'Ход уже перешёл другому герою. Повторно отправлять его нельзя.','revision':room.get('gameRevision')})
                 existing_deal=existing.get('tradeDeal') if isinstance(existing,dict) else None
                 incoming_deal=game.get('tradeDeal') if isinstance(game,dict) else None
                 existing_deal_rev=int(existing_deal.get('rev') or 0) if isinstance(existing_deal,dict) else -1
@@ -336,13 +347,19 @@ class Handler(SimpleHTTPRequestHandler):
                     game['tradeDeal']=existing_deal
                 incoming_players={q.get('id'):q for q in game.get('players',[]) if isinstance(q,dict)}
                 overlays=room.get('sidePlayerOverrides') or {}
+                side_acks=body.get('sideAcks') or {}
+                if not isinstance(side_acks,dict):side_acks={}
                 for hid,entry in list(overlays.items()):
                     inc=incoming_players.get(hid)
                     if not inc or not isinstance(entry,dict): continue
                     overlay_deal_rev=int(entry.get('dealRev') or 0)
                     # Свой full-state очищает старый обычный off-turn overlay. Торговый overlay
                     # очищается только если клиент уже видел не менее свежую версию сделки.
-                    caught_up=(hid==actor and (not overlay_deal_rev or incoming_deal_rev>=overlay_deal_rev))
+                    caught_up=(hid==actor and int(side_acks.get(hid) or 0)>=int(entry.get('seq') or 0) and (not overlay_deal_rev or incoming_deal_rev>=overlay_deal_rev))
+                    # Once the authoritative state includes a side patch, it is safe
+                    # to forget it even when the actor is a different hero.
+                    if all(inc.get(key)==value for key,value in (entry.get('fields') or {}).items()):
+                        caught_up=True
                     if caught_up:
                         overlays.pop(hid,None);continue
                     for key,value in (entry.get('fields') or {}).items(): inc[key]=value

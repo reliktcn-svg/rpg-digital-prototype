@@ -2,7 +2,7 @@
   const HEROES=[
     ['warrior','Воин','#4c83ff'],['dwarf','Дворф','#d34b45'],['mage','Маг','#9d5cff'],['archer','Лучник','#4db76d'],['rogue','Разбойник','#444b55']
   ];
-  let session={mode:null,code:null,playerId:null,playerSecret:null,recoveryKey:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:''};
+  let session={mode:null,code:null,playerId:null,playerSecret:null,recoveryKey:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:'',lastServerState:null,sideAcks:{}};
   const SESSION_KEY='rpg-online-session';
   const RECOVERY_KEY='rpg-online-recovery-v0635';
   const LEGACY_RECOVERY_KEYS=['rpg-online-recovery-v0634'];
@@ -37,6 +37,29 @@
   function exported(){const e=engine();return e?e.exportState():null}
   function snap(st){try{return JSON.stringify(st)}catch{return ''}}
   function sideSnap(e=engine(),heroId=myHeroId()){try{return snap(e?.exportSideState?.(heroId)||null)}catch{return ''}}
+  // Send only fields changed by this device. A stale phone inventory view must
+  // never overwrite poison/weakness/loot granted to its hero on another turn.
+  function acknowledgeSideVersions(result){
+    const versions=result?.sideVersions||{};const mine=myHeroId();if(mine&&versions[mine]!=null)session.sideAcks[mine]=Math.max(session.sideAcks[mine]||0,Number(versions[mine]||0));
+  }
+  function sideDelta(source){
+    if(!source)return null;
+    const baseline=session.lastServerState||{};
+    const original=new Map((baseline.players||[]).map(p=>[p.id,p]));
+    const allowed=new Set(['gold','maxHp','currentHp','statuses','statusTimers','statusTickedTurn','backpack','pendingItems','equipment','temporaryEffects','combatEffects','itemUsage','lockedItems','locationVisits','discoveredLocations','reexploreRiskHex','notes','stats','areaHealingCooldown','scoutBootsUsedTurn']);
+    const out={type:source.type,ownerId:source.ownerId,players:[]};
+    for(const item of source.players||[]){
+      const was=original.get(item.id)||{};const patch={id:item.id};
+      for(const key of allowed){if(Object.prototype.hasOwnProperty.call(item,key)&&snap(item[key])!==snap(was[key]))patch[key]=item[key]}
+      if(Object.keys(patch).length>1)out.players.push(patch);
+    }
+    for(const key of ['decks','locations','tradeDeal']){
+      if(Object.prototype.hasOwnProperty.call(source,key)&&snap(source[key])!==snap(baseline[key]))out[key]=source[key];
+    }
+    if(Array.isArray(source.journal)&&snap(source.journal)!==snap(baseline.journal))out.journal=source.journal;
+    return out;
+  }
+
   function auth(){return{playerId:session.playerId,playerSecret:session.playerSecret}}
   function acceptRoom(room){session.room=room;if(room?.recoveryKey)session.recoveryKey=room.recoveryKey;saveResumeSession();return room}
   function validRecoveryFor(code){const x=readRecoverySnapshot();if(!x||String(x.code)!==String(code)||!x.recoveryKey)return null;const last=Number(x.lastActiveAt||0);if(!last||Math.floor(Date.now()/1000)-last>10800)return null;return x}
@@ -56,7 +79,7 @@
     b.innerHTML=isMine?`Ваш ход · <b>${esc(heroName(mine))}</b>`:`Сейчас ходит <b>${esc(heroName(active))}</b> · ваш герой: ${esc(heroName(mine))}`;
   }
   function showHome(){
-    clearInterval(session.timer);clearInterval(session.gameTimer);session={mode:null,code:null,playerId:null,playerSecret:null,recoveryKey:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:''};
+    clearInterval(session.timer);clearInterval(session.gameTimer);session={mode:null,code:null,playerId:null,playerSecret:null,recoveryKey:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:'',lastServerState:null,sideAcks:{}};
     $('onlineHome').hidden=false;$('onlineRoom').hidden=true;showError('');document.body.classList.remove('online-game','online-not-my-turn');const b=$('onlineTurnBanner');if(b)b.hidden=true;const q=$('turnOrderBanner');if(q)delete q.dataset.roomCode;window.__RPG_ROOM_CODE__='';renderResumeButton();
   }
   function renderRoom(){
@@ -84,7 +107,7 @@
   }
   function enterGame(state,revision){
     const e=engine();if(!e||!state)return;
-    if(session.code){const q=$('turnOrderBanner');if(q)q.dataset.roomCode=session.code;window.__RPG_ROOM_CODE__=session.code}if(session.room?.recoveryKey)session.recoveryKey=session.room.recoveryKey;e.applyState(state);e.setLocalHeroId?.(myHeroId());session.gameEntered=true;session.lastRevision=Number(revision||0);session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(state);session.lastSideSnapshot=sideSnap(e,myHeroId());saveResumeSession();saveRecoverySnapshot(e.exportState());
+    if(session.code){const q=$('turnOrderBanner');if(q)q.dataset.roomCode=session.code;window.__RPG_ROOM_CODE__=session.code}if(session.room?.recoveryKey)session.recoveryKey=session.room.recoveryKey;e.applyState(state);e.setLocalHeroId?.(myHeroId());session.gameEntered=true;session.lastRevision=Number(revision||0);session.lastServerState=state;session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(state);session.lastSideSnapshot=sideSnap(e,myHeroId());saveResumeSession();saveRecoverySnapshot(e.exportState());
     overlay.hidden=true;document.body.classList.remove('net-lobby-open');updateTurnGuard();startGameSync();
   }
   async function ensureOnlineGame(){
@@ -110,7 +133,7 @@
     try{acceptRoom(await api(`/api/rooms/${session.code}${qs}`));if(!session.gameEntered)renderRoom();if(session.room.started)await ensureOnlineGame()}catch(e){if(e.status===404&&session.playerId&&session.playerSecret){try{const saved={code:session.code,playerId:session.playerId,playerSecret:session.playerSecret,recoveryKey:session.recoveryKey};await recoverSession(saved);if(!session.gameEntered)renderRoom();if(session.room.started)await ensureOnlineGame();showError('');return}catch(re){showError(re.message);return}}showError(e.message)}
   }
   function poll(){clearInterval(session.timer);session.timer=setInterval(refresh,900)}
-  async function pullGame(force=false){
+  async function pullGame(force=false,discardLocal=false){
     if(!session.gameEntered||session.syncBusy)return;
     session.syncBusy=true;
     try{
@@ -122,9 +145,9 @@
       const current=engine()?.exportState?.();
       const unsent=current&&snap(current)!==session.lastSnapshot;
       const dirtySide=sideSnap(engine(),myHeroId())!==session.lastSideSnapshot;
-      if(unsent&&!force&&(session.lastServerActiveHero===myHeroId()||engine()?.canOffturnSharedAction?.(myHeroId())||dirtySide))return;
+      if(unsent&&!discardLocal&&(session.lastServerActiveHero===myHeroId()||engine()?.canOffturnSharedAction?.(myHeroId())||dirtySide))return;
       if(force||remoteRevision>session.lastRevision||remoteSnap!==session.lastSnapshot){
-        const e=engine();e.applyState(d.state);session.lastRevision=remoteRevision;session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(d.state);session.lastSideSnapshot=sideSnap(e,myHeroId());saveRecoverySnapshot(d.state);updateTurnGuard();
+        const e=engine();e.applyState(d.state);acknowledgeSideVersions(d);session.lastServerState=d.state;session.lastRevision=remoteRevision;session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(d.state);session.lastSideSnapshot=sideSnap(e,myHeroId());saveRecoverySnapshot(d.state);updateTurnGuard();
       }
     }catch(e){if(e.status!==202)console.warn('online pull',e)}finally{session.syncBusy=false}
   }
@@ -136,9 +159,13 @@
     if(localSnap!==session.lastSnapshot&&(serverActor===mine||e.canOffturnSharedAction?.(mine))){
       session.syncBusy=true;
       try{
-        const d=await api(`/api/rooms/${session.code}/game/state`,{method:'POST',body:JSON.stringify({...auth(),baseRevision:session.lastRevision,state:local})});
-        session.lastRevision=Number(d.revision||session.lastRevision+1);session.lastSnapshot=localSnap;session.lastServerActiveHero=activeHeroFromState(local);session.lastSideSnapshot=sideSnap(e,mine);saveRecoverySnapshot(local);updateTurnGuard();
-      }catch(e2){console.warn('online push',e2);session.syncBusy=false;await pullGame(true);return}finally{session.syncBusy=false}
+        const d=await api(`/api/rooms/${session.code}/game/state`,{method:'POST',body:JSON.stringify({...auth(),baseRevision:session.lastRevision,sideAcks:session.sideAcks,state:local})});
+        session.lastRevision=Number(d.revision||session.lastRevision+1);session.lastServerState=local;session.lastSnapshot=localSnap;session.lastServerActiveHero=activeHeroFromState(local);session.lastSideSnapshot=sideSnap(e,mine);saveRecoverySnapshot(local);updateTurnGuard();
+      }catch(e2){console.warn('online push',e2);session.syncBusy=false;
+        // 409 means another main-turn state is already authoritative. Do not
+        // retry the obsolete turn forever, and do not replay its spent items.
+        await pullGame(true,e2.status===409);return
+      }finally{session.syncBusy=false}
       // User made more sales/moves while the request was in flight.
       // Keep the local state intact and commit it on the next tick.
       if(snap(e.exportState())!==localSnap){queueMicrotask(syncGame);return;}
@@ -149,13 +176,14 @@
       if(ss!==session.lastSideSnapshot){
         session.syncBusy=true;
         try{
-          const d=await api(`/api/rooms/${session.code}/game/side`,{method:'POST',body:JSON.stringify({...auth(),side:sideNow})});
-          session.lastRevision=Number(d.revision??session.lastRevision);session.lastSideSnapshot=ss;saveRecoverySnapshot(e.exportState());
+          const d=await api(`/api/rooms/${session.code}/game/side`,{method:'POST',body:JSON.stringify({...auth(),side:sideDelta(sideNow)})});
+          session.lastRevision=Number(d.revision??session.lastRevision);acknowledgeSideVersions(d);session.lastSideSnapshot=ss;saveRecoverySnapshot(e.exportState());
         }catch(err){console.warn('online side push',err)}finally{session.syncBusy=false}
       }
       // После любого фонового изменения сразу забираем объединённое состояние сервера.
       // Это одновременно доставляет торговые подтверждения и не даёт клиенту повторно
       // отправлять только что полученный side-state.
+      if(sideSnap(e,mine)!==ss){queueMicrotask(syncGame);return;}
       await pullGame(false);return;
     }
     session.lastSideSnapshot='';
@@ -177,16 +205,17 @@
       while(retries++<4){
         const before=e?.exportSideState?.(ownerId);
         if(!before||before.ownerId!==ownerId)throw new Error('Торговая сессия уже закрыта.');
-        await api(`/api/rooms/${session.code}/game/side`,{method:'POST',body:JSON.stringify({...auth(),side:before})});
+        const saved=await api(`/api/rooms/${session.code}/game/side`,{method:'POST',body:JSON.stringify({...auth(),side:sideDelta(before)})});acknowledgeSideVersions(saved);
         // Не только ответ 200: считываем состояние с сервера и сверяем
         // деньги/предметы с последним подтверждаемым действием.
-        const verified=await fetchGame();
+        const verified=await fetchGame();acknowledgeSideVersions(verified);
         const wanted=(before.players||[]).find(p=>p.id===ownerId);
         const actual=(verified.state?.players||[]).find(p=>p.id===ownerId);
         const fields=['gold','backpack','equipment','pendingItems','itemUsage'];
         const matched=!!wanted&&!!actual&&fields.every(key=>snap(wanted[key]??null)===snap(actual[key]??null));
         if(!matched)continue;
         session.lastSideSnapshot=snap(before);
+        session.lastServerState=verified.state;session.lastSnapshot=snap(e.exportState());
         saveRecoverySnapshot(e.exportState());
         if(snap(e.exportSideState?.(ownerId))===snap(before))return true;
       }
@@ -237,7 +266,7 @@
     if(t.closest('#gameSection,#overlay,#modal,#rollOverlay')){e.preventDefault();e.stopImmediatePropagation();updateTurnGuard()}
   },true);
 
-  window.addEventListener('rpg-side-interaction-change',e=>{if(!session.gameEntered)return;if(e.detail?.active){session.lastSideSnapshot=''}else{session.lastSideSnapshot='';setTimeout(()=>pullGame(true),80)}});
+  window.addEventListener('rpg-side-interaction-change',e=>{if(!session.gameEntered)return;if(e.detail?.active){session.lastSideSnapshot=''}else{session.lastSideSnapshot='';setTimeout(()=>syncGame(),80)}});
 
   $('netCreate').onclick=createRoom;$('netJoin').onclick=joinRoom;$('netResume').onclick=resumeRoom;$('netStart').onclick=startRoom;$('netBack').onclick=showHome;$('netLocal').onclick=localGame;
   $('netCodeInput').addEventListener('input',e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,6));
