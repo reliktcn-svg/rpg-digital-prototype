@@ -775,3 +775,11 @@ body.game-running #modal[hidden]{display:none!important}
 
 /* v0.6.45: noticeable exhausted item abilities */
 .item-ability-spent{outline:1px solid #997d40!important}.item-use-badge{display:block;color:#eac16e;font-size:10px;font-weight:700;line-height:1.2;margin-top:4px}
+
+/* v0.6.46: trade inspection and shared party statistics */
+.merchant-group-title{font-weight:800;color:#e3c782;font-size:12px;letter-spacing:.05em;padding:9px 4px 4px}
+.merchant-sell-divider{display:flex;align-items:center;gap:10px;margin:9px 0 7px;color:#e6c880;font-weight:800;grid-column:1/-1}
+.merchant-sell-divider:before,.merchant-sell-divider:after{content:'';height:1px;flex:1;background:#9b865c}
+.merchant-sell-detail{min-width:0}.merchant-sell-detail summary{cursor:pointer;list-style:none;display:flex;flex-direction:column;gap:3px;padding:4px;border-radius:5px}.merchant-sell-detail summary::before{content:'▸  Подробнее';color:#e3c782;font-size:10px}.merchant-sell-detail[open] summary::before{content:'▾  Скрыть описание'}
+.merchant-sell-detail summary:hover{background:#27323a}.merchant-sell-detail .card-fields{margin-top:10px;padding:6px}.merchant-sell-row:has(.merchant-sell-detail[open]){align-items:start}
+.game-over-hero-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0 14px}.game-over-hero-tabs button{border:1px solid #5b6470;border-radius:7px;padding:8px 12px;background:#192129;color:#dde4ed}.game-over-hero-tabs button.active{border-color:#e9c56a;background:#3b321e;color:#ffdb87}
