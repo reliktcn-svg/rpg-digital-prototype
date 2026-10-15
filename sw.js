@@ -1,5 +1,17 @@
-const CACHE='rpg-digital-v0647';
-const ASSETS=['./','./index.html','./styles.css','./app.js','./network-lobby.js','./map-data.js','./location-placement.js','./cards-data.js','./assets/map.png','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
+const CACHE='rpg-digital-v0648';
+const ASSETS=['./','./index.html','./styles.css?v=0648','./app.js?v=0648','./network-lobby.js?v=0648','./map-data.js?v=0648','./location-placement.js?v=0648','./cards-data.js?v=0648','./assets/map.png','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
-self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;event.respondWith(fetch(event.request).then(resp=>{const copy=resp.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));return resp}).catch(()=>caches.match(event.request).then(r=>r||caches.match('./index.html'))))});
+self.addEventListener('fetch',event=>{
+  if(event.request.method!=='GET')return;
+  const url=new URL(event.request.url);
+  if(url.origin!==self.location.origin)return;
+  const critical=event.request.mode==='navigate'||/\.(?:js|css|html)$/.test(url.pathname);
+  event.respondWith(fetch(event.request,critical?{cache:'no-store'}:{}).then(resp=>{
+    if(resp.ok){const copy=resp.clone();event.waitUntil(caches.open(CACHE).then(cache=>cache.put(event.request,copy)))}return resp;
+  }).catch(async()=>{
+    const exact=await caches.match(event.request);if(exact)return exact;
+    if(event.request.mode==='navigate')return caches.match('./index.html');
+    return Response.error();
+  }));
+});
