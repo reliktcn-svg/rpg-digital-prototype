@@ -852,3 +852,12 @@ body.game-running .roll-overlay:not([hidden]){z-index:820!important}
 .roll-popup-card.arcana-info-active #rollPopupClose{margin:10px auto 0;display:block}
 @media(max-width:700px){.roll-popup-card.arcana-info-active{width:min(490px,calc(100vw - 18px));padding:8px}}
 /* Never use nested Dungeon/legacy roll panels in the new sequence. */
+
+/* v0.6.53: keep the original logical image and SVG in exactly the same geometry. */
+.map-stage>img#mapImage{visibility:hidden!important}
+.map-stage>img#mapVisual{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:1}
+.map-stage>svg#overlay{z-index:2}
+/* Desktop: popup centered on the playable combat panel (not the whole three-column screen). */
+@media(min-width:901px) and (pointer:fine){
+ .arcana-battle-card{position:fixed;left:var(--arcana-center-x,50vw);top:var(--arcana-center-y,50vh);transform:translate(-50%,-50%)}
+}

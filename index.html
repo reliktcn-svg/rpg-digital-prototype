@@ -8,8 +8,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <title>RPG Digital Prototype v0.6.52 Online Flow Alpha</title>
-  <link rel="stylesheet" href="styles.css?v=0652" />
+  <title>RPG Digital Prototype v0.6.53 Online Flow Alpha</title>
+  <link rel="stylesheet" href="styles.css?v=0653" />
 </head>
 <body>
   
@@ -49,7 +49,7 @@
   <header class="topbar">
     <div>
       <div class="eyebrow">RPG DIGITAL PROTOTYPE</div>
-      <h1>Прототип v0.6.52 · Online Flow Alpha</h1>
+      <h1>Прототип v0.6.53 · Online Flow Alpha</h1>
       <div class="header-tools">
         <button id="journalBtn" class="journal-top" type="button">Журнал</button>
       </div>
@@ -104,7 +104,8 @@
       </div>
       <div id="boardWrap" class="board-wrap">
         <div class="map-stage" id="mapStage">
-          <img src="assets/map.png" alt="Игровая карта" id="mapImage" />
+          <img src="assets/map.png" alt="" id="mapImage" aria-hidden="true" />
+          <img src="assets/map-visual-v0653.png" alt="Игровая карта" id="mapVisual" />
           <svg id="overlay" viewBox="0 0 2481 1754" preserveAspectRatio="none" aria-label="Игровое поле"></svg>
         </div>
       </div>
@@ -156,12 +157,12 @@
     </div>
   </div>
 
-  <script src="map-data.js?v=0652"></script>
-  <script src="cards-data.js?v=0652"></script>
-  <script src="location-placement.js?v=0652"></script>
-  <script src="arcana/dice-renderer.js?v=0652"></script>
-  <script src="arcana/dice-animator.js?v=0652"></script>
-  <script src="app.js?v=0652"></script>
-  <script src="network-lobby.js?v=0652"></script>
+  <script src="map-data.js?v=0653"></script>
+  <script src="cards-data.js?v=0653"></script>
+  <script src="location-placement.js?v=0653"></script>
+  <script src="arcana/dice-renderer.js?v=0653"></script>
+  <script src="arcana/dice-animator.js?v=0653"></script>
+  <script src="app.js?v=0653"></script>
+  <script src="network-lobby.js?v=0653"></script>
 </body>
 </html>

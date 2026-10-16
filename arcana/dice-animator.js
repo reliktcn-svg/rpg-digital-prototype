@@ -17,6 +17,16 @@
     .empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:#aeb7b4;padding:24px}.empty span{font:50px Georgia,serif;color:#bba56b;line-height:1.5}.empty p{margin:0}
     .foot{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 22px;min-height:73px;border-top:1px solid #aa8b4730;flex-wrap:wrap}
     .result{margin:0;color:#cec7b7;font-size:13px;text-align:center;flex:1;min-width:120px;overflow-wrap:anywhere}.result strong{font-weight:650;color:#f6dfad}
+    .result.attack-breakdown{font-size:14px;line-height:1.65;color:#e7e8e5}
+    .attack-line{display:flex;justify-content:center;align-items:baseline;gap:5px 6px;flex-wrap:wrap}
+    .attack-prefix{font-size:12px;color:#c4cdd1;text-transform:uppercase;letter-spacing:.03em}
+    .attack-mod{white-space:nowrap;color:#dde3e3}
+    .attack-equal{color:#cdbb8a;font-weight:700}
+    .attack-total{font-weight:850;font-size:22px;line-height:1;color:#ffdd87}
+    .attack-defense{white-space:nowrap;color:#dbdfdf}
+    .attack-status{font-weight:850;white-space:nowrap;letter-spacing:.06em}
+    .attack-status.hit{color:#6add8c}.attack-status.miss{color:#ff7474}
+    @media(max-width:420px){.result.attack-breakdown{font-size:12px}.attack-total{font-size:19px}}
     .controls{display:flex;align-items:center;gap:8px}button{border:1px solid #9c895b60;border-radius:6px;background:#b69b5410;color:#e5d7b5;padding:8px 12px;cursor:pointer;min-height:40px}button:hover{background:#b69b5428}button:disabled{opacity:.35;cursor:default}
     .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
     .fallback .caption b{font-size:32px}.fallback .caption{padding:16px;border:1px solid #8e794b;border-radius:12px;background:#1d2729}
@@ -47,6 +57,20 @@
         if (!Number.isFinite(payload.total)) throw new TypeError('total must be finite');
         roll.total = payload.total;
       } else roll.total = text(payload.total, 'total', 128);
+    }
+    // Optional structured visual comparison supplied by the game. Never changes the dice.
+    if(payload.breakdown!==undefined){
+      const b=payload.breakdown;
+      if(!b || b.kind!=='attack' || !Array.isArray(b.modifiers) || b.modifiers.length>8 ||
+        ![b.base,b.total,b.defense].every(Number.isFinite) || typeof b.outcome!=='boolean')
+          throw new TypeError('Invalid attack breakdown');
+      const modifiers=b.modifiers.map(m=>{
+        if(!m||!Number.isFinite(m.value)||typeof m.label!=='string'||m.label.length>64)
+          throw new TypeError('Invalid attack modifier');
+        return Object.freeze({value:m.value,label:m.label});
+      });
+      roll.breakdown=Object.freeze({kind:'attack',base:b.base,modifiers:Object.freeze(modifiers),
+        total:b.total,defense:b.defense,outcome:b.outcome});
     }
     return Object.freeze(roll);
   }
@@ -148,7 +172,19 @@
       if (!roll) return;
       const values = roll.dice.map(d => 'D' + d.sides + ': ' + d.value).join(' · ');
       result.replaceChildren();
-      if (roll.total !== undefined) {
+      result.classList.toggle('attack-breakdown',!!roll.breakdown);
+      if(roll.breakdown){
+        const b=roll.breakdown,line=node('div','attack-line');
+        line.append(node('span','attack-prefix','Атака'),node('span','',String(b.base)));
+        for(const m of b.modifiers){
+          if(m.value)line.append(node('span','attack-mod',(m.value>=0?'+':'−')+Math.abs(m.value)+' '+m.label));
+        }
+        line.append(node('span','attack-equal','='),node('span','attack-total',String(b.total)),
+          node('span','attack-defense','против ЗЩ '+b.defense),
+          node('span','attack-equal','—'),
+          node('span','attack-status '+(b.outcome?'hit':'miss'),b.outcome?'ПОПАДАНИЕ':'ПРОМАХ'));
+        result.append(line);
+      }else if (roll.total !== undefined) {
         const raw=String(roll.total);const segments=raw.split(/(ПОПАДАНИЕ|ПРОМАХ|УСПЕХ|ПРОВАЛ)/g);for(const part of segments){const el=node('span', '', part);if(part==='ПОПАДАНИЕ'||part==='УСПЕХ')el.style.color='#72d993';if(part==='ПРОМАХ'||part==='ПРОВАЛ')el.style.color='#ff7878';result.append(el)}
       } else result.append(node('span', '', values));
       live.textContent = (roll.label ? roll.label + '. ' : '') + values + (roll.total !== undefined ? '. Результат: ' + roll.total : '');
