@@ -790,3 +790,12 @@ body.game-running #modal[hidden]{display:none!important}
 /* v0.6.48: Decisions interrupt automation only when a usable effect exists. */
 .combat-decision-title{font-weight:750;color:#edce85;text-align:center;width:100%;padding:.35rem 0;}
 .combat-choice{white-space:normal;text-align:center;max-width:100%;overflow-wrap:anywhere;}
+
+/* Arcana dice presentation: actual resolved dice are animated, with the original roll kept for fallback. */
+.combat-dice-stage.arcana-active{height:auto!important;max-height:none!important;min-height:250px!important;overflow:visible!important}
+.arcana-combat-dice{width:min(100%,530px);height:170px;position:relative;flex-shrink:0}
+.combat-dice-stage.arcana-rolling>.combat-die-main{opacity:.12}
+.combat-dice-stage.arcana-active>.combat-die-main{font-size:25px}
+@media(max-width:700px){.combat-dice-stage.arcana-active{min-height:205px!important}.arcana-combat-dice{height:125px}}
+
+.arcana-combat-dice{display:none}.combat-dice-stage.arcana-active .arcana-combat-dice{display:block}
