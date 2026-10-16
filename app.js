@@ -183,7 +183,7 @@
     return o;
   }
   function freshState(){return {
-    version:'0.6.65', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
+    version:'0.6.66', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
     decks:initialDecks(), cleaned:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, tradeDeal:null, dungeonEntryNotice:null, territoryBuiltNotice:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:3, sharedDifficulty:null, journal:[]
   };}
   let state=freshState();
@@ -548,7 +548,7 @@
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,potions:[null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:sharedHard,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats(),territoryBuildSeq:{kingdom:0,cursed:0}}});
     generatePermanentLocations({preserve:false});
     state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(isMobileViewport()){els.sheetDrawer.hidden=true}else openCharacterSheet('overview',null,currentPlayer().id);setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
-    log(`<b>Партия v0.6.65 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
+    log(`<b>Партия v0.6.66 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
     state.order.forEach(id=>{const p=getPlayer(id);log(`Инициатива ${p.name}: D20 = <b>${p.initiative}</b>.`,p.id)});updateUI();renderBoard();
   }
 
@@ -2174,15 +2174,13 @@
   }
   function arcanaPresentCombat(c){
     if(!window.FantasyDice||!c?.lastRoll)return;
-    const target=els.modalContent.querySelector('.combat-dice-stage');
-    if(!target)return;
     const roll=c.lastRoll,key=`${c.instanceId||'combat'}:${roll.seq||0}`;
     if(!Array.isArray(roll.dice)||!roll.dice.length){
       if(arcanaPresentationKey!==key){arcanaPresentationKey=key;stopArcanaBattlePresentation()}
       return;
     }
-    // Never render an old battle-stage result, even after the standalone overlay closes.
-    target.classList.add('arcana-battle-stage-hidden');
+    // The former inline combat result panel is gone. Dice remain in the independent
+    // Arcana overlay, so no inline target is needed to present a roll.
     if(arcanaPresentationKey===key)return;
     arcanaPresentationKey=key;
     if(!ensureArcanaBattleLayer())return;
@@ -2576,12 +2574,14 @@
   function escapeCombatText(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
   function combatCardStageHtml(side,kind,id,name,c,backHtml){
     const path=combatPortraitUrl(kind,id),ui=getCombatVisualUiState(c),back=side==='enemy'?ui.enemyBack:ui.heroBack;
-    return `<button type="button" class="visual-card-stage ${back?'is-back':''}" data-visual-toggle="${side}" aria-pressed="${back?'true':'false'}" title="${back?'Показать портрет':'Показать описание'}"><span class="visual-card-face visual-card-front"><div class="visual-combat-portrait${path?'':' portrait-not-found'}">${path?`<img src="${path}" alt="${escapeCombatText(name)}" loading="eager" decoding="async" onerror="this.style.display='none';this.parentElement.classList.add('portrait-not-found')">`:''}<div class="portrait-placeholder">Портрет готовится</div></div></span><span class="visual-card-face visual-card-back">${backHtml}</span></button>`;
+    const usedMarker=side==='hero'&&c.heroAbilityUsed?'<span class="visual-ability-used-marker">✓ Способность использована</span>':'';
+    return `<button type="button" class="visual-card-stage ${back?'is-back':''}" data-visual-toggle="${side}" aria-pressed="${back?'true':'false'}" title="${back?'Показать портрет':'Показать описание'}"><span class="visual-card-face visual-card-front"><div class="visual-combat-portrait${path?'':' portrait-not-found'}">${path?`<img src="${path}" alt="${escapeCombatText(name)}" loading="eager" decoding="async" onerror="this.style.display='none';this.parentElement.classList.add('portrait-not-found')">`:''}<div class="portrait-placeholder">Портрет готовится</div></div>${usedMarker}</span><span class="visual-card-face visual-card-back">${backHtml}</span></button>`;
   }
   function combatHeroBackHtml(p,c){
     const h=HERO_COMBAT[p.id];if(!h)return '<div class="visual-card-back-wrap"></div>';
     const nat=h.natural20||'—',parts=nat.split(' — '),effects=combatActiveEffectsHtml(c,p);
-    return `<div class="visual-card-back-wrap hero-back"><div class="visual-back-block"><small>СПОСОБНОСТЬ ГЕРОЯ</small><b>${escapeCombatText(h.ability)}</b><span>${escapeCombatText(h.effect)}</span></div><div class="visual-back-block accent"><small>НАТУРАЛЬНАЯ 20</small><b>${escapeCombatText(parts[0]||'Эффект героя')}</b><span>${escapeCombatText(parts.length>1?parts.slice(1).join(' — '):nat)}</span></div>${effects}</div>`;
+    const used=!!c.heroAbilityUsed;
+    return `<div class="visual-card-back-wrap hero-back"><div class="visual-back-block ${used?'ability-used':''}"><small>СПОСОБНОСТЬ ГЕРОЯ ${used?'<span class="visual-ability-used-state">✓ ИСПОЛЬЗОВАНО</span>':''}</small><b>${escapeCombatText(h.ability)}</b><span>${escapeCombatText(h.effect)}</span></div><div class="visual-back-block accent"><small>НАТУРАЛЬНАЯ 20</small><b>${escapeCombatText(parts[0]||'Эффект героя')}</b><span>${escapeCombatText(parts.length>1?parts.slice(1).join(' — '):nat)}</span></div>${effects}</div>`;
   }
   function combatEnemyBackHtml(e,c){
     const effect=String(e.fields?.['Эффект']||'').trim()||'Без постоянного эффекта';
@@ -2622,7 +2622,7 @@
   }
   function renderCombat(force=false){
     const c=state.combat,p=currentPlayer(),e=combatEnemy();if(!c||!e)return;if(c.phase==='victory'&&c.victoryUiStep==='loot'&&els.modal.dataset.lootDraft==='true')return;syncLocalCombatWindowState();if(combatWindowHidden&&!force){updateCombatRestoreButton();scheduleCombatAuto();return}if(force)combatWindowHidden=false;updateCombatRestoreButton();
-    document.body.classList.add('combat-active');els.modalClose.style.display='none';const localCombatant=localControlsCombat(),lr=c.lastRoll||{title:'Бой начался',main:'—',math:'',detail:''};const natClass=Number(lr.natural)===20?'natural20':Number(lr.natural)===1?'natural1':'';const attackOutcome=combatRollOutcome(),outcomeHtml=attackOutcome==null?'':`<div class="combat-roll-outcome ${attackOutcome?'hit':'miss'}">${attackOutcome?'ПОПАДАНИЕ':'ПРОМАХ'}</div>`;const reactions=localCombatant&&c.phase==='hero_turn'?combatReactionList():[];let phaseHtml='',actions='';
+    document.body.classList.add('combat-active');els.modalClose.style.display='none';const localCombatant=localControlsCombat(),reactions=localCombatant&&c.phase==='hero_turn'?combatReactionList():[];let phaseHtml='',actions='';
     const decisions=localCombatant?combatDecisionOptions(c.phase):[];
     if(localCombatant){
       if(c.phase==='pre')actions=`<button id="combatFight" class="success">Вступить в бой</button><button id="combatEscapeBefore" class="secondary">${c.freeEscape?'Сбежать':'Попытаться сбежать · ЛОВ 13+'}</button>`;
@@ -2642,14 +2642,13 @@
       else if(c.phase==='victory')actions=`<button id="combatPostVictory" class="success">Продолжить после победы</button>`;
       if(c.phase==='hero_damage')phaseHtml=`<div class="combat-pending damage-out"><b>Урон готов:</b> <b class="big">${c.pendingHeroDamage?.amount||0}</b>. До нажатия «Нанести урон» можно применить подходящие эффекты.</div>`;
       if(c.phase==='enemy_damage')phaseHtml=`<div class="combat-pending"><b>Входящий урон:</b> <b class="big">${c.pendingEnemyDamage?.amount||0}</b>. Игрок сам решает, тратить ли защитные эффекты.</div>`;
-      if(c.phase==='post_damage')phaseHtml=`<div class="combat-pending post-damage"><b>Урон принят.</b> Герой выжил. Следующий раунд начнётся автоматически.</div>`;
     }
     const mode=playerHardMode(p)?'Сложный режим · реакции скрыты':'Обычный режим · реакции включены';
     const observedName={warrior:'Воином',dwarf:'Дворфом',mage:'Магом',archer:'Лучником',rogue:'Разбойником'}[p.id]||p.name;
     const guide=localCombatant&&!playerHardMode(p)?`<div class="combat-effects-manual"><h4>Памятка боя</h4><div class="combat-note">Активные способности, предметы и наёмники применяет игрок. Натуральные 1 и 20 автоматические только при одиночном D20. Лечение доступно до атаки в свой боевой ход и после принятого нелетального урона.</div></div>`:'';
     const history=c.journalOpen?`<div class="combat-history-wrap"><div class="combat-history">${(c.history||[]).map(x=>`<div>${x}</div>`).join('')||'<div>Записей пока нет.</div>'}</div></div>`:'';
     const controlBlock=localCombatant?`${reactions.length?`<div class="combat-reactions"><h4>РЕАКЦИИ — игра напоминает, но решение за игроком</h4><div class="combat-reaction-buttons">${reactions.map((r,i)=>`<button data-reaction="${i}" class="secondary">${r.label}</button>`).join('')}</div></div>`:''}<div class="combat-actions">${actions}</div><div class="combat-sheet-actions"><button id="combatHeroSheet" class="secondary">Герой</button><button id="combatInventory" class="secondary">Инвентарь</button></div>${guide}`:'';
-    els.modalContent.innerHTML=`<div class="combat-shell ${localCombatant?'combat-owner-view':'combat-observer-view'}"><div class="combat-summary"><span class="combat-mode-badge">${localCombatant?mode:`Наблюдение за ${observedName}`}</span><span class="combat-pill">Раунд ${c.round}</span><button id="combatHide" class="combat-hide ghost" type="button">Скрыть бой</button></div><div class="combat-head visual-combat-head">${combatHeroVisualCard(p,c)}<div class="combat-vs">VS</div>${combatEnemyVisualCard(e,c)}</div><div class="combat-dice-stage"><div class="combat-dice-title">${lr.title}</div><div class="combat-die-main ${natClass}">${lr.main}</div><div class="combat-dice-math">${lr.math||''}</div><div class="combat-dice-detail">${lr.detail||''}</div>${outcomeHtml}</div>${phaseHtml}${controlBlock}<div class="combat-journal-control"><button id="combatJournalToggle" class="${c.journalOpen?'secondary active':'ghost'}">Журнал боя${c.journalOpen?' ▲':' ▼'}</button></div>${history}</div>`;els.modal.hidden=false;
+    els.modalContent.innerHTML=`<div class="combat-shell ${localCombatant?'combat-owner-view':'combat-observer-view'}"><div class="combat-summary"><span class="combat-mode-badge">${localCombatant?mode:`Наблюдение за ${observedName}`}</span><span class="combat-pill">Раунд ${c.round}</span><button id="combatHide" class="combat-hide ghost" type="button">Скрыть бой</button></div><div class="combat-head visual-combat-head">${combatHeroVisualCard(p,c)}<div class="combat-vs">VS</div>${combatEnemyVisualCard(e,c)}</div>${phaseHtml}${controlBlock}<div class="combat-journal-control"><button id="combatJournalToggle" class="${c.journalOpen?'secondary active':'ghost'}">Журнал боя${c.journalOpen?' ▲':' ▼'}</button></div>${history}</div>`;els.modal.hidden=false;
     if(localCombatant){reactions.forEach((r,i)=>{const b=els.modalContent.querySelector(`[data-reaction="${i}"]`);if(b)b.onclick=r.fn});els.modalContent.querySelectorAll('[data-auto-choice]').forEach(b=>b.onclick=()=>decisions[Number(b.dataset.autoChoice)]?.fn());els.modalContent.querySelectorAll('[data-cleanse-status]').forEach(b=>b.onclick=()=>chooseCombatCleanseStatus((c.pendingCleanse?.options||[])[Number(b.dataset.cleanseStatus)]))}
     els.modalContent.querySelectorAll('[data-visual-toggle]').forEach(b=>b.onclick=()=>toggleCombatVisualFace(b.dataset.visualToggle));
     const bind=(id,fn)=>{const x=document.getElementById(id);if(x)x.onclick=fn};if(localCombatant){bind('combatFight',combatFight);bind('combatResolveEscape',resolveCombatEscapeResult);bind('combatEscapeBefore',combatEscapeBefore);bind('combatAttack',combatHeroAttack);bind('combatRollDamage',combatRollHeroDamage);bind('combatSkipChoice',skipCombatChoice);bind('combatEscape',combatEscapeDuring);bind('combatHeroAbility',useHeroCombatAbility);bind('combatFinalizeAttack',finalizeHeroAttackRoll);bind('mageLightning',()=>chooseMageNat20('lightning'));bind('mageFire',()=>chooseMageNat20('fire'));bind('combatApplyHeroDamage',applyHeroDamageNow);bind('combatEnemyTurn',combatEnemyTurn);bind('combatFinalizeEnemyRoll',finalizeEnemyAttackRoll);bind('combatAcceptDamage',combatAcceptDamageAndContinue);bind('combatContinueMiss',combatContinueAfterEnemyMiss);bind('combatContinueAfterDamage',combatContinueAfterDamage);bind('combatFinishVictory',finishCombatVictory);bind('combatPostVictory',()=>{if(c.victory?.lootDraft&&!c.victory.lootDraft.confirmed&&c.victory.lootDraft.keep>0)openVictoryLootDraft();else showPostCombatTerritoryPrompt()});bind('combatHeroSheet',()=>openCharacterSheet('overview'));bind('combatInventory',()=>openCharacterSheet('inventory'))}
@@ -2840,7 +2839,7 @@
       const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
-      state.version='0.6.65';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.65.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
+      state.version='0.6.66';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.66.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
     }catch(e){console.error(e);alert('Не удалось загрузить сохранение.')}
   }
   function cloneJson(v){return JSON.parse(JSON.stringify(v))}
@@ -2858,7 +2857,7 @@
     if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
-    state.version='0.6.65';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    state.version='0.6.66';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){
