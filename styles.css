@@ -1304,3 +1304,100 @@ body.game-running .roll-overlay:not([hidden]){z-index:820!important}
   .visual-card-title-row h3{font-size:13px!important}
   .visual-card-stats b,.visual-card-stats span{font-size:8.6px!important;letter-spacing:-.02em!important}
 }
+
+
+/* v0.6.64 Fine alignment — smaller name/rank fonts and compact mobile header. */
+.visual-card-heading{position:relative!important}
+.visual-card-title-row h3{
+  font-size:17px!important;
+  line-height:1.02!important;
+  font-weight:850!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.visual-card-kicker{
+  font-size:9px!important;
+  line-height:1.05!important;
+  min-height:10px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.visual-card-heading{padding:8px 10px 4px!important;gap:3px!important}
+.visual-card-stats{margin-top:1px!important}
+.visual-card-stage{margin-top:4px!important}
+@media(min-width:901px) and (pointer:fine){
+  .visual-card-heading{padding:9px 11px 4px!important;gap:3px!important}
+  .visual-card-kicker{font-size:9px!important;min-height:10px!important}
+  .visual-card-title-row h3{font-size:16px!important}
+  .visual-card-hp{font-size:12px!important;padding:4px 7px!important}
+  .visual-card-stats b,.visual-card-stats span{font-size:10px!important;min-height:24px!important}
+  .visual-card-stage{margin-top:3px!important}
+}
+@media(max-width:900px),(pointer:coarse){
+  .visual-card-heading{
+    padding:7px 7px 3px!important;
+    gap:2px!important;
+  }
+  .visual-card-hp{
+    position:absolute!important;
+    top:7px!important;
+    right:7px!important;
+    margin:0!important;
+    font-size:9px!important;
+    padding:4px 7px!important;
+    z-index:2;
+  }
+  .hero-heading .visual-card-title-row,
+  .enemy-heading .visual-card-title-row{
+    display:block!important;
+    min-height:22px!important;
+    padding-right:72px!important;
+  }
+  .enemy-heading .visual-card-kicker{
+    padding-right:72px!important;
+    min-height:11px!important;
+    margin-bottom:1px!important;
+  }
+  .hero-heading .visual-card-title-row h3,
+  .enemy-heading .visual-card-title-row h3{
+    font-size:12px!important;
+    line-height:1.06!important;
+  }
+  .visual-card-stats{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:4px!important;
+    margin-top:2px!important;
+  }
+  .visual-card-stats b,
+  .visual-card-stats span{
+    font-size:8.7px!important;
+    min-height:21px!important;
+    padding:3px 2px!important;
+  }
+  .visual-card-stage{margin-top:2px!important}
+}
+@media(max-width:430px){
+  .hero-heading .visual-card-title-row,
+  .enemy-heading .visual-card-title-row{padding-right:66px!important}
+  .enemy-heading .visual-card-kicker{padding-right:66px!important}
+  .visual-card-hp{top:6px!important;right:6px!important;font-size:8.5px!important;padding:4px 6px!important}
+  .hero-heading .visual-card-title-row h3,
+  .enemy-heading .visual-card-title-row h3{font-size:11px!important}
+  .visual-card-kicker{font-size:7.8px!important}
+  .visual-card-stats b,
+  .visual-card-stats span{font-size:8.2px!important;min-height:20px!important}
+}
+
+
+/* v0.6.64 desktop equal top alignment for portrait blocks */
+@media(min-width:901px) and (pointer:fine){
+  .visual-card-heading{
+    height:86px!important;
+    min-height:86px!important;
+    overflow:hidden!important;
+    align-content:start!important;
+  }
+  .visual-card-stage{margin-top:2px!important}
+}
