@@ -1,5 +1,5 @@
-const CACHE='rpg-digital-v0651';
-const ASSETS=['./','./index.html','./styles.css?v=0651','./app.js?v=0651','./network-lobby.js?v=0651','./map-data.js?v=0651','./location-placement.js?v=0651','./cards-data.js?v=0651','./arcana/dice-renderer.js?v=0651','./arcana/dice-animator.js?v=0651','./assets/map.png','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
+const CACHE='rpg-digital-v0652';
+const ASSETS=['./','./index.html','./styles.css?v=0652','./app.js?v=0652','./network-lobby.js?v=0652','./map-data.js?v=0652','./location-placement.js?v=0652','./cards-data.js?v=0652','./arcana/dice-renderer.js?v=0652','./arcana/dice-animator.js?v=0652','./assets/map.png','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{

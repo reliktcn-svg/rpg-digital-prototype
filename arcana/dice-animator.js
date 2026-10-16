@@ -6,8 +6,8 @@
     :host{display:block;color:#f0e9d8;font:14px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-width:0;color-scheme:dark}
     *{box-sizing:border-box}button{font:inherit}button:focus-visible{outline:2px solid #ead095;outline-offset:4px}
     .shell{border:1px solid #65583e;border-radius:16px;background:#13191c;overflow:hidden;box-shadow:0 18px 60px #0003}
-    .bar{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #aa8b4730;flex-wrap:wrap}
-    .title{font-size:13px;font-weight:650;letter-spacing:.02em;margin:0;overflow-wrap:anywhere}
+    .bar{display:flex;gap:12px;align-items:center;justify-content:center;text-align:center;padding:12px 18px;border-bottom:1px solid #aa8b4730;flex-wrap:wrap}
+    .title{font-size:16px;font-weight:750;letter-spacing:.02em;margin:0;overflow-wrap:anywhere}
     .state{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:#c9ae79}
     .stage{position:relative;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 50% 34%,#303c3d70,transparent 65%),repeating-linear-gradient(20deg,#ffffff02 0 1px,transparent 1px 6px),#10191c}
     .stage:before{content:"";position:absolute;inset:18px;border:1px solid #bba56b16;border-radius:50%;pointer-events:none}
@@ -16,7 +16,7 @@
     .caption b{display:inline-block;min-width:30px;color:#ffe0a1;font-size:17px;letter-spacing:0;margin-left:6px;font-weight:600}.caption .pending{color:#8e9998;font-size:12px}
     .empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:#aeb7b4;padding:24px}.empty span{font:50px Georgia,serif;color:#bba56b;line-height:1.5}.empty p{margin:0}
     .foot{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 22px;min-height:73px;border-top:1px solid #aa8b4730;flex-wrap:wrap}
-    .result{margin:0;color:#cec7b7;font-size:12px;flex:1;min-width:120px;overflow-wrap:anywhere}.result strong{font-weight:650;color:#f6dfad}
+    .result{margin:0;color:#cec7b7;font-size:13px;text-align:center;flex:1;min-width:120px;overflow-wrap:anywhere}.result strong{font-weight:650;color:#f6dfad}
     .controls{display:flex;align-items:center;gap:8px}button{border:1px solid #9c895b60;border-radius:6px;background:#b69b5410;color:#e5d7b5;padding:8px 12px;cursor:pointer;min-height:40px}button:hover{background:#b69b5428}button:disabled{opacity:.35;cursor:default}
     .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
     .fallback .caption b{font-size:32px}.fallback .caption{padding:16px;border:1px solid #8e794b;border-radius:12px;background:#1d2729}
@@ -55,6 +55,7 @@
     const container = options.container;
     if (!container || container.nodeType !== 1 || typeof container.appendChild !== 'function') throw new TypeError('container must be a DOM element');
     const duration = finite(options.duration === undefined ? 1800 : options.duration, 0, 10000, 'duration');
+    const staggerMs = finite(options.staggerMs === undefined ? 500 : options.staggerMs, 0, 5000, 'staggerMs');
     let speed = finite(options.speed === undefined ? 1 : options.speed, 0.25, 4, 'speed');
     const reduced = options.reducedMotion === undefined ? 'auto' : options.reducedMotion;
     if (!['auto', 'always', 'never'].includes(reduced)) throw new TypeError('reducedMotion must be auto, always or never');
@@ -129,9 +130,9 @@
       if (!ctx || mode !== 'canvas') return;
       ctx.clearRect(0, 0, width, height);
       if (!roll) return;
-      const t = active ? Math.min(1, active.elapsed / Math.max(1, active.duration)) : 1;
+      const t = active ? Math.min(1, active.elapsed / Math.max(1, active.totalDuration)) : 1;
       const items = roll.dice.map((die, i) => {
-        const p = positions[i], local = Math.max(0, Math.min(1, (t - i * .006) / (1 - i * .006)));
+        const p = positions[i], local = active ? Math.max(0, Math.min(1, (active.elapsed - i * staggerMs) / Math.max(1, active.baseDuration))) : 1;
         const rest = Math.pow(1 - local, 3), wobble = Math.sin(local * Math.PI * 5 + i * .6) * Math.pow(1 - local, 2);
         return { sides: die.sides, value: die.value, index: i, x: p.x + Math.sin(local * 9 + i) * rest * p.size * .26,
           y: p.y, size: p.size, rx: rest * (Math.PI * 4 + i * .37), ry: rest * (Math.PI * 5 + i * .61), rz: rest * (Math.PI * 2 + i * .23) + wobble * .12,
@@ -148,7 +149,7 @@
       const values = roll.dice.map(d => 'D' + d.sides + ': ' + d.value).join(' · ');
       result.replaceChildren();
       if (roll.total !== undefined) {
-        result.append(node('span', '', ''), node('strong', '', String(roll.total)));
+        const raw=String(roll.total);const segments=raw.split(/(ПОПАДАНИЕ|ПРОМАХ|УСПЕХ|ПРОВАЛ)/g);for(const part of segments){const el=node('span', '', part);if(part==='ПОПАДАНИЕ'||part==='УСПЕХ')el.style.color='#72d993';if(part==='ПРОМАХ'||part==='ПРОВАЛ')el.style.color='#ff7878';result.append(el)}
       } else result.append(node('span', '', values));
       live.textContent = (roll.label ? roll.label + '. ' : '') + values + (roll.total !== undefined ? '. Результат: ' + roll.total : '');
     }
@@ -166,7 +167,7 @@
       frame = 0;
       if (!active) return;
       active.elapsed += Math.max(0, now - active.last) * speed; active.last = now;
-      if (active.elapsed >= active.duration) { finish('completed'); return; }
+      if (active.elapsed >= active.totalDuration) { finish('completed'); return; }
       draw();
       if (mode === 'text') { finish('completed'); return; }
       frame = win.requestAnimationFrame(tick);
@@ -186,7 +187,7 @@
         result.textContent = 'Идёт бросок…'; live.textContent = ''; empty.hidden = true; empty.style.display = 'none'; skipButton.disabled = false;
         let resolve;
         const promise = new Promise(r => { resolve = r; });
-        const run = { roll: next, duration: ms, elapsed: 0, last: win.performance.now(), resolve };
+        const run = { roll: next, baseDuration: ms, totalDuration: ms + (next.dice.length - 1) * staggerMs, elapsed: 0, last: win.performance.now(), resolve };
         active = run; layout();
         emit('dice:start', Object.freeze({ roll: next }));
         // Event handlers are allowed to skip, replace or destroy this presentation.

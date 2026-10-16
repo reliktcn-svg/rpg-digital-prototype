@@ -843,3 +843,12 @@ body.game-running .roll-overlay:not([hidden]){z-index:820!important}
   .combat-shell .combat-actions .combat-decision-title{grid-column:1/-1!important;padding:3px 2px 6px!important;font-size:12px;text-align:left}
   .combat-shell .combat-actions .combat-choice{font-size:12px!important;line-height:1.3}
 }
+
+/* v0.6.52: one unified compact dice presentation */
+.roll-popup-card.arcana-info-active .roll-popup-title,.roll-popup-card.arcana-info-active .roll-popup-main,
+.roll-popup-card.arcana-info-active .roll-popup-math,.roll-popup-card.arcana-info-active .roll-popup-detail{display:none!important}
+.roll-popup-card.arcana-info-active{width:min(490px,calc(100vw - 24px));max-height:calc(100dvh - 40px);overflow:auto;padding:12px}
+.arcana-battle-card .arcana-combat-dice,.roll-popup-card .arcana-popup-dice{margin-inline:auto}
+.roll-popup-card.arcana-info-active #rollPopupClose{margin:10px auto 0;display:block}
+@media(max-width:700px){.roll-popup-card.arcana-info-active{width:min(490px,calc(100vw - 18px));padding:8px}}
+/* Never use nested Dungeon/legacy roll panels in the new sequence. */
