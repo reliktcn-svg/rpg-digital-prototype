@@ -1,5 +1,5 @@
-const CACHE='rpg-digital-v0653';
-const ASSETS=['./','./index.html','./styles.css?v=0653','./app.js?v=0653','./network-lobby.js?v=0653','./map-data.js?v=0653','./location-placement.js?v=0653','./cards-data.js?v=0653','./arcana/dice-renderer.js?v=0653','./arcana/dice-animator.js?v=0653','./assets/map.png','./assets/map-visual-v0653.png','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
+const CACHE='rpg-digital-v066visual';
+const ASSETS=['./','./index.html','./styles.css?v=066visual','./app.js?v=066visual','./network-lobby.js?v=066visual','./map-data.js?v=066visual','./location-placement.js?v=066visual','./cards-data.js?v=066visual','./arcana/dice-renderer.js?v=066visual','./arcana/dice-animator.js?v=066visual','./assets/map.png','./assets/map-visual-v066visual.png','./assets/heroes/warrior.webp','./assets/heroes/dwarf.webp','./assets/heroes/mage.webp','./assets/heroes/archer.webp','./assets/heroes/rogue.webp','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{

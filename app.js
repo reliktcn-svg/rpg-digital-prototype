@@ -183,7 +183,7 @@
     return o;
   }
   function freshState(){return {
-    version:'0.6.53', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
+    version:'0.6.6', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
     decks:initialDecks(), cleaned:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, tradeDeal:null, dungeonEntryNotice:null, territoryBuiltNotice:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:3, sharedDifficulty:null, journal:[]
   };}
   let state=freshState();
@@ -548,7 +548,7 @@
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,potions:[null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:sharedHard,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats(),territoryBuildSeq:{kingdom:0,cursed:0}}});
     generatePermanentLocations({preserve:false});
     state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(isMobileViewport()){els.sheetDrawer.hidden=true}else openCharacterSheet('overview',null,currentPlayer().id);setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
-    log(`<b>Партия v0.6.53 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
+    log(`<b>Партия v0.6.6 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
     state.order.forEach(id=>{const p=getPlayer(id);log(`Инициатива ${p.name}: D20 = <b>${p.initiative}</b>.`,p.id)});updateUI();renderBoard();
   }
 
@@ -1599,13 +1599,37 @@
     showRollPopup(`Темница · ${statName(k)}`,d,`${d} ${signed(bonus)} = <b>${total}</b>`,`<b>${verdict}</b> · ${resultText}`,natural,onDone,'Продолжить');
   }
   function attemptDungeonExit(k){
-    const p=currentPlayer();if(!dungeonExitAvailable(p))return;const bonus=effectiveStat(p,k),d=rand(20),total=d+bonus;state.turnLocked=true;let resultText='',natural=null,lethal=false;
-    if(d===1){natural=1;const dmg=rand(6);recordDamageTaken(p,dmg);p.currentHp-=dmg;resultText=`Натуральная 1: выход не удался. D6 урона = ${dmg}. ЗД ${Math.max(0,p.currentHp)}/${p.maxHp}.`;log(`${p.name}: Темница, натуральная 1 — остаётся заперт и получает ${dmg} урона.`);lethal=p.currentHp<=0}
+    const p=currentPlayer();if(!dungeonExitAvailable(p))return;
+    const bonus=effectiveStat(p,k),d=rand(20),total=d+bonus;
+    state.turnLocked=true;let resultText='',natural=null,natOneDamage=0;
+    if(d===1){
+      natural=1;natOneDamage=rand(6);
+      resultText='Натуральная 1: выход не удался. Герой остаётся в Темнице. Сейчас будет бросок D6 урона.';
+      log(`${p.name}: Темница, натуральная 1 — попытка выхода провалена, дополнительный бросок D6 урона.`);
+    }
     else if(d===20){natural=20;p.inDungeon=false;p.dungeonCard=null;p.dungeonEnteredTurn=null;p.reexploreRiskHex=null;resultText='Натуральная 20: герой успешно выходит из Темницы и получает дополнительный ход исследования.';log(`${p.name}: <b>натуральная 20</b> — успешно выходит из Темницы и получает дополнительный ход исследования.`)}
     else if(total>=13){p.inDungeon=false;p.dungeonCard=null;p.dungeonEnteredTurn=null;p.reexploreRiskHex=null;resultText='Успех: герой выходит из Темницы.';log(`${p.name}: D20 ${d} + ${statName(k)} ${signed(bonus)} = ${total}. <b>Выход из Темницы успешен.</b>`)}
     else{resultText='Провал: герой остаётся в Темнице.';log(`${p.name}: D20 ${d} + ${statName(k)} ${signed(bonus)} = ${total}. Выход не удался.`)}
-    recordNatural(p,natural);showDungeonRollResult(p,k,d,total,resultText,natural,()=>{if(lethal){handleDeath(p);return}if(natural===20){beginBonusExplorationTurnAfterDungeon(p);return}endTurn(true)});
+    recordNatural(p,natural);
+    const finish=()=>{if(natural===20){beginBonusExplorationTurnAfterDungeon(p);return}endTurn(true)};
+    const afterCheck=()=>{
+      if(natOneDamage){
+        // Show the damage die separately; only then apply the already-determined damage.
+        showRollPopup('Темница · Натуральная 1 · урон',natOneDamage,`D6 = <b>${natOneDamage}</b>`,
+          `Натуральная 1 — дополнительный урон. Герой остаётся в Темнице.`,1,()=>{
+            recordDamageTaken(p,natOneDamage);p.currentHp-=natOneDamage;
+            log(`${p.name}: Темница, натуральная 1 — D6 = ${natOneDamage} урона. ЗД ${Math.max(0,p.currentHp)}/${p.maxHp}.`);
+            updateUI();
+            if(p.currentHp<=0){handleDeath(p);return}
+            finish();
+          },'Продолжить',true);
+        return;
+      }
+      finish();
+    };
+    showDungeonRollResult(p,k,d,total,resultText,natural,afterCheck);
   }
+
   function hexDistance(a,b){if(a===b)return 0;const q=[[a,0]],seen=new Set([a]);while(q.length){const[x,d]=q.shift();for(const n of MAP.hexes[x].neighbors){if(n===b)return d+1;if(!seen.has(n)){seen.add(n);q.push([n,d+1])}}}return 999}
 
   function resetItemUsage(p,place){ensurePlayerModel(p);for(const [id,u] of Object.entries(p.itemUsage||{})){const reset=Array.isArray(u?.reset)?u.reset:[u?.reset];if(reset.includes(place))delete p.itemUsage[id]}}
@@ -2064,6 +2088,14 @@
   }
   // Display-only bridge: the core RPG rolls first; Arcana receives resolved values.
   const ARCANA_DURATION=1000, ARCANA_RESULT_HOLD=3000;
+  // v0.6.54: attack results stay 1s longer; damage results 0.5s shorter.
+  const ARCANA_ATTACK_HOLD=4000, ARCANA_DAMAGE_HOLD=2500;
+  function arcanaCombatHold(roll,phase=''){
+    const title=String(roll?.title||'').toLowerCase();
+    if(phase==='hero_roll'||phase==='enemy_roll'||/^атака\s+(героя|врага)/.test(title))return ARCANA_ATTACK_HOLD;
+    if(phase==='hero_damage'||phase==='enemy_damage'||/^урон\s+(героя|врага)/.test(title)||/атака врага.*урон/.test(title))return ARCANA_DAMAGE_HOLD;
+    return ARCANA_RESULT_HOLD;
+  }
   let arcanaHost=null,arcanaAnimator=null,arcanaPresentationKey='',arcanaPlaying=false;
   function dicePlainText(markup){const el=document.createElement('div');el.innerHTML=String(markup||'');return (el.textContent||'').replace(/\s+/g,' ').trim()}
   function combatArcanaDescription(c,roll){
@@ -2111,7 +2143,7 @@
     c.rollPresentationSeq=(Number(c.rollPresentationSeq)||0)+1;
     c.lastRoll={title,main:String(main),math,detail,natural,seq:c.rollPresentationSeq,dice:arcanaDiceFromRoll(title,main,math,dice)};
   }
-  // v0.6.53: compact, standalone dice overlay. It does not alter game logic.
+  // v0.6.54: compact, standalone dice overlay. It does not alter game logic.
   let arcanaBattleLayer=null,arcanaBattleHold=null,arcanaBattleStamp=0;
   function stopArcanaBattlePresentation(){
     ++arcanaBattleStamp;
@@ -2173,7 +2205,7 @@
       Promise.resolve(arcanaAnimator.play(payload)).catch(error=>console.warn('Arcana combat playback:',error)).then(()=>{
         if(stamp!==arcanaBattleStamp)return;
         arcanaPlaying=false;
-        arcanaBattleHold=setTimeout(()=>{if(stamp===arcanaBattleStamp)stopArcanaBattlePresentation()},ARCANA_RESULT_HOLD);
+        arcanaBattleHold=setTimeout(()=>{if(stamp===arcanaBattleStamp)stopArcanaBattlePresentation()},arcanaCombatHold(roll,c.phase));
       });
     }catch(error){console.warn('Arcana combat payload:',error);stopArcanaBattlePresentation()}
   }
@@ -2355,23 +2387,26 @@
     if(d===1){searchDamage=rand(6);searchMishap=EXTRA_LOOT_NAT1_LINES[Math.floor(Math.random()*EXTRA_LOOT_NAT1_LINES.length)](p.name);combatPush(`${searchMishap} Натуральная 1: D6 = ${searchDamage} урона.`)}
     if(base>0)recordNatural(p,natural);
     const lootKey=c.deckKey==='exploreHeart'?'lootHeart':'lootOuter';
-    // Success lets you INSPECT one extra card, not keep an extra item.
-    // Weak enemies give gold only. Looking at a card without keeping it has no gameplay value.
-    const cardsToDraw=base+(base>0&&success?1:0),candidates=[];
+    // Ordinary success: +1 inspected card, no extra reward.
+    // Natural 20: +1 kept item AND +1 inspected card (ordinary: choose 2 of 3).
+    // Weak enemies: gold only; there is no wisdom search without basic loot.
+    const nat20Bonus=base>0&&natural===20?1:0;
+    const keepCount=base+nat20Bonus;
+    const cardsToDraw=keepCount+(base>0&&success?1:0),candidates=[];
     for(let i=0;i<cardsToDraw;i++){const loot=drawCard(lootKey);if(loot)candidates.push(loot.id)}
     discardCard(c.deckKey,e);markExplorationSuccess(p.hex);p.reexploreRiskHex=null;
     c.phase='victory';
-    c.victory={gold:goldEarned,baseLoot:base,extraLoot:0,bonusLoot:bonusLootCount,searchRoll:d,searchTotal:total,searchDamage,
-      got:[],boss:false,lootDraft:{deckKey:lootKey,candidates,keep:Math.min(base,candidates.length),selected:[],confirmed:false,carefulSearch:success&&base>0}};
+    c.victory={gold:goldEarned,baseLoot:base,extraLoot:nat20Bonus,bonusLoot:bonusLootCount,searchRoll:d,searchTotal:total,searchDamage,
+      got:[],boss:false,lootDraft:{deckKey:lootKey,candidates,keep:Math.min(keepCount,candidates.length),selected:[],confirmed:false,carefulSearch:success&&base>0,natural20Bonus:!!nat20Bonus}};
     c.victoryUiStep='results';
     combatSetRoll('Результаты боя','✓',`${p.name} победил врага «${e.name}»`,`Заработано золота: ${goldEarned}`);
-    combatPush(`<b>Победа!</b> +${goldEarned} золота, добыча: ${base} ${lootWord(base)}${success&&base>0?' · Тщательный поиск: +1 карта для выбора':''}.`);
+    combatPush(`<b>Победа!</b> +${goldEarned} золота, добыча: ${keepCount} ${lootWord(keepCount)}${nat20Bonus?' · Натуральная 20: +1 тайник':''}${success&&base>0?' · +1 карта для выбора':''}.`);
     const resultText=success?'УСПЕХ':'ПРОВАЛ',naturalText=natural?` · Натуральная ${natural}`:'',damageText=searchDamage?`<br><b>${searchMishap}</b><br>Получено D6 = <b>${searchDamage}</b> урона · ЗД ${Math.max(0,p.currentHp)}/${p.maxHp}`:'';
     closeModal();updateUI();
     const showVictoryResults=()=>{
       const finalDamageText=searchDamage?`<br><b>${searchMishap}</b><br>Получено D6 = <b>${searchDamage}</b> урона · ЗД ${Math.max(0,p.currentHp)}/${p.maxHp}`:'';
       showRollPopup('Результаты боя','✓',`<b>${p.name}</b> победил врага «<b>${e.name}</b>».<br>Заработано золота: <b>${goldEarned}</b>`,
-        `${base===0?'Слабый враг: только золото, без Тщательного поиска.':`Тщательный поиск: D20 <b>${d}</b> ${signed(wis)} МУД = <b>${total}</b> · <b>${resultText}</b>${naturalText}`}<br>Награда: <b>${base}</b> ${lootWord(base)}.${success&&base>0?' Можно посмотреть 1 дополнительную карту.':''}${finalDamageText}`,
+        `${base===0?'Слабый враг: только золото, без Тщательного поиска.':`Тщательный поиск: D20 <b>${d}</b> ${signed(wis)} МУД = <b>${total}</b> · <b>${resultText}</b>${naturalText}`}<br>Награда: <b>${keepCount}</b> ${lootWord(keepCount)}${nat20Bonus?' (натуральная 20: +1 тайник)':''}.${success&&base>0?` Выбор из ${candidates.length} карт.`:''}${finalDamageText}`,
         null,()=>{if(searchDamage&&p.currentHp<=0){for(const id of candidates){const card=itemCard(id);if(card)returnCardToDeckRandom(lootKey,card)}state.combat=null;handleDeath(p);return}
           if(base>0&&candidates.length)openVictoryLootDraft();else showPostCombatTerritoryPrompt();},'К наградам');
     };
@@ -2396,7 +2431,7 @@
       return `<div role="button" tabindex="0" class="loot-draft-card${chosen?' selected':''}" data-loot-choice="${index}" aria-pressed="${chosen}"><span class="loot-draft-number">КАРТА ${index+1}</span><strong>${escape(card?.name||'Неизвестная карта')}</strong><small>${escape(card?.category||'Предмет')}</small><span class="loot-draft-description">${fields}</span><span class="loot-draft-state">${chosen?'✓ ВЫБРАНА':'Выбрать'}</span></div>`
     }).join('');
     const complete=selected.size===max;
-    els.modalContent.innerHTML=`<div class="card-kicker">ПОБЕДА · ТАЙНИКИ</div><div class="card-title">Выберите добычу</div><div class="card-field">Получить <b>${max} ${lootWord(max)}</b> из <b>${all.length}</b> ${lootWord(all.length)}.${draft.carefulSearch?' Тщательный поиск открыл дополнительную карту.':''}<br>Невыбранные карты вернутся в колоду.</div><div class="loot-draft-grid">${list}</div><div class="modal-actions"><button id="lootDraftConfirm" class="success" ${complete?'':'disabled'}>Подтвердить (${selected.size}/${max})</button></div>`;
+    els.modalContent.innerHTML=`<div class="card-kicker">ПОБЕДА · ТАЙНИКИ</div><div class="card-title">Выберите добычу</div><div class="card-field">Получить <b>${max} ${lootWord(max)}</b> из <b>${all.length}</b> ${lootWord(all.length)}.${draft.carefulSearch?' Тщательный поиск открыл дополнительную карту.':''}${draft.natural20Bonus?' Натуральная 20: +1 получаемый тайник.':''}<br>Невыбранные карты вернутся в колоду.</div><div class="loot-draft-grid">${list}</div><div class="modal-actions"><button id="lootDraftConfirm" class="success" ${complete?'':'disabled'}>Подтвердить (${selected.size}/${max})</button></div>`;
     els.modal.hidden=false;
     els.modalContent.querySelectorAll('[data-loot-choice]').forEach(b=>b.onclick=()=>{
       const n=Number(b.dataset.lootChoice),actual=state.combat?.victory?.lootDraft;if(!actual||actual.confirmed)return;
@@ -2412,7 +2447,7 @@
         const card=itemCard(live.candidates[i]);if(!card)continue;
         if(chosen.has(i)){receiveTreasure(recipient,card);received.push(card.id)}else returnCardToDeckRandom(live.deckKey,card);
       }
-      combat.victory.got=received;combat.victory.extraLoot=0;
+      combat.victory.got=received;combat.victory.extraLoot=live.natural20Bonus?1:0;
       log(`${recipient.name} выбирает добычу: ${received.map(id=>`№${id} «${itemCard(id)?.name}»`).join(', ')||'нет карт'}.`);
       delete els.modal.dataset.lootDraft;closeModal();updateUI();showPostCombatTerritoryPrompt();
     };
@@ -2500,7 +2535,7 @@
     else if(phase==='enemy_damage'&&!decisions.length){step=combatAcceptDamageAndContinue}
     else if(phase==='post_damage'){step=combatContinueAfterDamage;wait=ARCANA_RESULT_HOLD}
     if(!step){cancelCombatAuto();return}
-    if(['hero_roll','enemy_roll','enemy_damage','hero_damage'].includes(phase)&&Array.isArray(c.lastRoll?.dice)&&c.lastRoll.dice.length)wait=ARCANA_DURATION+ARCANA_RESULT_HOLD+(Math.max(0,c.lastRoll.dice.length-1)*500);
+    if(['hero_roll','enemy_roll','enemy_damage','hero_damage'].includes(phase)&&Array.isArray(c.lastRoll?.dice)&&c.lastRoll.dice.length)wait=ARCANA_DURATION+arcanaCombatHold(c.lastRoll,phase)+(Math.max(0,c.lastRoll.dice.length-1)*500);
     const key=[c.instanceId,phase,c.round,c.attackRoll?.chosen,c.enemyAttackRoll?.chosen,c.pendingEnemyDamage?.amount,c.pendingHeroDamage?.amount,c.lastRoll?.seq].join(':');
     if(combatAutoTimer!==null&&combatAutoKey===key)return;
     cancelCombatAuto();combatAutoKey=key;
@@ -2519,7 +2554,40 @@
     else if(c.phase==='enemy_damage')combatAcceptDamageAndContinue();
   }
   function combatAbilityButtonHtml(p){const h=HERO_COMBAT[p.id],used=state.combat?.heroAbilityUsed,available=combatClassAbilityAvailable(p);return h?`<button id="combatHeroAbility" class="secondary" ${(used||!available)?'disabled':''} title="${used?'Способность уже использована в этом бою.':available?'':'Сейчас способность применить нельзя.'}">Способность: ${h.ability}</button>`:''}
-  function enemyRankClass(e){const r=String(e?.fields?.['Ранг']||'').toLowerCase();if(r.includes('слаб'))return 'rank-weak';if(r.includes('обыч'))return 'rank-normal';if(r.includes('силь'))return 'rank-strong';if(r.includes('элит'))return 'rank-elite';return ''}
+  function enemyRankClass(e){const r=String(e?.fields?.['Ранг']||'').toLowerCase();if(r.includes('слаб'))return 'rank-weak';if(r.includes('обыч'))return 'rank-normal';if(r.includes('силь'))return 'rank-strong';if(r.includes('элит'))return 'rank-elite';if(e?.id===281||r.includes('босс'))return 'rank-boss';return ''}
+  // Visual-only combat card helpers. IDs reference existing approved cards; no gameplay changes.
+  function combatPortraitUrl(kind,id){
+    if(kind==='hero'&&['warrior','dwarf','mage','archer','rogue'].includes(id))return `assets/heroes/${id}.webp`;
+    if(kind==='enemy'&&Number.isInteger(Number(id))&&Number(id)>0)return `assets/enemies/enemy-${String(id).padStart(3,'0')}.webp`;
+    return '';
+  }
+  function combatPortraitHtml(kind,id,name){
+    const path=combatPortraitUrl(kind,id);
+    return `<div class="visual-combat-portrait">${path?`<img src="${path}" alt="${escapeCombatText(name)}" loading="eager" decoding="async" onerror="this.style.display='none';this.parentElement.classList.add('portrait-not-found')">`:''}<div class="portrait-placeholder">Портрет готовится</div></div>`;
+  }
+  function escapeCombatText(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+  function combatHeroVisualCard(p,c){
+    return `<section class="combatant hero visual-combat-card" style="--visual-accent:${p.color||'#4f85dc'}">
+      <div class="visual-card-heading"><div class="visual-card-name"><small>ГЕРОЙ</small><h3>${escapeCombatText(p.name)}</h3></div><span class="visual-card-hp">ЗД ${p.currentHp}/${p.maxHp}</span></div>
+      <div class="visual-card-stats"><b>ЗЩ ${combatEffectiveDefense(p)}</b><b>Урон ${escapeCombatText(currentHeroDamage(p))}</b><span>СИЛ ${signed(effectiveStat(p,'str'))}</span><span>ЛОВ ${signed(effectiveStat(p,'dex'))}</span><span>МУД ${signed(effectiveStat(p,'wis'))}</span><span>ХАР ${signed(effectiveStat(p,'cha'))}</span></div>
+      ${combatPortraitHtml('hero',p.id,p.name)}
+      <div class="visual-card-below">${combatHeroRulesHtml(p)}${combatActiveEffectsHtml(c,p)}</div>
+    </section>`;
+  }
+  function combatEnemyVisualCard(e,c){
+    const isBoss=e.id===281,rank=e.fields?.['Ранг']|| (isBoss?'босс':'—');
+    const type=e.fields?.['Тип']||'—',effect=e.fields?.['Эффект']||'—';
+    return `<section class="combatant enemy visual-combat-card ${enemyRankClass(e)}" aria-label="Враг ${escapeCombatText(e.name)}">
+      <div class="visual-card-heading"><div class="visual-card-name"><small>${isBoss?'БОСС':escapeCombatText(rank.toUpperCase())}</small><h3>${escapeCombatText(e.name)}</h3></div><span class="visual-card-hp">ЗД ${Math.max(0,c.enemyHp)}/${c.enemyMaxHp}</span></div>
+      <div class="visual-card-stats visual-enemy-stats"><b>ЗЩ ${escapeCombatText(e.fields?.['ЗЩ']||'—')}</b><b>АТК ${escapeCombatText(e.fields?.['АТК']||'—')}</b><b>Урон ${escapeCombatText(e.fields?.['Урон']||'—')}</b></div>
+      ${combatPortraitHtml('enemy',e.id,e.name)}
+      <div class="visual-card-below">${c.elite?'<div class="visual-card-warning">ЭЛИТНАЯ ОПАСНОСТЬ · АТАКУЕТ ПЕРВОЙ</div>':''}
+        <div class="visual-card-effect"><small>ТИП</small><b>${escapeCombatText(type)}</b></div>
+        <div class="visual-card-effect"><small>ЭФФЕКТ ВРАГА</small><span>${escapeCombatText(effect)}</span></div>
+        ${combatEnemyEffectsHtml(c)}
+      </div>
+    </section>`;
+  }
   function combatHeroRulesHtml(p){const h=HERO_COMBAT[p.id];if(!h)return '';const nat=h.natural20||'—',parts=nat.split(' — ');return `<div class="combat-hero-rules"><div><small>СПОСОБНОСТЬ ГЕРОЯ</small><b>${h.ability}</b><span>${h.effect}</span></div><div><small>НАТУРАЛЬНАЯ 20</small><b>${parts[0]||'Эффект героя'}</b><span>${parts.length>1?parts.slice(1).join(' — '):nat}</span></div></div>`}
   function combatActiveEffectsHtml(c,p){
     const rows=[];const add=(label,desc,tone='positive')=>{if(label||desc)rows.push({label:label||'Эффект',desc,tone})};
@@ -2573,7 +2641,7 @@
     const guide=localCombatant&&!playerHardMode(p)?`<div class="combat-effects-manual"><h4>Памятка боя</h4><div class="combat-note">Активные способности, предметы и наёмники применяет игрок. Натуральные 1 и 20 автоматические только при одиночном D20. Лечение доступно до атаки в свой боевой ход и после принятого нелетального урона.</div></div>`:'';
     const history=c.journalOpen?`<div class="combat-history-wrap"><div class="combat-history">${(c.history||[]).map(x=>`<div>${x}</div>`).join('')||'<div>Записей пока нет.</div>'}</div></div>`:'';
     const controlBlock=localCombatant?`${reactions.length?`<div class="combat-reactions"><h4>РЕАКЦИИ — игра напоминает, но решение за игроком</h4><div class="combat-reaction-buttons">${reactions.map((r,i)=>`<button data-reaction="${i}" class="secondary">${r.label}</button>`).join('')}</div></div>`:''}<div class="combat-actions">${actions}</div><div class="combat-sheet-actions"><button id="combatHeroSheet" class="secondary">Герой</button><button id="combatInventory" class="secondary">Инвентарь</button></div>${guide}`:'';
-    els.modalContent.innerHTML=`<div class="combat-shell ${localCombatant?'combat-owner-view':'combat-observer-view'}"><div class="combat-summary"><span class="combat-mode-badge">${localCombatant?mode:`Наблюдение за ${observedName}`}</span><span class="combat-pill">Раунд ${c.round}</span><button id="combatHide" class="combat-hide ghost" type="button">Скрыть бой</button></div><div class="combat-head"><div class="combatant hero"><h3 style="color:${p.color}">${p.name}</h3><div class="combat-hp">ЗД ${p.currentHp}/${p.maxHp}</div><div class="combat-meta">ЗЩ ${combatEffectiveDefense(p)} · Урон ${currentHeroDamage(p)} · СИЛ ${signed(effectiveStat(p,'str'))} · ЛОВ ${signed(effectiveStat(p,'dex'))} · МУД ${signed(effectiveStat(p,'wis'))} · ХАР ${signed(effectiveStat(p,'cha'))}</div>${combatHeroRulesHtml(p)}${combatActiveEffectsHtml(c,p)}</div><div class="combat-vs">VS</div><div class="combatant enemy ${enemyRankClass(e)}">${c.elite?'<div class="elite-danger-badge">ЭЛИТНАЯ ОПАСНОСТЬ · АТАКУЕТ ПЕРВОЙ</div>':''}<h3>${e.name}</h3><div class="combat-hp">ЗД ${Math.max(0,c.enemyHp)}/${c.enemyMaxHp}</div><div class="combat-meta">Ранг: ${e.fields?.['Ранг']||'—'}<br>ЗЩ ${e.fields?.['ЗЩ']} · АТК ${e.fields?.['АТК']} · Урон ${e.fields?.['Урон']}<br>${e.fields?.['Тип']||''}<br>Эффект: ${e.fields?.['Эффект']||'—'}</div>${combatEnemyEffectsHtml(c)}</div></div><div class="combat-dice-stage"><div class="combat-dice-title">${lr.title}</div><div class="combat-die-main ${natClass}">${lr.main}</div><div class="combat-dice-math">${lr.math||''}</div><div class="combat-dice-detail">${lr.detail||''}</div>${outcomeHtml}</div>${phaseHtml}${controlBlock}<div class="combat-journal-control"><button id="combatJournalToggle" class="${c.journalOpen?'secondary active':'ghost'}">Журнал боя${c.journalOpen?' ▲':' ▼'}</button></div>${history}</div>`;els.modal.hidden=false;
+    els.modalContent.innerHTML=`<div class="combat-shell ${localCombatant?'combat-owner-view':'combat-observer-view'}"><div class="combat-summary"><span class="combat-mode-badge">${localCombatant?mode:`Наблюдение за ${observedName}`}</span><span class="combat-pill">Раунд ${c.round}</span><button id="combatHide" class="combat-hide ghost" type="button">Скрыть бой</button></div><div class="combat-head visual-combat-head">${combatHeroVisualCard(p,c)}<div class="combat-vs">VS</div>${combatEnemyVisualCard(e,c)}</div><div class="combat-dice-stage"><div class="combat-dice-title">${lr.title}</div><div class="combat-die-main ${natClass}">${lr.main}</div><div class="combat-dice-math">${lr.math||''}</div><div class="combat-dice-detail">${lr.detail||''}</div>${outcomeHtml}</div>${phaseHtml}${controlBlock}<div class="combat-journal-control"><button id="combatJournalToggle" class="${c.journalOpen?'secondary active':'ghost'}">Журнал боя${c.journalOpen?' ▲':' ▼'}</button></div>${history}</div>`;els.modal.hidden=false;
     if(localCombatant){reactions.forEach((r,i)=>{const b=els.modalContent.querySelector(`[data-reaction="${i}"]`);if(b)b.onclick=r.fn});els.modalContent.querySelectorAll('[data-auto-choice]').forEach(b=>b.onclick=()=>decisions[Number(b.dataset.autoChoice)]?.fn());els.modalContent.querySelectorAll('[data-cleanse-status]').forEach(b=>b.onclick=()=>chooseCombatCleanseStatus((c.pendingCleanse?.options||[])[Number(b.dataset.cleanseStatus)]))}
     const bind=(id,fn)=>{const x=document.getElementById(id);if(x)x.onclick=fn};if(localCombatant){bind('combatFight',combatFight);bind('combatResolveEscape',resolveCombatEscapeResult);bind('combatEscapeBefore',combatEscapeBefore);bind('combatAttack',combatHeroAttack);bind('combatRollDamage',combatRollHeroDamage);bind('combatSkipChoice',skipCombatChoice);bind('combatEscape',combatEscapeDuring);bind('combatHeroAbility',useHeroCombatAbility);bind('combatFinalizeAttack',finalizeHeroAttackRoll);bind('mageLightning',()=>chooseMageNat20('lightning'));bind('mageFire',()=>chooseMageNat20('fire'));bind('combatApplyHeroDamage',applyHeroDamageNow);bind('combatEnemyTurn',combatEnemyTurn);bind('combatFinalizeEnemyRoll',finalizeEnemyAttackRoll);bind('combatAcceptDamage',combatAcceptDamageAndContinue);bind('combatContinueMiss',combatContinueAfterEnemyMiss);bind('combatContinueAfterDamage',combatContinueAfterDamage);bind('combatFinishVictory',finishCombatVictory);bind('combatPostVictory',()=>{if(c.victory?.lootDraft&&!c.victory.lootDraft.confirmed&&c.victory.lootDraft.keep>0)openVictoryLootDraft();else showPostCombatTerritoryPrompt()});bind('combatHeroSheet',()=>openCharacterSheet('overview'));bind('combatInventory',()=>openCharacterSheet('inventory'))}
     bind('combatHide',hideCombatWindow);bind('combatJournalToggle',()=>{c.journalOpen=!c.journalOpen;renderCombat(true)});if(localCombatant&&!els.sheetDrawer.hidden&&sheetView.playerId===p.id)renderCharacterSheet(sheetView.mode,sheetView.bonusKey);arcanaPresentCombat(c);scheduleCombatAuto();
@@ -2752,7 +2820,7 @@
 
   function saveGame(){if(!state.started)return;localStorage.setItem('rpgDigitalPrototypeV0648',JSON.stringify(state));log('Партия v0.6.48 сохранена в браузере.')}
   function loadGame(){
-    const raw=localStorage.getItem('rpgDigitalPrototypeV0653')||localStorage.getItem('rpgDigitalPrototypeV0652')||localStorage.getItem('rpgDigitalPrototypeV0651')||localStorage.getItem('rpgDigitalPrototypeV0648')||localStorage.getItem('rpgDigitalPrototypeV0647')||localStorage.getItem('rpgDigitalPrototypeV0646')||localStorage.getItem('rpgDigitalPrototypeV0645')||localStorage.getItem('rpgDigitalPrototypeV0639')||localStorage.getItem('rpgDigitalPrototypeV0638')||localStorage.getItem('rpgDigitalPrototypeV0637')||localStorage.getItem('rpgDigitalPrototypeV0636')||localStorage.getItem('rpgDigitalPrototypeV0635')||localStorage.getItem('rpgDigitalPrototypeV0634')||localStorage.getItem('rpgDigitalPrototypeV0633')||localStorage.getItem('rpgDigitalPrototypeV0632')||localStorage.getItem('rpgDigitalPrototypeV0631')||localStorage.getItem('rpgDigitalPrototypeV063')||localStorage.getItem('rpgDigitalPrototypeV062')||localStorage.getItem('rpgDigitalPrototypeV060')||localStorage.getItem('rpgDigitalPrototypeV0522')||localStorage.getItem('rpgDigitalPrototypeV0521')||localStorage.getItem('rpgDigitalPrototypeV0520')||localStorage.getItem('rpgDigitalPrototypeV0519')||localStorage.getItem('rpgDigitalPrototypeV0518')||localStorage.getItem('rpgDigitalPrototypeV0517')||localStorage.getItem('rpgDigitalPrototypeV0516')||localStorage.getItem('rpgDigitalPrototypeV0515')||localStorage.getItem('rpgDigitalPrototypeV0514')||localStorage.getItem('rpgDigitalPrototypeV0513')||localStorage.getItem('rpgDigitalPrototypeV0512')||localStorage.getItem('rpgDigitalPrototypeV0511')||localStorage.getItem('rpgDigitalPrototypeV0510')||localStorage.getItem('rpgDigitalPrototypeV059')||localStorage.getItem('rpgDigitalPrototypeV058')||localStorage.getItem('rpgDigitalPrototypeV057')||localStorage.getItem('rpgDigitalPrototypeV056')||localStorage.getItem('rpgDigitalPrototypeV055')||localStorage.getItem('rpgDigitalPrototypeV054')||localStorage.getItem('rpgDigitalPrototypeV053')||localStorage.getItem('rpgDigitalPrototypeV052')||localStorage.getItem('rpgDigitalPrototypeV051')||localStorage.getItem('rpgDigitalPrototypeV050')||localStorage.getItem('rpgDigitalPrototypeV045')||localStorage.getItem('rpgDigitalPrototypeV044')||localStorage.getItem('rpgDigitalPrototypeV043')||localStorage.getItem('rpgDigitalPrototypeV042')||localStorage.getItem('rpgDigitalPrototypeV041')||localStorage.getItem('rpgDigitalPrototypeV040')||localStorage.getItem('rpgDigitalPrototypeV033')||localStorage.getItem('rpgDigitalPrototypeV032');
+    const raw=localStorage.getItem('rpgDigitalPrototypeV0654')||localStorage.getItem('rpgDigitalPrototypeV0653')||localStorage.getItem('rpgDigitalPrototypeV0652')||localStorage.getItem('rpgDigitalPrototypeV0651')||localStorage.getItem('rpgDigitalPrototypeV0648')||localStorage.getItem('rpgDigitalPrototypeV0647')||localStorage.getItem('rpgDigitalPrototypeV0646')||localStorage.getItem('rpgDigitalPrototypeV0645')||localStorage.getItem('rpgDigitalPrototypeV0639')||localStorage.getItem('rpgDigitalPrototypeV0638')||localStorage.getItem('rpgDigitalPrototypeV0637')||localStorage.getItem('rpgDigitalPrototypeV0636')||localStorage.getItem('rpgDigitalPrototypeV0635')||localStorage.getItem('rpgDigitalPrototypeV0634')||localStorage.getItem('rpgDigitalPrototypeV0633')||localStorage.getItem('rpgDigitalPrototypeV0632')||localStorage.getItem('rpgDigitalPrototypeV0631')||localStorage.getItem('rpgDigitalPrototypeV063')||localStorage.getItem('rpgDigitalPrototypeV062')||localStorage.getItem('rpgDigitalPrototypeV060')||localStorage.getItem('rpgDigitalPrototypeV0522')||localStorage.getItem('rpgDigitalPrototypeV0521')||localStorage.getItem('rpgDigitalPrototypeV0520')||localStorage.getItem('rpgDigitalPrototypeV0519')||localStorage.getItem('rpgDigitalPrototypeV0518')||localStorage.getItem('rpgDigitalPrototypeV0517')||localStorage.getItem('rpgDigitalPrototypeV0516')||localStorage.getItem('rpgDigitalPrototypeV0515')||localStorage.getItem('rpgDigitalPrototypeV0514')||localStorage.getItem('rpgDigitalPrototypeV0513')||localStorage.getItem('rpgDigitalPrototypeV0512')||localStorage.getItem('rpgDigitalPrototypeV0511')||localStorage.getItem('rpgDigitalPrototypeV0510')||localStorage.getItem('rpgDigitalPrototypeV059')||localStorage.getItem('rpgDigitalPrototypeV058')||localStorage.getItem('rpgDigitalPrototypeV057')||localStorage.getItem('rpgDigitalPrototypeV056')||localStorage.getItem('rpgDigitalPrototypeV055')||localStorage.getItem('rpgDigitalPrototypeV054')||localStorage.getItem('rpgDigitalPrototypeV053')||localStorage.getItem('rpgDigitalPrototypeV052')||localStorage.getItem('rpgDigitalPrototypeV051')||localStorage.getItem('rpgDigitalPrototypeV050')||localStorage.getItem('rpgDigitalPrototypeV045')||localStorage.getItem('rpgDigitalPrototypeV044')||localStorage.getItem('rpgDigitalPrototypeV043')||localStorage.getItem('rpgDigitalPrototypeV042')||localStorage.getItem('rpgDigitalPrototypeV041')||localStorage.getItem('rpgDigitalPrototypeV040')||localStorage.getItem('rpgDigitalPrototypeV033')||localStorage.getItem('rpgDigitalPrototypeV032');
     if(!raw){alert('Сохранённой партии пока нет.');return}
     try{
       state=JSON.parse(raw);if(!state.locations)state.locations={};if(!state.territories)state.territories={};if(!state.areas)state.areas=[];stripPermanentLocationCardsFromDecks(state.decks);normalizeLegendaryHeartLoot(state.decks);normalizeTavernMercenaries();
@@ -2763,7 +2831,7 @@
       const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
-      state.version='0.6.53';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.53.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
+      state.version='0.6.6';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.6.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
     }catch(e){console.error(e);alert('Не удалось загрузить сохранение.')}
   }
   function cloneJson(v){return JSON.parse(JSON.stringify(v))}
@@ -2781,7 +2849,7 @@
     if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
-    state.version='0.6.53';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    state.version='0.6.6';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){
