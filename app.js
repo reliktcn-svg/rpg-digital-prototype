@@ -183,7 +183,7 @@
     return o;
   }
   function freshState(){return {
-    version:'0.6.50', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
+    version:'0.6.51', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
     decks:initialDecks(), cleaned:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, tradeDeal:null, dungeonEntryNotice:null, territoryBuiltNotice:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:3, sharedDifficulty:null, journal:[]
   };}
   let state=freshState();
@@ -216,7 +216,7 @@
     if(!key){combatWindowInstance=null;combatWindowHidden=false}
     updateCombatRestoreButton();return isNew;
   }
-  function hideCombatWindow(){if(!state.combat)return;combatWindowHidden=true;updateCombatRestoreButton();if(!els.modal.hidden&&els.modalContent.querySelector('.combat-shell'))closeModal();updateUI();renderBoard()}
+  function hideCombatWindow(){if(!state.combat)return;if(arcanaBattleLayer&&!arcanaBattleLayer.hidden)stopArcanaBattlePresentation();combatWindowHidden=true;updateCombatRestoreButton();if(!els.modal.hidden&&els.modalContent.querySelector('.combat-shell'))closeModal();updateUI();renderBoard()}
   function showCombatWindow(){if(!state.combat)return;combatWindowHidden=false;updateCombatRestoreButton();renderCombat(true)}
   function canOffturnModalActionFor(heroId){return !!heroId&&modalOffturnOwnerId===heroId}
   function beginSideInteraction(p,type,participantIds=[p?.id].filter(Boolean)){
@@ -548,7 +548,7 @@
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,potions:[null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:sharedHard,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats(),territoryBuildSeq:{kingdom:0,cursed:0}}});
     generatePermanentLocations({preserve:false});
     state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(isMobileViewport()){els.sheetDrawer.hidden=true}else openCharacterSheet('overview',null,currentPlayer().id);setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
-    log(`<b>Партия v0.6.50 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
+    log(`<b>Партия v0.6.51 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
     state.order.forEach(id=>{const p=getPlayer(id);log(`Инициатива ${p.name}: D20 = <b>${p.initiative}</b>.`,p.id)});updateUI();renderBoard();
   }
 
@@ -868,7 +868,7 @@
     els.modalContent.innerHTML=`<div class="card-kicker">${card.category} · №${card.id} · ${card.deck}</div><div class="card-title">${card.name}</div><div class="card-fields">${fields}</div>${extra?`<div class="card-field" style="margin-top:10px">${extra}</div>`:''}<div class="modal-actions" id="modalActions"></div>`;
     const box=els.modalContent.querySelector('#modalActions');actions.forEach(a=>{const b=document.createElement('button');b.className=a.className||'primary';b.textContent=a.label;b.onclick=()=>a.fn();box.appendChild(b)});els.modal.hidden=false;
   }
-  function closeModal(){delete els.modal.dataset.lootDraft;els.modal.hidden=true;els.modal.classList.remove('post-combat-prompt');els.modalContent.innerHTML='';els.modalClose.style.display='';modalOffturnOwnerId=null;modalCloseAction=null;visibleGameOverKey=null}
+  function closeModal(){if(arcanaBattleLayer&&!arcanaBattleLayer.hidden)stopArcanaBattlePresentation();delete els.modal.dataset.lootDraft;els.modal.hidden=true;els.modal.classList.remove('post-combat-prompt');els.modalContent.innerHTML='';els.modalClose.style.display='';modalOffturnOwnerId=null;modalCloseAction=null;visibleGameOverKey=null}
   function requestModalClose(){if(modalCloseAction){const fn=modalCloseAction;modalCloseAction=null;fn();return}if(state.gameOver&&els.modalContent.querySelector('.game-over-stats')){dismissedGameOverKey=currentGameOverKey();closeModal();return}if(!state.turnLocked)closeModal()}
   const rollPopupQueue=[];
   let rollPopupAfterClose=null;
@@ -881,14 +881,14 @@
     els.rollPopupTitle.insertAdjacentElement('afterend',infoDiceHost);
     const dice=arcanaDiceFromRoll(x.title,x.main,x.math,x.dice);
     if(!window.FantasyDice||!dice.length){popup.classList.remove('arcana-info-active','arcana-info-rolling');infoDiceHost.hidden=true;return false;}
-    infoDiceHost.hidden=false;popup.classList.add('arcana-info-active','arcana-info-rolling');
+    infoDiceHost.hidden=false;popup.classList.add('arcana-info-active','arcana-info-rolling');document.body.classList.add('arcana-info-presenting');
     if(!infoDiceAnimator){try{infoDiceAnimator=window.FantasyDice.create({container:infoDiceHost,duration:ARCANA_DURATION,controls:false,reducedMotion:'auto'});}catch(err){console.warn('Info dice:',err);popup.classList.remove('arcana-info-active','arcana-info-rolling');return false;}}
     const stamp=++infoDiceToken;
     const summary=[dicePlainText(x.math),dicePlainText(x.detail).match(/(?:УСПЕХ|ПРОВАЛ|ПОПАДАНИЕ|ПРОМАХ)/i)?.[0]].filter(Boolean).join(' · ')||String(x.main);
     // Dice animation is visual only: all values were already resolved by game logic.
     try{Promise.resolve(infoDiceAnimator.play({id:'info-'+stamp,label:String(x.title||'Бросок'),dice,total:summary}))
-      .then(()=>{if(infoDiceToken===stamp&&rollPopupDisplaySeq===seq){popup.classList.remove('arcana-info-rolling');els.rollPopupClose.disabled=false;}})
-      .catch(()=>{if(infoDiceToken===stamp&&rollPopupDisplaySeq===seq){popup.classList.remove('arcana-info-rolling');els.rollPopupClose.disabled=false;}})}
+      .then(()=>{if(infoDiceToken===stamp&&rollPopupDisplaySeq===seq){popup.classList.remove('arcana-info-rolling');document.body.classList.remove('arcana-info-presenting');els.rollPopupClose.disabled=false;}})
+      .catch(()=>{if(infoDiceToken===stamp&&rollPopupDisplaySeq===seq){popup.classList.remove('arcana-info-rolling');document.body.classList.remove('arcana-info-presenting');els.rollPopupClose.disabled=false;}})}
     catch(err){console.warn('Info dice play:',err);popup.classList.remove('arcana-info-rolling');return false}
     return true;
   }
@@ -897,7 +897,7 @@
     rollPopupQueue.push({title,main:String(main),math,detail,natural,onClose,buttonLabel});if(els.rollOverlay.hidden)showNextRollPopup();
   }
   function showNextRollPopup(){
-    const x=rollPopupQueue.shift();if(!x){els.rollOverlay.hidden=true;els.rollOverlay.classList.remove('battle-results-popup');rollPopupAfterClose=null;els.rollPopupClose.textContent='Продолжить';return}
+    const x=rollPopupQueue.shift();if(!x){document.body.classList.remove('arcana-info-presenting');els.rollOverlay.hidden=true;els.rollOverlay.classList.remove('battle-results-popup');rollPopupAfterClose=null;els.rollPopupClose.textContent='Продолжить';return}
     els.rollOverlay.classList.toggle('battle-results-popup',x.title==='Результаты боя');
     els.rollPopupTitle.textContent=x.title||'Бросок';
     els.rollPopupMain.textContent=x.main;
@@ -913,7 +913,7 @@
     const seq=++rollPopupDisplaySeq;
     const animated=x.title!=='Результаты боя'&&presentInfoDice(x,seq);
     if(animated)els.rollPopupClose.disabled=true;
-    else els.rollOverlay.querySelector('.roll-popup-card')?.classList.remove('arcana-info-active','arcana-info-rolling');
+    else {document.body.classList.remove('arcana-info-presenting');els.rollOverlay.querySelector('.roll-popup-card')?.classList.remove('arcana-info-active','arcana-info-rolling')}
     if(state.combat&&localControlsCombat()&&!rollPopupAfterClose&&x.title!=='Результаты боя'){
       setTimeout(()=>{if(seq===rollPopupDisplaySeq&&!els.rollOverlay.hidden&&state.combat&&localControlsCombat())els.rollPopupClose?.click()},animated?ARCANA_DURATION+ARCANA_RESULT_HOLD:ARCANA_RESULT_HOLD);
     }
@@ -2082,20 +2082,63 @@
     c.rollPresentationSeq=(Number(c.rollPresentationSeq)||0)+1;
     c.lastRoll={title,main:String(main),math,detail,natural,seq:c.rollPresentationSeq,dice:arcanaDiceFromRoll(title,main,math,dice)};
   }
+  // v0.6.51: compact, standalone dice overlay. It does not alter game logic.
+  let arcanaBattleLayer=null,arcanaBattleHold=null,arcanaBattleStamp=0;
+  function stopArcanaBattlePresentation(){
+    ++arcanaBattleStamp;
+    if(arcanaBattleHold!==null)clearTimeout(arcanaBattleHold);
+    arcanaBattleHold=null;
+    if(arcanaBattleLayer)arcanaBattleLayer.hidden=true;
+    document.body.classList.remove('arcana-battle-presenting');
+    arcanaPlaying=false;
+  }
+  function ensureArcanaBattleLayer(){
+    if(!arcanaBattleLayer){
+      arcanaBattleLayer=document.createElement('div');
+      arcanaBattleLayer.className='arcana-battle-layer';
+      arcanaBattleLayer.hidden=true;
+      arcanaBattleLayer.innerHTML='<div class="arcana-battle-card" role="status" aria-label="Анимация броска кубика"></div>';
+      document.body.appendChild(arcanaBattleLayer);
+    }
+    if(!arcanaHost){
+      arcanaHost=document.createElement('div');
+      arcanaHost.className='arcana-combat-dice';
+      arcanaBattleLayer.querySelector('.arcana-battle-card').appendChild(arcanaHost);
+    }
+    if(!arcanaAnimator){
+      try{arcanaAnimator=window.FantasyDice.create({container:arcanaHost,duration:ARCANA_DURATION,speed:1,controls:false,reducedMotion:'auto'})}
+      catch(err){console.warn('Arcana combat:',err);return false}
+    }
+    return true;
+  }
   function arcanaPresentCombat(c){
     if(!window.FantasyDice||!c?.lastRoll)return;
-    const target=els.modalContent.querySelector('.combat-dice-stage');if(!target)return;
-    if(!arcanaHost){arcanaHost=document.createElement('div');arcanaHost.className='arcana-combat-dice';}
-    target.insertBefore(arcanaHost,target.querySelector('.combat-dice-math'));
-    if(!arcanaAnimator){try{arcanaAnimator=window.FantasyDice.create({container:arcanaHost,duration:ARCANA_DURATION,speed:1,controls:false,reducedMotion:'auto'});}catch(error){console.warn('Arcana unavailable:',error);return}}
+    const target=els.modalContent.querySelector('.combat-dice-stage');
+    if(!target)return;
     const roll=c.lastRoll,key=`${c.instanceId||'combat'}:${roll.seq||0}`;
-    if(arcanaPresentationKey===key){if(Array.isArray(roll.dice)&&roll.dice.length){target.classList.add('arcana-active');if(arcanaPlaying){target.classList.add('arcana-rolling');target.closest('.combat-shell')?.classList.add('arcana-in-progress')}}return;}
+    if(!Array.isArray(roll.dice)||!roll.dice.length){
+      if(arcanaPresentationKey!==key){arcanaPresentationKey=key;stopArcanaBattlePresentation()}
+      return;
+    }
+    // Never render an old battle-stage result, even after the standalone overlay closes.
+    target.classList.add('arcana-battle-stage-hidden');
+    if(arcanaPresentationKey===key)return;
     arcanaPresentationKey=key;
-    if(!Array.isArray(roll.dice)||!roll.dice.length){arcanaPlaying=false;target.classList.remove('arcana-active');arcanaAnimator.clear();return}
+    if(!ensureArcanaBattleLayer())return;
+    stopArcanaBattlePresentation();
+    const stamp=++arcanaBattleStamp;
+    arcanaBattleLayer.hidden=false;
+    document.body.classList.add('arcana-battle-presenting');
+    arcanaPlaying=true;
+    // Outcome is passed as resolved data and is revealed ONLY after the animation settles.
     const payload={id:key,label:String(roll.title||'Бросок'),dice:roll.dice,total:combatArcanaDescription(c,roll)};
-    arcanaPlaying=true;target.classList.add('arcana-active');target.closest('.combat-shell')?.classList.add('arcana-in-progress');
-    try{Promise.resolve(arcanaAnimator.play(payload)).then(()=>{if(arcanaPresentationKey===key){arcanaPlaying=false;els.modalContent.querySelector('.combat-dice-stage')?.classList.remove('arcana-rolling');els.modalContent.querySelector('.combat-shell')?.classList.remove('arcana-in-progress')}}).catch(error=>{console.warn('Arcana playback:',error);if(arcanaPresentationKey===key){arcanaPlaying=false;els.modalContent.querySelector('.combat-dice-stage')?.classList.remove('arcana-rolling');els.modalContent.querySelector('.combat-shell')?.classList.remove('arcana-in-progress')}});target.classList.add('arcana-rolling')}
-    catch(error){console.warn('Arcana payload:',error);arcanaPlaying=false;target.classList.remove('arcana-active','arcana-rolling');target.closest('.combat-shell')?.classList.remove('arcana-in-progress')}
+    try{
+      Promise.resolve(arcanaAnimator.play(payload)).catch(error=>console.warn('Arcana combat playback:',error)).then(()=>{
+        if(stamp!==arcanaBattleStamp)return;
+        arcanaPlaying=false;
+        arcanaBattleHold=setTimeout(()=>{if(stamp===arcanaBattleStamp)stopArcanaBattlePresentation()},ARCANA_RESULT_HOLD);
+      });
+    }catch(error){console.warn('Arcana combat payload:',error);stopArcanaBattlePresentation()}
   }
 
   function combatUsed(key){return !!state.combat?.used?.[key]}
@@ -2205,7 +2248,7 @@
   function finalizeHeroAttackRoll(){const c=state.combat,p=currentPlayer();if(!c||c.phase!=='hero_roll')return;const a=c.attackRoll,d=a.chosen,natural=a.natural;let hit=natural===20?true:natural===1?false:a.total>=a.target;
     if(natural===1){c.enemyAdvantage++;combatPush('<b>Натуральная 1:</b> автоматический промах; враг получает преимущество на следующую атаку.');}
     if(!hit){c.afterEnemyMiss=false;if(combatEnemy()?.id===46&&!combatUsed('enemy46miss')){combatMarkUsed('enemy46miss');combatApplyHeroStatus(p,'Усталость')}if(a.profile.weapon?.id===218)c.nextHeroAttackBonus=(c.nextHeroAttackBonus||0)+1;combatPush(`${p.name} промахивается.`);combatTickBuffsAtHeroAttack();combatTickHeroStatuses();if(!state.combat)return;if(c.enemyHp<=0){combatVictory();return}c.phase='enemy_ready';renderCombat();return}
-    c.phase='hero_damage_ready';combatSetRoll('Атака героя · попадание',d,`${d} ${signed(a.bonus)} = ${a.total}`,'Попадание! Нажмите «Урон», чтобы бросить кубики.',natural);renderCombat();return;
+    c.phase='hero_damage_ready';renderCombat();return;
   }
   function combatRollHeroDamage(){
     const c=state.combat,p=currentPlayer();if(!c||c.phase!=='hero_damage_ready'||!c.attackRoll)return;
@@ -2659,7 +2702,7 @@
 
   function saveGame(){if(!state.started)return;localStorage.setItem('rpgDigitalPrototypeV0648',JSON.stringify(state));log('Партия v0.6.48 сохранена в браузере.')}
   function loadGame(){
-    const raw=localStorage.getItem('rpgDigitalPrototypeV0650')||localStorage.getItem('rpgDigitalPrototypeV0648')||localStorage.getItem('rpgDigitalPrototypeV0647')||localStorage.getItem('rpgDigitalPrototypeV0646')||localStorage.getItem('rpgDigitalPrototypeV0645')||localStorage.getItem('rpgDigitalPrototypeV0639')||localStorage.getItem('rpgDigitalPrototypeV0638')||localStorage.getItem('rpgDigitalPrototypeV0637')||localStorage.getItem('rpgDigitalPrototypeV0636')||localStorage.getItem('rpgDigitalPrototypeV0635')||localStorage.getItem('rpgDigitalPrototypeV0634')||localStorage.getItem('rpgDigitalPrototypeV0633')||localStorage.getItem('rpgDigitalPrototypeV0632')||localStorage.getItem('rpgDigitalPrototypeV0631')||localStorage.getItem('rpgDigitalPrototypeV063')||localStorage.getItem('rpgDigitalPrototypeV062')||localStorage.getItem('rpgDigitalPrototypeV060')||localStorage.getItem('rpgDigitalPrototypeV0522')||localStorage.getItem('rpgDigitalPrototypeV0521')||localStorage.getItem('rpgDigitalPrototypeV0520')||localStorage.getItem('rpgDigitalPrototypeV0519')||localStorage.getItem('rpgDigitalPrototypeV0518')||localStorage.getItem('rpgDigitalPrototypeV0517')||localStorage.getItem('rpgDigitalPrototypeV0516')||localStorage.getItem('rpgDigitalPrototypeV0515')||localStorage.getItem('rpgDigitalPrototypeV0514')||localStorage.getItem('rpgDigitalPrototypeV0513')||localStorage.getItem('rpgDigitalPrototypeV0512')||localStorage.getItem('rpgDigitalPrototypeV0511')||localStorage.getItem('rpgDigitalPrototypeV0510')||localStorage.getItem('rpgDigitalPrototypeV059')||localStorage.getItem('rpgDigitalPrototypeV058')||localStorage.getItem('rpgDigitalPrototypeV057')||localStorage.getItem('rpgDigitalPrototypeV056')||localStorage.getItem('rpgDigitalPrototypeV055')||localStorage.getItem('rpgDigitalPrototypeV054')||localStorage.getItem('rpgDigitalPrototypeV053')||localStorage.getItem('rpgDigitalPrototypeV052')||localStorage.getItem('rpgDigitalPrototypeV051')||localStorage.getItem('rpgDigitalPrototypeV050')||localStorage.getItem('rpgDigitalPrototypeV045')||localStorage.getItem('rpgDigitalPrototypeV044')||localStorage.getItem('rpgDigitalPrototypeV043')||localStorage.getItem('rpgDigitalPrototypeV042')||localStorage.getItem('rpgDigitalPrototypeV041')||localStorage.getItem('rpgDigitalPrototypeV040')||localStorage.getItem('rpgDigitalPrototypeV033')||localStorage.getItem('rpgDigitalPrototypeV032');
+    const raw=localStorage.getItem('rpgDigitalPrototypeV0651')||localStorage.getItem('rpgDigitalPrototypeV0648')||localStorage.getItem('rpgDigitalPrototypeV0647')||localStorage.getItem('rpgDigitalPrototypeV0646')||localStorage.getItem('rpgDigitalPrototypeV0645')||localStorage.getItem('rpgDigitalPrototypeV0639')||localStorage.getItem('rpgDigitalPrototypeV0638')||localStorage.getItem('rpgDigitalPrototypeV0637')||localStorage.getItem('rpgDigitalPrototypeV0636')||localStorage.getItem('rpgDigitalPrototypeV0635')||localStorage.getItem('rpgDigitalPrototypeV0634')||localStorage.getItem('rpgDigitalPrototypeV0633')||localStorage.getItem('rpgDigitalPrototypeV0632')||localStorage.getItem('rpgDigitalPrototypeV0631')||localStorage.getItem('rpgDigitalPrototypeV063')||localStorage.getItem('rpgDigitalPrototypeV062')||localStorage.getItem('rpgDigitalPrototypeV060')||localStorage.getItem('rpgDigitalPrototypeV0522')||localStorage.getItem('rpgDigitalPrototypeV0521')||localStorage.getItem('rpgDigitalPrototypeV0520')||localStorage.getItem('rpgDigitalPrototypeV0519')||localStorage.getItem('rpgDigitalPrototypeV0518')||localStorage.getItem('rpgDigitalPrototypeV0517')||localStorage.getItem('rpgDigitalPrototypeV0516')||localStorage.getItem('rpgDigitalPrototypeV0515')||localStorage.getItem('rpgDigitalPrototypeV0514')||localStorage.getItem('rpgDigitalPrototypeV0513')||localStorage.getItem('rpgDigitalPrototypeV0512')||localStorage.getItem('rpgDigitalPrototypeV0511')||localStorage.getItem('rpgDigitalPrototypeV0510')||localStorage.getItem('rpgDigitalPrototypeV059')||localStorage.getItem('rpgDigitalPrototypeV058')||localStorage.getItem('rpgDigitalPrototypeV057')||localStorage.getItem('rpgDigitalPrototypeV056')||localStorage.getItem('rpgDigitalPrototypeV055')||localStorage.getItem('rpgDigitalPrototypeV054')||localStorage.getItem('rpgDigitalPrototypeV053')||localStorage.getItem('rpgDigitalPrototypeV052')||localStorage.getItem('rpgDigitalPrototypeV051')||localStorage.getItem('rpgDigitalPrototypeV050')||localStorage.getItem('rpgDigitalPrototypeV045')||localStorage.getItem('rpgDigitalPrototypeV044')||localStorage.getItem('rpgDigitalPrototypeV043')||localStorage.getItem('rpgDigitalPrototypeV042')||localStorage.getItem('rpgDigitalPrototypeV041')||localStorage.getItem('rpgDigitalPrototypeV040')||localStorage.getItem('rpgDigitalPrototypeV033')||localStorage.getItem('rpgDigitalPrototypeV032');
     if(!raw){alert('Сохранённой партии пока нет.');return}
     try{
       state=JSON.parse(raw);if(!state.locations)state.locations={};if(!state.territories)state.territories={};if(!state.areas)state.areas=[];stripPermanentLocationCardsFromDecks(state.decks);normalizeLegendaryHeartLoot(state.decks);normalizeTavernMercenaries();
@@ -2670,7 +2713,7 @@
       const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
-      state.version='0.6.50';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.50.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
+      state.version='0.6.51';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.51.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
     }catch(e){console.error(e);alert('Не удалось загрузить сохранение.')}
   }
   function cloneJson(v){return JSON.parse(JSON.stringify(v))}
@@ -2688,7 +2731,7 @@
     if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
-    state.version='0.6.50';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    state.version='0.6.51';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){

@@ -72,6 +72,8 @@
     const style = node('style'); style.textContent = STYLE; root.appendChild(style);
     const shell = node('section', 'shell'); shell.setAttribute('aria-label', 'Визуализация готового броска');
     const bar = node('div', 'bar'), title = node('h3', 'title', 'Кубики готовы'), stateLabel = node('span', 'state', 'Ожидание');
+    // Game UI 0.6.51: one title and one result, no duplicated 'РЕЗУЛЬТАТ' badge.
+    stateLabel.style.display = 'none';
     bar.append(title, stateLabel);
     const stage = node('div', 'stage'), canvas = node('canvas'); canvas.setAttribute('aria-hidden', 'true');
     const captions = node('div', 'captions'); captions.setAttribute('aria-hidden', 'true');
@@ -111,6 +113,9 @@
         const row = Math.floor(i / cols), inRow = Math.min(cols, n - row * cols);
         return { x: (width - inRow * cellW) / 2 + (i % cols + .5) * cellW, y: row * cellH + radius + 28, size: radius, cellW };
       });
+      // With one die the single value is printed in the formula below.
+      // Multiple dice keep individual captions to explain e.g. 2D8.
+      captions.style.display = n === 1 ? 'none' : '';
       captions.replaceChildren();
       if (roll) roll.dice.forEach((die, i) => {
         const p = positions[i], caption = node('div', 'caption');
