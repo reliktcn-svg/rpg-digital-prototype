@@ -862,542 +862,294 @@ body.game-running .roll-overlay:not([hidden]){z-index:820!important}
  .arcana-battle-card{position:fixed;left:var(--arcana-center-x,50vw);top:var(--arcana-center-y,50vh);transform:translate(-50%,-50%)}
 }
 
-
-/* v0.6.61 Visual Alignment — display-only corrections.
-   Equal header/stats tracks keep both square portraits at exactly the same Y.
-   The desktop six-stat ribbon stays in ONE line; mobile uses matching 2-column
-   compact grids with one-line labels in each cell. Character rules stay below. */
+/* v0.6.65 — единственный источник геометрии боевых карточек.
+   Удалены все конфликтующие правила v0.6.61–v0.6.64.
+   Общее фиксированное пространство шапки + квадратный портрет без отступов.
+   При перевороте меняется только содержимое портрета, размеры стабильны. */
 .visual-combat-head{
   display:grid;
-  grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);
+  grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr);
   align-items:start;
-  gap:10px;
+  gap:12px;
   min-width:0;
 }
-.visual-combat-head .combat-vs{align-self:center;font-size:15px;color:#d1b978}
-.visual-combat-head .visual-combat-card{
-  --visual-accent:#87929e;
-  display:grid;
-  grid-template-columns:minmax(0,1fr);
-  grid-template-rows:60px 34px auto auto;
-  align-content:start;
-  gap:0;
-  min-width:0;min-height:0;
-  border:2px solid var(--visual-accent)!important;
-  border-radius:13px;overflow:hidden;padding:0!important;
-  background:#11171d;
-  box-shadow:0 0 0 1px color-mix(in srgb,var(--visual-accent),transparent 72%),0 12px 24px rgba(0,0,0,.22);
-}
-.visual-combat-head .combatant.enemy.rank-weak{--visual-accent:#969da7}
-.visual-combat-head .combatant.enemy.rank-normal{--visual-accent:#55ac70}
-.visual-combat-head .combatant.enemy.rank-strong{--visual-accent:#568cdd}
-.visual-combat-head .combatant.enemy.rank-elite{--visual-accent:#aa75d9}
-.visual-combat-head .combatant.enemy.rank-boss{--visual-accent:#e25757}
-.visual-card-heading{
-  display:flex;align-items:center;justify-content:space-between;
-  gap:6px;padding:8px 9px 4px;
-  height:60px;min-height:0;min-width:0;overflow:hidden;
-}
-.visual-card-name{min-width:0;flex:1}
-.visual-card-name small{
-  display:block;font-size:9px;letter-spacing:.1em;
-  font-weight:900;color:var(--visual-accent);
-}
-.visual-combat-card .visual-card-name h3{
-  font-size:clamp(11px,1.05vw,16px);margin:3px 0 0!important;
-  line-height:1.13;overflow-wrap:anywhere;color:#f0f3f6!important;
-  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;
-  line-clamp:3;overflow:hidden;
-}
-.visual-card-hp{
-  flex-shrink:0;white-space:nowrap;background:#171f26;
-  border:1px solid #455160;border-radius:7px;
-  color:#f0f2f4;font-size:11px;font-weight:900;
-  padding:5px 6px;font-variant-numeric:tabular-nums;
-}
-.visual-card-stats{
-  display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-between;
-  gap:2px;height:34px;min-width:0;min-height:0;
-  padding:2px 8px 6px;color:#c6d1d9;overflow:hidden;
-}
-.visual-card-stats b,.visual-card-stats span{
-  display:inline-block;min-width:0;flex:0 1 auto;
-  font-size:clamp(7.5px,.64vw,10px);line-height:1.2;
-  font-weight:700;letter-spacing:-.12px;
-  background:#1a242b;border:1px solid #2c3a43;
-  border-radius:5px;padding:3px 3px;white-space:nowrap;
-  font-variant-numeric:tabular-nums;
-}
-.visual-card-stats b{color:#fff}
-.visual-enemy-stats{justify-content:flex-start;gap:5px}
-.visual-combat-portrait{
-  aspect-ratio:1/1;width:min(100%,230px);height:auto;
-  max-height:none;justify-self:center;align-self:start;
-  position:relative;background:radial-gradient(circle,#293139,#11171d);
-  overflow:hidden;border:1px solid color-mix(in srgb,var(--visual-accent),transparent 62%);
-  border-radius:6px;isolation:isolate;
-}
-.visual-combat-portrait img{
-  display:block;width:100%;height:100%;object-fit:cover;
-  object-position:center;position:absolute;inset:0;z-index:1;
-}
-.visual-combat-portrait .portrait-placeholder{color:#9ba5ac;text-align:center;padding:35% 5%;font-size:12px}
-.visual-combat-portrait:has(img) .portrait-placeholder{display:none}
-.visual-combat-portrait.portrait-not-found .portrait-placeholder{display:block}
-.visual-card-below{padding:9px 10px 11px;width:100%;display:grid;gap:7px;min-width:0}
-.visual-card-below .combat-hero-rules{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px;margin:0;padding:0;border:none}
-.visual-card-below .combat-hero-rules>div{padding:7px 8px;min-width:0;border:1px solid #313e49;border-radius:7px;background:#172028}
-.visual-card-below .combat-hero-rules>div:last-child{border-color:#62532b;background:#221e17}
-.visual-card-below .combat-hero-rules small{font-size:9px;color:#e2c77c;letter-spacing:.06em}
-.visual-card-below .combat-hero-rules b{font-size:11px;line-height:1.3;color:#fff}
-.visual-card-below .combat-hero-rules span{font-size:10px;line-height:1.4;color:#d1d8df;overflow-wrap:anywhere}
-.visual-card-effect{display:grid;gap:3px;border:1px solid #303c46;background:#151d24;border-radius:7px;padding:7px 9px;min-width:0}
-.visual-card-effect small{font-size:9px;letter-spacing:.1em;color:var(--visual-accent);font-weight:850}
-.visual-card-effect b,.visual-card-effect span{font-size:11px;line-height:1.4;color:#e2e8ed;overflow-wrap:anywhere}
-.visual-card-warning{font-size:10px;font-weight:850;color:#ecc389;background:#362518;border:1px solid #8c6a42;padding:7px;border-radius:7px}
-.visual-card-below .combat-active-effects{margin:0;padding:7px 9px;font-size:10px}
-.visual-card-below .combat-enemy-effects{margin:0;font-size:10px}
-@media(max-width:900px),(pointer:coarse){
- .visual-combat-head{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;align-items:start}
- .visual-combat-head .combat-vs{display:none!important}
- .visual-combat-head .visual-combat-card{
-   grid-template-rows:72px 75px auto auto;
-   border-width:2px!important;border-radius:11px;
- }
- .visual-card-heading{
-   height:72px;padding:7px 6px 4px;gap:3px;align-items:flex-start;
- }
- .visual-combat-card .visual-card-name h3{font-size:clamp(10px,2.65vw,14px);line-height:1.14}
- .visual-card-name small{font-size:8px;letter-spacing:0}
- .visual-card-hp{font-size:9px;padding:3px 4px;margin-top:10px}
- .visual-card-stats{
-   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
-   grid-template-rows:repeat(3,19px);align-content:start;
-   gap:3px;height:75px;padding:4px 6px 8px;
- }
- .visual-card-stats b,.visual-card-stats span{
-   display:block;max-width:100%;width:100%;
-   overflow:hidden;text-overflow:clip;
-   text-align:center;font-size:clamp(8px,2.25vw,10px);
-   line-height:1.2;padding:3px 1px;letter-spacing:-.22px;
- }
- .visual-enemy-stats{grid-template-rows:repeat(3,19px)}
- .visual-combat-portrait{width:100%;border-inline:0;border-radius:0}
- .visual-card-below{padding:6px;gap:5px}
- .visual-card-below .combat-hero-rules{grid-template-columns:1fr!important;gap:5px}
- .visual-card-below .combat-hero-rules>div{padding:6px!important}
- .visual-card-below .combat-hero-rules b{font-size:10px}
- .visual-card-below .combat-hero-rules small{font-size:8px}
- .visual-card-below .combat-hero-rules span{font-size:10px;line-height:1.35}
- .visual-card-effect{padding:6px 7px}
- .visual-card-effect small{font-size:8px}
- .visual-card-effect b,.visual-card-effect span{font-size:10px;line-height:1.38}
- .visual-card-below .combat-active-effects{font-size:9px}
-}
-@media(max-width:360px){
- .visual-combat-head .visual-combat-card{grid-template-rows:78px 75px auto auto}
- .visual-card-heading{height:78px}
- .visual-combat-card .visual-card-name h3{font-size:10px}
- .visual-card-hp{font-size:8px;padding:3px}
- .visual-card-stats b,.visual-card-stats span{font-size:8px}
-}
-
-/* v0.6.62 Visual Combat Cards — interactive portrait/info cards.
-   Front side = full-width square image. Back side = fixed-size rules/effects panel.
-   No gameplay changes. */
-.visual-combat-head{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);
-  gap:12px;
-  align-items:start;
-}
 .visual-combat-head .combat-vs{
+  display:grid;
   align-self:center;
   justify-self:center;
-  font-size:18px;
+  place-items:center;
+  color:#e0c478;
+  font-size:17px;
   font-weight:900;
-  color:#d1b978;
 }
 .visual-combat-head .visual-combat-card{
-  --visual-accent:#87929e;
+  --visual-accent:#84909a;
+  min-width:0;
   display:flex;
   flex-direction:column;
   align-items:stretch;
-  gap:0;
-  min-width:0;
-  padding:0!important;
-  border:2px solid var(--visual-accent)!important;
-  border-radius:14px;
+  padding:0;
+  margin:0;
+  border:2px solid var(--visual-accent);
+  border-radius:13px;
   overflow:hidden;
-  background:#10161b;
-  box-shadow:0 12px 24px rgba(0,0,0,.22);
+  background:#10161c;
+  box-shadow:0 8px 22px #0005;
 }
 .visual-combat-head .combatant.enemy.rank-weak{--visual-accent:#969da7}
 .visual-combat-head .combatant.enemy.rank-normal{--visual-accent:#55ac70}
 .visual-combat-head .combatant.enemy.rank-strong{--visual-accent:#568cdd}
 .visual-combat-head .combatant.enemy.rank-elite{--visual-accent:#aa75d9}
 .visual-combat-head .combatant.enemy.rank-boss{--visual-accent:#e25757}
-.visual-card-heading{
-  display:grid;
-  gap:3px;
-  padding:8px 10px 6px;
-  background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,0));
+.visual-combat-head .visual-card-heading{
+  position:relative;
+  flex:0 0 79px;
+  width:100%;
+  height:79px;
+  min-width:0;
+  padding:7px 9px 2px;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  overflow:hidden;
+  background:linear-gradient(180deg,#171e24,#10161c);
 }
-.visual-card-kicker{
-  font-size:10px;
-  line-height:1.1;
-  font-weight:900;
-  letter-spacing:.08em;
+.visual-combat-head .visual-card-kicker{
+  margin:0;
+  padding:0 72px 0 0;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
   color:var(--visual-accent);
-  text-transform:uppercase;
-}
-.visual-card-title-row{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  align-items:center;
-  gap:8px;
-  min-width:0;
-}
-.visual-card-title-row h3{
-  margin:0!important;
-  min-width:0;
-  color:#f3f6f8!important;
-  font-size:20px;
-  line-height:1.02;
+  font-size:9px;
   font-weight:900;
+  letter-spacing:.06em;
+  line-height:1.14;
+}
+.visual-combat-head .visual-card-title-row{
+  display:block;
+  min-width:0;
+  margin:0;
+  padding:0 75px 0 0;
+}
+.visual-combat-head .visual-card-title-row h3{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  max-height:35px;
+  margin:0;
+  color:#f3f5f8;
+  font-size:15px;
+  line-height:1.07;
+  font-weight:850;
+  overflow:hidden;
   overflow-wrap:anywhere;
 }
-.visual-card-hp{
-  white-space:nowrap;
-  background:#171f26;
-  border:1px solid #455160;
+.visual-combat-head .visual-card-hp{
+  position:absolute;
+  top:7px;
+  right:8px;
+  display:block;
+  margin:0;
+  padding:4px 5px;
+  border:1px solid #485563;
   border-radius:7px;
-  color:#f0f2f4;
-  font-size:12px;
-  font-weight:900;
-  line-height:1.05;
-  padding:4px 7px;
+  background:#1a222c;
+  color:#f4f7fa;
   font-variant-numeric:tabular-nums;
+  font-size:11px;
+  line-height:1.12;
+  font-weight:900;
+  white-space:nowrap;
+  z-index:2;
 }
-.visual-card-stats{
+.visual-combat-head .visual-card-stats{
+  width:100%;
+  min-width:0;
+  height:auto;
+  min-height:0;
+  margin-top:auto;
+  padding:0;
   display:grid;
   grid-template-columns:repeat(6,minmax(0,1fr));
+  grid-template-rows:none;
+  grid-auto-rows:minmax(21px,auto);
   gap:3px;
-  min-width:0;
+  justify-content:stretch;
+  align-items:stretch;
+  align-content:end;
+  overflow:visible;
 }
-.visual-card-stats b,.visual-card-stats span{
+.visual-combat-head .visual-enemy-stats{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-rows:none;
+}
+.visual-combat-head .visual-card-stats b,
+.visual-combat-head .visual-card-stats span{
   display:flex;
   align-items:center;
   justify-content:center;
+  width:100%;
   min-width:0;
-  background:#1a242b;
-  border:1px solid #2c3a43;
-  border-radius:5px;
-  padding:3px 4px;
-  white-space:nowrap;
-  font-size:10px;
-  line-height:1;
+  max-width:none;
+  padding:2px 1px;
+  border-radius:4px;
+  border:1px solid #34414d;
+  background:#202b34;
+  color:#dae2e9;
+  font-size:9px;
   font-weight:800;
-  letter-spacing:-.02em;
+  letter-spacing:-.04em;
   font-variant-numeric:tabular-nums;
-  color:#d3dce4;
+  line-height:1.08;
+  text-align:center;
+  white-space:nowrap;
 }
-.visual-card-stats b{color:#fff}
-.visual-enemy-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
-.visual-card-stage{
+.visual-combat-head .visual-card-stats b{color:#fff}
+.visual-combat-head .visual-card-stage{
   appearance:none;
   -webkit-appearance:none;
   display:block;
+  box-sizing:border-box;
   width:100%;
-  height:0;
-  padding:100% 0 0;
+  flex:0 0 auto;
+  position:relative;
+  height:auto;
+  aspect-ratio:1/1;
+  min-height:0;
+  max-height:none;
+  padding:0;
   margin:0;
   border:0;
-  border-top:1px solid color-mix(in srgb,var(--visual-accent),transparent 72%);
-  background:#0c1116;
-  position:relative;
+  border-radius:0;
   overflow:hidden;
   cursor:pointer;
+  background:#0e141b;
+  touch-action:manipulation;
 }
-.visual-card-stage:focus-visible{outline:2px solid #d8b25d;outline-offset:-2px}
-.visual-card-face{
+.visual-combat-head .visual-card-stage:focus-visible{outline:2px solid #e4c87d;outline-offset:-3px}
+.visual-combat-head .visual-card-face{
   position:absolute;
   inset:0;
   display:block;
-  transition:opacity .16s ease;
+  overflow:hidden;
+  transition:opacity .14s ease;
+  pointer-events:none;
 }
-.visual-card-front{opacity:1;pointer-events:none}
-.visual-card-back{opacity:0;pointer-events:none;background:#11181e}
-.visual-card-stage.is-back .visual-card-front{opacity:0}
-.visual-card-stage.is-back .visual-card-back{opacity:1}
-.visual-combat-portrait{
+.visual-combat-head .visual-card-front{opacity:1}
+.visual-combat-head .visual-card-back{opacity:0;background:#11181e}
+.visual-combat-head .visual-card-stage.is-back .visual-card-front{opacity:0}
+.visual-combat-head .visual-card-stage.is-back .visual-card-back{opacity:1}
+.visual-combat-head .visual-combat-portrait{
   position:absolute;
   inset:0;
-  background:radial-gradient(circle at 50% 28%,#2d363e 0,#12181d 65%,#0d1217 100%);
-  overflow:hidden;
-}
-.visual-combat-portrait img{
+  display:block;
   width:100%;
   height:100%;
+  min-width:0;
+  max-width:none;
+  min-height:0;
+  max-height:none;
+  aspect-ratio:auto;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:#182027;
+  overflow:hidden;
+}
+.visual-combat-head .visual-combat-portrait img{
+  position:absolute;
+  inset:0;
   display:block;
+  width:100%;
+  height:100%;
   object-fit:cover;
   object-position:center;
+  border:0;
 }
-.visual-combat-portrait .portrait-placeholder{
+.visual-combat-head .visual-combat-portrait .portrait-placeholder{
   position:absolute;
   inset:0;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:10%;
+  padding:15px;
+  color:#a5afb9;
   text-align:center;
-  color:#9ba5ac;
   font-size:12px;
 }
-.visual-combat-portrait:has(img) .portrait-placeholder{display:none}
-.visual-combat-portrait.portrait-not-found .portrait-placeholder{display:flex}
-.visual-card-back-wrap{
+.visual-combat-head .visual-combat-portrait:has(img) .portrait-placeholder{display:none}
+.visual-combat-head .visual-combat-portrait.portrait-not-found .portrait-placeholder{display:flex}
+.visual-combat-head .visual-card-back-wrap{
   height:100%;
-  padding:8px;
-  display:grid;
-  align-content:start;
+  display:flex;
+  flex-direction:column;
   gap:7px;
+  padding:9px;
   overflow:auto;
-}
-.visual-back-block{
-  display:grid;
-  gap:3px;
-  padding:7px 8px;
-  border:1px solid #313e49;
-  border-radius:7px;
-  background:#162028;
   text-align:left;
 }
-.visual-back-block.accent{
-  border-color:#62532b;
-  background:#221e17;
-}
-.visual-back-block small{
-  font-size:9px;
-  line-height:1.1;
-  letter-spacing:.06em;
-  font-weight:900;
-  color:#e2c77c;
-}
-.visual-back-block b{
-  font-size:12px;
-  line-height:1.18;
-  color:#fff;
-}
-.visual-back-block span{
-  font-size:11px;
-  line-height:1.28;
-  color:#d5dde4;
-  overflow-wrap:anywhere;
-}
-.visual-card-warning{
-  font-size:10px;
-  font-weight:850;
-  color:#ecc389;
-  background:#362518;
-  border:1px solid #8c6a42;
-  padding:7px 8px;
+.visual-combat-head .visual-back-block{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  padding:8px;
+  border:1px solid #3d4852;
+  background:#182229;
   border-radius:7px;
+  text-align:left;
 }
-.visual-card-back-wrap .combat-active-effects,
-.visual-card-back-wrap .combat-enemy-effects{
-  margin:0;
-  padding:7px 8px;
-  border-radius:7px;
-  background:#10161b;
-}
-.visual-card-back-wrap .combat-active-effects{font-size:10px}
-.visual-card-back-wrap .combat-enemy-effects{font-size:10px;line-height:1.35}
-.visual-card-back-wrap .combat-active-effect-list{gap:5px}
-.visual-card-back-wrap .combat-effect-chip{padding:5px 6px}
-
+.visual-combat-head .visual-back-block.accent{border-color:#695b34;background:#262117}
+.visual-combat-head .visual-back-block small{font-size:9px;line-height:1.2;letter-spacing:.05em;color:#dfc079;font-weight:850}
+.visual-combat-head .visual-back-block b{font-size:12px;line-height:1.25;color:#f6f7f8}
+.visual-combat-head .visual-back-block span{font-size:11px;line-height:1.4;color:#dae1e7;overflow-wrap:anywhere}
+.visual-combat-head .visual-card-back-wrap .combat-active-effects,
+.visual-combat-head .visual-card-back-wrap .combat-enemy-effects{margin:0;padding:6px 7px;font-size:10px;line-height:1.35}
+.visual-combat-head .visual-card-warning{border:1px solid #846943;border-radius:7px;padding:6px;font-size:10px;background:#302515;color:#f3c980}
 @media(max-width:900px),(pointer:coarse){
-  .visual-combat-head{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
-  .visual-combat-head .combat-vs{display:none!important}
-  .visual-card-heading{padding:6px 6px 5px;gap:4px}
-  .visual-card-kicker{font-size:8px;letter-spacing:.05em}
-  .visual-card-title-row{gap:5px}
-  .visual-card-title-row h3{font-size:13px;line-height:1.06}
-  .visual-card-hp{font-size:9px;padding:3px 4px}
-  .visual-card-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:3px}
-  .visual-card-stats b,.visual-card-stats span{font-size:8.5px;padding:3px 2px}
-  .visual-card-back-wrap{padding:6px;gap:5px}
-  .visual-back-block{padding:6px 6px}
-  .visual-back-block small{font-size:8px}
-  .visual-back-block b{font-size:10px}
-  .visual-back-block span{font-size:9px;line-height:1.26}
-  .visual-card-back-wrap .combat-active-effects,
-  .visual-card-back-wrap .combat-enemy-effects{padding:6px;font-size:9px}
+  .visual-combat-head{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px;align-items:start}
+  .visual-combat-head .combat-vs{display:none}
+  .visual-combat-head .visual-card-heading{flex-basis:83px;height:83px;padding:5px 6px 2px;gap:2px}
+  .visual-combat-head .visual-card-kicker{
+    display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:3;
+    line-clamp:3;
+    max-height:27px;
+    white-space:normal;
+    overflow-wrap:anywhere;
+    font-size:7.7px;
+    line-height:1.1;
+    padding-right:58px;
+    letter-spacing:.01em;
+  }
+  .visual-combat-head .visual-card-title-row{padding-right:58px}
+  .visual-combat-head .visual-card-title-row h3{font-size:11px;line-height:1.09;max-height:26px}
+  .visual-combat-head .visual-card-hp{top:5px;right:5px;font-size:8.6px;padding:3px 4px}
+  .visual-combat-head .visual-card-stats{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-template-rows:none;
+    grid-auto-rows:minmax(19px,auto);
+    gap:3px;
+  }
+  .visual-combat-head .visual-enemy-stats{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:none}
+  .visual-combat-head .visual-card-stats b,
+  .visual-combat-head .visual-card-stats span{padding:2px 1px;font-size:8px;line-height:1.05}
+  .visual-combat-head .visual-card-back-wrap{padding:6px;gap:5px}
+  .visual-combat-head .visual-back-block{padding:6px;gap:3px}
+  .visual-combat-head .visual-back-block small{font-size:8px}
+  .visual-combat-head .visual-back-block b{font-size:10px}
+  .visual-combat-head .visual-back-block span{font-size:9px;line-height:1.33}
 }
 @media(max-width:360px){
-  .visual-card-title-row h3{font-size:12px}
-  .visual-card-hp{font-size:8px}
-  .visual-card-stats b,.visual-card-stats span{font-size:8px;letter-spacing:-.03em}
+  .visual-combat-head .visual-card-heading{flex-basis:86px;height:86px}
+  .visual-combat-head .visual-card-title-row h3{font-size:10px}
+  .visual-combat-head .visual-card-stats b,
+  .visual-combat-head .visual-card-stats span{font-size:7.2px;letter-spacing:-.05em}
 }
-
-
-/* v0.6.63 Combat polish — remove leftover fixed heights and old portrait limits. */
-.visual-card-heading{
-  height:auto!important;
-  min-height:0!important;
-  overflow:visible!important;
-  align-items:stretch!important;
-}
-.visual-card-title-row{
-  align-items:start!important;
-}
-.visual-card-title-row h3{
-  display:block!important;
-}
-.visual-card-stats{
-  height:auto!important;
-  min-height:0!important;
-  align-content:start!important;
-  row-gap:4px!important;
-}
-.visual-card-stats b,
-.visual-card-stats span{
-  min-height:24px;
-}
-.visual-card-stage{
-  flex:0 0 auto;
-  margin-top:6px;
-}
-.visual-combat-portrait{
-  width:100%!important;
-  max-width:none!important;
-  height:100%!important;
-  max-height:none!important;
-  justify-self:stretch!important;
-  align-self:stretch!important;
-}
-.visual-combat-portrait img{
-  width:100%!important;
-  height:100%!important;
-}
-@media(min-width:901px) and (pointer:fine){
-  .visual-combat-head{grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr)!important;gap:14px!important}
-  .visual-card-heading{padding:10px 12px 8px!important;gap:5px!important}
-  .visual-card-title-row h3{font-size:21px!important;line-height:1.04!important}
-  .visual-card-kicker{font-size:11px!important}
-  .visual-card-hp{font-size:13px!important;padding:5px 8px!important}
-  .visual-card-stats{grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:4px!important}
-  .visual-enemy-stats{grid-template-columns:repeat(3,minmax(0,1fr))!important}
-  .visual-card-stats b,.visual-card-stats span{font-size:11px!important;min-height:26px;padding:4px 5px!important}
-  .visual-card-stage{margin-top:8px!important}
-}
-@media(max-width:900px),(pointer:coarse){
-  .visual-card-heading{padding:7px 7px 6px!important;gap:5px!important}
-  .visual-card-title-row h3{font-size:14px!important;line-height:1.08!important}
-  .visual-card-hp{font-size:10px!important;padding:4px 5px!important}
-  .visual-card-stats{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px!important}
-  .visual-card-stats b,.visual-card-stats span{font-size:9px!important;min-height:23px;padding:3px 2px!important}
-  .visual-enemy-stats{grid-template-columns:repeat(3,minmax(0,1fr))!important}
-  .visual-card-stage{margin-top:6px!important}
-}
-@media(max-width:430px){
-  .visual-card-title-row h3{font-size:13px!important}
-  .visual-card-stats b,.visual-card-stats span{font-size:8.6px!important;letter-spacing:-.02em!important}
-}
-
-
-/* v0.6.64 Fine alignment — smaller name/rank fonts and compact mobile header. */
-.visual-card-heading{position:relative!important}
-.visual-card-title-row h3{
-  font-size:17px!important;
-  line-height:1.02!important;
-  font-weight:850!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-}
-.visual-card-kicker{
-  font-size:9px!important;
-  line-height:1.05!important;
-  min-height:10px!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-}
-.visual-card-heading{padding:8px 10px 4px!important;gap:3px!important}
-.visual-card-stats{margin-top:1px!important}
-.visual-card-stage{margin-top:4px!important}
-@media(min-width:901px) and (pointer:fine){
-  .visual-card-heading{padding:9px 11px 4px!important;gap:3px!important}
-  .visual-card-kicker{font-size:9px!important;min-height:10px!important}
-  .visual-card-title-row h3{font-size:16px!important}
-  .visual-card-hp{font-size:12px!important;padding:4px 7px!important}
-  .visual-card-stats b,.visual-card-stats span{font-size:10px!important;min-height:24px!important}
-  .visual-card-stage{margin-top:3px!important}
-}
-@media(max-width:900px),(pointer:coarse){
-  .visual-card-heading{
-    padding:7px 7px 3px!important;
-    gap:2px!important;
-  }
-  .visual-card-hp{
-    position:absolute!important;
-    top:7px!important;
-    right:7px!important;
-    margin:0!important;
-    font-size:9px!important;
-    padding:4px 7px!important;
-    z-index:2;
-  }
-  .hero-heading .visual-card-title-row,
-  .enemy-heading .visual-card-title-row{
-    display:block!important;
-    min-height:22px!important;
-    padding-right:72px!important;
-  }
-  .enemy-heading .visual-card-kicker{
-    padding-right:72px!important;
-    min-height:11px!important;
-    margin-bottom:1px!important;
-  }
-  .hero-heading .visual-card-title-row h3,
-  .enemy-heading .visual-card-title-row h3{
-    font-size:12px!important;
-    line-height:1.06!important;
-  }
-  .visual-card-stats{
-    grid-template-columns:repeat(3,minmax(0,1fr))!important;
-    gap:4px!important;
-    margin-top:2px!important;
-  }
-  .visual-card-stats b,
-  .visual-card-stats span{
-    font-size:8.7px!important;
-    min-height:21px!important;
-    padding:3px 2px!important;
-  }
-  .visual-card-stage{margin-top:2px!important}
-}
-@media(max-width:430px){
-  .hero-heading .visual-card-title-row,
-  .enemy-heading .visual-card-title-row{padding-right:66px!important}
-  .enemy-heading .visual-card-kicker{padding-right:66px!important}
-  .visual-card-hp{top:6px!important;right:6px!important;font-size:8.5px!important;padding:4px 6px!important}
-  .hero-heading .visual-card-title-row h3,
-  .enemy-heading .visual-card-title-row h3{font-size:11px!important}
-  .visual-card-kicker{font-size:7.8px!important}
-  .visual-card-stats b,
-  .visual-card-stats span{font-size:8.2px!important;min-height:20px!important}
-}
-
-
-/* v0.6.64 desktop equal top alignment for portrait blocks */
-@media(min-width:901px) and (pointer:fine){
-  .visual-card-heading{
-    height:86px!important;
-    min-height:86px!important;
-    overflow:hidden!important;
-    align-content:start!important;
-  }
-  .visual-card-stage{margin-top:2px!important}
+@media (min-width:901px) and (max-width:1150px) and (pointer:fine){
+ .visual-combat-head .visual-card-stats b,.visual-combat-head .visual-card-stats span{font-size:7px;letter-spacing:-.06em;padding-inline:0}
 }
