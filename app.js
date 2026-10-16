@@ -183,7 +183,7 @@
     return o;
   }
   function freshState(){return {
-    version:'0.6.49', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
+    version:'0.6.50', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
     decks:initialDecks(), cleaned:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, tradeDeal:null, dungeonEntryNotice:null, territoryBuiltNotice:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:3, sharedDifficulty:null, journal:[]
   };}
   let state=freshState();
@@ -548,7 +548,7 @@
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,potions:[null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:sharedHard,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats(),territoryBuildSeq:{kingdom:0,cursed:0}}});
     generatePermanentLocations({preserve:false});
     state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(isMobileViewport()){els.sheetDrawer.hidden=true}else openCharacterSheet('overview',null,currentPlayer().id);setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
-    log(`<b>Партия v0.6.48 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
+    log(`<b>Партия v0.6.50 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
     state.order.forEach(id=>{const p=getPlayer(id);log(`Инициатива ${p.name}: D20 = <b>${p.initiative}</b>.`,p.id)});updateUI();renderBoard();
   }
 
@@ -650,6 +650,7 @@
     state.die=rand(6);state.movePoints=movementFor(p.hex,state.die);state.rolled=true;state.turnMoved=false;state.movePending=false;state.moveOriginHex=p.hex;state.moveTransit=null;state.pendingMoveAction=null;state.chosenPath=[p.hex];state.chosenMovePlan=null;
     refreshManualMoveReachable(p);
     log(`${p.name}, личный ход ${p.personalTurn}: D6 = <b>${state.die}</b>, движение 1–${state.movePoints}. Маршрут выбирает игрок по одному гексу.`);updateUI();renderBoard();
+    showRollPopup('Движение · D6',state.die,`D6 = <b>${state.die}</b>`,`Доступно перемещение: ${state.movePoints}`);
   }
   function locationVisitStatus(p,hex){ensurePlayerModel(p);return p.locationVisits?.[hex]||'ready'}
   function canActivateLocationOnEntry(p,hex){
@@ -872,6 +873,26 @@
   const rollPopupQueue=[];
   let rollPopupAfterClose=null;
   let rollPopupDisplaySeq=0;
+  let infoDiceAnimator=null, infoDiceHost=null, infoDiceToken=0;
+  function presentInfoDice(x,seq){
+    const popup=els.rollOverlay.querySelector('.roll-popup-card');
+    if(!popup)return false;
+    if(!infoDiceHost){infoDiceHost=document.createElement('div');infoDiceHost.id='rollPopupArcana';infoDiceHost.className='arcana-popup-dice';}
+    els.rollPopupTitle.insertAdjacentElement('afterend',infoDiceHost);
+    const dice=arcanaDiceFromRoll(x.title,x.main,x.math,x.dice);
+    if(!window.FantasyDice||!dice.length){popup.classList.remove('arcana-info-active','arcana-info-rolling');infoDiceHost.hidden=true;return false;}
+    infoDiceHost.hidden=false;popup.classList.add('arcana-info-active','arcana-info-rolling');
+    if(!infoDiceAnimator){try{infoDiceAnimator=window.FantasyDice.create({container:infoDiceHost,duration:ARCANA_DURATION,controls:false,reducedMotion:'auto'});}catch(err){console.warn('Info dice:',err);popup.classList.remove('arcana-info-active','arcana-info-rolling');return false;}}
+    const stamp=++infoDiceToken;
+    const summary=[dicePlainText(x.math),dicePlainText(x.detail).match(/(?:УСПЕХ|ПРОВАЛ|ПОПАДАНИЕ|ПРОМАХ)/i)?.[0]].filter(Boolean).join(' · ')||String(x.main);
+    // Dice animation is visual only: all values were already resolved by game logic.
+    try{Promise.resolve(infoDiceAnimator.play({id:'info-'+stamp,label:String(x.title||'Бросок'),dice,total:summary}))
+      .then(()=>{if(infoDiceToken===stamp&&rollPopupDisplaySeq===seq){popup.classList.remove('arcana-info-rolling');els.rollPopupClose.disabled=false;}})
+      .catch(()=>{if(infoDiceToken===stamp&&rollPopupDisplaySeq===seq){popup.classList.remove('arcana-info-rolling');els.rollPopupClose.disabled=false;}})}
+    catch(err){console.warn('Info dice play:',err);popup.classList.remove('arcana-info-rolling');return false}
+    return true;
+  }
+
   function showRollPopup(title,main,math='',detail='',natural=null,onClose=null,buttonLabel='Продолжить'){
     rollPopupQueue.push({title,main:String(main),math,detail,natural,onClose,buttonLabel});if(els.rollOverlay.hidden)showNextRollPopup();
   }
@@ -884,14 +905,19 @@
     els.rollPopupMath.innerHTML=x.math||'';
     els.rollPopupDetail.innerHTML=x.detail||'';
     els.rollPopupClose.textContent=x.buttonLabel||'Продолжить';
+    els.rollPopupClose.disabled=false;
     rollPopupAfterClose=typeof x.onClose==='function'?x.onClose:null;
     els.rollOverlay.hidden=false;
     // Purely informational dice popups never require an extra click in combat.
     // Results, choices and popups with a continuation callback still wait for the user.
     const seq=++rollPopupDisplaySeq;
+    const animated=x.title!=='Результаты боя'&&presentInfoDice(x,seq);
+    if(animated)els.rollPopupClose.disabled=true;
+    else els.rollOverlay.querySelector('.roll-popup-card')?.classList.remove('arcana-info-active','arcana-info-rolling');
     if(state.combat&&localControlsCombat()&&!rollPopupAfterClose&&x.title!=='Результаты боя'){
-      setTimeout(()=>{if(seq===rollPopupDisplaySeq&&!els.rollOverlay.hidden&&state.combat&&localControlsCombat())els.rollPopupClose?.click()},1250);
+      setTimeout(()=>{if(seq===rollPopupDisplaySeq&&!els.rollOverlay.hidden&&state.combat&&localControlsCombat())els.rollPopupClose?.click()},animated?ARCANA_DURATION+ARCANA_RESULT_HOLD:ARCANA_RESULT_HOLD);
     }
+
   }
   function announceCheck(title,d,statLabel,bonus,total,dc,ok,natural=null,extra=''){
     recordNatural(currentPlayer(),natural);
@@ -1556,7 +1582,18 @@
   function showDungeonRollResult(p,k,d,total,resultText,natural=null,onDone=null){
     els.modalClose.style.display='none';const natClass=natural===20?'natural20':natural===1?'natural1':'';
     els.modalContent.innerHTML=`<div class="dungeon-roll-shell"><div class="card-kicker">ТЕМНИЦА · попытка выхода</div><div class="card-title">Проверка ${statName(k)} 13+</div><div class="combat-dice-stage compact"><div class="combat-dice-title">D20 + ${statName(k)}</div><div class="combat-die-main ${natClass}">${d}</div><div class="combat-dice-math">${d} ${signed(effectiveStat(p,k))} = ${total}</div><div class="combat-dice-detail">${resultText}</div></div><div class="modal-actions"><button id="dungeonRollDone" class="success">Продолжить</button></div></div>`;
-    els.modal.hidden=false;document.getElementById('dungeonRollDone').onclick=()=>{closeModal();if(onDone)onDone()};
+    els.modal.hidden=false;const done=document.getElementById('dungeonRollDone');
+    const stage=els.modalContent.querySelector('.dungeon-roll-shell .combat-dice-stage');
+    if(window.FantasyDice&&stage){
+      const host=document.createElement('div');host.className='arcana-inline-dice';stage.insertBefore(host,stage.querySelector('.combat-dice-math'));stage.classList.add('arcana-active','arcana-rolling');
+      done.disabled=true;
+      try{const anim=window.FantasyDice.create({container:host,duration:ARCANA_DURATION,controls:false});
+        Promise.resolve(anim.play({dice:[{sides:20,value:d}],label:`Темница · ${statName(k)}`,total:`${d} ${signed(effectiveStat(p,k))} = ${total} · ${dicePlainText(resultText)}`}))
+          .then(()=>{stage.classList.remove('arcana-rolling');done.disabled=false})
+          .catch(()=>{stage.classList.remove('arcana-rolling');done.disabled=false});
+      }catch(err){console.warn('Dungeon dice:',err);stage.classList.remove('arcana-active','arcana-rolling');done.disabled=false}
+    }
+    done.onclick=()=>{closeModal();if(onDone)onDone()};
   }
   function attemptDungeonExit(k){
     const p=currentPlayer();if(!dungeonExitAvailable(p))return;const bonus=effectiveStat(p,k),d=rand(20),total=d+bonus;state.turnLocked=true;let resultText='',natural=null,lethal=false;
@@ -2025,6 +2062,14 @@
   // Display-only bridge: the core RPG rolls first; Arcana receives resolved values.
   const ARCANA_DURATION=2500, ARCANA_RESULT_HOLD=2000;
   let arcanaHost=null,arcanaAnimator=null,arcanaPresentationKey='',arcanaPlaying=false;
+  function dicePlainText(markup){const el=document.createElement('div');el.innerHTML=String(markup||'');return (el.textContent||'').replace(/\s+/g,' ').trim()}
+  function combatArcanaDescription(c,roll){
+    const formula=dicePlainText(roll.math),detail=dicePlainText(roll.detail);
+    const outcome=combatRollOutcome();
+    const status=outcome===null?'':(outcome?'ПОПАДАНИЕ':'ПРОМАХ');
+    return [formula||`D20: ${roll.main}`,status,(!formula&&detail?detail:'')].filter(Boolean).join(' · ');
+  }
+
   function arcanaDiceFromRoll(title,main,math,explicit){
     if(Array.isArray(explicit)&&explicit.length)return explicit.filter(x=>[4,6,8,10,12,20].includes(Number(x.sides))&&Number.isInteger(Number(x.value))&&Number(x.value)>=1&&Number(x.value)<=Number(x.sides)).map(x=>({sides:Number(x.sides),value:Number(x.value)}));
     const token=String(title).match(/(?:^|[^\d])(\d*)D(4|6|8|10|12|20)(?!\d)/i)||String(math).match(/(?:^|[^\d])(\d*)D(4|6|8|10|12|20)(?!\d)/i);
@@ -2044,13 +2089,13 @@
     target.insertBefore(arcanaHost,target.querySelector('.combat-dice-math'));
     if(!arcanaAnimator){try{arcanaAnimator=window.FantasyDice.create({container:arcanaHost,duration:ARCANA_DURATION,speed:1,controls:false,reducedMotion:'auto'});}catch(error){console.warn('Arcana unavailable:',error);return}}
     const roll=c.lastRoll,key=`${c.instanceId||'combat'}:${roll.seq||0}`;
-    if(arcanaPresentationKey===key){if(Array.isArray(roll.dice)&&roll.dice.length){target.classList.add('arcana-active');if(arcanaPlaying)target.classList.add('arcana-rolling')}return;}
+    if(arcanaPresentationKey===key){if(Array.isArray(roll.dice)&&roll.dice.length){target.classList.add('arcana-active');if(arcanaPlaying){target.classList.add('arcana-rolling');target.closest('.combat-shell')?.classList.add('arcana-in-progress')}}return;}
     arcanaPresentationKey=key;
     if(!Array.isArray(roll.dice)||!roll.dice.length){arcanaPlaying=false;target.classList.remove('arcana-active');arcanaAnimator.clear();return}
-    const payload={id:key,label:String(roll.title||'Бросок'),dice:roll.dice,total:String(roll.main)};
-    arcanaPlaying=true;target.classList.add('arcana-active');
-    try{Promise.resolve(arcanaAnimator.play(payload)).then(()=>{if(arcanaPresentationKey===key){arcanaPlaying=false;els.modalContent.querySelector('.combat-dice-stage')?.classList.remove('arcana-rolling')}}).catch(error=>console.warn('Arcana playback:',error));target.classList.add('arcana-rolling')}
-    catch(error){console.warn('Arcana payload:',error);arcanaPlaying=false;target.classList.remove('arcana-active','arcana-rolling')}
+    const payload={id:key,label:String(roll.title||'Бросок'),dice:roll.dice,total:combatArcanaDescription(c,roll)};
+    arcanaPlaying=true;target.classList.add('arcana-active');target.closest('.combat-shell')?.classList.add('arcana-in-progress');
+    try{Promise.resolve(arcanaAnimator.play(payload)).then(()=>{if(arcanaPresentationKey===key){arcanaPlaying=false;els.modalContent.querySelector('.combat-dice-stage')?.classList.remove('arcana-rolling');els.modalContent.querySelector('.combat-shell')?.classList.remove('arcana-in-progress')}}).catch(error=>{console.warn('Arcana playback:',error);if(arcanaPresentationKey===key){arcanaPlaying=false;els.modalContent.querySelector('.combat-dice-stage')?.classList.remove('arcana-rolling');els.modalContent.querySelector('.combat-shell')?.classList.remove('arcana-in-progress')}});target.classList.add('arcana-rolling')}
+    catch(error){console.warn('Arcana payload:',error);arcanaPlaying=false;target.classList.remove('arcana-active','arcana-rolling');target.closest('.combat-shell')?.classList.remove('arcana-in-progress')}
   }
 
   function combatUsed(key){return !!state.combat?.used?.[key]}
@@ -2435,7 +2480,7 @@
     const guide=localCombatant&&!playerHardMode(p)?`<div class="combat-effects-manual"><h4>Памятка боя</h4><div class="combat-note">Активные способности, предметы и наёмники применяет игрок. Натуральные 1 и 20 автоматические только при одиночном D20. Лечение доступно до атаки в свой боевой ход и после принятого нелетального урона.</div></div>`:'';
     const history=c.journalOpen?`<div class="combat-history-wrap"><div class="combat-history">${(c.history||[]).map(x=>`<div>${x}</div>`).join('')||'<div>Записей пока нет.</div>'}</div></div>`:'';
     const controlBlock=localCombatant?`${reactions.length?`<div class="combat-reactions"><h4>РЕАКЦИИ — игра напоминает, но решение за игроком</h4><div class="combat-reaction-buttons">${reactions.map((r,i)=>`<button data-reaction="${i}" class="secondary">${r.label}</button>`).join('')}</div></div>`:''}<div class="combat-actions">${actions}</div><div class="combat-sheet-actions"><button id="combatHeroSheet" class="secondary">Герой</button><button id="combatInventory" class="secondary">Инвентарь</button></div>${guide}`:'';
-    els.modalContent.innerHTML=`<div class="combat-shell ${localCombatant?'combat-owner-view':'combat-observer-view'}"><div class="combat-summary"><span class="combat-mode-badge">${localCombatant?mode:`Наблюдение за ${observedName}`}</span><span class="combat-pill">Раунд ${c.round}</span><button id="combatHide" class="combat-hide ghost" type="button">Скрыть бой</button></div><div class="combat-head"><div class="combatant hero"><h3 style="color:${p.color}">${p.name}</h3><div class="combat-hp">ЗД ${p.currentHp}/${p.maxHp}</div><div class="combat-meta">ЗЩ ${combatEffectiveDefense(p)} · Урон ${currentHeroDamage(p)} · СИЛ ${signed(effectiveStat(p,'str'))} · ЛОВ ${signed(effectiveStat(p,'dex'))} · МУД ${signed(effectiveStat(p,'wis'))} · ХАР ${signed(effectiveStat(p,'cha'))}</div>${combatHeroRulesHtml(p)}${combatActiveEffectsHtml(c,p)}</div><div class="combat-vs">VS</div><div class="combatant enemy ${enemyRankClass(e)}">${c.elite?'<div class="elite-danger-badge">ЭЛИТНАЯ ОПАСНОСТЬ · АТАКУЕТ ПЕРВОЙ</div>':''}<h3>${e.name}</h3><div class="combat-hp">ЗД ${Math.max(0,c.enemyHp)}/${c.enemyMaxHp}</div><div class="combat-meta">Ранг: ${e.fields?.['Ранг']||'—'}<br>ЗЩ ${e.fields?.['ЗЩ']} · АТК ${e.fields?.['АТК']} · Урон ${e.fields?.['Урон']}<br>${e.fields?.['Тип']||''}<br>Эффект: ${e.fields?.['Эффект']||'—'}</div>${combatEnemyEffectsHtml(c)}</div></div><div class="combat-dice-stage"><div class="combat-dice-title">${lr.title}</div>${outcomeHtml}<div class="combat-die-main ${natClass}">${lr.main}</div><div class="combat-dice-math">${lr.math||''}</div><div class="combat-dice-detail">${lr.detail||''}</div></div>${phaseHtml}${controlBlock}<div class="combat-journal-control"><button id="combatJournalToggle" class="${c.journalOpen?'secondary active':'ghost'}">Журнал боя${c.journalOpen?' ▲':' ▼'}</button></div>${history}</div>`;els.modal.hidden=false;
+    els.modalContent.innerHTML=`<div class="combat-shell ${localCombatant?'combat-owner-view':'combat-observer-view'}"><div class="combat-summary"><span class="combat-mode-badge">${localCombatant?mode:`Наблюдение за ${observedName}`}</span><span class="combat-pill">Раунд ${c.round}</span><button id="combatHide" class="combat-hide ghost" type="button">Скрыть бой</button></div><div class="combat-head"><div class="combatant hero"><h3 style="color:${p.color}">${p.name}</h3><div class="combat-hp">ЗД ${p.currentHp}/${p.maxHp}</div><div class="combat-meta">ЗЩ ${combatEffectiveDefense(p)} · Урон ${currentHeroDamage(p)} · СИЛ ${signed(effectiveStat(p,'str'))} · ЛОВ ${signed(effectiveStat(p,'dex'))} · МУД ${signed(effectiveStat(p,'wis'))} · ХАР ${signed(effectiveStat(p,'cha'))}</div>${combatHeroRulesHtml(p)}${combatActiveEffectsHtml(c,p)}</div><div class="combat-vs">VS</div><div class="combatant enemy ${enemyRankClass(e)}">${c.elite?'<div class="elite-danger-badge">ЭЛИТНАЯ ОПАСНОСТЬ · АТАКУЕТ ПЕРВОЙ</div>':''}<h3>${e.name}</h3><div class="combat-hp">ЗД ${Math.max(0,c.enemyHp)}/${c.enemyMaxHp}</div><div class="combat-meta">Ранг: ${e.fields?.['Ранг']||'—'}<br>ЗЩ ${e.fields?.['ЗЩ']} · АТК ${e.fields?.['АТК']} · Урон ${e.fields?.['Урон']}<br>${e.fields?.['Тип']||''}<br>Эффект: ${e.fields?.['Эффект']||'—'}</div>${combatEnemyEffectsHtml(c)}</div></div><div class="combat-dice-stage"><div class="combat-dice-title">${lr.title}</div><div class="combat-die-main ${natClass}">${lr.main}</div><div class="combat-dice-math">${lr.math||''}</div><div class="combat-dice-detail">${lr.detail||''}</div>${outcomeHtml}</div>${phaseHtml}${controlBlock}<div class="combat-journal-control"><button id="combatJournalToggle" class="${c.journalOpen?'secondary active':'ghost'}">Журнал боя${c.journalOpen?' ▲':' ▼'}</button></div>${history}</div>`;els.modal.hidden=false;
     if(localCombatant){reactions.forEach((r,i)=>{const b=els.modalContent.querySelector(`[data-reaction="${i}"]`);if(b)b.onclick=r.fn});els.modalContent.querySelectorAll('[data-auto-choice]').forEach(b=>b.onclick=()=>decisions[Number(b.dataset.autoChoice)]?.fn());els.modalContent.querySelectorAll('[data-cleanse-status]').forEach(b=>b.onclick=()=>chooseCombatCleanseStatus((c.pendingCleanse?.options||[])[Number(b.dataset.cleanseStatus)]))}
     const bind=(id,fn)=>{const x=document.getElementById(id);if(x)x.onclick=fn};if(localCombatant){bind('combatFight',combatFight);bind('combatResolveEscape',resolveCombatEscapeResult);bind('combatEscapeBefore',combatEscapeBefore);bind('combatAttack',combatHeroAttack);bind('combatRollDamage',combatRollHeroDamage);bind('combatSkipChoice',skipCombatChoice);bind('combatEscape',combatEscapeDuring);bind('combatHeroAbility',useHeroCombatAbility);bind('combatFinalizeAttack',finalizeHeroAttackRoll);bind('mageLightning',()=>chooseMageNat20('lightning'));bind('mageFire',()=>chooseMageNat20('fire'));bind('combatApplyHeroDamage',applyHeroDamageNow);bind('combatEnemyTurn',combatEnemyTurn);bind('combatFinalizeEnemyRoll',finalizeEnemyAttackRoll);bind('combatAcceptDamage',combatAcceptDamageAndContinue);bind('combatContinueMiss',combatContinueAfterEnemyMiss);bind('combatContinueAfterDamage',combatContinueAfterDamage);bind('combatFinishVictory',finishCombatVictory);bind('combatPostVictory',()=>{if(c.victory?.lootDraft&&!c.victory.lootDraft.confirmed&&c.victory.lootDraft.keep>0)openVictoryLootDraft();else showPostCombatTerritoryPrompt()});bind('combatHeroSheet',()=>openCharacterSheet('overview'));bind('combatInventory',()=>openCharacterSheet('inventory'))}
     bind('combatHide',hideCombatWindow);bind('combatJournalToggle',()=>{c.journalOpen=!c.journalOpen;renderCombat(true)});if(localCombatant&&!els.sheetDrawer.hidden&&sheetView.playerId===p.id)renderCharacterSheet(sheetView.mode,sheetView.bonusKey);arcanaPresentCombat(c);scheduleCombatAuto();
@@ -2614,7 +2659,7 @@
 
   function saveGame(){if(!state.started)return;localStorage.setItem('rpgDigitalPrototypeV0648',JSON.stringify(state));log('Партия v0.6.48 сохранена в браузере.')}
   function loadGame(){
-    const raw=localStorage.getItem('rpgDigitalPrototypeV0648')||localStorage.getItem('rpgDigitalPrototypeV0647')||localStorage.getItem('rpgDigitalPrototypeV0646')||localStorage.getItem('rpgDigitalPrototypeV0645')||localStorage.getItem('rpgDigitalPrototypeV0639')||localStorage.getItem('rpgDigitalPrototypeV0638')||localStorage.getItem('rpgDigitalPrototypeV0637')||localStorage.getItem('rpgDigitalPrototypeV0636')||localStorage.getItem('rpgDigitalPrototypeV0635')||localStorage.getItem('rpgDigitalPrototypeV0634')||localStorage.getItem('rpgDigitalPrototypeV0633')||localStorage.getItem('rpgDigitalPrototypeV0632')||localStorage.getItem('rpgDigitalPrototypeV0631')||localStorage.getItem('rpgDigitalPrototypeV063')||localStorage.getItem('rpgDigitalPrototypeV062')||localStorage.getItem('rpgDigitalPrototypeV060')||localStorage.getItem('rpgDigitalPrototypeV0522')||localStorage.getItem('rpgDigitalPrototypeV0521')||localStorage.getItem('rpgDigitalPrototypeV0520')||localStorage.getItem('rpgDigitalPrototypeV0519')||localStorage.getItem('rpgDigitalPrototypeV0518')||localStorage.getItem('rpgDigitalPrototypeV0517')||localStorage.getItem('rpgDigitalPrototypeV0516')||localStorage.getItem('rpgDigitalPrototypeV0515')||localStorage.getItem('rpgDigitalPrototypeV0514')||localStorage.getItem('rpgDigitalPrototypeV0513')||localStorage.getItem('rpgDigitalPrototypeV0512')||localStorage.getItem('rpgDigitalPrototypeV0511')||localStorage.getItem('rpgDigitalPrototypeV0510')||localStorage.getItem('rpgDigitalPrototypeV059')||localStorage.getItem('rpgDigitalPrototypeV058')||localStorage.getItem('rpgDigitalPrototypeV057')||localStorage.getItem('rpgDigitalPrototypeV056')||localStorage.getItem('rpgDigitalPrototypeV055')||localStorage.getItem('rpgDigitalPrototypeV054')||localStorage.getItem('rpgDigitalPrototypeV053')||localStorage.getItem('rpgDigitalPrototypeV052')||localStorage.getItem('rpgDigitalPrototypeV051')||localStorage.getItem('rpgDigitalPrototypeV050')||localStorage.getItem('rpgDigitalPrototypeV045')||localStorage.getItem('rpgDigitalPrototypeV044')||localStorage.getItem('rpgDigitalPrototypeV043')||localStorage.getItem('rpgDigitalPrototypeV042')||localStorage.getItem('rpgDigitalPrototypeV041')||localStorage.getItem('rpgDigitalPrototypeV040')||localStorage.getItem('rpgDigitalPrototypeV033')||localStorage.getItem('rpgDigitalPrototypeV032');
+    const raw=localStorage.getItem('rpgDigitalPrototypeV0650')||localStorage.getItem('rpgDigitalPrototypeV0648')||localStorage.getItem('rpgDigitalPrototypeV0647')||localStorage.getItem('rpgDigitalPrototypeV0646')||localStorage.getItem('rpgDigitalPrototypeV0645')||localStorage.getItem('rpgDigitalPrototypeV0639')||localStorage.getItem('rpgDigitalPrototypeV0638')||localStorage.getItem('rpgDigitalPrototypeV0637')||localStorage.getItem('rpgDigitalPrototypeV0636')||localStorage.getItem('rpgDigitalPrototypeV0635')||localStorage.getItem('rpgDigitalPrototypeV0634')||localStorage.getItem('rpgDigitalPrototypeV0633')||localStorage.getItem('rpgDigitalPrototypeV0632')||localStorage.getItem('rpgDigitalPrototypeV0631')||localStorage.getItem('rpgDigitalPrototypeV063')||localStorage.getItem('rpgDigitalPrototypeV062')||localStorage.getItem('rpgDigitalPrototypeV060')||localStorage.getItem('rpgDigitalPrototypeV0522')||localStorage.getItem('rpgDigitalPrototypeV0521')||localStorage.getItem('rpgDigitalPrototypeV0520')||localStorage.getItem('rpgDigitalPrototypeV0519')||localStorage.getItem('rpgDigitalPrototypeV0518')||localStorage.getItem('rpgDigitalPrototypeV0517')||localStorage.getItem('rpgDigitalPrototypeV0516')||localStorage.getItem('rpgDigitalPrototypeV0515')||localStorage.getItem('rpgDigitalPrototypeV0514')||localStorage.getItem('rpgDigitalPrototypeV0513')||localStorage.getItem('rpgDigitalPrototypeV0512')||localStorage.getItem('rpgDigitalPrototypeV0511')||localStorage.getItem('rpgDigitalPrototypeV0510')||localStorage.getItem('rpgDigitalPrototypeV059')||localStorage.getItem('rpgDigitalPrototypeV058')||localStorage.getItem('rpgDigitalPrototypeV057')||localStorage.getItem('rpgDigitalPrototypeV056')||localStorage.getItem('rpgDigitalPrototypeV055')||localStorage.getItem('rpgDigitalPrototypeV054')||localStorage.getItem('rpgDigitalPrototypeV053')||localStorage.getItem('rpgDigitalPrototypeV052')||localStorage.getItem('rpgDigitalPrototypeV051')||localStorage.getItem('rpgDigitalPrototypeV050')||localStorage.getItem('rpgDigitalPrototypeV045')||localStorage.getItem('rpgDigitalPrototypeV044')||localStorage.getItem('rpgDigitalPrototypeV043')||localStorage.getItem('rpgDigitalPrototypeV042')||localStorage.getItem('rpgDigitalPrototypeV041')||localStorage.getItem('rpgDigitalPrototypeV040')||localStorage.getItem('rpgDigitalPrototypeV033')||localStorage.getItem('rpgDigitalPrototypeV032');
     if(!raw){alert('Сохранённой партии пока нет.');return}
     try{
       state=JSON.parse(raw);if(!state.locations)state.locations={};if(!state.territories)state.territories={};if(!state.areas)state.areas=[];stripPermanentLocationCardsFromDecks(state.decks);normalizeLegendaryHeartLoot(state.decks);normalizeTavernMercenaries();
@@ -2625,7 +2670,7 @@
       const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
-      state.version='0.6.48';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.48.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
+      state.version='0.6.50';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.50.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
     }catch(e){console.error(e);alert('Не удалось загрузить сохранение.')}
   }
   function cloneJson(v){return JSON.parse(JSON.stringify(v))}
@@ -2643,7 +2688,7 @@
     if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
-    state.version='0.6.48';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    state.version='0.6.50';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){

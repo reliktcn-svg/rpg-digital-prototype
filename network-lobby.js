@@ -3,7 +3,7 @@
     ['warrior','Воин','#4c83ff'],['dwarf','Дворф','#d34b45'],['mage','Маг','#9d5cff'],['archer','Лучник','#4db76d'],['rogue','Разбойник','#444b55']
   ];
   let session={mode:null,code:null,playerId:null,playerSecret:null,recoveryKey:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:'',lastServerState:null,sideAcks:{}};
-  const CLIENT_BUILD='0.6.48';
+  const CLIENT_BUILD='0.6.50';
   const SESSION_KEY='rpg-online-session';
   const RECOVERY_KEY='rpg-online-recovery-v0635';
   const LEGACY_RECOVERY_KEYS=['rpg-online-recovery-v0634'];

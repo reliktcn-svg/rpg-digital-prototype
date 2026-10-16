@@ -799,3 +799,55 @@ body.game-running #modal[hidden]{display:none!important}
 @media(max-width:700px){.combat-dice-stage.arcana-active{min-height:205px!important}.arcana-combat-dice{height:125px}}
 
 .arcana-combat-dice{display:none}.combat-dice-stage.arcana-active .arcana-combat-dice{display:block}
+
+
+/* v0.6.50 — Unified resolved dice: no leaked outcomes, no sticky controls over dice. */
+body.game-running .combat-shell>.combat-dice-stage.arcana-active{
+  box-sizing:border-box!important;height:auto!important;min-height:0!important;max-height:none!important;
+  padding:5px!important;overflow:visible!important;position:relative;isolation:isolate;z-index:1;
+}
+.combat-dice-stage.arcana-active>.combat-dice-title,
+.combat-dice-stage.arcana-active>.combat-die-main,
+.combat-dice-stage.arcana-active>.combat-dice-math,
+.combat-dice-stage.arcana-active>.combat-dice-detail,
+.combat-dice-stage.arcana-active>.combat-roll-outcome{display:none!important}
+.arcana-combat-dice,.arcana-inline-dice,.arcana-popup-dice{
+  display:block!important;width:100%!important;max-width:100%!important;height:auto!important;min-height:0!important;
+  position:relative;z-index:1;overflow:hidden;border-radius:12px;flex:0 0 auto;box-sizing:border-box;
+}
+.arcana-combat-dice [data-fantasy-dice],.arcana-inline-dice [data-fantasy-dice],.arcana-popup-dice [data-fantasy-dice]{display:block;width:100%;max-width:100%}
+body.game-running .combat-shell .combat-actions{position:relative!important;bottom:auto!important;z-index:auto!important;background:transparent!important;padding-top:4px!important}
+body.game-running .combat-shell{min-width:0;width:100%}
+body.game-running .combat-head,body.game-running .combatant,body.game-running .combat-dice-stage{min-width:0;max-width:100%}
+.roll-popup-card.arcana-info-active{box-sizing:border-box;max-height:calc(100dvh - 38px);overflow:auto}
+.roll-popup-card.arcana-info-active .roll-popup-main,.roll-popup-card.arcana-info-active .roll-popup-math{display:none}
+.roll-popup-card.arcana-info-rolling .roll-popup-detail{visibility:hidden}
+.arcana-popup-dice[hidden]{display:none!important}
+.roll-popup-card.arcana-info-active .arcana-popup-dice{margin-top:8px}
+.roll-popup-card.arcana-info-active .roll-popup-detail{padding:8px 0;line-height:1.45}
+.dungeon-roll-shell .combat-dice-stage.arcana-active{height:auto!important;max-height:none!important;overflow:visible}
+@media(max-width:900px),(pointer:coarse){
+  body.game-running .modal:has(.combat-shell){inset:0!important;right:0!important;top:0!important;bottom:0!important;align-items:stretch!important;justify-items:stretch!important;padding:calc(4px + var(--safe-top)) 5px calc(4px + var(--safe-bottom))!important;overflow:hidden!important}
+  body.game-running .modal-card:has(.combat-shell){box-sizing:border-box!important;min-width:0!important;max-width:100%!important;width:100%!important;height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 8px)!important;max-height:none!important;overflow:hidden!important;padding:7px!important;margin:0!important;}
+  body.game-running .combat-shell{display:flex!important;flex-direction:column!important;gap:5px!important;height:100%!important;min-height:0!important;overflow:hidden!important}
+  body.game-running .combat-shell>.combat-summary{flex:0 0 auto}
+  body.game-running .combat-shell>.combat-head{flex:0 1 170px;min-height:92px;max-height:170px;overflow:auto;align-items:stretch}
+  body.game-running .combat-shell>.combat-dice-stage.arcana-active{flex:1 1 auto;min-height:0!important;max-height:none!important;overflow:auto!important}
+  body.game-running .combat-shell>.combat-dice-stage.arcana-active .arcana-combat-dice{width:100%!important;}
+  body.game-running .combat-shell>.combat-actions,body.game-running .combat-shell>.combat-reactions,body.game-running .combat-shell>.combat-sheet-actions{flex:0 0 auto;min-height:0}
+  body.game-running .combat-shell>.combat-journal-control{flex:0 0 auto}
+  body.game-running .combat-shell>.combat-history-wrap{flex:0 1 auto;min-height:0;overflow:auto}
+  body.game-running .combat-shell>.combat-pending{flex:0 0 auto}
+  body.game-running .combat-shell>.combat-effects-manual{display:none!important}
+  body.game-running .combat-shell>.combat-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+  body.game-running .combat-shell>.combat-actions button{min-height:39px;padding:6px;font-size:11px}
+  body.game-running .combat-shell>.combat-sheet-actions{display:none!important}
+  body.game-running .combat-shell>.combat-dice-stage:not(.arcana-active){flex:1 1 auto;min-height:90px;max-height:none!important;height:auto!important}
+  body.game-running .combat-shell>.combat-dice-stage.arcana-active{justify-content:flex-start!important}
+  .roll-popup-card.arcana-info-active{width:min(96vw,440px)!important;padding:10px!important}
+}
+
+/* Disable owner interaction during the active rotation only, not for the 2s result hold. */
+body.game-running .combat-shell.arcana-in-progress .combat-actions,body.game-running .combat-shell.arcana-in-progress .combat-reactions{pointer-events:none!important;opacity:.55}
+
+.roll-popup-card.arcana-info-active>.roll-popup-title{display:none!important}

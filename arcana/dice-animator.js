@@ -100,9 +100,9 @@
       const preferred = n <= 2 ? n : n <= 6 ? 3 : n <= 12 ? 4 : 6;
       const cols = Math.max(1, Math.min(preferred, Math.floor(width / 140)));
       const rows = Math.ceil(n / cols), cellW = width / cols;
-      const radius = Math.max(20, Math.min(90, (cellW - 20) * 0.31));
-      const cellH = radius * 2 + 84;
-      height = roll ? Math.max(220, rows * cellH) : 290;
+      const radius = Math.max(20, Math.min(width < 460 ? 64 : 78, (cellW - 20) * 0.31));
+      const cellH = radius * 2 + (width < 460 ? 52 : 70);
+      height = roll ? Math.max(width < 460 ? 205 : 210, rows * cellH + 20) : 240;
       stage.style.height = height + 'px';
       const dpr = Math.min(2, win.devicePixelRatio || 1);
       canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr);
@@ -143,9 +143,9 @@
       const values = roll.dice.map(d => 'D' + d.sides + ': ' + d.value).join(' · ');
       result.replaceChildren();
       if (roll.total !== undefined) {
-        result.append(node('span', '', 'Итог движка '), node('strong', '', String(roll.total)));
+        result.append(node('span', '', ''), node('strong', '', String(roll.total)));
       } else result.append(node('span', '', values));
-      live.textContent = (roll.label ? roll.label + '. ' : '') + values + (roll.total !== undefined ? '. Итог движка: ' + roll.total : '');
+      live.textContent = (roll.label ? roll.label + '. ' : '') + values + (roll.total !== undefined ? '. Результат: ' + roll.total : '');
     }
     function finish(reason) {
       if (!active) return;
@@ -178,7 +178,7 @@
         if (status === 'destroyed' || disposing) return Promise.resolve(Object.freeze({ status: 'destroyed', roll: next, mode }));
         if (request !== operation) return Promise.resolve(Object.freeze({ status: 'replaced', roll: next, mode }));
         roll = next; status = 'playing'; title.textContent = next.label || 'Готовый бросок'; stateLabel.textContent = 'Анимация';
-        result.textContent = 'Показываем результат движка…'; live.textContent = ''; empty.hidden = true; empty.style.display = 'none'; skipButton.disabled = false;
+        result.textContent = 'Идёт бросок…'; live.textContent = ''; empty.hidden = true; empty.style.display = 'none'; skipButton.disabled = false;
         let resolve;
         const promise = new Promise(r => { resolve = r; });
         const run = { roll: next, duration: ms, elapsed: 0, last: win.performance.now(), resolve };
