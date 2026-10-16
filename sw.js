@@ -1,4 +1,4 @@
-const CACHE='rpg-digital-v0662visual';
+const CACHE='rpg-digital-v0663visual';
 const ASSETS=['./','./index.html','./styles.css?v=0661visual','./app.js?v=0661visual','./network-lobby.js?v=0661visual','./map-data.js?v=0661visual','./location-placement.js?v=0661visual','./cards-data.js?v=0661visual','./arcana/dice-renderer.js?v=0661visual','./arcana/dice-animator.js?v=0661visual','./assets/map.png','./assets/map-visual-v0654.png','./assets/heroes/warrior.webp','./assets/heroes/dwarf.webp','./assets/heroes/mage.webp','./assets/heroes/archer.webp','./assets/heroes/rogue.webp','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
