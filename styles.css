@@ -1422,3 +1422,47 @@ body.game-running .loot-draft-card.selected .loot-draft-select{background:#55462
   body.game-running .loot-draft-select,body.game-running .loot-draft-flip{font-size:10px;min-height:36px;padding:5px 3px}
   body.game-running .inventory-card-front .item-art-title strong{font-size:15px}
 }
+
+
+/* v0.6.69 — identical compact layouts for backpack and unresolved loot.
+   Explicit tracks + row-major order prevent 2 items from stacking vertically. */
+body.game-running .sheet-content{container-type:inline-size;min-width:0;min-height:0;flex:1 1 auto;overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#526372 transparent}
+body.game-running .sheet-utility-tools{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+  padding:8px 12px;background:#161d24;border-bottom:1px solid #35414c;
+  flex:0 0 auto;z-index:2;
+}
+body.game-running .sheet-utility-tools button{min-width:0;min-height:33px;padding:6px 3px;font-size:10px;font-weight:800}
+body.game-running .inventory-two-row-grid,
+body.game-running .backpack-picture-grid.inventory-two-row-grid,
+body.game-running .pending-picture-grid.inventory-two-row-grid{
+  --item-size:clamp(112px,37cqw,156px);
+  display:grid!important;
+  grid-auto-flow:row!important;
+  grid-template-columns:repeat(var(--item-cols),var(--item-size))!important;
+  grid-template-rows:repeat(var(--item-rows),var(--item-size))!important;
+  grid-auto-columns:unset!important;
+  gap:9px!important;
+  width:100%;max-width:100%;min-width:0;
+  padding:3px 2px 14px;margin:0;
+  overflow-x:auto;overflow-y:hidden;
+  overscroll-behavior-x:contain;
+  scroll-snap-type:x proximity;
+  align-content:start;justify-content:start;
+  scrollbar-width:thin;
+}
+body.game-running .inventory-two-row-grid .picture-item-tile{
+  aspect-ratio:1/1!important;
+  width:100%!important;height:100%!important;
+  min-width:0!important;min-height:0!important;
+  max-width:none!important;max-height:none!important;
+  align-self:stretch;justify-self:stretch;
+  scroll-snap-align:start;
+}
+@media(max-width:900px),(pointer:coarse){
+  body.game-running .sheet-utility-tools{padding:6px 10px;gap:6px}
+  body.game-running .sheet-utility-tools button{min-height:38px;font-size:11px}
+  body.game-running .inventory-two-row-grid,
+  body.game-running .backpack-picture-grid.inventory-two-row-grid,
+  body.game-running .pending-picture-grid.inventory-two-row-grid{--item-size:clamp(108px,39cqw,166px);gap:8px!important}
+}

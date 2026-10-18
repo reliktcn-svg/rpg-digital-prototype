@@ -8,8 +8,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <title>RPG Digital Prototype v0.6.68 Visual Alpha</title>
-  <link rel="stylesheet" href="styles.css?v=0668cards" />
+  <title>RPG Digital Prototype v0.6.69 Visual Alpha</title>
+  <link rel="stylesheet" href="styles.css?v=0669layout" />
 </head>
 <body>
   
@@ -49,7 +49,7 @@
   <header class="topbar">
     <div>
       <div class="eyebrow">RPG DIGITAL PROTOTYPE</div>
-      <h1>Прототип v0.6.68 · Visual Alpha</h1>
+      <h1>Прототип v0.6.69 · Visual Alpha</h1>
       <div class="header-tools">
         <button id="journalBtn" class="journal-top" type="button">Журнал</button>
       </div>
@@ -125,6 +125,11 @@
       </div>
       <button id="sheetClose" class="sheet-close" aria-label="Закрыть">×</button>
     </div>
+    <div class="sheet-utility-tools" aria-label="Управление сохранением партии">
+      <button type="button" id="sheetSaveBtn" class="ghost">Сохранить</button>
+      <button type="button" id="sheetLoadBtn" class="ghost">Загрузить</button>
+      <button type="button" id="sheetResetBtn" class="danger">Сбросить</button>
+    </div>
     <div id="sheetContent" class="sheet-content"></div>
   </aside>
 
@@ -157,12 +162,12 @@
     </div>
   </div>
 
-  <script src="map-data.js?v=0668cards"></script>
-  <script src="cards-data.js?v=0668cards"></script>
-  <script src="location-placement.js?v=0668cards"></script>
-  <script src="arcana/dice-renderer.js?v=0668cards"></script>
-  <script src="arcana/dice-animator.js?v=0668cards"></script>
-  <script src="app.js?v=0668cards"></script>
-  <script src="network-lobby.js?v=0668cards"></script>
+  <script src="map-data.js?v=0669layout"></script>
+  <script src="cards-data.js?v=0669layout"></script>
+  <script src="location-placement.js?v=0669layout"></script>
+  <script src="arcana/dice-renderer.js?v=0669layout"></script>
+  <script src="arcana/dice-animator.js?v=0669layout"></script>
+  <script src="app.js?v=0669layout"></script>
+  <script src="network-lobby.js?v=0669layout"></script>
 </body>
 </html>
