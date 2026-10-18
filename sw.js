@@ -1,5 +1,5 @@
-const CACHE='rpg-digital-v0669layout';
-const ASSETS=['./','./index.html','./styles.css?v=0669layout','./app.js?v=0669layout','./network-lobby.js?v=0669layout','./map-data.js?v=0669layout','./location-placement.js?v=0669layout','./cards-data.js?v=0669layout','./arcana/dice-renderer.js?v=0669layout','./arcana/dice-animator.js?v=0669layout','./assets/map.png','./assets/map-visual-v0654.png','./assets/heroes/warrior.webp','./assets/heroes/dwarf.webp','./assets/heroes/mage.webp','./assets/heroes/archer.webp','./assets/heroes/rogue.webp','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
+const CACHE='rpg-digital-v0670cards';
+const ASSETS=['./','./index.html','./styles.css?v=0670cards','./app.js?v=0670cards','./network-lobby.js?v=0670cards','./map-data.js?v=0670cards','./location-placement.js?v=0670cards','./cards-data.js?v=0670cards','./arcana/dice-renderer.js?v=0670cards','./arcana/dice-animator.js?v=0670cards','./assets/map.png','./assets/map-visual-v0654.png','./assets/heroes/warrior.webp','./assets/heroes/dwarf.webp','./assets/heroes/mage.webp','./assets/heroes/archer.webp','./assets/heroes/rogue.webp','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{

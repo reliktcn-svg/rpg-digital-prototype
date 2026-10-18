@@ -1466,3 +1466,144 @@ body.game-running .inventory-two-row-grid .picture-item-tile{
   body.game-running .backpack-picture-grid.inventory-two-row-grid,
   body.game-running .pending-picture-grid.inventory-two-row-grid{--item-size:clamp(108px,39cqw,166px);gap:8px!important}
 }
+
+
+/* v0.6.70 — explicit, bounded card grids. No card image can escape its own tile. */
+body.game-running .pending-card-grid{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  grid-auto-columns:auto!important;
+  grid-template-rows:none!important;
+  grid-auto-rows:auto!important;
+  grid-auto-flow:row!important;
+  gap:9px!important;
+  align-items:start!important;
+  justify-items:stretch!important;
+  overflow-x:hidden!important;
+  overflow-y:visible!important;
+  padding:5px 2px 12px!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  scroll-snap-type:none!important;
+}
+body.game-running .pending-card-grid .picture-item-tile{
+  box-sizing:border-box!important;
+  display:block!important;
+  position:relative!important;
+  isolation:isolate!important;
+  aspect-ratio:1 / 1!important;
+  width:100%!important;
+  height:auto!important;
+  max-width:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  padding:0!important;
+  border:1px solid #756545!important;
+  border-radius:9px!important;
+  overflow:hidden!important;
+  color:#fff!important;
+  text-align:left!important;
+  background:#141a21!important;
+  cursor:pointer;
+}
+body.game-running .pending-card-grid .picture-item-tile > img.item-card-art{
+  display:block!important;
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:cover!important;
+  z-index:0!important;
+}
+body.game-running .pending-card-grid .picture-item-tile .picture-item-caption,
+body.game-running .pending-card-grid .picture-item-tile .picture-item-name,
+body.game-running .pending-card-grid .picture-item-tile .picture-item-id{
+  position:absolute!important;
+  z-index:2!important;
+}
+body.game-running .pending-help{
+  font-size:11px;line-height:1.35;color:#bbc5ce;
+  padding:7px 9px;margin:8px 0 5px;
+  border:1px solid #384853;background:#151e25;border-radius:8px;
+}
+@media(max-width:900px),(pointer:coarse){
+  body.game-running .pending-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+}
+/* Loot choice: fixed 3 columns on desktop, fixed 2 on mobile, including just one card. */
+body.game-running #modal:has(.loot-draft-grid) .modal-card{
+  box-sizing:border-box;
+  width:min(760px,100%)!important;
+  max-height:calc(100dvh - 190px)!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior-y:contain;
+}
+body.game-running #modal .loot-draft-grid{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  grid-auto-rows:max-content;
+  gap:9px!important;
+  align-items:start!important;
+  margin:12px 0!important;
+  min-width:0!important;
+  width:100%!important;
+}
+body.game-running #modal .loot-draft-card{
+  min-width:0!important;width:100%!important;max-width:100%!important;
+  box-sizing:border-box!important;
+  padding:6px!important;gap:6px!important;
+}
+body.game-running #modal .loot-draft-art-action{
+  box-sizing:border-box!important;
+  display:block!important;position:relative!important;
+  aspect-ratio:1/1!important;
+  height:auto!important;width:100%!important;min-width:0!important;
+  max-width:100%!important;overflow:hidden!important;padding:0!important;
+}
+body.game-running #modal .loot-draft-art-action > .inventory-card-front,
+body.game-running #modal .loot-draft-art-action > .inventory-card-reverse{
+  display:block!important;box-sizing:border-box!important;
+  position:absolute!important;inset:0!important;
+  height:100%!important;width:100%!important;max-width:none!important;
+  margin:0!important;overflow:auto!important;
+}
+body.game-running #modal .loot-draft-art-action > .inventory-card-reverse{display:grid!important}
+body.game-running #modal .loot-draft-art-action img.item-card-art{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  object-fit:cover!important;
+}
+@media(max-width:900px),(pointer:coarse){
+  body.game-running #modal .loot-draft-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
+  body.game-running #modal .loot-draft-card{padding:4px!important;gap:5px!important}
+  body.game-running #modal:has(.loot-draft-grid) .modal-card{
+    width:100%!important;max-height:calc(100dvh - 100px - var(--safe-bottom,0px))!important;
+  }
+}
+/* Scroll the back of the combat card, keeping the outer square and its click-to-flip behavior. */
+.visual-combat-head .visual-card-stage.is-back{
+  touch-action:pan-y!important;
+}
+.visual-combat-head .visual-card-stage.is-back .visual-card-back{
+  pointer-events:auto!important;
+  overflow:hidden!important;
+}
+.visual-combat-head .visual-card-stage.is-back .visual-card-back-wrap{
+  box-sizing:border-box!important;
+  display:flex!important;
+  flex-direction:column!important;
+  height:100%!important;
+  max-height:100%!important;
+  min-height:0!important;
+  width:100%!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-y!important;
+  scrollbar-width:thin;
+  scrollbar-color:#657887 #15212b;
+}
+.visual-combat-head .visual-card-stage.is-back .visual-card-back-wrap > *{flex:0 0 auto;min-width:0}

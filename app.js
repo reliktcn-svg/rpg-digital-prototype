@@ -183,7 +183,7 @@
     return o;
   }
   function freshState(){return {
-    version:'0.6.69', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
+    version:'0.6.70', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
     decks:initialDecks(), cleaned:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, tradeDeal:null, dungeonEntryNotice:null, territoryBuiltNotice:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:3, sharedDifficulty:null, journal:[]
   };}
   let state=freshState();
@@ -548,7 +548,7 @@
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,potions:[null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:sharedHard,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats(),territoryBuildSeq:{kingdom:0,cursed:0}}});
     generatePermanentLocations({preserve:false});
     state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(isMobileViewport()){els.sheetDrawer.hidden=true}else openCharacterSheet('overview',null,currentPlayer().id);setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
-    log(`<b>Партия v0.6.69 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
+    log(`<b>Партия v0.6.70 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
     state.order.forEach(id=>{const p=getPlayer(id);log(`Инициатива ${p.name}: D20 = <b>${p.initiative}</b>.`,p.id)});updateUI();renderBoard();
   }
 
@@ -1700,7 +1700,7 @@
     else{p.hardMode=false;log(`${p.name}: <b>сложный режим выключен</b>.`)}
     renderCharacterSheet('overview');if(state.combat)renderCombat();updateUI();renderBoard();
   }
-  // v0.6.69 — Every image is linked by the approved card ID, not by a translated name.
+  // v0.6.70 — Every image is linked by the approved card ID, not by a translated name.
   const INVENTORY_IMAGE_IDS=new Set([141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347]);
   function itemImageHtml(card){return card&&INVENTORY_IMAGE_IDS.has(Number(card.id))?`<img class="item-card-art" src="assets/items/${card.id}.webp" loading="lazy" decoding="async" alt="" onerror="this.hidden=true">`:''}
   function itemEffectSpent(p,id){
@@ -1749,7 +1749,10 @@
   function twoRowItemGridHtml(items,kind,p){
     const cols=Math.max(2,Math.ceil(items.length/2));
     const rows=Math.min(2,Math.ceil(items.length/cols));
-    return `<div class="inventory-two-row-grid ${kind}-picture-grid" style="--item-cols:${cols};--item-rows:${rows}" aria-label="${kind==='backpack'?'Предметы рюкзака':'Неразобранные тайники'}">${items.map(c=>inventoryPictureTile(c,c.fields?.['Тип']||c.category,c.name,`${itemColorClass(p,c)} ${itemEffectSpent(p,c.id)?'item-ability-spent':''}`,`data-item-id="${c.id}"`)).join('')}</div>`;
+    const pending=kind==='pending';
+    const gridClass=pending?'pending-picture-grid pending-card-grid':`inventory-two-row-grid backpack-picture-grid`;
+    const tracks=pending?'':`style="--item-cols:${cols};--item-rows:${rows}"`;
+    return `<div class="${gridClass}" ${tracks} aria-label="${pending?'Неразобранные карты':'Предметы рюкзака'}">${items.map(c=>inventoryPictureTile(c,c.fields?.['Тип']||c.category,c.name,`${itemColorClass(p,c)} ${itemEffectSpent(p,c.id)?'item-ability-spent':''}`,`data-item-id="${c.id}" aria-label="Взять карту ${escapeCombatText(c.name)} для просмотра"`)).join('')}</div>`;
   }
   function renderBackpack(p){
     ensurePlayerModel(p);updateSheetTabs('backpack');const items=p.backpack.map(id=>itemCard(id)).filter(Boolean);
@@ -1759,7 +1762,7 @@
   }
   function renderPending(p){
     ensurePlayerModel(p);updateSheetTabs('pending');const items=p.pendingItems.map(id=>itemCard(id)).filter(Boolean);
-    els.sheetContent.innerHTML=`<div class="sheet-nav"><button class="ghost" id="sheetBack">← Инвентарь</button><b>Неразобранные тайники: ${items.length}</b></div>${items.length?twoRowItemGridHtml(items,'pending',p):'<div class="empty-box">Неразобранных тайников нет.</div>'}`;
+    els.sheetContent.innerHTML=`<div class="sheet-nav"><button class="ghost" id="sheetBack">← Инвентарь</button><b>Неразобранные тайники: ${items.length}</b></div>${items.length?`<div class="pending-help">Нажмите на карту, чтобы взять её в руку и рассмотреть. Сама карта останется здесь, пока вы не выберете действие.</div>${twoRowItemGridHtml(items,'pending',p)}`:'<div class="empty-box">Неразобранных тайников нет.</div>'}`;
     document.getElementById('sheetBack').onclick=()=>renderCharacterSheet('inventory');
     els.sheetContent.querySelectorAll('[data-item-id]').forEach(b=>b.onclick=()=>showItemInSheet(Number(b.dataset.itemId),{where:'pending'}));
   }
@@ -2497,10 +2500,10 @@
       const card=itemCard(id),chosen=selected.has(index);
       if(!card)return '';
       const key=`${c.instanceId}:${index}`,reverse=!!victoryLootReversed.get(key);
-      return `<div class="loot-draft-card${chosen?' selected':''}" data-loot-card="${index}"><span class="loot-draft-number">КАРТА ${index+1} · №${card.id}</span><button type="button" class="loot-draft-art-action" data-loot-flip="${index}" title="${reverse?'Показать рисунок':'Посмотреть полное описание'}" aria-label="${reverse?'Показать рисунок':'Перевернуть карту'} №${card.id}">${reverse?inventoryCardBackHtml(card):itemCardFrontHtml(card)}</button><button type="button" class="loot-draft-flip secondary" data-loot-flip="${index}">${reverse?'↶ Рисунок':'↻ Перевернуть'}</button><button type="button" class="loot-draft-select ${chosen?'secondary':'success'}" data-loot-choice="${index}" aria-pressed="${chosen}">${chosen?'✓ Выбрано · отменить':'Выбрать'}</button></div>`;
+      return `<div class="loot-draft-card${chosen?' selected':''}" data-loot-card="${index}"><span class="loot-draft-number">КАРТА ${index+1} · №${card.id}</span><button type="button" class="loot-draft-art-action" data-loot-flip="${index}" title="${reverse?'Показать рисунок':'Посмотреть полное описание'}" aria-label="${reverse?'Показать рисунок':'Просмотреть описание'} №${card.id}">${reverse?inventoryCardBackHtml(card):itemCardFrontHtml(card)}</button><button type="button" class="loot-draft-flip secondary" data-loot-flip="${index}">${reverse?'↶ Рисунок':'↻ Перевернуть'}</button><button type="button" class="loot-draft-select ${chosen?'secondary':'success'}" data-loot-choice="${index}" aria-pressed="${chosen}">${chosen?'✓ Выбрано · отменить':'Выбрать'}</button></div>`;
     }).join('');
     const complete=selected.size===max;
-    els.modalContent.innerHTML=`<div class="card-kicker">ПОБЕДА · ТАЙНИКИ</div><div class="card-title">Выберите добычу</div><div class="card-field">Получить <b>${max} ${lootWord(max)}</b> из <b>${all.length}</b> ${lootWord(all.length)}.${draft.carefulSearch?' Тщательный поиск открыл дополнительную карту.':''}${draft.natural20Bonus?' Натуральная 20: +1 получаемый тайник.':''}<br>Невыбранные карты вернутся в колоду.</div><div class="loot-draft-grid">${list}</div><div class="modal-actions"><button id="lootDraftConfirm" class="success" ${complete?'':'disabled'}>Подтвердить (${selected.size}/${max})</button></div>`;
+    els.modalContent.innerHTML=`<div class="card-kicker">ПОБЕДА · ТАЙНИКИ</div><div class="card-title">Выберите добычу</div><div class="card-field">Получить <b>${max} ${lootWord(max)}</b> из <b>${all.length}</b> ${lootWord(all.length)}.${draft.carefulSearch?' Тщательный поиск открыл дополнительную карту.':''}${draft.natural20Bonus?' Натуральная 20: +1 получаемый тайник.':''}<br>Невыбранные карты вернутся в колоду.</div><div class="loot-draft-grid" aria-label="Карты для выбора добычи">${list}</div><div class="modal-actions"><button id="lootDraftConfirm" class="success" ${complete?'':'disabled'}>Подтвердить (${selected.size}/${max})</button></div>`;
     els.modal.hidden=false;
     els.modalContent.querySelectorAll('[data-loot-flip]').forEach(b=>b.onclick=()=>{
       const index=Number(b.dataset.lootFlip),key=`${c.instanceId}:${index}`;
@@ -2915,7 +2918,7 @@
       const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
-      state.version='0.6.69';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.69.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
+      state.version='0.6.70';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.70.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
     }catch(e){console.error(e);alert('Не удалось загрузить сохранение.')}
   }
   function cloneJson(v){return JSON.parse(JSON.stringify(v))}
@@ -2933,7 +2936,7 @@
     if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
-    state.version='0.6.69';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    state.version='0.6.70';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){
