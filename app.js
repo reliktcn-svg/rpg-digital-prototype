@@ -183,7 +183,7 @@
     return o;
   }
   function freshState(){return {
-    version:'0.6.73', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
+    version:'0.6.74', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
     decks:initialDecks(), cleaned:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, tradeDeal:null, dungeonEntryNotice:null, territoryBuiltNotice:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:3, sharedDifficulty:null, journal:[]
   };}
   let state=freshState();
@@ -548,7 +548,7 @@
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,potions:[null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:sharedHard,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats(),territoryBuildSeq:{kingdom:0,cursed:0}}});
     generatePermanentLocations({preserve:false});
     state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(isMobileViewport()){els.sheetDrawer.hidden=true}else openCharacterSheet('overview',null,currentPlayer().id);setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
-    log(`<b>Партия v0.6.73 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
+    log(`<b>Партия v0.6.74 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
     state.order.forEach(id=>{const p=getPlayer(id);log(`Инициатива ${p.name}: D20 = <b>${p.initiative}</b>.`,p.id)});updateUI();renderBoard();
   }
 
@@ -862,7 +862,7 @@
   function deckKeyForCard(card){if(card?.id===281||card?.category==='Босс')return'boss';if(card.deck==='Исследования внешних регионов')return'exploreOuter';if(card.deck==='Исследования Сердца тьмы')return'exploreHeart';if(card.deck==='Тайники внешних регионов')return'lootOuter';return'lootHeart'}
   function cleanCardFieldValue(v){return String(v??'').split(/\n={5,}/)[0].trim()}
   function displayCardFieldEntries(card){return Object.entries(card?.fields||{}).filter(([k])=>!['НОМЕР','Название','Колода','Категория','Номер в своей колоде','Регион','КОЛОДА'].includes(k)&&!k.startsWith('---')&&!/^=+$/.test(k)).map(([k,v])=>[k,cleanCardFieldValue(v)]).filter(([,v])=>v)}
-  // v0.6.73: horizontal illustrated exploration cards including traps. Display-only: card actions
+  // v0.6.74: horizontal illustrated exploration cards including traps. Display-only: card actions
   // still use the original callbacks; no card rules or deck logic are changed.
   const STORY_CATEGORIES=new Set(['Ловушка','Событие','Темница','Элитная опасность','Тёмное испытание','Проклятый шаг','Золото и сокровища']);
   const STORY_ART_IDS=new Set([56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,93,94,95,96,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140]);
@@ -878,12 +878,49 @@
     if(card?.category==='Золото и сокровища')return 'treasure';
     return 'special';
   }
+  // v0.6.74: visual shell for permanent locations; actions use the existing game handlers.
+  function locationWindow(kind,p,content,footer,{cursed=false,title=null}={}){
+    const names={merchant:'Торговец',tavern:'Таверна',shrine:'Святилище'};
+    const actual=names[kind]||kind,shade=cursed?'cursed':'kingdom';
+    const region=MAP.hexes?.[p?.hex]?.region;
+    const regionLabel=region==='cursed'?'Проклятые территории':region==='heart_of_darkness'?'Сердце тьмы':'Территории королевства';
+    const escaped=v=>escapeCombatText(v);
+    const img=`assets/locations/${shade}-${kind}.webp`;
+    return `<div class="location-ui loc-${kind} ${cursed?'loc-cursed':''}">
+      <div class="loc-art"><div class="loc-art-frame"><img src="${img}" alt="${escaped(actual)}" onerror="this.hidden=true"></div>
+        <div class="loc-art-caption"><strong>${escaped(actual)}</strong><small>Постоянная локация · ${regionLabel}</small></div>
+      </div>
+      <div class="loc-panel"><div class="loc-head"><div><div class="loc-kicker">ПОСТОЯННАЯ ЛОКАЦИЯ${cursed?' · ПРОКЛЯТАЯ':''}</div><h2>${escaped(title||actual)}</h2></div><button type="button" class="loc-close" title="Закрыть" aria-label="Закрыть">×</button></div>
+        <div class="loc-scroll" tabindex="0">${content}</div><div class="loc-footer">${footer}</div>
+      </div></div>`;
+  }
+  function locationStatusPills(parts){return `<div class="loc-pills">${parts.map(([label,value])=>`<span>${label}: <b>${escapeCombatText(value)}</b></span>`).join('')}</div>`}
+  function locationActivateClose(kind){
+    const b=els.modalContent.querySelector('.loc-close');if(!b)return;
+    if(kind==='merchant')b.onclick=()=>document.getElementById('merchantDone')?.click();
+    else if(kind==='tavern')b.onclick=()=>document.getElementById('tavernClose')?.click();
+    else {b.disabled=true;b.title='Выберите действие или нажмите «Готово»';}
+  }
   function showCard(card,extra='',actions=[]){
     modalOffturnOwnerId=null;modalCloseAction=null;
     const escapeText=v=>escapeCombatText(v);
     const entries=displayCardFieldEntries(card);
     const fields=entries.map(([k,v])=>`<div class="card-field"><b>${escapeText(k)}:</b> ${escapeText(v).replace(/\n/g,'<br>')}</div>`).join('');
-    if(STORY_CATEGORIES.has(card?.category)){
+    if(card?.locationVisualKind==='shrine'){
+      const meta=card.locationVisualInfo||{},p=getPlayer(meta.playerId)||currentPlayer();
+      const choice=actions.some(a=>/Восстановить D8|Снять негативный эффект/.test(a.label));
+      const oneClean=actions.some(a=>/^Снять:/.test(a.label));
+      const statusLine=(p?.statuses||[]).length?`<div class="loc-section-title">Негативные эффекты героя</div><div class="loc-status-list">${p.statuses.map(s=>`<span>${escapeText(s)}</span>`).join('')}</div>`:'';
+      const detail=choice?`<div class="loc-section-title">Выберите один эффект святилища</div>
+        <div class="loc-option"><span class="loc-symbol">✚</span><div><b>Восстановление здоровья</b><small>Восстановить D8 ЗД. Бросок — после выбора.</small></div></div>
+        <div class="loc-option"><span class="loc-symbol">✧</span><div><b>Очищение</b><small>Снять один выбранный негативный эффект.</small></div></div>${statusLine}`:
+        oneClean?`<div class="loc-section-title">Выберите один негативный эффект</div>${statusLine}<div class="loc-option"><span class="loc-symbol">✧</span><div>${extra}</div></div>`:
+        `<div class="loc-section-title">Результат посещения</div><div class="loc-option"><span class="loc-symbol">✦</span><div>${extra||'Эффект Святилища применён.'}</div></div>${statusLine}`;
+      const summary=locationStatusPills([['Герой',p?.name||'—'],['ЗД',`${p?.currentHp??'—'}/${p?.maxHp??'—'}`],['Негативных эффектов',String(p?.statuses?.length||0)]]);
+      const content=summary+detail+`<div class="loc-note">Эффекты предметов, восстанавливаемые в Святилище, перезаряжаются по существующим правилам.</div>`;
+      els.modalContent.innerHTML=locationWindow('shrine',p,content,'<div id="modalActions" class="loc-action-list"></div>',{cursed:!!meta.cursed});
+      locationActivateClose('shrine');
+    }else if(STORY_CATEGORIES.has(card?.category)){
       const tone=storyTone(card),src=storyImageUrl(card),number=Number(card.id)||0;
       const art=src?`<img src="${src}" alt="${escapeText(card.name)}" loading="eager" decoding="async" onerror="this.hidden=true;this.parentElement.classList.add('story-art-missing')">`:'';
       els.modalContent.innerHTML=`<div class="story-card-shell story-${tone}"><div class="story-card-art ${src?'':'story-art-missing'}">${art}<div class="story-art-placeholder"><span>Иллюстрация для карты №${number} пока не загружена</span></div><div class="story-number">КАРТА №${String(number).padStart(3,'0')}</div></div><div class="story-card-info"><div class="story-card-scroller"><div class="story-kicker">${escapeText(card.category)} · ${escapeText(card.region||card.fields?.['Регион']||'')}</div><h2 class="story-title">${escapeText(card.name)}</h2><div class="story-divider"></div><div class="story-field-list">${fields}</div>${extra?`<div class="story-extra">${extra}</div>`:''}</div><div class="story-card-actions modal-actions" id="modalActions"></div></div></div>`;
@@ -1334,7 +1371,7 @@
 
   function visitShrine(p,result,onDone){
     resetItemUsage(p,'shrine');
-    const fake={id:'—',name:result.title||'Святилище',category:'Постоянная локация',deck:'Поле',fields:{
+    const fake={locationVisualKind:'shrine',locationVisualInfo:{playerId:p.id,cursed:MAP.hexes?.[p.hex]?.region==='cursed'},id:'—',name:result.title||'Святилище',category:'Постоянная локация',deck:'Поле',fields:{
       'Обычный':'выбери одно: восстанови D8 ЗД ИЛИ сними 1 негативный эффект.',
       'Проклятый':'восстанови D6 ЗД.',
       'Натуральная 20':'полностью восстанови ЗД; сними все негативные эффекты.',
@@ -1386,10 +1423,22 @@
     const canHire=!!merc&&p.gold>=price&&!oldLocked,canHeal=!session.healed&&p.gold>=4&&p.currentHp<p.maxHp;
     const hireWhy=!merc?'В таверне сейчас нет свободного наёмника.':oldLocked?'Текущий наёмник заблокирован для сброса. Сначала снимите блокировку.':p.gold<price?`Нужно ${price} золота.`:'';
     const healWhy=session.healed?'Лечение уже использовано в это посещение.':p.gold<4?'Нужно 4 золота.':p.currentHp>=p.maxHp?'ЗД уже полные.':'';
-    const mercHtml=merc?`<div class="tavern-merc-card"><div class="card-kicker">В таверне сейчас</div><div class="card-title">${merc.name}</div><div class="card-field"><b>Цена найма:</b> ${price} золота</div><div class="card-field"><b>Эффект:</b> ${merc.fields?.['Эффект']||'—'}</div></div>`:`<div class="empty-box">Сейчас в Таверне нет свободного наёмника. Новый появится, когда все герои покинут эту Таверну.</div>`;
-    const currentHtml=current?`Ваш спутник: <b>${current.name}</b>${oldLocked?' · 🔒 заблокирован':''}`:'Ваш спутник: <b>нет</b>';
-    els.modalContent.innerHTML=`<div class="card-kicker">Постоянная локация · Таверна</div><div class="card-title">${loc?.name||'Таверна'}</div>${mercHtml}<div class="card-field tavern-current-merc">${currentHtml}</div>${session.healSummary?`<div class="notice compact-notice">${session.healSummary}</div>`:''}<div class="modal-actions tavern-actions"><button id="tavernHire" class="success" ${canHire?'':'disabled'} title="${hireWhy}">${current?'Нанять вместо текущего':'Нанять'}${merc?` — ${price} зол.`:''}</button><button id="tavernHeal" class="primary" ${canHeal?'':'disabled'} title="${healWhy}">Лечиться — 4 зол.</button><button id="tavernClose" class="secondary">Закрыть</button></div>`;
-    els.modal.hidden=false;
+    const locCursed=MAP.hexes?.[hex]?.region==='cursed';
+    const mercHtml=merc?`<div class="loc-section-title">В таверне сейчас — ${escapeCombatText(merc.name)}</div>
+      <div class="loc-merc"><div class="loc-merc-art">${itemImageHtml(merc)}</div><div class="loc-merc-text"><strong>${escapeCombatText(merc.name)} <small>№${merc.id}</small></strong>
+      <b class="loc-price">Найм: ${price} золота</b><span>${escapeCombatText(merc.fields?.['Эффект']||'—')}</span></div></div>`:
+      '<div class="loc-empty">Сейчас в Таверне нет свободного наёмника. Новый появится, когда все герои покинут эту Таверну.</div>';
+    const currentHtml=current?`Ваш спутник: <b>${escapeCombatText(current.name)}</b>${oldLocked?' · 🔒 заблокирован':''}`:'Ваш спутник: <b>нет</b>';
+    const content=locationStatusPills([['Герой',p.name],['ЗД',`${p.currentHp}/${p.maxHp}`],['Золото',String(p.gold)]])+
+      mercHtml+`<div class="loc-current">${currentHtml}${current?' · При наличии спутника доступна замена':''}</div>
+      <div class="loc-heal"><b>✚ &nbsp; Лечение — 4 золота · D6 ЗД</b><small>Один раз за посещение · при неполных ЗД</small></div>
+      ${session.healSummary?`<div class="loc-note">${session.healSummary}</div>`:''}
+      <div class="loc-note">Новый наёмник появится после освобождения Таверны. Повторное лечение — после выхода и нового посещения.</div>`;
+    const footer=`<button id="tavernHire" class="loc-hire" ${canHire?'':'disabled'} title="${escapeCombatText(hireWhy)}">${current?'Заменить наёмника':'Нанять'}${merc?` · ${price} зол.`:''}</button>
+      <button id="tavernHeal" class="loc-healbtn" ${canHeal?'':'disabled'} title="${escapeCombatText(healWhy)}">Лечиться · 4</button>
+      <button id="tavernClose" class="loc-done">Закрыть</button>`;
+    els.modalContent.innerHTML=locationWindow('tavern',p,content,footer,{cursed:locCursed});
+    els.modal.hidden=false;locationActivateClose('tavern');
     const hireBtn=document.getElementById('tavernHire');if(hireBtn)hireBtn.onclick=()=>{if(!canHire||!merc)return;const old=getSlotId(p,'mercenary');if(old&& !confirm(`Заменить наёмника «${itemCard(old)?.name}» на «${merc.name}»? Старый наёмник уйдёт в сброс.`))return;if(old){if(isItemLocked(p,old)){alert('Текущий наёмник заблокирован для сброса.');return}discardHeldCard(itemCard(old));delete p.itemUsage[old];delete p.lockedItems?.[old]}
       p.gold-=price;setSlotId(p,'mercenary',merc.id);delete loc.tavernMercenaryId;delete loc.tavernMercenaryDeckKey;loc.tavernNeedsRestock=true;log(`${p.name} нанимает в Таверне «${merc.name}» за ${price} золота. До тех пор, пока Таверна не опустеет, нового наёмника здесь не будет.`);updateUI();renderTavernVisit(p,hex,onDone,session)};
     const healBtn=document.getElementById('tavernHeal');if(healBtn)healBtn.onclick=()=>{if(!canHeal)return;const hr=rollHealing(p,'D6');closeModal();showRollPopup('Таверна · лечение',hr.total,`${hr.used} = <b>${hr.total}</b>`,'Лечение за 4 золота',null,()=>{p.gold-=4;const before=p.currentHp;heal(p,hr.total);const restored=p.currentHp-before;session.healed=true;session.healSummary=`Лечение: ${hr.used} = <b>${hr.total}</b>. Восстановлено <b>${restored} ЗД</b>. ЗД ${p.currentHp}/${p.maxHp}.${hr.reduced?' Проклятие уменьшило кубик лечения.':''}`;log(`${p.name} лечится в Таверне за 4 золота: ${hr.used}=${hr.total}, восстановлено ${restored} ЗД.`);updateUI();renderTavernVisit(p,hex,onDone,session)})};
@@ -1457,15 +1506,34 @@
     const p=getPlayer(ownerId);if(!p)return;
     const saleMultiplier=merchantSaleMultiplier(p,plan),saleLabel=merchantSaleLabel(p,plan);
     const blocked=shop.saving||shop.unsaved;
-    const stockHtml=stock.length?stock.map((e,i)=>{const c=e.card,base=merchantBuyPrice(c),buyable=base!=null,cost=buyable?Math.ceil(base*plan.buyMultiplier):null;const why=base==null?'Цена отсутствует или требует утверждения.':'';return `<div class="merchant-card ${itemColorClass(p,c)}"><div class="merchant-card-head"><div><small>№${c.id} · ${c.fields?.['Тип']||c.category}</small><b>${c.name}</b></div><div class="merchant-price">${buyable?`${cost} зол.`:'—'}</div></div><div class="card-fields compact">${itemFieldsHtml(c)}</div><button data-buy-index="${i}" class="success" ${blocked||!buyable||p.gold<cost?'disabled':''}>${buyable?`Купить за ${cost}`:'Недоступно'}</button>${why?`<div class="merchant-note">${why}</div>`:''}</div>`}).join(''):'<div class="empty-box">Ассортимент пуст.</div>';
+    const stockHtml=stock.length?stock.map((e,i)=>{const c=e.card,base=merchantBuyPrice(c),buyable=base!=null,cost=buyable?Math.ceil(base*plan.buyMultiplier):null;const why=base==null?'Цена отсутствует или требует утверждения.':'';return `<div class="loc-good ${itemColorClass(p,c)}"><div class="loc-good-art">${itemImageHtml(c)}<span class="loc-num">№${c.id}</span></div><strong>${escapeCombatText(c.name)}</strong><small>${escapeCombatText(c.fields?.['Тип']||c.category)} · ${buyable?`${cost} зол.`:'—'}</small><details class="loc-good-details"><summary>Описание карты</summary><div class="card-fields compact">${itemFieldsHtml(c)}</div></details><button data-buy-index="${i}" class="loc-buy" ${blocked||!buyable||p.gold<cost?'disabled':''}>${buyable?`Купить за ${cost}`:'Недоступно'}</button>${why?`<div class="loc-note">${why}</div>`:''}</div>`}).join(''):'<div class="empty-box">Ассортимент пуст.</div>';
     const sells=merchantSellEntries(p);
-    const sellGroup=(rows,title)=>rows.length?`<div class="merchant-group-title">${title}</div>${rows.map(e=>{const i=sells.indexOf(e),chk=canSellMerchantItem(p,e),base=numericItemPrice(e.card),value=base==null?null:Math.floor(base*saleMultiplier);return `<div class="merchant-sell-row ${itemColorClass(p,e.card)}"><details class="merchant-sell-detail"><summary><b>${e.card.name}</b><small>${e.where}${base!=null?` · цена ${base}`:''} · №${e.id}</small></summary><div class="card-fields compact">${itemFieldsHtml(e.card)}</div></details><button data-sell-index="${i}" class="secondary" ${blocked||!chk.ok?'disabled':''}>${value!=null?`Продать за ${value}`:'Нет цены'}</button>${!chk.ok?`<span class="merchant-note">${chk.why}</span>`:''}</div>`}).join('')}`:'';
+    const sellGroup=(rows,title)=>rows.length?`<div class="merchant-group-title">${title}</div>${rows.map(e=>{const i=sells.indexOf(e),chk=canSellMerchantItem(p,e),base=numericItemPrice(e.card),value=base==null?null:Math.floor(base*saleMultiplier);return `<div class="loc-sell ${itemColorClass(p,e.card)}"><div class="loc-mini-art">${itemImageHtml(e.card)}</div><details class="loc-sell-detail"><summary><b>${escapeCombatText(e.card.name)}</b><small>${escapeCombatText(e.where)} · №${e.id}${base!=null?` · цена ${base}`:''}</small></summary><div class="card-fields compact">${itemFieldsHtml(e.card)}</div></details><button data-sell-index="${i}" class="loc-sellbtn" ${blocked||!chk.ok?'disabled':''}>${value!=null?`Продать за ${value}`:'Нет цены'}</button>${!chk.ok?`<span class="loc-note">${escapeCombatText(chk.why)}</span>`:''}</div>`}).join('')}`:'';
     const sellHtml=sells.length?sellGroup(sells.filter(e=>e.ctx.where==='equipment'),'Экипированные предметы')+'<div class="merchant-sell-divider" role="separator"><span>Рюкзак</span></div>'+sellGroup(sells.filter(e=>e.ctx.where==='backpack'),'Предметы в рюкзаке'):'<div class="empty-box">Нет предметов для продажи.</div>';
     const savingLine=shop.saving?'<div class="notice">Сохраняем изменения на сервере…</div>':shop.unsaved?`<div class="notice" role="alert"><b>Изменения ещё не сохранены!</b> ${shop.error||'Проверьте соединение.'} Покупки и продажи не будут завершены до подтверждения сервера.</div>`:'';
-    els.modalContent.innerHTML=`<div class="card-kicker">Постоянная локация · Торговец</div><div class="card-title">${plan.locationTitle||'Торговец'}</div><div class="merchant-summary"><span>Золото: <b>${p.gold}</b></span><span>${saleLabel}</span><span>Продажа: <b>${Math.round(saleMultiplier*100)}%</b></span><span>Покупка: <b>${Math.round(plan.buyMultiplier*100)}%</b></span></div>${savingLine}<h3>Купить</h3><div class="merchant-grid">${stockHtml}</div><h3 style="margin-top:18px">Продать</h3><div class="merchant-sell-list">${sellHtml}</div><div class="modal-actions">${shop.unsaved?'<button id="merchantRetry" class="primary">Повторить сохранение</button>':''}<button id="merchantDone" class="success" ${blocked?'disabled':''}>Готово</button></div>`;
+    const regionCursed=MAP.hexes?.[p.hex]?.region==='cursed';
+    const content=`${locationStatusPills([['Герой',p.name],['Золото',String(p.gold)],['Покупка',`${Math.round(plan.buyMultiplier*100)}%`],['Продажа',`${Math.round(saleMultiplier*100)}%`]])}
+      <div class="loc-note">${escapeCombatText(saleLabel)}</div>${savingLine}
+      <div class="loc-section-title" id="locBuySection">Товары торговца <small>${stock.length} карт</small></div>
+      <div class="loc-goods">${stockHtml}</div>
+      <div class="loc-section-title" id="locSellSection">Ваши предметы на продажу <small>Экипировка и рюкзак</small></div>
+      <div class="loc-sell-list">${sellHtml}</div>
+      <div class="loc-note">Покупка и продажа доступны в одном посещении. Купленные предметы поступают в неразобранные карты по действующим правилам.</div>`;
+    const footer=`${shop.unsaved?'<button id="merchantRetry" class="loc-retry">Повторить сохранение</button>':''}
+      <button type="button" class="loc-buy-nav" data-loc-jump="locBuySection">Покупка</button>
+      <button type="button" class="loc-sell-nav" data-loc-jump="locSellSection">Продажа</button>
+      <button id="merchantDone" class="loc-done" ${blocked?'disabled':''}>Готово</button>`;
+    els.modalContent.innerHTML=locationWindow('merchant',p,content,footer,{cursed:regionCursed});
+    const scroll=els.modalContent.querySelector('.loc-scroll');
+    if(scroll){scroll.scrollTop=shop.scrollTop||0;scroll.onscroll=()=>{shop.scrollTop=scroll.scrollTop};}
+    els.modalContent.querySelectorAll('[data-loc-jump]').forEach(btn=>{btn.onclick=()=>{
+      const target=els.modalContent.querySelector('#'+btn.dataset.locJump);
+      if(target&&scroll)scroll.scrollTop+=target.getBoundingClientRect().top-scroll.getBoundingClientRect().top;
+    }});
     els.modal.hidden=false;
     modalOffturnOwnerId=ownerId;
     modalCloseAction=()=>document.getElementById('merchantDone')?.click();
+    locationActivateClose('merchant');
     async function saveShop(){
       shop.saving=true;shop.unsaved=false;shop.error='';showMerchantShop(ownerId,stock,plan,onDone,shop);
       try{
@@ -1726,7 +1794,7 @@
     else{p.hardMode=false;log(`${p.name}: <b>сложный режим выключен</b>.`)}
     renderCharacterSheet('overview');if(state.combat)renderCombat();updateUI();renderBoard();
   }
-  // v0.6.73 — Every image is linked by the approved card ID, not by a translated name.
+  // v0.6.74 — Every image is linked by the approved card ID, not by a translated name.
   const INVENTORY_IMAGE_IDS=new Set([141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347]);
   function itemImageHtml(card){return card&&INVENTORY_IMAGE_IDS.has(Number(card.id))?`<img class="item-card-art" src="assets/items/${card.id}.webp" loading="lazy" decoding="async" alt="" onerror="this.hidden=true">`:''}
   function itemEffectSpent(p,id){
@@ -2944,7 +3012,7 @@
       const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
-      state.version='0.6.73';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.73.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
+      state.version='0.6.74';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.74.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
     }catch(e){console.error(e);alert('Не удалось загрузить сохранение.')}
   }
   function cloneJson(v){return JSON.parse(JSON.stringify(v))}
@@ -2962,7 +3030,7 @@
     if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
-    state.version='0.6.73';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    state.version='0.6.74';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){
@@ -2993,7 +3061,7 @@
   let pinchStartDist=0,pinchStartZoom=1;const touchDistance=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);if(els.boardWrap){els.boardWrap.addEventListener('touchstart',e=>{if(e.touches.length===2){pinchStartDist=touchDistance(e.touches);pinchStartZoom=Number(state.mapZoom||1)}},{passive:true});els.boardWrap.addEventListener('touchmove',e=>{if(e.touches.length===2&&pinchStartDist>0){e.preventDefault();const ratio=touchDistance(e.touches)/pinchStartDist;state.mapZoom=Math.round(clamp(pinchStartZoom*ratio,.6,2)*20)/20;applyMapZoom(false)}},{passive:false});els.boardWrap.addEventListener('touchend',e=>{if(e.touches.length<2)pinchStartDist=0},{passive:true})}
   if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
   els.startBtn.addEventListener('click',startGame);els.moveRollBtn.addEventListener('click',rollMove);els.endTurnBtn.addEventListener('click',()=>endTurn(false));els.saveBtn.addEventListener('click',saveGame);els.loadBtn.addEventListener('click',loadGame);els.resetBtn.addEventListener('click',resetGame);[['sheetSaveBtn','saveBtn'],['sheetLoadBtn','loadBtn'],['sheetResetBtn','resetBtn']].forEach(([mirror,source])=>{const btn=document.getElementById(mirror);if(btn)btn.addEventListener('click',()=>els[source].click())});els.inventoryBtn.addEventListener('click',()=>openCharacterSheet('overview'));els.sheetClose.addEventListener('click',closeCharacterSheet);els.modalClose.addEventListener('click',requestModalClose);
-  window.__RPG_DEBUG__={getState:()=>state,setState:v=>{state=v},freshState,HEROES,CARD_BY_ID,combatStart,combatFight,combatHeroAttack,finalizeHeroAttackRoll,applyHeroDamageNow,combatEnemyTurn,finalizeEnemyAttackRoll,acceptEnemyDamage,combatContinueAfterEnemyMiss,renderCombat,currentPlayer,getPlayer,ensurePlayerModel,supportedCombatEffect,applyCombatItemEffect,useHeroCombatAbility,combatReactionList,fullSetEquipped,completeSetNames,itemColorClass,mandatoryLootCount,setBonusActionInfo,useSetBonus,showRollPopup,heroImmuneStatus,combatPassiveDamageBonus,combatHeroDeath,combatVictory,movementFor,combatCanChangeEquipment,combatTickEnemyStatuses,equipTransaction,merchantSaleMultiplier,decorateNegativeEffects,generatePermanentLocations,locationVisibleToPlayer,revealLocationToPlayer,ensureTavernMercenary,restockTavernIfVacant,visitTavern,attemptDungeonExit,beginBonusExplorationTurnAfterDungeon,gameOverStats,showGameOverPopup,renderBoard,updateUI};
+  window.__RPG_DEBUG__={getState:()=>state,setState:v=>{state=v},freshState,HEROES,CARD_BY_ID,combatStart,combatFight,combatHeroAttack,finalizeHeroAttackRoll,applyHeroDamageNow,combatEnemyTurn,finalizeEnemyAttackRoll,acceptEnemyDamage,combatContinueAfterEnemyMiss,renderCombat,currentPlayer,getPlayer,ensurePlayerModel,supportedCombatEffect,applyCombatItemEffect,useHeroCombatAbility,combatReactionList,fullSetEquipped,completeSetNames,itemColorClass,mandatoryLootCount,setBonusActionInfo,useSetBonus,showRollPopup,heroImmuneStatus,combatPassiveDamageBonus,combatHeroDeath,combatVictory,movementFor,combatCanChangeEquipment,combatTickEnemyStatuses,equipTransaction,merchantSaleMultiplier,visitShrine,visitMerchant,showMerchantShop,renderTavernVisit,visitLocation,decorateNegativeEffects,generatePermanentLocations,locationVisibleToPlayer,revealLocationToPlayer,ensureTavernMercenary,restockTavernIfVacant,visitTavern,attemptDungeonExit,beginBonusExplorationTurnAfterDungeon,gameOverStats,showGameOverPopup,renderBoard,updateUI};
   window.__RPG_ONLINE__={startWithHeroes:startOnlineGame,exportState:exportOnlineState,applyState:applyOnlineState,currentPlayerId:()=>currentPlayer()?.id||null,isStarted:()=>!!state.started,sideInteractionOwnerId,sideInteractionActiveFor,exportSideState:sideInteractionPayload,endSideInteraction,refreshUI:()=>{renderJournal();updateUI();renderBoard()},setLocalHeroId:id=>{onlineLocalHeroId=id||null;if(onlineLocalHeroId){sheetView.playerId=onlineLocalHeroId;if(!els.sheetDrawer.hidden)renderCharacterSheet(sheetView.mode,sheetView.bonusKey)}renderJournal();updateUI();renderBoard()},canOffturnSharedAction:id=>!!id&&(state.tributeConsentPending?.ownerId===id||state.dungeonEntryNotice?.heroId===id),canOffturnModalActionFor,combatWindowIsHidden:()=>combatWindowHidden,showCombatWindow,hideCombatWindow};
   decorateNegativeEffects(document.body);negativeEffectObserver.observe(document.body,{childList:true,subtree:true});
   renderJournal();renderBoard();
