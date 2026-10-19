@@ -1609,7 +1609,7 @@ body.game-running #modal .loot-draft-art-action img.item-card-art{
 .visual-combat-head .visual-card-stage.is-back .visual-card-back-wrap > *{flex:0 0 auto;min-width:0}
 
 
-/* v0.6.72 — image + description exploration popups, 21:10 desktop, including traps */
+/* v0.6.73 — image + description exploration popups, mobile art is square */
 body.game-running #modal:has(.story-card-shell) .modal-card,
 #modal:has(.story-card-shell) .modal-card{
   width:min(1060px,100%)!important;
@@ -1673,8 +1673,23 @@ body.game-running #modal:has(.story-card-shell) .modal-card,
     margin:auto!important;overflow:hidden!important;
   }
   .story-card-shell{aspect-ratio:auto;display:flex;flex-direction:column;min-height:0;
-    height:min(81dvh,710px);max-height:calc(100dvh - 35px - var(--safe-top,0px) - var(--safe-bottom,0px))}
-  .story-card-art{height:clamp(150px,31dvh,260px);flex:0 0 auto;border-right:0;border-bottom:1px solid var(--story-accent)}
+    height:min(86dvh,760px);max-height:calc(100dvh - 35px - var(--safe-top,0px) - var(--safe-bottom,0px))}
+  .story-card-art{
+    width:100%;
+    aspect-ratio:1 / 1;
+    height:auto;
+    max-height:min(44dvh,420px);
+    flex:0 0 auto;
+    border-right:0;
+    border-bottom:1px solid var(--story-accent);
+  }
+  .story-card-art img{
+    object-fit:contain;
+    object-position:center;
+    background:#131922;
+  }
+  .story-card-art::after{background:linear-gradient(0deg,#10151c8a,transparent 18%)}
+  .story-number{bottom:10px;left:10px}
   .story-card-info{flex:1;min-height:0;padding:11px 12px 10px;gap:5px}
   .story-kicker{font-size:9px;margin-right:35px;margin-bottom:5px}
   .story-title{font-size:20px;margin-bottom:8px}
@@ -1684,7 +1699,7 @@ body.game-running #modal:has(.story-card-shell) .modal-card,
   .story-card-actions button{flex:1 1 auto;min-height:40px;padding:7px 8px;font-size:12px}
 }
 @media(max-width:360px){
-  .story-card-art{height:clamp(130px,26dvh,196px)}
-  .story-card-shell{height:min(86dvh,670px)}
+  .story-card-shell{height:min(88dvh,700px)}
+  .story-card-art{max-height:min(42dvh,340px)}
   .story-card-info{padding:8px 10px}
 }
