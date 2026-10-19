@@ -1,0 +1,15 @@
+v0.6.52 — Dice presentation, trap sequence and combat UI polish
+Based on v0.6.51 Online Flow Alpha, not Codex game branch.
+
+1. All Arcana dice use a 1-second roll animation; settled result remains visible roughly 2 seconds for automatic combat advances.
+2. Advantage/disadvantage: display both engine-resolved D20 results horizontally in a single compact window. Second die starts 0.5 seconds later, both finish by about 1.5 seconds; reveal the outcome only when both are finished. Combat auto-advance waits for the extra stagger.
+3. Centred, context-specific dice titles; coloured HIT/MISS and SUCCESS/FAIL; removed repeated information in info popups and dungeon checks. Dungeon now uses the same compact dice popup at start and finish.
+4. Trap sequence: card description -> check -> optional separate damage roll(s) -> final trap card with effect/outcome -> continue exploring. Outcomes and hero death occur only after the displayed rolls. Checked flow supports a natural-1 extra D6, combat equipment mitigation and lethal damage.
+5. Tavern D6 and Shrine D6/D8 healing use dice animation; HP/gold are updated after confirmation of the completed throw. Healing in personal areas was already animated and is unchanged.
+6. Careful Search D20 is displayed before the victory results; its natural-1 damage has a separate throw. Loot choice remains unchanged.
+7. Item #194 Luck Stone reroll only offered after a failed attack. Rejecting an enemy-damage defense reaction uses a red button, using reaction remains blue.
+8. Remove stale Movement D6 visual from victory popup and never leave previous dice animation mounted in a non-dice popup.
+9. Client/cached asset identifiers updated to 0.6.52.
+
+Visual/local tests: iPhone-width and desktop-width popup, two sequential D20, lethal trap (D20 -> damage -> extra natural 1 damage -> defeat), shrine healing, tavern healing and normal-enemy careful search to the loot draft. JavaScript and Python syntax checks. Full network test on separate physical devices still required.
+10. No extra confirmation between trap check, optional damage dice, critical damage dice and final trap result: popups automatically advance after the dice stop and a short result hold. Careful Search also advances automatically to Victory Results. Final exploration/loot decisions remain manual.
