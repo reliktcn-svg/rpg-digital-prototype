@@ -1,4 +1,4 @@
-/* v0.6.74: only permanent-location dialogs; gameplay routines unchanged. */
+/* v0.6.75: responsive permanent-location artwork + status layout, gameplay unchanged. */
 body #modal:has(.location-ui){inset:0!important;right:0!important;left:0!important;top:0!important;bottom:0!important;padding:12px!important;display:grid!important;place-items:center!important;z-index:580!important;background:rgba(0,0,0,.73)!important}
 body #modal[hidden]:has(.location-ui){display:none!important}
 body #modal:has(.location-ui) .modal-card{width:min(1100px,calc(100vw - 22px))!important;max-width:none!important;height:min(650px,calc(100dvh - 32px))!important;max-height:none!important;margin:0!important;overflow:hidden!important;padding:0!important;border:0!important;border-radius:15px!important;background:transparent!important;box-shadow:0 22px 85px #000b!important;position:relative!important}
@@ -12,6 +12,7 @@ body #modal:has(.location-ui) .modal-close{display:none!important}
 .loc-art{min-width:0;min-height:0;padding:12px;background:linear-gradient(160deg,#131d24,#0c161c);border-right:1px solid color-mix(in srgb,var(--loc-border) 60%,#24323e);display:flex;flex-direction:column;gap:10px}
 .loc-art-frame{width:100%;aspect-ratio:1;max-height:calc(100% - 63px);border:1px solid var(--loc-border);padding:5px;border-radius:11px;background:#0c1319;overflow:hidden;flex:0 0 auto}
 .loc-art-frame img{display:block;width:100%;height:100%;object-fit:contain;border-radius:7px}
+.loc-mobile-status{display:none}
 .loc-art-caption{padding:3px 5px}.loc-art-caption strong{display:block;color:#e8c686;font-weight:850;font-size:19px;margin-bottom:5px}.loc-art-caption small{font-size:11px;color:#adbac5}
 .loc-panel{display:flex;flex-direction:column;min-height:0;min-width:0}
 .loc-head{padding:13px 15px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:67px;background:var(--loc-tint);border-bottom:1px solid color-mix(in srgb,var(--loc-border) 65%,#1f2630)}
@@ -36,4 +37,42 @@ body #modal:has(.location-ui) .modal-card{width:100%!important;height:calc(100dv
 .loc-art-caption{display:none}
 .loc-scroll{order:2;flex:1;min-height:0;overflow-y:auto;padding:8px 10px 10px}.loc-footer{order:3;padding:7px;gap:5px}.loc-footer>button,.loc-footer .loc-action-list button{min-height:44px;font-size:11px;padding:8px 2px}
 .loc-pills{gap:4px;margin:0 0 7px}.loc-pills span{padding:5px 6px;font-size:10px}.loc-section-title{font-size:15px;margin:8px 0 6px}.loc-section-title small{font-size:9px}.loc-goods{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.loc-good{padding:5px}.loc-good strong{font-size:12px}.loc-good small,.loc-good-details{font-size:9px}.loc-good button{min-height:39px;font-size:10px}.loc-sell{grid-template-columns:48px minmax(0,1fr) 91px;gap:5px;min-height:56px;padding:4px}.loc-mini-art{width:48px;height:48px}.loc-sell-detail summary b{font-size:11px}.loc-sell-detail summary small{font-size:9px}.loc-sellbtn{font-size:10px;padding:6px 2px}.loc-merc{min-height:88px;gap:8px;padding:6px}.loc-merc-art{height:82px;flex-basis:82px}.loc-merc-text strong{font-size:14px}.loc-merc-text span,.loc-merc-text .loc-price,.loc-heal small{font-size:10px}.loc-current{padding:6px 8px;font-size:10px}.loc-heal{padding:8px}.loc-heal b{font-size:11px}.loc-note{font-size:10px}.loc-option{padding:9px;margin-bottom:7px;gap:9px}.loc-option small{font-size:10px}
+}
+
+/* v0.6.75 — approved compact mobile location header; PC presentation unchanged. */
+@media(max-width:900px),(pointer:coarse){
+  .location-ui .loc-art{
+    display:flex;flex-direction:row;align-items:stretch;
+    gap:9px;padding:9px 10px 8px;
+    border-bottom:1px solid color-mix(in srgb,var(--loc-border) 40%,#25313d);
+    background:linear-gradient(160deg,#141e27,#0f1820);
+  }
+  .location-ui .loc-art-frame{
+    width:55%;flex:0 0 55%;height:auto;aspect-ratio:1;
+    max-height:none;min-width:0;min-height:0;align-self:flex-start;
+    padding:4px;border:1px solid var(--loc-border);border-radius:10px;
+    overflow:hidden;background:#0b141b;
+  }
+  .location-ui .loc-art-frame img{display:block;width:100%;height:100%;object-fit:contain;border-radius:6px}
+  .location-ui .loc-mobile-status.loc-pills{
+    display:flex;flex:1 1 0;min-width:0;flex-direction:column;
+    gap:5px;margin:0;align-self:stretch;justify-content:center;
+  }
+  .location-ui .loc-mobile-status.loc-pills span{
+    min-width:0;max-width:100%;display:flex;flex-direction:column;
+    align-items:flex-start;justify-content:center;gap:2px;flex:1 1 0;
+    white-space:normal;overflow-wrap:anywhere;
+    padding:5px 7px;border:1px solid color-mix(in srgb,var(--loc-border) 55%,#394853);
+    border-radius:8px;background:linear-gradient(120deg,var(--loc-tint),#1a2730);
+    color:#bfccd2;font-size:10px;line-height:1.15;
+  }
+  .location-ui .loc-mobile-status.loc-pills b{color:#f3d389;font-size:12px;line-height:1.1}
+  .location-ui .loc-scroll > .loc-pills{display:none}
+  .location-ui .loc-scroll{padding-top:9px}
+}
+@media(max-width:360px){
+  .location-ui .loc-art{gap:7px;padding:7px 8px}
+  .location-ui .loc-art-frame{width:51%;flex-basis:51%}
+  .location-ui .loc-mobile-status.loc-pills span{padding:3px 6px;font-size:9px}
+  .location-ui .loc-mobile-status.loc-pills b{font-size:11px}
 }
