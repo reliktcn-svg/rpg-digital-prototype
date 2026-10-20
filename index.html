@@ -8,9 +8,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <title>RPG Digital Prototype v0.6.75 Visual Alpha</title>
-  <link rel="stylesheet" href="styles.css?v=0675compact" />
-  <link rel="stylesheet" href="location-ui.css?v=0675compact" />
+  <title>RPG Digital Prototype v0.6.76 Visual Alpha</title>
+  <link rel="stylesheet" href="styles.css?v=0676results" />
+  <link rel="stylesheet" href="location-ui.css?v=0676results" />
+  <link rel="stylesheet" href="battle-result-ui.css?v=0676results" />
 </head>
 <body>
   
@@ -50,7 +51,7 @@
   <header class="topbar">
     <div>
       <div class="eyebrow">RPG DIGITAL PROTOTYPE</div>
-      <h1>Прототип v0.6.75 · Visual Alpha</h1>
+      <h1>Прототип v0.6.76 · Visual Alpha</h1>
       <div class="header-tools">
         <button id="journalBtn" class="journal-top" type="button">Журнал</button>
       </div>
@@ -155,20 +156,23 @@
 
   <div id="rollOverlay" class="roll-overlay" hidden>
     <div class="roll-popup-card">
-      <div id="rollPopupTitle" class="roll-popup-title">Проверка</div>
-      <div id="rollPopupMain" class="roll-popup-main">—</div>
-      <div id="rollPopupMath" class="roll-popup-math"></div>
-      <div id="rollPopupDetail" class="roll-popup-detail"></div>
-      <button id="rollPopupClose" class="primary">Продолжить</button>
+      <div id="rollPopupOutcomeArt" class="roll-result-art" hidden><img id="rollPopupOutcomeImage" alt="Иллюстрация победы героя" /></div>
+      <div class="roll-result-text">
+        <div id="rollPopupTitle" class="roll-popup-title">Проверка</div>
+        <div id="rollPopupMain" class="roll-popup-main">—</div>
+        <div id="rollPopupMath" class="roll-popup-math"></div>
+        <div id="rollPopupDetail" class="roll-popup-detail"></div>
+      </div>
+      <div class="roll-result-actions"><button id="rollPopupClose" class="primary">Продолжить</button></div>
     </div>
   </div>
 
-  <script src="map-data.js?v=0675compact"></script>
-  <script src="cards-data.js?v=0675compact"></script>
-  <script src="location-placement.js?v=0675compact"></script>
-  <script src="arcana/dice-renderer.js?v=0675compact"></script>
-  <script src="arcana/dice-animator.js?v=0675compact"></script>
-  <script src="app.js?v=0675compact"></script>
-  <script src="network-lobby.js?v=0675compact"></script>
+  <script src="map-data.js?v=0676results"></script>
+  <script src="cards-data.js?v=0676results"></script>
+  <script src="location-placement.js?v=0676results"></script>
+  <script src="arcana/dice-renderer.js?v=0676results"></script>
+  <script src="arcana/dice-animator.js?v=0676results"></script>
+  <script src="app.js?v=0676results"></script>
+  <script src="network-lobby.js?v=0676results"></script>
 </body>
 </html>
