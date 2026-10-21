@@ -1607,3 +1607,99 @@ body.game-running #modal .loot-draft-art-action img.item-card-art{
   scrollbar-color:#657887 #15212b;
 }
 .visual-combat-head .visual-card-stage.is-back .visual-card-back-wrap > *{flex:0 0 auto;min-width:0}
+
+
+/* v0.6.73 — image + description exploration popups, mobile art is square */
+body.game-running #modal:has(.story-card-shell) .modal-card,
+#modal:has(.story-card-shell) .modal-card{
+  width:min(1060px,100%)!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border:1px solid #68707a;
+  border-radius:16px;
+  max-height:calc(100dvh - 32px)!important;
+  background:#10171f;
+}
+#modal:has(.story-card-shell) .modal-close{
+  position:absolute;z-index:12;top:8px;right:10px;
+  background:#151b24dc;border:1px solid #47515c;border-radius:8px;
+  font-size:20px;padding:0;width:32px;height:32px;min-height:32px;
+}
+.story-card-shell{
+  --story-accent:#b89772;
+  display:grid;grid-template-columns:43% minmax(0,1fr);
+  width:100%;aspect-ratio:21/10;
+  min-height:300px;
+  overflow:hidden;
+  border:2px solid var(--story-accent);
+  border-radius:15px;
+  background:linear-gradient(120deg,#1c252f,#0e151d 75%);
+}
+.story-card-shell.story-event{--story-accent:#c3a15e}
+.story-card-shell.story-trap{--story-accent:#d17873}
+.story-card-shell.story-special{--story-accent:#a881d4}
+.story-card-shell.story-treasure{--story-accent:#d5ae56}
+.story-card-art{position:relative;min-width:0;overflow:hidden;background:#161c24;
+  border-right:1px solid color-mix(in srgb,var(--story-accent),transparent 63%)}
+.story-card-art img{width:100%;height:100%;display:block;object-fit:cover;object-position:center}
+.story-card-art::after{content:'';pointer-events:none;position:absolute;inset:0;background:linear-gradient(90deg,transparent 85%,#0e151d55),linear-gradient(0deg,#10151cbb,transparent 25%)}
+.story-art-placeholder{display:none;position:absolute;inset:0;align-items:center;justify-content:center;
+  padding:20px;background:radial-gradient(circle at 50% 30%,#43333c,#131a22 72%);color:#d0c5b7;text-align:center;line-height:1.5;font-weight:700}
+.story-art-placeholder span{padding:14px;border:1px dashed #8c7e81;border-radius:10px}
+.story-card-art.story-art-missing .story-art-placeholder{display:flex}
+.story-number{position:absolute;bottom:12px;left:12px;z-index:2;padding:6px 9px;
+  background:#111721db;color:#efdeb5;border:1px solid #8f825f;border-radius:7px;font-size:11px;font-weight:900;letter-spacing:.06em}
+.story-card-info{min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:18px 20px 13px;gap:8px}
+.story-card-scroller{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;padding:0 4px 10px 0;scrollbar-width:thin}
+.story-kicker{font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;color:var(--story-accent);margin:0 32px 7px 0}
+.story-title{margin:0 0 11px;font-size:clamp(17px,1.7vw,26px);font-weight:900;color:#f1f4f6;line-height:1.13;overflow-wrap:anywhere}
+.story-divider{height:1px;background:linear-gradient(90deg,var(--story-accent),transparent);opacity:.7;margin-bottom:11px}
+.story-field-list{display:grid;gap:6px}
+.story-field-list .card-field{background:#161e26;border:1px solid #303d48;border-radius:7px;
+  padding:8px 10px;color:#dce3e9;font-size:12px;line-height:1.43;overflow-wrap:anywhere}
+.story-field-list .card-field b{color:var(--story-accent)}
+.story-extra{font-size:12px;line-height:1.5;color:#e2e8eb;margin-top:10px;
+  padding:10px;background:#121a23;border:1px solid #3a4552;border-radius:8px;overflow-wrap:anywhere}
+.story-extra .card-title{font-size:16px}
+.story-extra .card-fields{margin-top:6px}
+.story-card-actions.modal-actions{display:flex;gap:6px;margin:0;padding:7px 0 0;border-top:1px solid #35424c;
+  flex:0 0 auto;max-height:112px;overflow-y:auto;flex-wrap:wrap;justify-content:flex-end}
+.story-card-actions button{font-size:11px;min-height:34px;padding:7px 10px;white-space:normal;line-height:1.2}
+@media(max-width:900px),(pointer:coarse){
+  body.game-running #modal:has(.story-card-shell) .modal-card,
+  #modal:has(.story-card-shell) .modal-card{
+    width:100%!important;
+    max-height:calc(100dvh - 30px - var(--safe-top,0px) - var(--safe-bottom,0px))!important;
+    margin:auto!important;overflow:hidden!important;
+  }
+  .story-card-shell{aspect-ratio:auto;display:flex;flex-direction:column;min-height:0;
+    height:min(86dvh,760px);max-height:calc(100dvh - 35px - var(--safe-top,0px) - var(--safe-bottom,0px))}
+  .story-card-art{
+    width:100%;
+    aspect-ratio:1 / 1;
+    height:auto;
+    max-height:min(44dvh,420px);
+    flex:0 0 auto;
+    border-right:0;
+    border-bottom:1px solid var(--story-accent);
+  }
+  .story-card-art img{
+    object-fit:contain;
+    object-position:center;
+    background:#131922;
+  }
+  .story-card-art::after{background:linear-gradient(0deg,#10151c8a,transparent 18%)}
+  .story-number{bottom:10px;left:10px}
+  .story-card-info{flex:1;min-height:0;padding:11px 12px 10px;gap:5px}
+  .story-kicker{font-size:9px;margin-right:35px;margin-bottom:5px}
+  .story-title{font-size:20px;margin-bottom:8px}
+  .story-field-list .card-field{font-size:12px;padding:7px 8px}
+  .story-extra{font-size:11px;margin-top:7px;padding:8px}
+  .story-card-actions.modal-actions{max-height:116px;padding-top:6px;justify-content:stretch}
+  .story-card-actions button{flex:1 1 auto;min-height:40px;padding:7px 8px;font-size:12px}
+}
+@media(max-width:360px){
+  .story-card-shell{height:min(88dvh,700px)}
+  .story-card-art{max-height:min(42dvh,340px)}
+  .story-card-info{padding:8px 10px}
+}
