@@ -62,7 +62,8 @@
   }
 
   function auth(){return{playerId:session.playerId,playerSecret:session.playerSecret}}
-  function acceptRoom(room){session.room=room;if(room?.recoveryKey)session.recoveryKey=room.recoveryKey;saveResumeSession();return room}
+  function updateHeroPlayerNames(room){window.__RPG_HERO_PLAYER_NAMES__=Object.fromEntries((room?.players||[]).filter(p=>p.heroId&&p.name).map(p=>[p.heroId,p.name]));}
+  function acceptRoom(room){session.room=room;updateHeroPlayerNames(room);if(room?.recoveryKey)session.recoveryKey=room.recoveryKey;saveResumeSession();return room}
   function validRecoveryFor(code){const x=readRecoverySnapshot();if(!x||String(x.code)!==String(code)||!x.recoveryKey||x.build!==CLIENT_BUILD)return null;const last=Number(x.lastActiveAt||0);if(!last||Math.floor(Date.now()/1000)-last>10800)return null;return x}
   async function recoverSession(saved){const recovery=validRecoveryFor(saved?.code);const recoveryKey=saved?.recoveryKey||recovery?.recoveryKey;if(!recoveryKey)throw Object.assign(new Error('Нет актуального снимка партии для восстановления.'),{status:404});
     const d=await api(`/api/rooms/${saved.code}/resume`,{method:'POST',body:JSON.stringify({playerId:saved.playerId,playerSecret:saved.playerSecret,recoveryKey,recovery})});acceptRoom(d.room);return d;
@@ -81,10 +82,10 @@
   }
   function showHome(){
     clearInterval(session.timer);clearInterval(session.gameTimer);session={mode:null,code:null,playerId:null,playerSecret:null,recoveryKey:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:'',lastServerState:null,sideAcks:{}};
-    $('onlineHome').hidden=false;$('onlineRoom').hidden=true;showError('');document.body.classList.remove('online-game','online-not-my-turn');const b=$('onlineTurnBanner');if(b)b.hidden=true;const q=$('turnOrderBanner');if(q)delete q.dataset.roomCode;window.__RPG_ROOM_CODE__='';renderResumeButton();
+    window.__RPG_HERO_PLAYER_NAMES__={};$('onlineHome').hidden=false;$('onlineRoom').hidden=true;showError('');document.body.classList.remove('online-game','online-not-my-turn');const b=$('onlineTurnBanner');if(b)b.hidden=true;const q=$('turnOrderBanner');if(q)delete q.dataset.roomCode;window.__RPG_ROOM_CODE__='';renderResumeButton();
   }
   function renderRoom(){
-    const r=session.room;if(!r)return;
+    const r=session.room;if(!r)return;updateHeroPlayerNames(r);
     $('onlineHome').hidden=true;$('onlineRoom').hidden=false;
     $('roomCode').textContent=r.code;
     const me=myPlayer();$('roomWho').textContent=me?`${me.name}${me.host?' · хозяин':''}`:'';

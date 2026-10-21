@@ -548,7 +548,7 @@
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,potions:[null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:sharedHard,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats(),territoryBuildSeq:{kingdom:0,cursed:0}}});
     generatePermanentLocations({preserve:false});
     state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;els.sheetDrawer.hidden=true;setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
-    log(`<b>Партия v0.6.81 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
+    log(`<b>Партия v0.6.84 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
     state.order.forEach(id=>{const p=getPlayer(id);log(`Инициатива ${p.name}: D20 = <b>${p.initiative}</b>.`,p.id)});updateUI();renderBoard();
   }
 
@@ -920,7 +920,7 @@
         <div class="loc-option"><span class="loc-symbol">✚</span><div><b>Восстановление здоровья</b><small>Восстановить D8 ЗД. Бросок — после выбора.</small></div></div>
         <div class="loc-option"><span class="loc-symbol">✧</span><div><b>Очищение</b><small>Снять один выбранный негативный эффект.</small></div></div>${statusLine}`:
         oneClean?`<div class="loc-section-title">Выберите один негативный эффект</div>${statusLine}<div class="loc-option"><span class="loc-symbol">✧</span><div>${extra}</div></div>`:
-        `<div class="loc-section-title">Результат посещения</div><div class="loc-option"><span class="loc-symbol">✦</span><div>${extra||'Эффект Святилища применён.'}</div></div>${statusLine}`;
+        `<div class="loc-section-title">Результат посещения</div><div class="loc-option loc-visit-result"><span class="loc-symbol">✦</span><div class="loc-result-line">${extra||'Эффект Святилища применён.'}</div></div>${statusLine}`;
       const summary=locationStatusPills([['Герой',p?.name||'—'],['ЗД',`${p?.currentHp??'—'}/${p?.maxHp??'—'}`],['Негативных эффектов',String(p?.statuses?.length||0)]]);
       const content=summary+detail+`<div class="loc-note">Эффекты предметов, восстанавливаемые в Святилище, перезаряжаются по существующим правилам.</div>`;
       els.modalContent.innerHTML=locationWindow('shrine',p,content,'<div id="modalActions" class="loc-action-list"></div>',{cursed:!!meta.cursed});
@@ -1153,14 +1153,33 @@
     if(natural===1){const dmg=rand(6);damage(p,dmg);showRollPopup(`${label} · Натуральная 1`,dmg,`D6 = <b>${dmg}</b>`,`Получено ${dmg} урона · ЗД ${Math.max(0,p.currentHp)}/${p.maxHp}`);log(`${p.name}: <b>Натуральная 1</b> — ${label}: D6 = ${dmg} урона.`);return{damage:dmg}}
     return{};
   }
+  // v0.6.82: the card is revealed BEFORE the player initiates a check. The
+  // result is shown on the same event card AFTER the dice popup has finished.
   function resolveOldCache(card){
-    const p=currentPlayer(),wis=effectiveStat(p,'wis'),d=rand(20),total=d+wis,natural=d===20?20:d===1?1:null,ok=d===20?true:d===1?false:total>=13;
-    const lootKey=ok?'lootHeart':'lootOuter',loot=drawCard(lootKey);
-    announceCheck(`Событие · ${card.name}`,d,'МУД',wis,total,13,ok,natural,ok?'Тайник Сердца тьмы':'Тайник внешних регионов');
-    if(loot){receiveTreasure(p,loot);log(`${p.name}: «${card.name}» — ${ok?'успех':'провал'} проверки МУД 13+, получен ${DECK_NAMES[lootKey]} №${loot.id} «${loot.name}».`)}
-    const natResult=applyTreasureSearchNatural(p,natural,`«${card.name}»`);if(p.currentHp<=0)return;
-    const extraText=natResult.extra?`<br><b>Натуральная 20:</b> дополнительно получен тайник региона №${natResult.extra.id} «${natResult.extra.name}».`:natResult.damage?`<br><b>Натуральная 1:</b> получено D6 = ${natResult.damage} урона.`:'';
-    showCard(card,`D20 ${d} + МУД ${signed(wis)} = <b>${total}</b>.<br>Получен: <b>${ok?'Тайник Сердца тьмы':'Тайник внешних регионов'}</b>${loot?` — №${loot.id} «${loot.name}»`:''}.${extraText}`,p.pendingItems.length?[{label:'Разобрать тайник',className:'success',fn:()=>pauseExploreForPendingLoot(card,state.exploration.deckKey)}]:[{label:'Продолжить',className:'success',fn:()=>continueExplore(card,state.exploration.deckKey)}]);
+    const p=currentPlayer();
+    showCard(card,'Сначала осмотрите старый тайник. Проверка МУД 13+ определит, из какой колоды будет награда.',[
+      {label:'Поиск тайника · ПРОВЕРКА МУД 13+',className:'success',fn:()=>{
+        const wis=effectiveStat(p,'wis'),d=rand(20),total=d+wis,natural=d===20?20:d===1?1:null;
+        const ok=d===20?true:d===1?false:total>=13;
+        // Preserve the original loot and natural-20/1 rules, but defer them
+        // until after the first check's animation.
+        const showOutcome=()=>{
+          if(!state.exploration)return;
+          const lootKey=ok?'lootHeart':'lootOuter',loot=drawCard(lootKey);
+          if(loot){receiveTreasure(p,loot);log(`${p.name}: «${card.name}» — ${ok?'успех':'провал'} проверки МУД 13+, получен ${DECK_NAMES[lootKey]} №${loot.id} «${loot.name}».`)}
+          let extra=null;
+          if(natural===20){const extraKey=explorationLootKey();extra=drawCard(extraKey);if(extra){receiveTreasure(p,extra);log(`${p.name}: Натуральная 20 — «${card.name}»: +1 тайник региона №${extra.id} «${extra.name}».`)}}
+          const finish=(dmg=0)=>{
+            if(p.currentHp<=0){handleDeath(p);return}
+            const extraText=extra?`<br><b>Натуральная 20:</b> дополнительно получен тайник региона №${extra.id} «${extra.name}».`:dmg?`<br><b>Натуральная 1:</b> получено D6 = ${dmg} урона.`:'';
+            updateUI();showCard(card,`<b>${ok?'УСПЕХ':'ПРОВАЛ'}</b>. D20 ${d} + МУД ${signed(wis)} = <b>${total}</b>.<br>Получен: <b>${ok?'Тайник Сердца тьмы':'Тайник внешних регионов'}</b>${loot?` — №${loot.id} «${loot.name}»`:''}.${extraText}`,p.pendingItems.length?[{label:'Разобрать тайник',className:'success',fn:()=>pauseExploreForPendingLoot(card,state.exploration.deckKey)}]:[{label:'Продолжить',className:'success',fn:()=>continueExplore(card,state.exploration.deckKey)}]);
+          };
+          if(natural===1){const dmg=rand(6);damage(p,dmg);log(`${p.name}: Натуральная 1 — «${card.name}»: D6 = ${dmg} урона.`);showRollPopup('Старый тайник · Натуральная 1',dmg,`D6 = <b>${dmg}</b>`,`Получено ${dmg} урона`,1,()=>finish(dmg),'Продолжить');}
+          else finish();
+        };
+        closeModal();announceCheck(`Событие · ${card.name}`,d,'МУД',wis,total,13,ok,natural,ok?'Тайник Сердца тьмы':'Тайник внешних регионов',showOutcome);
+      }}
+    ]);
   }
   function resolveAncientHeroTracks(card){
     const p=currentPlayer(),key='lootHeart',a=drawCard(key),b=drawCard(key),cards=[a,b].filter(Boolean);
@@ -1228,19 +1247,42 @@
     }
     if(card.fields['Проверка']){resolveCheckedEvent(card);return}
     if(NON_STACKING_EVENT_EFFECTS.has(card.name)){const duplicate=(p.combatEffects||[]).some(e=>Number(e.sourceCardId)===Number(card.id)||e.label===card.name);if(duplicate){log(`${p.name}: дубль карты «${card.name}» — эффект уже активен и не суммируется.`);updateUI();showCard(card,`<b>Дубль карты «${card.name}».</b><br>Этот эффект уже есть у героя и не суммируется. Новая копия эффекта пропущена.`,[{label:'Продолжить',className:'success',fn:()=>continueExplore(card,state.exploration.deckKey)}]);return}const note=addNextBattleEventEffect(p,card);log(`${p.name}: «${card.name}» — ${note}`);updateUI();showCard(card,`<b>Эффект применён к герою.</b><br>${note}<br>Он будет виден в листе героя до начала следующего боя.`,[{label:'Продолжить',className:'success',fn:()=>continueExplore(card,state.exploration.deckKey)}]);return}
-    const prayer=/сними\s+Страх\s+или\s+Проклятие/i.test(eff);
-    if(prayer){
-      const removable=p.statuses.filter(s=>s==='Страх'||s==='Проклятие');
-      if(removable.length){
-        showCard(card,'Выбери негативный эффект, который нужно снять:',removable.map(s=>({label:`Снять: ${s}`,className:'success',fn:()=>{removeStatus(p,s);log(`${p.name} снимает эффект: <b>${s}</b>.`);continueExplore(card,state.exploration.deckKey)}})));
-      }else{
-        const hr=rollHealing(p,'D6');
-        closeModal();showRollPopup('Молитвенный камень · лечение',hr.total,`${hr.used} = <b>${hr.total}</b>`,'Восстановление ЗД',null,()=>{
-          const healed=heal(p,hr.total);log(`${p.name}: Страха и Проклятия нет — ${hr.used}=${hr.total}, восстановлено ${healed.restored} ЗД.`);
-          updateUI();showCard(card,`Страха и Проклятия нет. Восстановлено <b>${healed.restored} ЗД</b> (${hr.used}).`,[{label:'Продолжить',className:'success',fn:()=>continueExplore(card,state.exploration.deckKey)}]);
-        },'Продолжить');
-      }
-      return;
+    // v0.6.84: Prayer Stone always offers a choice BEFORE resolving an effect.
+    // Rendering uses a descriptive view card; the deck itself is not modified.
+    if(card.name==='Молитвенный камень'){
+      const displayCard={...card,fields:{...card.fields,'Эффект':'Выберите одно действие: снять Страх или Проклятие либо восстановить D6 ЗД.'}};
+      const result=message=>{
+        updateUI();
+        showCard(displayCard,message,[{label:'Продолжить',className:'success',fn:()=>continueExplore(card,state.exploration.deckKey)}]);
+      };
+      const choose=()=>{
+        const removable=(p.statuses||[]).filter(s=>s==='Страх'||s==='Проклятие');
+        const canHeal=p.currentHp<p.maxHp;
+        showCard(displayCard,'Выберите действие «Молитвенного камня»:',[
+          {label:'Снять негативный эффект',className:'danger',disabled:!removable.length,fn:()=>{
+            const effects=(p.statuses||[]).filter(s=>s==='Страх'||s==='Проклятие');
+            showCard(displayCard,'Какой негативный эффект снять?',effects.map(s=>({
+              label:`Снять: ${s}`,className:'danger',fn:()=>{
+                removeStatus(p,s);
+                log(`${p.name}: «Молитвенный камень» — снят эффект «${s}».`);
+                result(`Снят негативный эффект: <b>${escapeCombatText(s)}</b>.`);
+              }
+            })).concat([{label:'Назад',className:'secondary',fn:choose}]));
+          }},
+          {label:'Лечение · D6 ЗД',className:'success',disabled:!canHeal,fn:()=>{
+            if(p.currentHp>=p.maxHp)return choose();
+            const hr=rollHealing(p,'D6');
+            closeModal();
+            showRollPopup('Молитвенный камень · лечение',hr.total,`${hr.used} = <b>${hr.total}</b>`,'Восстановление ЗД',null,()=>{
+              const healed=heal(p,hr.total);
+              log(`${p.name}: «Молитвенный камень» — восстановлено ${healed.restored} ЗД (${hr.used}).`);
+              result(`Восстановлено <b>${healed.restored} ЗД</b> (${escapeCombatText(hr.used)}).`);
+            },'Продолжить');
+          }},
+          {label:'Закрыть',className:'secondary',fn:()=>continueExplore(card,state.exploration.deckKey)}
+        ]);
+      };
+      choose();return;
     }
     const choiceHealGold=eff.match(/восстанови (D\d+) ЗД или получи (\d+) золота/i);
     if(choiceHealGold){showCard(card,'Выбери эффект:',[
@@ -2880,12 +2922,11 @@
   function escapeCombatText(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
   function combatCardStageHtml(side,kind,id,name,c,backHtml,frontMetrics=''){
     const path=combatPortraitUrl(kind,id),ui=getCombatVisualUiState(c),back=side==='enemy'?ui.enemyBack:ui.heroBack;
-    const usedMarker=side==='hero'&&c.heroAbilityUsed?'<span class="visual-ability-used-marker" title="Способность героя использована">✓</span>':'';
-    return `<button type="button" class="visual-card-stage ${back?'is-back':''}" data-visual-toggle="${side}" aria-pressed="${back?'true':'false'}" title="${back?'Показать портрет':'Показать описание'}"><span class="visual-card-face visual-card-front"><div class="visual-combat-portrait${path?'':' portrait-not-found'}">${path?`<img src="${path}" alt="${escapeCombatText(name)}" loading="eager" decoding="async" onerror="this.style.display='none';this.parentElement.classList.add('portrait-not-found')">`:''}<div class="portrait-placeholder">Портрет готовится</div></div>${frontMetrics}${usedMarker}</span><span class="visual-card-face visual-card-back">${backHtml}</span></button>`;
+    return `<button type="button" class="visual-card-stage ${back?'is-back':''}" data-visual-toggle="${side}" aria-pressed="${back?'true':'false'}" title="${back?'Показать портрет':'Показать описание'}"><span class="visual-card-face visual-card-front"><div class="visual-combat-portrait${path?'':' portrait-not-found'}">${path?`<img src="${path}" alt="${escapeCombatText(name)}" loading="eager" decoding="async" onerror="this.style.display='none';this.parentElement.classList.add('portrait-not-found')">`:''}<div class="portrait-placeholder">Портрет готовится</div></div>${frontMetrics}</span><span class="visual-card-face visual-card-back">${backHtml}</span></button>`;
   }
   // v0.6.80: tabletop battle card inspired by the approved Codex mockups.
   // All actions below the cards and the combat state machine stay unchanged.
-  // v0.6.81 — live character statistics sit over the 1:1 portrait, not below it.
+  // v0.6.82 — live character statistics sit over the 1:1 portrait, not below it.
   // These values are read from the same game state as the old metrics; no combat rules change.
   function battleMetric(label,value,position,tone=''){
     return `<span class="battle-overlay-stat ${position} ${tone}" aria-label="${escapeCombatText(label)}: ${escapeCombatText(value)}"><span class="stat-label">${escapeCombatText(label)}</span><strong>${escapeCombatText(value)}</strong></span>`;
@@ -2935,7 +2976,8 @@
   function combatEnemyBackHtml(e,c){
     const effect=String(e.fields?.['Эффект']||'').trim()||'Без постоянного эффекта';
     const extra=combatEnemyEffectsHtml(c);
-    return `<div class="visual-card-back-wrap enemy-back battle-v080-back"><h4>Характеристики врага</h4>
+    const rank=String(e.fields?.['Ранг']||(e.id===281?'Босс':'—'));const type=String(e.fields?.['Тип']||'—');
+    return `<div class="visual-card-back-wrap enemy-back battle-v080-back"><h4>Характеристики врага</h4><div class="battle-enemy-taxonomy">${escapeCombatText(rank)} · ${escapeCombatText(type)}</div>
       ${battleBackRow('Здоровье',`${Math.max(0,c.enemyHp)}/${c.enemyMaxHp}`)}
       ${battleBackRow('ЗЩ',String(e.fields?.['ЗЩ']||'—'))}
       ${battleBackRow('АТК',String(e.fields?.['АТК']||'—'))}
@@ -2946,13 +2988,18 @@
   }
   function combatHeroVisualCard(p,c){
     const statuses=(p.statuses||[]).map(st=>`<span title="${escapeCombatText(st)}" aria-label="Эффект ${escapeCombatText(st)}" class="tabletop-status-dot">${st==='Горение'?'♨':st==='Страх'?'◉':st==='Проклятие'?'◆':'✦'}</span>`).join('');
-    return `<section class="combatant hero visual-combat-card tabletop-battle-card" style="--visual-accent:${p.color||'#4f85dc'}"><div class="tabletop-card-heading"><small>ГЕРОЙ · БОЕВОЙ ПЛАНШЕТ</small><h3>${escapeCombatText(p.name)}</h3></div>${combatCardStageHtml('hero','hero',p.id,p.name,c,combatHeroBackHtml(p,c),battleHeroMetrics(p))}${statuses?`<div class="tabletop-status-row">${statuses}</div>`:''}<div class="tabletop-card-note"><small>СПОСОБНОСТЬ · ${c.heroAbilityUsed?'ИСПОЛЬЗОВАНА':'ДОСТУПНА'}</small><strong>${escapeCombatText(HERO_COMBAT[p.id]?.ability||'—')}</strong><span>${escapeCombatText(HERO_COMBAT[p.id]?.effect||'')}</span></div><button type="button" class="tabletop-card-flip" data-visual-toggle="hero">⟳ <span>${getCombatVisualUiState(c).heroBack?'Лицевая сторона':'Полное описание'}</span></button></section>`;
+    const playerName=String(window.__RPG_HERO_PLAYER_NAMES__?.[p.id]||'').trim();
+    const heroHeading=playerName&&playerName!==p.name?`${p.name} — ${playerName}`:p.name;
+    // v0.6.83: the negative effects belong to the upper central area of the portrait,
+    // while a spent class ability is crossed out on its OWN panel (not on the image).
+    const portraitDetails=battleHeroMetrics(p)+(statuses?`<span class="tabletop-status-overlay" aria-label="Негативные эффекты">${statuses}</span>`:'');
+    return `<section class="combatant hero visual-combat-card tabletop-battle-card" style="--visual-accent:${p.color||'#4f85dc'}"><div class="tabletop-card-heading"><h3 title="${escapeCombatText(heroHeading)}">${escapeCombatText(heroHeading)}</h3></div>${combatCardStageHtml('hero','hero',p.id,p.name,c,combatHeroBackHtml(p,c),portraitDetails)}<div class="tabletop-card-note ${c.heroAbilityUsed?'ability-used':''}"><small>СПОСОБНОСТЬ · ${c.heroAbilityUsed?'ИСПОЛЬЗОВАНА':'ДОСТУПНА'}</small><strong>${escapeCombatText(HERO_COMBAT[p.id]?.ability||'—')}</strong><span>${escapeCombatText(HERO_COMBAT[p.id]?.effect||'')}</span></div></section>`;
   }
   function combatEnemyVisualCard(e,c){
     const isBoss=e.id===281,rank=String(e.fields?.['Ранг']||(isBoss?'Босс':'—')).toUpperCase();
     const type=String(e.fields?.['Тип']||'—').toUpperCase();
     const permanent=String(e.fields?.['Эффект']||'').trim();
-    return `<section class="combatant enemy visual-combat-card tabletop-battle-card ${enemyRankClass(e)}" aria-label="Враг ${escapeCombatText(e.name)}"><div class="tabletop-card-heading"><small>${escapeCombatText(isBoss?'БОСС':rank)} · ${escapeCombatText(type)}</small><h3>${escapeCombatText(e.name)}</h3></div>${combatCardStageHtml('enemy','enemy',e.id,e.name,c,combatEnemyBackHtml(e,c),battleEnemyMetrics(e,c))}${permanent?`<div class="tabletop-card-note enemy-note"><small>ПОСТОЯННЫЙ ЭФФЕКТ</small><strong>Особенность врага</strong><span>${escapeCombatText(permanent)}</span></div>`:''}<button type="button" class="tabletop-card-flip" data-visual-toggle="enemy">⟳ <span>${getCombatVisualUiState(c).enemyBack?'Лицевая сторона':'Полное описание'}</span></button></section>`;
+    return `<section class="combatant enemy visual-combat-card tabletop-battle-card ${enemyRankClass(e)}" aria-label="Враг ${escapeCombatText(e.name)}"><div class="tabletop-card-heading"><h3 title="${escapeCombatText(e.name)}">${escapeCombatText(e.name)}</h3></div>${combatCardStageHtml('enemy','enemy',e.id,e.name,c,combatEnemyBackHtml(e,c),battleEnemyMetrics(e,c))}${permanent?`<div class="tabletop-card-note enemy-note"><small>ПОСТОЯННЫЙ ЭФФЕКТ</small><strong>Особенность врага</strong><span>${escapeCombatText(permanent)}</span></div>`:''}</section>`;
   }
   function combatHeroRulesHtml(p){const h=HERO_COMBAT[p.id];if(!h)return '';const nat=h.natural20||'—',parts=nat.split(' — ');return `<div class="combat-hero-rules"><div><small>СПОСОБНОСТЬ ГЕРОЯ</small><b>${h.ability}</b><span>${h.effect}</span></div><div><small>НАТУРАЛЬНАЯ 20</small><b>${parts[0]||'Эффект героя'}</b><span>${parts.length>1?parts.slice(1).join(' — '):nat}</span></div></div>`}
   function combatActiveEffectsHtml(c,p){
@@ -2989,7 +3036,7 @@
       else if(c.phase==='mage_nat20')actions=`<button id="mageLightning" class="success">Молния · +D4 и Оглушение</button><button id="mageFire" class="danger">Огонь · +D4 и Горение</button>`;
       else if(['hero_roll','hero_damage','enemy_roll','enemy_damage'].includes(c.phase)&&decisions.length){
         const skipText=c.phase==='hero_roll'?'Не использовать бонус атаки':c.phase==='hero_damage'?'Без бонуса — нанести урон':c.phase==='enemy_roll'?'Не перебрасывать атаку врага':`Не использовать защиту · принять ${c.pendingEnemyDamage?.amount||0} урона`;
-        actions=`<div class="combat-decision-title">Доступно действие — использовать способность?</div>${decisions.map((x,i)=>`<button class="${/^(Каменная кровь|Железная стойкость)/.test(x.label)?'success':'secondary'} combat-choice" data-auto-choice="${i}">${x.label}</button>`).join('')}<button id="combatSkipChoice" class="${c.phase==='enemy_damage'?'danger':'success'}">${skipText}</button>`;
+        actions=`${decisions.map((x,i)=>`<button class="${/^(Каменная кровь|Железная стойкость)/.test(x.label)?'success':'secondary'} combat-choice" data-auto-choice="${i}">${x.label}</button>`).join('')}<button id="combatSkipChoice" class="${c.phase==='enemy_damage'?'danger':'success'}">${skipText}</button>`;
       }
       else if(c.phase==='enemy_miss'&&decisions.length)actions=`<div class="combat-decision-title">Доступна реакция на промах врага</div>${decisions.map((x,i)=>`<button class="${/^(Каменная кровь|Железная стойкость)/.test(x.label)?'success':'secondary'} combat-choice" data-auto-choice="${i}">${x.label}</button>`).join('')}<button id="combatContinueMiss" class="success">Не использовать</button>`;
       else if(c.phase==='post_damage')actions='';
@@ -3213,7 +3260,7 @@
       const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
-      state.version='0.6.81';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.81.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
+      state.version='0.6.84';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.84.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
     }catch(e){console.error(e);alert('Не удалось загрузить сохранение.')}
   }
   function cloneJson(v){return JSON.parse(JSON.stringify(v))}
@@ -3231,7 +3278,7 @@
     if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
-    state.version='0.6.81';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    state.version='0.6.84';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){

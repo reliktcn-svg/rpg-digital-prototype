@@ -1,0 +1,128 @@
+/* v0.6.78: corrections to battle layering, viewport centering, mobile scroll and location UI.
+   Loaded LAST to override legacy layout offsets without modifying game mechanics. */
+:root { --ui-overlay-dark:rgba(3,5,8,.88); }
+/* Entire viewport darkens under all popups, even when a sheet or tablet is open. */
+body.game-running #modal:not([hidden]),
+body.game-running #rollOverlay:not([hidden]),
+body.game-running #journalOverlay:not([hidden]) {
+  position:fixed!important;
+  inset:0!important;
+  left:0!important;right:0!important;top:0!important;bottom:0!important;
+  width:100vw!important;height:100dvh!important;
+  background:var(--ui-overlay-dark)!important;
+  display:grid!important;place-items:center!important;
+  align-items:center!important;justify-items:center!important;
+  padding:calc(14px + env(safe-area-inset-top,0px)) 12px calc(14px + env(safe-area-inset-bottom,0px))!important;
+  box-sizing:border-box!important;
+}
+body.game-running #modal:not([hidden]) { z-index:1150!important; }
+body.game-running #rollOverlay:not([hidden]) { z-index:2150!important; }
+body.game-running #journalOverlay:not([hidden]) { z-index:1300!important; }
+body.game-running #modal:not([hidden])>.modal-card,
+body.game-running #modal:not([hidden])>.modal-card:has(.combat-shell),
+body.game-running #modal:not([hidden])>.modal-card:has(.battle-fate) {
+  margin:auto!important;
+  max-height:calc(100dvh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))!important;
+  max-width:min(1040px,calc(100vw - 24px))!important;
+  overflow-y:auto;
+}
+body.game-running #rollOverlay:not([hidden])>.roll-popup-card,
+body.game-running #rollOverlay:not([hidden])>.roll-popup-card.battle-results-illustrated{
+  margin:auto!important;
+  max-height:calc(100dvh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))!important;
+}
+/* Square art + text areas need space, but modal should sit in the CENTER of viewport. */
+body.game-running #modal:has(.location-ui):not([hidden]){inset:0!important;place-items:center!important;z-index:1200!important;background:var(--ui-overlay-dark)!important}
+body.game-running #modal:has(.location-ui):not([hidden]) .modal-card{margin:auto!important}
+body.game-running #modal:has(.battle-fate):not([hidden])>.modal-card{margin:auto!important}
+body.game-running #modal:has(.combat-shell):not([hidden])>.modal-card{margin:auto!important}
+.arcana-battle-layer:not([hidden]){background:var(--ui-overlay-dark)!important;z-index:2100!important}
+/* The user can open a sheet ABOVE an ongoing combat, then close or change it. */
+body.tabletop-upgrade.game-running.sheet-over-combat .sheet-drawer:not([hidden]){z-index:1850!important;box-shadow:0 18px 80px #000e!important}
+body.tabletop-upgrade.game-running .sheet-drawer[hidden]{display:none!important}
+/* Desktop: remove duplicate heading/caption under location art; keep left square art. */
+.location-ui .loc-art-caption{display:none!important}
+.location-ui .loc-art-frame{max-height:none}
+.location-ui .loc-art{gap:0}
+.location-ui .loc-footer{margin-top:auto}
+/* Shrine: three genuine options, red cleanse and neutral exit. */
+.loc-shrine .loc-footer .loc-action-list .success{background:#286741!important;border-color:#58af74!important;color:#fff!important}
+.loc-shrine .loc-footer .loc-action-list .danger{background:#7c3339!important;border-color:#c16a72!important;color:#fff!important}
+.loc-shrine .loc-footer .loc-action-list .secondary{background:#5a4535!important;border-color:#af8b63!important;color:#fff!important}
+.loc-shrine .loc-footer .loc-action-list button:disabled{opacity:.28!important;pointer-events:none}
+/* Color of protagonist on defeat window, and rank of defeated-by enemy. */
+.battle-fate-defeat{--fate-edge:var(--result-hero-color,#ac70cb)}
+body.game-running .modal-card:has(.battle-fate-defeat){border-color:var(--fate-edge)!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--fate-edge) 46%,transparent),0 24px 76px #000e!important}
+.battle-fate-defeat .battle-fate-right h2{color:var(--result-hero-color,#fff)!important}
+.battle-fate-defeat .battle-fate-kicker{color:#ef6d6d!important}
+.battle-fate-defeat .battle-fate-art{border-color:var(--result-hero-color,#ac70cb)!important}
+.battle-fate-defeat .defeat-enemy-rank.rank-weak{color:#b5b5b5!important}
+.battle-fate-defeat .defeat-enemy-rank.rank-normal{color:#65ca88!important}
+.battle-fate-defeat .defeat-enemy-rank.rank-strong{color:#70aafb!important}
+.battle-fate-defeat .defeat-enemy-rank.rank-elite{color:#bc86ee!important}
+.battle-fate-defeat .defeat-enemy-rank.rank-boss{color:#fa6969!important}
+.battle-fate-defeat .defeat-enemy-rank:not([class*="rank-"]){color:#e7cadc!important}
+/* Victory remains its existing result callback, only an extra green heading. */
+.battle-victory-label{display:none}
+#rollOverlay.battle-results-illustrated .battle-victory-label{display:block;letter-spacing:.13em;font-weight:950;color:#64d894;font-size:14px;margin:0 3px 7px}
+/* Hero portraits in both solo setup and online-room selection. */
+.hero-option{display:grid;grid-template-columns:20px 68px minmax(0,1fr) 18px;gap:11px;min-height:100px;align-items:center}
+.hero-option .hero-choice-art{width:68px;height:80px;object-fit:cover;object-position:top;border:2px solid var(--hero-color,#86683d);border-radius:7px;background:#17202a}
+.hero-option:has(input:checked){border-color:var(--hero-color,#cba366);box-shadow:inset 0 0 0 1px var(--hero-color,#cba366)}
+.hero-choice-main{min-width:0}
+.net-hero{grid-template-columns:66px 1fr;grid-template-rows:auto auto;min-height:88px;align-content:center;column-gap:10px}
+.net-hero-art{width:66px;height:75px;object-fit:cover;object-position:top;border:2px solid var(--hc,#977b55);border-radius:7px;grid-row:1/3;grid-column:1;background:#172027}
+.net-hero b{grid-column:2;align-self:end}.net-hero small{grid-column:2;align-self:start}
+/* The top tabletop banner already owns the Journal button. */
+body.game-running #journalBtn{display:none!important}
+body.game-running .header-tools:has(#journalBtn){display:none!important}
+/* Defensive style for class survival buttons. */
+#combatHeroAbility.success:not(:disabled),.combat-choice.success:not(:disabled),.combat-reaction-buttons button.success:not(:disabled){background:#26764d!important;border-color:#58c28a!important;color:white!important}
+@media(max-width:900px),(pointer:coarse){
+  /* iPhone: the entire game document must scroll vertically, not clip under
+     Safari's bottom bar / Dynamic Island. Existing board zoom scrolls separately. */
+  html{height:auto!important;min-height:100%;overflow-x:hidden!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch}
+  body{height:auto!important;min-height:100dvh!important;overflow-x:hidden!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;padding-bottom:env(safe-area-inset-bottom,0px)}
+  body.tabletop-upgrade.game-running .turn-order-banner{
+    height:auto!important;min-height:calc(79px + env(safe-area-inset-top,0px))!important;
+    padding-top:calc(8px + env(safe-area-inset-top,0px))!important;
+    overflow-x:hidden!important;overflow-y:visible!important;
+  }
+  body.tabletop-upgrade.game-running .layout{
+    position:relative!important;height:auto!important;min-height:0!important;
+    overflow:visible!important;
+    padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))!important;
+  }
+  body.tabletop-upgrade.game-running .side-panel{
+    position:relative!important;bottom:auto!important;top:auto!important;left:auto!important;right:auto!important;
+    height:auto!important;max-height:none!important;overflow:visible!important;
+  }
+  body.tabletop-upgrade.game-running .board-panel{position:relative!important;flex:none!important}
+  /* Open sheet stays inside the viewport; independent scrolling. */
+  body.tabletop-upgrade.game-running .sheet-drawer:not([hidden]){position:fixed!important;top:calc(5px + env(safe-area-inset-top,0px))!important;bottom:calc(6px + env(safe-area-inset-bottom,0px))!important;max-height:calc(100dvh - 11px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))!important;overflow-y:auto!important}
+  /* Same vertical presentation at 9:16 and 9:21, allowing content scroll. */
+  body.game-running #modal:not([hidden]),body.game-running #rollOverlay:not([hidden]){padding:calc(9px + env(safe-area-inset-top,0px)) 7px calc(10px + env(safe-area-inset-bottom,0px))!important}
+  body.game-running #modal:has(.location-ui)>.modal-card{max-height:calc(100dvh - 20px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))!important}
+  .location-ui .loc-art-frame{max-height:none!important}
+  /* Lobby and character picker: scroll content if phone is short. */
+  .online-lobby{align-items:flex-start!important;justify-content:center!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;padding-top:calc(18px + env(safe-area-inset-top,0px))!important;padding-bottom:calc(48px + env(safe-area-inset-bottom,0px))!important}
+  .online-lobby-card{margin:auto 0;max-height:none!important;overflow:visible!important}
+  body:not(.game-running) .layout{height:auto!important;min-height:100dvh!important;overflow:visible!important;padding-bottom:calc(70px + env(safe-area-inset-bottom,0px))!important}
+  #setupSection{overflow:visible;max-height:none}
+  .net-hero-picker{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .net-hero{grid-template-columns:45px minmax(0,1fr);padding:6px;min-height:70px;column-gap:5px}
+  .net-hero-art{width:45px;height:56px}
+  .net-hero b{font-size:12px}.net-hero small{font-size:10px;overflow-wrap:anywhere}
+  .hero-option{grid-template-columns:18px 58px minmax(0,1fr) 12px;padding:6px;gap:7px}
+  .hero-option .hero-choice-art{width:58px;height:68px}
+}
+/* PC: status text belongs only on the right, never duplicated beneath the square art. */
+.location-ui .loc-art .loc-mobile-status{display:none!important}
+@media(min-width:901px) and (pointer:fine){
+  body.game-running #modal:has(.location-ui) .modal-card{
+    height:min(540px,calc(100dvh - 32px))!important;
+  }
+}
+@media(max-width:900px),(pointer:coarse){
+  .location-ui .loc-art .loc-mobile-status{display:flex!important}
+}
