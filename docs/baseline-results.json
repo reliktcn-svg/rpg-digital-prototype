@@ -1,0 +1,106 @@
+{
+  "finished": true,
+  "results": [
+    {
+      "name": "Start: five heroes, unique initiative, original stats",
+      "pass": true
+    },
+    {
+      "name": "Start: minimum two heroes",
+      "pass": true
+    },
+    {
+      "name": "Movement D6 and manual neighbouring route",
+      "pass": true
+    },
+    {
+      "name": "Map image and hit grid stay aligned after zoom",
+      "pass": true
+    },
+    {
+      "name": "Hero sheet opens, inventory accessible, closes on desktop",
+      "pass": false,
+      "error": "Assertion failed"
+    },
+    {
+      "name": "Unresolved loot: viewing and flipping do not claim the item",
+      "pass": true
+    },
+    {
+      "name": "Equip and unequip through real UI",
+      "pass": true
+    },
+    {
+      "name": "Backpack capacities: normal 10, hard 5, artifact +5",
+      "pass": true
+    },
+    {
+      "name": "Item lock prevents discard",
+      "pass": true
+    },
+    {
+      "name": "Combat reveal and card flips preserve combat state",
+      "pass": true
+    },
+    {
+      "name": "Hero attack: natural 1 misses",
+      "pass": true
+    },
+    {
+      "name": "Hero attack: natural 20 hits and damage applies",
+      "pass": true
+    },
+    {
+      "name": "Enemy attack and defensive class ability, no repeat",
+      "pass": true
+    },
+    {
+      "name": "Enemy damage and status tick paths",
+      "pass": true
+    },
+    {
+      "name": "Loot flip, separate selection, confirm, return rejected cards",
+      "pass": true
+    },
+    {
+      "name": "Boss uses original 40 HP and victory path",
+      "pass": true
+    },
+    {
+      "name": "Defeat invokes original death handling",
+      "pass": true
+    },
+    {
+      "name": "Escape succeeds with natural 20",
+      "pass": true
+    },
+    {
+      "name": "Tavern shows hiring and original actions",
+      "pass": true
+    },
+    {
+      "name": "Shrine / merchant location actions remain reachable",
+      "pass": true
+    },
+    {
+      "name": "Portal destinations are mapped to the original grid",
+      "pass": true
+    },
+    {
+      "name": "Dungeon natural 20 exits and preserves bonus-turn path",
+      "pass": true
+    },
+    {
+      "name": "Local save and v0.6.70-compatible load retain inventory and gold",
+      "pass": true
+    },
+    {
+      "name": "Serialized online state excludes camera and inspector",
+      "pass": true
+    },
+    {
+      "name": "Journal and settings controls remain present",
+      "pass": true
+    }
+  ]
+}

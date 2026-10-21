@@ -1,0 +1,169 @@
+{
+  "finished": true,
+  "results": [
+    {
+      "name": "Start: five heroes, unique initiative, original stats",
+      "pass": true
+    },
+    {
+      "name": "Start: minimum two heroes",
+      "pass": true
+    },
+    {
+      "name": "Movement D6 and manual neighbouring route",
+      "pass": true
+    },
+    {
+      "name": "Map image and hit grid stay aligned after zoom",
+      "pass": true
+    },
+    {
+      "name": "Hero sheet opens, inventory accessible, closes on desktop",
+      "pass": true
+    },
+    {
+      "name": "Unresolved loot: viewing and flipping do not claim the item",
+      "pass": true
+    },
+    {
+      "name": "Equip and unequip through real UI",
+      "pass": true
+    },
+    {
+      "name": "Backpack capacities: normal 10, hard 5, artifact +5",
+      "pass": true
+    },
+    {
+      "name": "Item lock prevents discard",
+      "pass": true
+    },
+    {
+      "name": "Combat reveal and card flips preserve combat state",
+      "pass": true
+    },
+    {
+      "name": "Hero attack: natural 1 misses",
+      "pass": true
+    },
+    {
+      "name": "Hero attack: natural 20 hits and damage applies",
+      "pass": true
+    },
+    {
+      "name": "Enemy attack and defensive class ability, no repeat",
+      "pass": true
+    },
+    {
+      "name": "Enemy damage and status tick paths",
+      "pass": true
+    },
+    {
+      "name": "Loot flip, separate selection, confirm, return rejected cards",
+      "pass": true
+    },
+    {
+      "name": "Boss uses original 40 HP and victory path",
+      "pass": true
+    },
+    {
+      "name": "Defeat invokes original death handling",
+      "pass": true
+    },
+    {
+      "name": "Escape succeeds with natural 20",
+      "pass": true
+    },
+    {
+      "name": "Tavern shows hiring and original actions",
+      "pass": true
+    },
+    {
+      "name": "Shrine / merchant location actions remain reachable",
+      "pass": true
+    },
+    {
+      "name": "Portal destinations are mapped to the original grid",
+      "pass": true
+    },
+    {
+      "name": "Dungeon natural 20 exits and preserves bonus-turn path",
+      "pass": true
+    },
+    {
+      "name": "Local save and v0.6.70-compatible load retain inventory and gold",
+      "pass": true
+    },
+    {
+      "name": "Serialized online state excludes camera and inspector",
+      "pass": true
+    },
+    {
+      "name": "Journal and settings controls remain present",
+      "pass": true
+    },
+    {
+      "name": "Healing potion applies effect and consumes exactly one item",
+      "pass": true
+    },
+    {
+      "name": "Unlocked backpack item can be discarded",
+      "pass": true
+    },
+    {
+      "name": "Merchant purchase and sale through live controls",
+      "pass": true
+    },
+    {
+      "name": "Load save produced by untouched v0.6.70",
+      "pass": true
+    },
+    {
+      "name": "All 88 supplied artwork mappings load and preserve card IDs",
+      "pass": true
+    },
+    {
+      "name": "Illustrated event preserves choice and original gold reward",
+      "pass": true
+    },
+    {
+      "name": "Illustrated trap retains preparation and check controls",
+      "pass": true
+    },
+    {
+      "name": "Illustrated dark trial retains stat choice and natural 20 buff",
+      "pass": true
+    },
+    {
+      "name": "Used item resets on shrine visit under original rule",
+      "pass": true
+    },
+    {
+      "name": "Eight location illustrations decode and all 15 location cards have art",
+      "pass": true
+    },
+    {
+      "name": "Normal shrine keeps choice and selected status removal",
+      "pass": true
+    },
+    {
+      "name": "Shrine failure uses cursed art and original D6 healing",
+      "pass": true
+    },
+    {
+      "name": "Shrine natural 20 uses normal art and restores all",
+      "pass": true
+    },
+    {
+      "name": "Shrine natural 1 uses cursed art and original curse",
+      "pass": true
+    },
+    {
+      "name": "Merchant failed/successful checks select art without changing prices",
+      "pass": true
+    },
+    {
+      "name": "Portal artwork inspection preserves chosen exits and game state",
+      "pass": true
+    }
+  ]
+}

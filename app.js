@@ -183,7 +183,7 @@
     return o;
   }
   function freshState(){return {
-    version:'0.6.76', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
+    version:'0.7.0', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
     decks:initialDecks(), cleaned:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, tradeDeal:null, dungeonEntryNotice:null, territoryBuiltNotice:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:3, sharedDifficulty:null, journal:[]
   };}
   let state=freshState();
@@ -547,8 +547,8 @@
     state=freshState();dismissedGameOverKey=null;visibleGameOverKey=null;state.started=true;const sharedHard=options?.sharedDifficulty==='hard'||options?.hardMode===true;state.sharedDifficulty=Array.isArray(forcedIds)?(sharedHard?'hard':'normal'):null;
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,potions:[null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:sharedHard,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats(),territoryBuildSeq:{kingdom:0,cursed:0}}});
     generatePermanentLocations({preserve:false});
-    state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(isMobileViewport()){els.sheetDrawer.hidden=true}else openCharacterSheet('overview',null,currentPlayer().id);setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
-    log(`<b>Партия v0.6.76 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
+    state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;els.sheetDrawer.hidden=true;setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
+    log(`<b>Партия v0.7.0 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
     state.order.forEach(id=>{const p=getPlayer(id);log(`Инициатива ${p.name}: D20 = <b>${p.initiative}</b>.`,p.id)});updateUI();renderBoard();
   }
 
@@ -862,79 +862,10 @@
   function deckKeyForCard(card){if(card?.id===281||card?.category==='Босс')return'boss';if(card.deck==='Исследования внешних регионов')return'exploreOuter';if(card.deck==='Исследования Сердца тьмы')return'exploreHeart';if(card.deck==='Тайники внешних регионов')return'lootOuter';return'lootHeart'}
   function cleanCardFieldValue(v){return String(v??'').split(/\n={5,}/)[0].trim()}
   function displayCardFieldEntries(card){return Object.entries(card?.fields||{}).filter(([k])=>!['НОМЕР','Название','Колода','Категория','Номер в своей колоде','Регион','КОЛОДА'].includes(k)&&!k.startsWith('---')&&!/^=+$/.test(k)).map(([k,v])=>[k,cleanCardFieldValue(v)]).filter(([,v])=>v)}
-  // v0.6.74: horizontal illustrated exploration cards including traps. Display-only: card actions
-  // still use the original callbacks; no card rules or deck logic are changed.
-  const STORY_CATEGORIES=new Set(['Ловушка','Событие','Темница','Элитная опасность','Тёмное испытание','Проклятый шаг','Золото и сокровища']);
-  const STORY_ART_IDS=new Set([56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,93,94,95,96,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140]);
-  function storyImageUrl(card){
-    const id=Number(card?.id);
-    if(STORY_ART_IDS.has(id))return `assets/story/${id}.webp`;
-    if(card?.category==='Золото и сокровища'&&INVENTORY_IMAGE_IDS.has(id))return `assets/items/${id}.webp`;
-    return '';
-  }
-  function storyTone(card){
-    if(card?.category==='Ловушка')return 'trap';
-    if(card?.category==='Событие')return 'event';
-    if(card?.category==='Золото и сокровища')return 'treasure';
-    return 'special';
-  }
-  // v0.6.74: visual shell for permanent locations; actions use the existing game handlers.
-  function locationWindow(kind,p,content,footer,{cursed=false,title=null}={}){
-    const names={merchant:'Торговец',tavern:'Таверна',shrine:'Святилище'};
-    const actual=names[kind]||kind,shade=cursed?'cursed':'kingdom';
-    const region=MAP.hexes?.[p?.hex]?.region;
-    const regionLabel=region==='cursed'?'Проклятые территории':region==='heart_of_darkness'?'Сердце тьмы':'Территории королевства';
-    const escaped=v=>escapeCombatText(v);
-    const img=`assets/locations/${shade}-${kind}.webp`;
-    // v0.6.75: mirror the live status labels beside the square location artwork
-    // on narrow screens. The canonical labels inside loc-scroll remain for PC.
-    const statusMatch=content.match(/<div class="loc-pills">([\s\S]*?)<\/div>/);
-    const mobileStatus=statusMatch?`<div class="loc-mobile-status loc-pills" aria-label="Сведения о герое">${statusMatch[1]}</div>`:'';
-    return `<div class="location-ui loc-${kind} ${cursed?'loc-cursed':''}">
-      <div class="loc-art"><div class="loc-art-frame"><img src="${img}" alt="${escaped(actual)}" onerror="this.hidden=true"></div>
-        ${mobileStatus}
-        <div class="loc-art-caption"><strong>${escaped(actual)}</strong><small>Постоянная локация · ${regionLabel}</small></div>
-      </div>
-      <div class="loc-panel"><div class="loc-head"><div><div class="loc-kicker">ПОСТОЯННАЯ ЛОКАЦИЯ${cursed?' · ПРОКЛЯТАЯ':''}</div><h2>${escaped(title||actual)}</h2></div><button type="button" class="loc-close" title="Закрыть" aria-label="Закрыть">×</button></div>
-        <div class="loc-scroll" tabindex="0">${content}</div><div class="loc-footer">${footer}</div>
-      </div></div>`;
-  }
-  function locationStatusPills(parts){return `<div class="loc-pills">${parts.map(([label,value])=>`<span>${label}: <b>${escapeCombatText(value)}</b></span>`).join('')}</div>`}
-  function locationActivateClose(kind){
-    const b=els.modalContent.querySelector('.loc-close');if(!b)return;
-    if(kind==='merchant')b.onclick=()=>document.getElementById('merchantDone')?.click();
-    else if(kind==='tavern')b.onclick=()=>document.getElementById('tavernClose')?.click();
-    else {b.disabled=true;b.title='Выберите действие или нажмите «Готово»';}
-  }
   function showCard(card,extra='',actions=[]){
     modalOffturnOwnerId=null;modalCloseAction=null;
-    const escapeText=v=>escapeCombatText(v);
-    const entries=displayCardFieldEntries(card);
-    const fields=entries.map(([k,v])=>`<div class="card-field"><b>${escapeText(k)}:</b> ${escapeText(v).replace(/\n/g,'<br>')}</div>`).join('');
-    if(card?.locationVisualKind==='shrine'){
-      const meta=card.locationVisualInfo||{},p=getPlayer(meta.playerId)||currentPlayer();
-      const choice=actions.some(a=>/Восстановить D8|Снять негативный эффект/.test(a.label));
-      const oneClean=actions.some(a=>/^Снять:/.test(a.label));
-      const statusLine=(p?.statuses||[]).length?`<div class="loc-section-title">Негативные эффекты героя</div><div class="loc-status-list">${p.statuses.map(s=>`<span>${escapeText(s)}</span>`).join('')}</div>`:'';
-      const detail=choice?`<div class="loc-section-title">Выберите один эффект святилища</div>
-        <div class="loc-option"><span class="loc-symbol">✚</span><div><b>Восстановление здоровья</b><small>Восстановить D8 ЗД. Бросок — после выбора.</small></div></div>
-        <div class="loc-option"><span class="loc-symbol">✧</span><div><b>Очищение</b><small>Снять один выбранный негативный эффект.</small></div></div>${statusLine}`:
-        oneClean?`<div class="loc-section-title">Выберите один негативный эффект</div>${statusLine}<div class="loc-option"><span class="loc-symbol">✧</span><div>${extra}</div></div>`:
-        `<div class="loc-section-title">Результат посещения</div><div class="loc-option"><span class="loc-symbol">✦</span><div>${extra||'Эффект Святилища применён.'}</div></div>${statusLine}`;
-      const summary=locationStatusPills([['Герой',p?.name||'—'],['ЗД',`${p?.currentHp??'—'}/${p?.maxHp??'—'}`],['Негативных эффектов',String(p?.statuses?.length||0)]]);
-      const content=summary+detail+`<div class="loc-note">Эффекты предметов, восстанавливаемые в Святилище, перезаряжаются по существующим правилам.</div>`;
-      els.modalContent.innerHTML=locationWindow('shrine',p,content,'<div id="modalActions" class="loc-action-list"></div>',{cursed:!!meta.cursed});
-      locationActivateClose('shrine');
-    }else if(STORY_CATEGORIES.has(card?.category)){
-      const tone=storyTone(card),src=storyImageUrl(card),number=Number(card.id)||0;
-      const art=src?`<img src="${src}" alt="${escapeText(card.name)}" loading="eager" decoding="async" onerror="this.hidden=true;this.parentElement.classList.add('story-art-missing')">`:'';
-      els.modalContent.innerHTML=`<div class="story-card-shell story-${tone}"><div class="story-card-art ${src?'':'story-art-missing'}">${art}<div class="story-art-placeholder"><span>Иллюстрация для карты №${number} пока не загружена</span></div><div class="story-number">КАРТА №${String(number).padStart(3,'0')}</div></div><div class="story-card-info"><div class="story-card-scroller"><div class="story-kicker">${escapeText(card.category)} · ${escapeText(card.region||card.fields?.['Регион']||'')}</div><h2 class="story-title">${escapeText(card.name)}</h2><div class="story-divider"></div><div class="story-field-list">${fields}</div>${extra?`<div class="story-extra">${extra}</div>`:''}</div><div class="story-card-actions modal-actions" id="modalActions"></div></div></div>`;
-    }else{
-      els.modalContent.innerHTML=`<div class="card-kicker">${escapeText(card.category)} · №${escapeText(card.id)} · ${escapeText(card.deck)}</div><div class="card-title">${escapeText(card.name)}</div><div class="card-fields">${fields}</div>${extra?`<div class="card-field" style="margin-top:10px">${extra}</div>`:''}<div class="modal-actions" id="modalActions"></div>`;
-    }
-    const box=els.modalContent.querySelector('#modalActions');
-    actions.forEach(a=>{const b=document.createElement('button');b.className=a.className||'primary';b.textContent=a.label;b.onclick=()=>a.fn();box.appendChild(b)});
-    els.modal.hidden=false;
+    els.modalContent.innerHTML=TabletopUI.encounter(card,displayCardFieldEntries(card),extra,getPlayer(card.visualPlayerId)||currentPlayer())||`<div class="table-encounter"><div class="table-encounter-card">${TabletopUI.card(card,displayCardFieldEntries(card))}</div><div class="table-encounter-actions"><div class="card-kicker">${escapeCombatText(card.category||'Приключение')}</div><h2>${escapeCombatText(card.name)}</h2>${extra?`<div class="table-encounter-note">${extra}</div>`:''}<div class="modal-actions" id="modalActions"></div></div></div>`;
+    const box=els.modalContent.querySelector('#modalActions');actions.forEach(a=>{const b=document.createElement('button');b.className=a.className||'primary';b.textContent=a.label;b.onclick=()=>a.fn();box.appendChild(b)});if(state.started){const inspect=document.createElement('button');inspect.className='ghost';inspect.textContent='Планшет героя';inspect.onclick=()=>openCharacterSheet('inventory');box.appendChild(inspect)}els.modal.hidden=false;TabletopUI.deal(els.modalContent.querySelector('.table-encounter-card, .table-story-art'),deckKeyForCard(card));
   }
   function closeModal(){if(arcanaBattleLayer&&!arcanaBattleLayer.hidden)stopArcanaBattlePresentation();delete els.modal.dataset.lootDraft;els.modal.hidden=true;els.modal.classList.remove('post-combat-prompt');els.modalContent.innerHTML='';els.modalClose.style.display='';modalOffturnOwnerId=null;modalCloseAction=null;visibleGameOverKey=null}
   function requestModalClose(){if(modalCloseAction){const fn=modalCloseAction;modalCloseAction=null;fn();return}if(state.gameOver&&els.modalContent.querySelector('.game-over-stats')){dismissedGameOverKey=currentGameOverKey();closeModal();return}if(!state.turnLocked)closeModal()}
@@ -961,17 +892,12 @@
     return true;
   }
 
-  function showRollPopup(title,main,math='',detail='',natural=null,onClose=null,buttonLabel='Продолжить',autoContinue=false,visualHeroId=null){
-    rollPopupQueue.push({title,main:String(main),math,detail,natural,onClose,buttonLabel,autoContinue,visualHeroId});if(els.rollOverlay.hidden)showNextRollPopup();
+  function showRollPopup(title,main,math='',detail='',natural=null,onClose=null,buttonLabel='Продолжить',autoContinue=false){
+    rollPopupQueue.push({title,main:String(main),math,detail,natural,onClose,buttonLabel,autoContinue});if(els.rollOverlay.hidden)showNextRollPopup();
   }
   function showNextRollPopup(){
-    const x=rollPopupQueue.shift();if(!x){document.body.classList.remove('arcana-info-presenting');els.rollOverlay.hidden=true;els.rollOverlay.classList.remove('battle-results-popup','battle-results-illustrated');if(infoDiceHost)infoDiceHost.hidden=true;els.rollOverlay.querySelector('.roll-popup-card')?.classList.remove('arcana-info-active','arcana-info-rolling');rollPopupAfterClose=null;els.rollPopupClose.textContent='Продолжить';return}
+    const x=rollPopupQueue.shift();if(!x){document.body.classList.remove('arcana-info-presenting');els.rollOverlay.hidden=true;els.rollOverlay.classList.remove('battle-results-popup');if(infoDiceHost)infoDiceHost.hidden=true;els.rollOverlay.querySelector('.roll-popup-card')?.classList.remove('arcana-info-active','arcana-info-rolling');rollPopupAfterClose=null;els.rollPopupClose.textContent='Продолжить';return}
     els.rollOverlay.classList.toggle('battle-results-popup',x.title==='Результаты боя');
-    const visualHeroId=BATTLE_RESULT_HERO_IDS.has(x.visualHeroId)?x.visualHeroId:null;
-    const outcomeArt=els.rollOverlay.querySelector('#rollPopupOutcomeArt');
-    const outcomeImg=els.rollOverlay.querySelector('#rollPopupOutcomeImage');
-    els.rollOverlay.classList.toggle('battle-results-illustrated',x.title==='Результаты боя'&&!!visualHeroId);
-    if(outcomeArt&&outcomeImg){outcomeArt.hidden=!visualHeroId;if(visualHeroId){outcomeImg.src=`assets/results/${visualHeroId}-victory.webp`;outcomeImg.alt='Иллюстрация победы героя';}else outcomeImg.removeAttribute('src');}
     els.rollPopupTitle.textContent=x.title||'Бросок';
     els.rollPopupMain.textContent=x.main;
     els.rollPopupMain.className='roll-popup-main'+(x.natural===20?' natural20':x.natural===1?' natural1':'');
@@ -1057,7 +983,7 @@
   function resolveTrap(card){
     const check=card.fields['Проверка']||'',key=statKeyFromText(check),dc=Number((check.match(/(\d+)\+/)||[])[1]||13);
     const label=key?statName(key):'характеристика';
-    const prep=playerHardMode(currentPlayer())?'':`<div class="trap-prep-note"><b>Подготовка к ловушке.</b><br>До броска можно открыть вкладку «ИНВЕНТАРЬ» справа и изменить экипировку. Когда будете готовы, нажмите «Проверка».</div>`;
+    const prep=playerHardMode(currentPlayer())?'':`<div class="trap-prep-note"><b>Подготовка к ловушке.</b><br>До броска можно нажать «Планшет героя» и изменить экипировку. Когда будете готовы, нажмите «Проверка».</div>`;
     showCard(card,prep,[
       {label:`Проверка · ${label} ${dc}+`,className:'success',fn:()=>performTrapCheck(card)}
     ]);
@@ -1295,20 +1221,10 @@
     ensurePlayerModel(p);if(heroImmuneStatus(p,s)){log(`${p.name}: эффект «${s}» проигнорирован экипировкой.`);return}if(!p.statuses.includes(s)){p.statuses.push(s);log(`${p.name} получает эффект: <b>${s}</b>.`)}
     const timed=['Яд','Горение','Кровотечение'];if(timed.includes(s)){p.statusTimers[s]=duration??3;log(`${p.name}: «${s}» — осталось ${p.statusTimers[s]} х.`)}
   }
-  // v0.6.76: only change the presentation of battle outcomes; no impact on battle rules.
-  const BATTLE_RESULT_HERO_IDS=new Set(['warrior','dwarf','mage','archer','rogue']);
-  function battleOutcomeImage(hero,type){return BATTLE_RESULT_HERO_IDS.has(hero?.id)&&['victory','defeat'].includes(type)?`assets/results/${hero.id}-${type}.webp`:''}
-  function battleFateArt(hero,type){const src=battleOutcomeImage(hero,type);return `<div class="battle-fate-art"><img src="${src}" alt="${escapeCombatText(hero?.name||'Герой')} · ${type==='victory'?'Победа':'Поражение'}" onerror="this.hidden=true" /></div>`;}
   function showDefeatPopup(p,enemy,loss,turnEnded=false){
     rollPopupQueue.length=0;rollPopupAfterClose=null;if(els.rollOverlay)els.rollOverlay.hidden=true;
-    const source=enemy?`<b>${escapeCombatText(p.name)}</b> пал от <b>${escapeCombatText(ENEMY_GENITIVE[enemy.id]||enemy.name)}</b>.`:`<b>${escapeCombatText(p.name)}</b> пал.`;
-    modalOffturnOwnerId=p.id;modalCloseAction=null;
-    els.modalContent.innerHTML=`<div class="battle-fate battle-fate-defeat">${battleFateArt(p,'defeat')}
-      <div class="battle-fate-right"><div class="battle-fate-scroll"><div class="battle-fate-kicker">ПОРАЖЕНИЕ</div><h2>Герой пал</h2>
-        <div class="battle-fate-info">${source}</div><div class="battle-fate-info battle-fate-gold"><span aria-hidden="true">🪙</span> Потеряно золота: <b>${loss}</b></div>
-        <div class="battle-fate-note">Герой возвращается в <b>Лагерь</b>.${turnEnded?' Ход уже завершён автоматически.':''}</div></div>
-        <div class="battle-fate-footer"><button id="defeatContinue" type="button" class="success">Далее</button></div></div></div>`;
-    els.modal.hidden=false;document.getElementById('defeatContinue').onclick=closeModal;
+    const source=enemy?`<b>${p.name}</b> пал от <b>${ENEMY_GENITIVE[enemy.id]||enemy.name}</b>.`:`<b>${p.name}</b> пал.`;
+    modalOffturnOwnerId=p.id;modalCloseAction=null;els.modalContent.innerHTML=`<div class="card-kicker">ПОРАЖЕНИЕ ГЕРОЯ</div><div class="card-title">${p.name} пал</div><div class="defeat-message">${source}<br>Он возвращается в <b>Лагерь</b> и теряет <b>${loss} золота</b>.${turnEnded?'<br><br><b>Ход уже завершён автоматически.</b>':''}</div><div class="modal-actions"><button id="defeatContinue" class="danger">Продолжить</button></div>`;els.modal.hidden=false;document.getElementById('defeatContinue').onclick=closeModal;
   }
   function gameOverStats(p){
     ensurePlayerStats(p);const e=p.stats.enemies||{},territories=Object.values(state.territories||{}).filter(t=>t.owner===p.id).length,areas=(state.areas||[]).filter(a=>a.owner===p.id).length;
@@ -1391,7 +1307,7 @@
 
   function visitShrine(p,result,onDone){
     resetItemUsage(p,'shrine');
-    const fake={locationVisualKind:'shrine',locationVisualInfo:{playerId:p.id,cursed:MAP.hexes?.[p.hex]?.region==='cursed'},id:'—',name:result.title||'Святилище',category:'Постоянная локация',deck:'Поле',fields:{
+    const fake={id:'—',visualMode:result.mode,visualNatural:result.natural,visualPlayerId:p.id,name:result.title||'Святилище',category:'Постоянная локация',deck:'Поле',fields:{
       'Обычный':'выбери одно: восстанови D8 ЗД ИЛИ сними 1 негативный эффект.',
       'Проклятый':'восстанови D6 ЗД.',
       'Натуральная 20':'полностью восстанови ЗД; сними все негативные эффекты.',
@@ -1443,22 +1359,11 @@
     const canHire=!!merc&&p.gold>=price&&!oldLocked,canHeal=!session.healed&&p.gold>=4&&p.currentHp<p.maxHp;
     const hireWhy=!merc?'В таверне сейчас нет свободного наёмника.':oldLocked?'Текущий наёмник заблокирован для сброса. Сначала снимите блокировку.':p.gold<price?`Нужно ${price} золота.`:'';
     const healWhy=session.healed?'Лечение уже использовано в это посещение.':p.gold<4?'Нужно 4 золота.':p.currentHp>=p.maxHp?'ЗД уже полные.':'';
-    const locCursed=MAP.hexes?.[hex]?.region==='cursed';
-    const mercHtml=merc?`<div class="loc-section-title">В таверне сейчас — ${escapeCombatText(merc.name)}</div>
-      <div class="loc-merc"><div class="loc-merc-art">${itemImageHtml(merc)}</div><div class="loc-merc-text"><strong>${escapeCombatText(merc.name)} <small>№${merc.id}</small></strong>
-      <b class="loc-price">Найм: ${price} золота</b><span>${escapeCombatText(merc.fields?.['Эффект']||'—')}</span></div></div>`:
-      '<div class="loc-empty">Сейчас в Таверне нет свободного наёмника. Новый появится, когда все герои покинут эту Таверну.</div>';
-    const currentHtml=current?`Ваш спутник: <b>${escapeCombatText(current.name)}</b>${oldLocked?' · 🔒 заблокирован':''}`:'Ваш спутник: <b>нет</b>';
-    const content=locationStatusPills([['Герой',p.name],['ЗД',`${p.currentHp}/${p.maxHp}`],['Золото',String(p.gold)]])+
-      mercHtml+`<div class="loc-current">${currentHtml}${current?' · При наличии спутника доступна замена':''}</div>
-      <div class="loc-heal"><b>✚ &nbsp; Лечение — 4 золота · D6 ЗД</b><small>Один раз за посещение · при неполных ЗД</small></div>
-      ${session.healSummary?`<div class="loc-note">${session.healSummary}</div>`:''}
-      <div class="loc-note">Новый наёмник появится после освобождения Таверны. Повторное лечение — после выхода и нового посещения.</div>`;
-    const footer=`<button id="tavernHire" class="loc-hire" ${canHire?'':'disabled'} title="${escapeCombatText(hireWhy)}">${current?'Заменить наёмника':'Нанять'}${merc?` · ${price} зол.`:''}</button>
-      <button id="tavernHeal" class="loc-healbtn" ${canHeal?'':'disabled'} title="${escapeCombatText(healWhy)}">Лечиться · 4</button>
-      <button id="tavernClose" class="loc-done">Закрыть</button>`;
-    els.modalContent.innerHTML=locationWindow('tavern',p,content,footer,{cursed:locCursed});
-    els.modal.hidden=false;locationActivateClose('tavern');
+    const mercHtml=merc?`<div class="tavern-merc-card table-tavern-card">${TabletopUI.card(merc,displayCardFieldEntries(merc))}<div class="card-field"><b>Цена найма:</b> ${price} золота</div></div>`:`<div class="empty-box">Сейчас в Таверне нет свободного наёмника. Новый появится, когда все герои покинут эту Таверну.</div>`;
+
+    const currentHtml=current?`Ваш спутник: <b>${current.name}</b>${oldLocked?' · 🔒 заблокирован':''}`:'Ваш спутник: <b>нет</b>';
+    els.modalContent.innerHTML=TabletopUI.locationFrame('Таверна','normal',`<div class="card-kicker">Постоянная локация · Таверна</div><div class="card-title">${loc?.name||'Таверна'}</div>${mercHtml}<div class="card-field tavern-current-merc">${currentHtml}</div>${session.healSummary?`<div class="notice compact-notice">${session.healSummary}</div>`:''}<div class="modal-actions tavern-actions"><button id="tavernHire" class="success" ${canHire?'':'disabled'} title="${hireWhy}">${current?'Нанять вместо текущего':'Нанять'}${merc?` — ${price} зол.`:''}</button><button id="tavernHeal" class="primary" ${canHeal?'':'disabled'} title="${healWhy}">Лечиться — 4 зол.</button><button id="tavernClose" class="secondary">Закрыть</button></div>`,p);
+    els.modal.hidden=false;
     const hireBtn=document.getElementById('tavernHire');if(hireBtn)hireBtn.onclick=()=>{if(!canHire||!merc)return;const old=getSlotId(p,'mercenary');if(old&& !confirm(`Заменить наёмника «${itemCard(old)?.name}» на «${merc.name}»? Старый наёмник уйдёт в сброс.`))return;if(old){if(isItemLocked(p,old)){alert('Текущий наёмник заблокирован для сброса.');return}discardHeldCard(itemCard(old));delete p.itemUsage[old];delete p.lockedItems?.[old]}
       p.gold-=price;setSlotId(p,'mercenary',merc.id);delete loc.tavernMercenaryId;delete loc.tavernMercenaryDeckKey;loc.tavernNeedsRestock=true;log(`${p.name} нанимает в Таверне «${merc.name}» за ${price} золота. До тех пор, пока Таверна не опустеет, нового наёмника здесь не будет.`);updateUI();renderTavernVisit(p,hex,onDone,session)};
     const healBtn=document.getElementById('tavernHeal');if(healBtn)healBtn.onclick=()=>{if(!canHeal)return;const hr=rollHealing(p,'D6');closeModal();showRollPopup('Таверна · лечение',hr.total,`${hr.used} = <b>${hr.total}</b>`,'Лечение за 4 золота',null,()=>{p.gold-=4;const before=p.currentHp;heal(p,hr.total);const restored=p.currentHp-before;session.healed=true;session.healSummary=`Лечение: ${hr.used} = <b>${hr.total}</b>. Восстановлено <b>${restored} ЗД</b>. ЗД ${p.currentHp}/${p.maxHp}.${hr.reduced?' Проклятие уменьшило кубик лечения.':''}`;log(`${p.name} лечится в Таверне за 4 золота: ${hr.used}=${hr.total}, восстановлено ${restored} ЗД.`);updateUI();renderTavernVisit(p,hex,onDone,session)})};
@@ -1520,40 +1425,21 @@
     log(`${p.name} посещает Торговца (${plan.label}). Открыто карт: ${stock.length}.`);
     // Важно: клиент онлайн-игры может применять очередное серверное состояние, заменяя
     // объекты героев. Никогда не держим объект героя в обработчиках торговли — только ID.
-    showMerchantShop(p.id,stock,plan,onDone,{saving:false,unsaved:false,error:''});
+    showMerchantShop(p.id,stock,plan,onDone,{saving:false,unsaved:false,error:'',visualMode:result.mode});
   }
   function showMerchantShop(ownerId,stock,plan,onDone,shop){
     const p=getPlayer(ownerId);if(!p)return;
     const saleMultiplier=merchantSaleMultiplier(p,plan),saleLabel=merchantSaleLabel(p,plan);
     const blocked=shop.saving||shop.unsaved;
-    const stockHtml=stock.length?stock.map((e,i)=>{const c=e.card,base=merchantBuyPrice(c),buyable=base!=null,cost=buyable?Math.ceil(base*plan.buyMultiplier):null;const why=base==null?'Цена отсутствует или требует утверждения.':'';return `<div class="loc-good ${itemColorClass(p,c)}"><div class="loc-good-art">${itemImageHtml(c)}<span class="loc-num">№${c.id}</span></div><strong>${escapeCombatText(c.name)}</strong><small>${escapeCombatText(c.fields?.['Тип']||c.category)} · ${buyable?`${cost} зол.`:'—'}</small><details class="loc-good-details"><summary>Описание карты</summary><div class="card-fields compact">${itemFieldsHtml(c)}</div></details><button data-buy-index="${i}" class="loc-buy" ${blocked||!buyable||p.gold<cost?'disabled':''}>${buyable?`Купить за ${cost}`:'Недоступно'}</button>${why?`<div class="loc-note">${why}</div>`:''}</div>`}).join(''):'<div class="empty-box">Ассортимент пуст.</div>';
+    const stockHtml=stock.length?stock.map((e,i)=>{const c=e.card,base=merchantBuyPrice(c),buyable=base!=null,cost=buyable?Math.ceil(base*plan.buyMultiplier):null;const why=base==null?'Цена отсутствует или требует утверждения.':'';return `<div class="merchant-card ${itemColorClass(p,c)}">${TabletopUI.card(c,displayCardFieldEntries(c))}<div class="merchant-price">${buyable?`${cost} зол.`:'—'}</div><button data-buy-index="${i}" class="success" ${blocked||!buyable||p.gold<cost?'disabled':''}>${buyable?`Купить за ${cost}`:'Недоступно'}</button>${why?`<div class="merchant-note">${why}</div>`:''}</div>`}).join(''):'<div class="empty-box">Ассортимент пуст.</div>';
     const sells=merchantSellEntries(p);
-    const sellGroup=(rows,title)=>rows.length?`<div class="merchant-group-title">${title}</div>${rows.map(e=>{const i=sells.indexOf(e),chk=canSellMerchantItem(p,e),base=numericItemPrice(e.card),value=base==null?null:Math.floor(base*saleMultiplier);return `<div class="loc-sell ${itemColorClass(p,e.card)}"><div class="loc-mini-art">${itemImageHtml(e.card)}</div><details class="loc-sell-detail"><summary><b>${escapeCombatText(e.card.name)}</b><small>${escapeCombatText(e.where)} · №${e.id}${base!=null?` · цена ${base}`:''}</small></summary><div class="card-fields compact">${itemFieldsHtml(e.card)}</div></details><button data-sell-index="${i}" class="loc-sellbtn" ${blocked||!chk.ok?'disabled':''}>${value!=null?`Продать за ${value}`:'Нет цены'}</button>${!chk.ok?`<span class="loc-note">${escapeCombatText(chk.why)}</span>`:''}</div>`}).join('')}`:'';
+    const sellGroup=(rows,title)=>rows.length?`<div class="merchant-group-title">${title}</div>${rows.map(e=>{const i=sells.indexOf(e),chk=canSellMerchantItem(p,e),base=numericItemPrice(e.card),value=base==null?null:Math.floor(base*saleMultiplier);return `<div class="merchant-sell-row ${itemColorClass(p,e.card)}"><details class="merchant-sell-detail"><summary><b>${e.card.name}</b><small>${e.where}${base!=null?` · цена ${base}`:''} · №${e.id}</small></summary><div class="card-fields compact">${itemFieldsHtml(e.card)}</div></details><button data-sell-index="${i}" class="secondary" ${blocked||!chk.ok?'disabled':''}>${value!=null?`Продать за ${value}`:'Нет цены'}</button>${!chk.ok?`<span class="merchant-note">${chk.why}</span>`:''}</div>`}).join('')}`:'';
     const sellHtml=sells.length?sellGroup(sells.filter(e=>e.ctx.where==='equipment'),'Экипированные предметы')+'<div class="merchant-sell-divider" role="separator"><span>Рюкзак</span></div>'+sellGroup(sells.filter(e=>e.ctx.where==='backpack'),'Предметы в рюкзаке'):'<div class="empty-box">Нет предметов для продажи.</div>';
     const savingLine=shop.saving?'<div class="notice">Сохраняем изменения на сервере…</div>':shop.unsaved?`<div class="notice" role="alert"><b>Изменения ещё не сохранены!</b> ${shop.error||'Проверьте соединение.'} Покупки и продажи не будут завершены до подтверждения сервера.</div>`:'';
-    const regionCursed=MAP.hexes?.[p.hex]?.region==='cursed';
-    const content=`${locationStatusPills([['Герой',p.name],['Золото',String(p.gold)],['Покупка',`${Math.round(plan.buyMultiplier*100)}%`],['Продажа',`${Math.round(saleMultiplier*100)}%`]])}
-      <div class="loc-note">${escapeCombatText(saleLabel)}</div>${savingLine}
-      <div class="loc-section-title" id="locBuySection">Товары торговца <small>${stock.length} карт</small></div>
-      <div class="loc-goods">${stockHtml}</div>
-      <div class="loc-section-title" id="locSellSection">Ваши предметы на продажу <small>Экипировка и рюкзак</small></div>
-      <div class="loc-sell-list">${sellHtml}</div>
-      <div class="loc-note">Покупка и продажа доступны в одном посещении. Купленные предметы поступают в неразобранные карты по действующим правилам.</div>`;
-    const footer=`${shop.unsaved?'<button id="merchantRetry" class="loc-retry">Повторить сохранение</button>':''}
-      <button type="button" class="loc-buy-nav" data-loc-jump="locBuySection">Покупка</button>
-      <button type="button" class="loc-sell-nav" data-loc-jump="locSellSection">Продажа</button>
-      <button id="merchantDone" class="loc-done" ${blocked?'disabled':''}>Готово</button>`;
-    els.modalContent.innerHTML=locationWindow('merchant',p,content,footer,{cursed:regionCursed});
-    const scroll=els.modalContent.querySelector('.loc-scroll');
-    if(scroll){scroll.scrollTop=shop.scrollTop||0;scroll.onscroll=()=>{shop.scrollTop=scroll.scrollTop};}
-    els.modalContent.querySelectorAll('[data-loc-jump]').forEach(btn=>{btn.onclick=()=>{
-      const target=els.modalContent.querySelector('#'+btn.dataset.locJump);
-      if(target&&scroll)scroll.scrollTop+=target.getBoundingClientRect().top-scroll.getBoundingClientRect().top;
-    }});
+    els.modalContent.innerHTML=TabletopUI.locationFrame('Торговец',shop.visualMode,`<div class="card-kicker">Постоянная локация · Торговец</div><div class="card-title">${plan.locationTitle||'Торговец'}</div><div class="merchant-summary"><span>Золото: <b>${p.gold}</b></span><span>${saleLabel}</span><span>Продажа: <b>${Math.round(saleMultiplier*100)}%</b></span><span>Покупка: <b>${Math.round(plan.buyMultiplier*100)}%</b></span></div>${savingLine}<h3>Купить</h3><div class="merchant-grid">${stockHtml}</div><h3 style="margin-top:18px">Продать</h3><div class="merchant-sell-list">${sellHtml}</div><div class="modal-actions">${shop.unsaved?'<button id="merchantRetry" class="primary">Повторить сохранение</button>':''}<button id="merchantDone" class="success" ${blocked?'disabled':''}>Готово</button></div>`,p);
     els.modal.hidden=false;
     modalOffturnOwnerId=ownerId;
     modalCloseAction=()=>document.getElementById('merchantDone')?.click();
-    locationActivateClose('merchant');
     async function saveShop(){
       shop.saving=true;shop.unsaved=false;shop.error='';showMerchantShop(ownerId,stock,plan,onDone,shop);
       try{
@@ -1796,7 +1682,7 @@
     if(els.sheetInventoryTab){els.sheetInventoryTab.classList.toggle('active',inventory);els.sheetInventoryTab.setAttribute('aria-selected',String(inventory))}
   }
   function openCharacterSheet(mode='overview',bonusKey=null,playerId=null){if(!state.started)return;const active=currentPlayer(),sideTarget=sideInteractionOwnerId(),target=sideTarget||playerId||onlineLocalHeroId||(playerHardMode(active)?active.id:(state.inspectPlayerId||active.id));sheetView={mode,bonusKey,itemId:null,context:null,playerId:target};els.sheetDrawer.hidden=false;renderCharacterSheet(mode,bonusKey)}
-  function closeCharacterSheet(){const sideOwner=sideInteractionOwnerId(),sidePlayer=sideOwner?getPlayer(sideOwner):null;if(sideInteraction?.type==='loot'&&sidePlayer&&!sidePlayer.pendingItems?.length)endSideInteraction();if(state.started&&!isMobileViewport()){const active=currentPlayer(),target=sideInteractionOwnerId()||onlineLocalHeroId||(playerHardMode(active)?active.id:(state.inspectPlayerId||active.id));sheetView={mode:'overview',bonusKey:null,itemId:null,context:null,playerId:target};els.sheetDrawer.hidden=false;renderCharacterSheet('overview');return}els.sheetDrawer.hidden=true;els.sheetContent.innerHTML='';sheetView={mode:'overview',bonusKey:null,itemId:null,context:null,playerId:null};updateSheetTabs('overview')}
+  function closeCharacterSheet(){const sideOwner=sideInteractionOwnerId(),sidePlayer=sideOwner?getPlayer(sideOwner):null;if(sideInteraction?.type==='loot'&&sidePlayer&&!sidePlayer.pendingItems?.length)endSideInteraction();els.sheetDrawer.hidden=true;els.sheetContent.innerHTML='';sheetView={mode:'overview',bonusKey:null,itemId:null,context:null,playerId:null};updateSheetTabs('overview')}
   function bonusBreakdownHtml(p,key){const src=modifierSources(p,key),total=modifierTotal(p,key),title=key==='defense'?'ЗЩ':statName(key);return `<div class="bonus-popover"><b>Модификатор ${title}: ${signed(total)}</b>${src.length?src.map(x=>`<div class="bonus-row"><span>${x.kind}: ${x.label}</span><b>${signed(x.amount)}</b></div>`).join(''):'<div class="muted small">Активных источников бонуса нет.</div>'}<div class="bonus-row total"><span>Итого</span><b>${signed(total)}</b></div></div>`}
   function restoreCombatModalIfNeeded(){if(state.combat)setTimeout(renderCombat,0)}
   function showHardModeCapacityWarning(p){
@@ -1814,9 +1700,9 @@
     else{p.hardMode=false;log(`${p.name}: <b>сложный режим выключен</b>.`)}
     renderCharacterSheet('overview');if(state.combat)renderCombat();updateUI();renderBoard();
   }
-  // v0.6.74 — Every image is linked by the approved card ID, not by a translated name.
+  // v0.6.70 — Every image is linked by the approved card ID, not by a translated name.
   const INVENTORY_IMAGE_IDS=new Set([141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347]);
-  function itemImageHtml(card){return card&&INVENTORY_IMAGE_IDS.has(Number(card.id))?`<img class="item-card-art" src="assets/items/${card.id}.webp" loading="lazy" decoding="async" alt="" onerror="this.hidden=true">`:''}
+  function itemImageHtml(card){return card&&INVENTORY_IMAGE_IDS.has(Number(card.id))?`<img class="item-card-art" src="${TabletopUI.art(card)}" loading="lazy" decoding="async" alt="" onerror="this.hidden=true">`:''}
   function itemEffectSpent(p,id){
     if(!p||!id)return false;
     const use=p.itemUsage?.[id];
@@ -1887,15 +1773,9 @@
   }
   function itemFieldsHtml(card){return displayCardFieldEntries(card).map(([k,v])=>`<div class="card-field"><b>${k}:</b> ${v.replace(/\n/g,'<br>')}</div>`).join('')}
   function inventoryCardBackHtml(card){
-    const fields=card.fields||{}, esc=escapeCombatText;
-    const type=fields['Тип']||card.category||'—';
-    const who=fields['Для кого']||'—';
-    const price=fields['Цена']!=null?`${fields['Цена']} зол.`:fields['Цена найма']!=null?`${fields['Цена найма']} зол. (найм)`:'—';
-    const effect=fields['Эффект']||'—';
-    const used=new Set(['Тип','Для кого','Цена','Цена найма','Эффект']);
-    const extra=displayCardFieldEntries(card).filter(([key])=>!used.has(key));
-    return `<div class="inventory-card-reverse"><div class="reverse-kicker">ОБОРОТ КАРТЫ · №${card.id}</div><div class="reverse-title">${esc(card.name)}</div><div class="reverse-properties"><div><small>ТИП</small><span>${esc(type)}</span></div><div><small>ДЛЯ КОГО</small><span>${esc(who)}</span></div><div><small>ЦЕНА</small><span>${esc(price)}</span></div><div><small>КАТЕГОРИЯ</small><span>${esc(card.category)}</span></div></div><div class="reverse-effect"><small>ЭФФЕКТ</small><span>${esc(effect)}</span></div>${extra.length?`<div class="reverse-extras">${extra.map(([key,val])=>`<div><b>${esc(key)}</b><span>${esc(val)}</span></div>`).join('')}</div>`:''}</div>`;
+    return TabletopUI.cardBack(card,displayCardFieldEntries(card));
   }
+
   function renderItemDetail(p,id,ctx){const card=itemCard(id);if(!card){renderCharacterSheet('inventory');return}const readOnly=sheetReadOnly(),equip=canEquipCard(p,card),slots=targetSlots(card),actions=[],outside=readOnly?{supported:false,enabled:false,why:''}:supportedOutsideEffect(p,card,ctx),canLock=!readOnly&&ctx?.where!=='pending',locked=canLock&&isItemLocked(p,id),heroCombat=heroIsActiveCombatant(p);
     if(heroCombat){
       const canRegear=combatCanChangeEquipment(p,card);
@@ -1918,7 +1798,7 @@
     const face=reverse?inventoryCardBackHtml(card):itemCardFrontHtml(card,p);
     const spent=itemEffectSpent(p,id);
     els.sheetContent.innerHTML=`${ro}<div class="sheet-nav"><button class="ghost" id="itemBack">← Назад</button><span>${origin}</span></div><div class="item-detail-card ${itemColorClass(p,card)}">${lockBtn}${face}${lockNote}${spent?'<div class="item-use-badge">✓ Эффект использован · ожидает восстановления</div>':''}</div><button type="button" class="item-flip-button secondary" id="itemFlip" aria-pressed="${reverse}">${reverse?'↶ Показать рисунок':'↻ Перевернуть · описание'}</button>${showEquipError?`<div class="error-box">${equip.why}</div>`:''}<div class="modal-actions" id="itemActions"></div>`;
-    document.getElementById('itemFlip').onclick=()=>{sheetView.itemFlipped=!sheetView.itemFlipped;renderItemDetail(getPlayer(p.id)||p,id,ctx)};
+    document.getElementById('itemFlip').onclick=()=>{sheetView.itemFlipped=!sheetView.itemFlipped;renderItemDetail(getPlayer(p.id)||p,id,ctx);TabletopUI.flipIn(els.sheetContent.querySelector('.item-detail-card'))};
     document.getElementById('itemBack').onclick=()=>ctx?.where==='backpack'?renderCharacterSheet('backpack'):ctx?.where==='pending'?renderCharacterSheet('pending'):renderCharacterSheet('inventory');const lockToggle=document.getElementById('itemLockToggle');if(lockToggle)lockToggle.onclick=()=>{setItemLocked(p,id,!isItemLocked(p,id));renderItemDetail(p,id,ctx);updateUI()};const box=document.getElementById('itemActions');for(const a of actions){const b=document.createElement('button');b.textContent=a.label;b.className=a.cls||'primary';b.disabled=!!a.disabled;if(a.title)b.title=a.title;b.onclick=a.fn;box.appendChild(b)}const close=document.createElement('button');close.textContent='Закрыть';close.className='ghost';close.onclick=()=>renderCharacterSheet('inventory');box.appendChild(close);
   }
   function canUnequipToBackpack(p,id,slot){const cap=slot==='artifact'&&id===191?5:backpackCapacity(p);return p.backpack.length+1<=cap}
@@ -2591,7 +2471,7 @@
       showRollPopup('Результаты боя','✓',`<b>${p.name}</b> победил врага «<b>${e.name}</b>».<br>Заработано золота: <b>${goldEarned}</b>`,
         `${base===0?'Слабый враг: только золото, без Тщательного поиска.':`Тщательный поиск: D20 <b>${d}</b> ${signed(wis)} МУД = <b>${total}</b> · <b>${resultText}</b>${naturalText}`}<br>Награда: <b>${keepCount}</b> ${lootWord(keepCount)}${nat20Bonus?' (натуральная 20: +1 тайник)':''}.${success&&base>0?` Выбор из ${candidates.length} карт.`:''}${finalDamageText}`,
         null,()=>{if(searchDamage&&p.currentHp<=0){for(const id of candidates){const card=itemCard(id);if(card)returnCardToDeckRandom(lootKey,card)}state.combat=null;handleDeath(p);return}
-          if(base>0&&candidates.length)openVictoryLootDraft();else showPostCombatTerritoryPrompt();},'К наградам',false,p.id);
+          if(base>0&&candidates.length)openVictoryLootDraft();else showPostCombatTerritoryPrompt();},'К наградам');
     };
     if(base>0){
       const afterSearch=()=>{
@@ -2622,7 +2502,7 @@
     els.modalContent.querySelectorAll('[data-loot-flip]').forEach(b=>b.onclick=()=>{
       const index=Number(b.dataset.lootFlip),key=`${c.instanceId}:${index}`;
       victoryLootReversed.set(key,!victoryLootReversed.get(key));
-      openVictoryLootDraft();
+      openVictoryLootDraft();TabletopUI.flipIn(els.modalContent.querySelector(`[data-loot-card="${index}"] .loot-draft-art-action`));
     });
     els.modalContent.querySelectorAll('[data-loot-choice]').forEach(b=>b.onclick=()=>{
       const n=Number(b.dataset.lootChoice),actual=state.combat?.victory?.lootDraft;if(!actual||actual.confirmed)return;
@@ -2757,7 +2637,7 @@
     const c=state.combat;if(!c)return;
     const ui=getCombatVisualUiState(c),key=side==='enemy'?'enemyBack':'heroBack';
     ui[key]=!ui[key];
-    renderCombat(true);
+    renderCombat(true);TabletopUI.flipIn(els.modalContent.querySelector(`[data-visual-toggle="${side}"]`));
   }
   function combatPortraitUrl(kind,id){
     if(kind==='hero'&&['warrior','dwarf','mage','archer','rogue'].includes(id))return `assets/heroes/${id}.webp`;
@@ -2841,7 +2721,7 @@
     const guide=localCombatant&&!playerHardMode(p)?`<div class="combat-effects-manual"><h4>Памятка боя</h4><div class="combat-note">Активные способности, предметы и наёмники применяет игрок. Натуральные 1 и 20 автоматические только при одиночном D20. Лечение доступно до атаки в свой боевой ход и после принятого нелетального урона.</div></div>`:'';
     const history=c.journalOpen?`<div class="combat-history-wrap"><div class="combat-history">${(c.history||[]).map(x=>`<div>${x}</div>`).join('')||'<div>Записей пока нет.</div>'}</div></div>`:'';
     const controlBlock=localCombatant?`${reactions.length?`<div class="combat-reactions"><h4>РЕАКЦИИ — игра напоминает, но решение за игроком</h4><div class="combat-reaction-buttons">${reactions.map((r,i)=>`<button data-reaction="${i}" class="secondary">${r.label}</button>`).join('')}</div></div>`:''}<div class="combat-actions">${actions}</div><div class="combat-sheet-actions"><button id="combatHeroSheet" class="secondary">Герой</button><button id="combatInventory" class="secondary">Инвентарь</button></div>${guide}`:'';
-    els.modalContent.innerHTML=`<div class="combat-shell ${localCombatant?'combat-owner-view':'combat-observer-view'}"><div class="combat-summary"><span class="combat-mode-badge">${localCombatant?mode:`Наблюдение за ${observedName}`}</span><span class="combat-pill">Раунд ${c.round}</span><button id="combatHide" class="combat-hide ghost" type="button">Скрыть бой</button></div><div class="combat-head visual-combat-head">${combatHeroVisualCard(p,c)}<div class="combat-vs">VS</div>${combatEnemyVisualCard(e,c)}</div>${phaseHtml}${controlBlock}<div class="combat-journal-control"><button id="combatJournalToggle" class="${c.journalOpen?'secondary active':'ghost'}">Журнал боя${c.journalOpen?' ▲':' ▼'}</button></div>${history}</div>`;els.modal.hidden=false;
+    els.modalContent.innerHTML=`<div class="combat-shell ${localCombatant?'combat-owner-view':'combat-observer-view'}"><div class="combat-summary"><span class="combat-mode-badge">${localCombatant?mode:`Наблюдение за ${observedName}`}</span><span class="combat-pill">Раунд ${c.round}</span><button id="combatHide" class="combat-hide ghost" type="button">Скрыть бой</button></div>${TabletopUI.combatPhase(c.phase,c.round)}<div class="combat-head visual-combat-head">${combatHeroVisualCard(p,c)}<div class="combat-vs">VS</div>${combatEnemyVisualCard(e,c)}</div>${phaseHtml}${controlBlock}<div class="combat-journal-control"><button id="combatJournalToggle" class="${c.journalOpen?'secondary active':'ghost'}">Журнал боя${c.journalOpen?' ▲':' ▼'}</button></div>${history}</div>`;els.modal.hidden=false;
     if(localCombatant){reactions.forEach((r,i)=>{const b=els.modalContent.querySelector(`[data-reaction="${i}"]`);if(b)b.onclick=r.fn});els.modalContent.querySelectorAll('[data-auto-choice]').forEach(b=>b.onclick=()=>decisions[Number(b.dataset.autoChoice)]?.fn());els.modalContent.querySelectorAll('[data-cleanse-status]').forEach(b=>b.onclick=()=>chooseCombatCleanseStatus((c.pendingCleanse?.options||[])[Number(b.dataset.cleanseStatus)]))}
     els.modalContent.querySelectorAll('[data-visual-toggle]').forEach(b=>b.onclick=()=>toggleCombatVisualFace(b.dataset.visualToggle));
     const bind=(id,fn)=>{const x=document.getElementById(id);if(x)x.onclick=fn};if(localCombatant){bind('combatFight',combatFight);bind('combatResolveEscape',resolveCombatEscapeResult);bind('combatEscapeBefore',combatEscapeBefore);bind('combatAttack',combatHeroAttack);bind('combatRollDamage',combatRollHeroDamage);bind('combatSkipChoice',skipCombatChoice);bind('combatEscape',combatEscapeDuring);bind('combatHeroAbility',useHeroCombatAbility);bind('combatFinalizeAttack',finalizeHeroAttackRoll);bind('mageLightning',()=>chooseMageNat20('lightning'));bind('mageFire',()=>chooseMageNat20('fire'));bind('combatApplyHeroDamage',applyHeroDamageNow);bind('combatEnemyTurn',combatEnemyTurn);bind('combatFinalizeEnemyRoll',finalizeEnemyAttackRoll);bind('combatAcceptDamage',combatAcceptDamageAndContinue);bind('combatContinueMiss',combatContinueAfterEnemyMiss);bind('combatContinueAfterDamage',combatContinueAfterDamage);bind('combatFinishVictory',finishCombatVictory);bind('combatPostVictory',()=>{if(c.victory?.lootDraft&&!c.victory.lootDraft.confirmed&&c.victory.lootDraft.keep>0)openVictoryLootDraft();else showPostCombatTerritoryPrompt()});bind('combatHeroSheet',()=>openCharacterSheet('overview'));bind('combatInventory',()=>openCharacterSheet('inventory'))}
@@ -2855,7 +2735,7 @@
     if(!state.started){renderTurnOrderBanner();return}const p=currentPlayer();renderTurnOrderBanner();els.actionPanel.innerHTML='';
     if(state.gameOver){const winner=getPlayer(state.gameOver.winnerId)||p;addActionBox('Партия завершена',`<b>${winner.name}</b> победил Владыку Сердца Тьмы. Дальнейшие ходы заблокированы.`,[{label:'Показать итог партии',className:'success',fn:()=>showGameOverPopup(winner,{force:true})}]);return}
     if(state.combat){return}
-    if(state.portalPending){addActionBox('Древний портал',`Выберите выход прямо на карте. Доступные порталы подсвечены <b>фиолетовой границей</b>: ${state.portalPending.destinations.join(', ')}.`,[]);return}
+    if(state.portalPending){addActionBox('Древний портал',`Выберите выход прямо на карте. Доступные порталы подсвечены <b>фиолетовой границей</b>: ${state.portalPending.destinations.join(', ')}.`,[],'Древний портал');return}
     if(state.tributeConsentPending){const req=state.tributeConsentPending,owner=getPlayer(req.ownerId),visitor=getPlayer(req.visitorId),mine=!onlineLocalHeroId||onlineLocalHeroId===req.ownerId;if(mine)addActionBox('Запрос на бесплатный проход',`<b>${visitor?.name||'Игрок'}</b> просит пройти бесплатно по территории <b>${req.hex}</b>. Решение принимает ${owner?.name||'владелец'}.`,[{label:'Разрешить проход',className:'success',fn:()=>resolvePassagePermission(true)},{label:'Отказать',className:'danger',fn:()=>resolvePassagePermission(false)}]);else addActionBox('Ожидание владельца территории',`Запрос отправлен игроку <b>${owner?.name||'владелец'}</b>. Пока он не ответит, движение приостановлено.`,[]);return}
     if(p.pendingItems?.length){addActionBox('Нужно разобрать тайники',`У героя осталось неразобранных предметов: ${p.pendingItems.length}. Пока каждый из них не будет надет, помещён в рюкзак или сброшен, продолжать ход нельзя.`,[{label:'Разобрать тайники',className:'primary',fn:()=>openCharacterSheet('pending')}]);return}
     if(p.inDungeon){if(dungeonExitAvailable(p))showDungeonActions(p);else showDungeonWaiting(p);return}
@@ -2886,7 +2766,7 @@
       }
       if(previewLoc){
         if(previewLoc.name==='Древний портал'){
-          addActionBox('Древний портал',`Маршрут ведёт на портал ${p.hex}. Вход в портал зафиксирует перемещение и активирует сеть порталов.`,[{label:'Войти в портал',className:'primary',fn:()=>commitPendingMove()}]);
+          addActionBox('Древний портал',`Маршрут ведёт на портал ${p.hex}. Вход в портал зафиксирует перемещение и активирует сеть порталов.`,[{label:'Войти в портал',className:'primary',fn:()=>commitPendingMove()}],'Древний портал');
         }else{
           const ready=canActivateLocationOnEntry(p,p.hex);
           addActionBox('Постоянная локация',`На выбранном гексе находится: <b>${previewLoc.name}</b>.${ready?' Посещение зафиксирует выбранный маршрут.':' Повторный эффект этой локации пока недоступен.'}`,ready?[{label:'Посетить локацию',className:'primary',fn:()=>commitPendingMove({type:'visitLocation',hex:p.hex})}]:[]);
@@ -2930,10 +2810,10 @@
       if(loc.name==='Древний портал')note=' Портал активируется при остановке на его гексе.';
       else if(canUseNow)note=' Вы только что вошли на гекс и можете воспользоваться локацией.';
       else note=' Нового посещения нет. Чтобы воспользоваться этой же локацией снова, нужно покинуть её, завершить хотя бы один последующий ход вне этого гекса и затем войти снова.';
-      addActionBox('Постоянная локация',`На этом гексе находится: ${loc.name}.${note}`,actions)
+      addActionBox('Постоянная локация',`На этом гексе находится: ${loc.name}.${note}`,actions,loc.name)
     }
   }
-  function addActionBox(title,text,actions){const box=document.createElement('div');box.className='action-box';box.innerHTML=`<div class="action-title">${title}</div><div class="muted small">${text}</div><div class="action-buttons"></div>`;const bxs=box.querySelector('.action-buttons');actions.forEach(a=>{const b=document.createElement('button');b.textContent=a.label;b.className=a.className||'';b.onclick=a.fn;bxs.appendChild(b)});els.actionPanel.appendChild(box)}
+  function addActionBox(title,text,actions,locationName=null,locationMode='normal'){const box=document.createElement('div');box.className='action-box';box.innerHTML=`<div class="action-title">${title}</div><details class="table-action-detail"><summary>Условия действия</summary><div class="muted small">${text}</div></details><div class="action-buttons"></div>`;const bxs=box.querySelector('.action-buttons');actions.forEach(a=>{const b=document.createElement('button');b.textContent=a.label;b.className=a.className||'';b.onclick=a.fn;bxs.appendChild(b)});if(locationName){const data=TabletopUI.locationInfo(locationName,locationMode);if(data){const view=document.createElement('button');view.className='table-location-preview';view.type='button';view.innerHTML=`<img src="${data.src}" alt=""><span>${escapeCombatText(locationName)}<small>Рассмотреть карту</small></span>`;view.onclick=()=>showCard({...CARD_BY_ID[LOCATION_CARD_ID[locationName]],visualMode:locationMode},text,[{label:'Вернуться к карте',className:'secondary',fn:closeModal}]);box.prepend(view)}}els.actionPanel.appendChild(box)}
 
   function currentHexNeedsResolution(p){
     if(!state.turnMoved||p.inDungeon)return false;
@@ -2972,7 +2852,12 @@
     if(!state.started||!state.order?.length){els.turnOrderBanner.hidden=true;return}
     const active=currentPlayer(),rot=[];for(let n=1;n<state.order.length;n++)rot.push(getPlayer(state.order[(state.currentIndex+n)%state.order.length]));
     els.turnOrderBanner.hidden=false;
-    const roomCode=els.turnOrderBanner.dataset.roomCode||'';els.turnOrderBanner.innerHTML=`<div class="turn-order-active"><small>СЕЙЧАС ХОДИТ</small><strong>${String(active?.name||'—').toUpperCase()}</strong></div><div class="turn-order-next"><small>ДАЛЬШЕ</small><span>${rot.map(q=>q?.name||'—').join(' → ')}</span></div>${roomCode?`<div class="turn-order-code">КОД ${roomCode}</div>`:''}<button class="turn-order-journal" type="button">Журнал</button>`;const journal=els.turnOrderBanner.querySelector('.turn-order-journal');if(journal)journal.onclick=()=>{renderJournal();els.journalOverlay.hidden=false};
+    const roomCode=els.turnOrderBanner.dataset.roomCode||'';
+    els.turnOrderBanner.innerHTML=TabletopUI.turns(active,rot,state.round,roomCode);
+    els.turnOrderBanner.querySelectorAll('[data-table-hero]').forEach(b=>b.onclick=()=>openCharacterSheet('overview',null,playerHardMode(active)?(onlineLocalHeroId||active.id):b.dataset.tableHero));
+    els.turnOrderBanner.querySelector('[data-table-journal]').onclick=()=>{renderJournal();els.journalOverlay.hidden=false};
+    TabletopUI.decks(state.decks,DECK_NAMES);
+
   }
 
   function updateUI(){
@@ -3016,7 +2901,7 @@
     for(const id of portalChoices)drawPurpleHexOutline(id,'portal-choice-outline',66);
     if(!state.started){applyMapZoom(false);return}
     const dungeonHexes=new Set(state.players.filter(p=>p.inDungeon).map(p=>p.hex));for(const hex of dungeonHexes){const h=MAP.hexes[hex];if(!h)continue;els.overlay.appendChild(svgEl('polygon',{points:hexPolygonPoints(h,47).map(x=>x.join(',')).join(' '),class:'dungeon-grate-bg'}));for(const dx of [-28,-10,10,28])els.overlay.appendChild(svgEl('line',{x1:h.x+dx,y1:h.y-31,x2:h.x+dx,y2:h.y+31,class:'dungeon-grate-line'}));for(const dy of [-20,0,20])els.overlay.appendChild(svgEl('line',{x1:h.x-36,y1:h.y+dy,x2:h.x+36,y2:h.y+dy,class:'dungeon-grate-line'}))}
-    const groups={};state.players.forEach(p=>(groups[p.hex]??=[]).push(p));Object.entries(groups).forEach(([hex,ps])=>{const h=MAP.hexes[hex],n=ps.length;ps.forEach((p,i)=>{const a=n===1?0:Math.PI*2*i/n,rad=n===1?0:24,x=h.x+Math.cos(a)*rad,y=h.y+Math.sin(a)*rad;if(p.id===currentPlayer().id)els.overlay.appendChild(svgEl('circle',{cx:x,cy:y,r:25,class:'current-ring'}));els.overlay.appendChild(svgEl('circle',{cx:x,cy:y,r:17,fill:p.color,class:'player-marker'}));const t=svgEl('text',{x,y:y+1,class:'marker-label'});t.textContent=p.initial;els.overlay.appendChild(t)})});applyMapZoom(false)
+    const tokenPositions={};const groups={};state.players.forEach(p=>(groups[p.hex]??=[]).push(p));Object.entries(groups).forEach(([hex,ps])=>{const h=MAP.hexes[hex],n=ps.length;ps.forEach((p,i)=>{const a=n===1?0:Math.PI*2*i/n,rad=n===1?0:24,x=h.x+Math.cos(a)*rad,y=h.y+Math.sin(a)*rad;tokenPositions[p.id]={x,y};TabletopUI.token(els.overlay,p,x,y,p.id===currentPlayer().id,svgEl)})});TabletopUI.rememberTokens(tokenPositions);applyMapZoom(false)
   }
 
   function saveGame(){if(!state.started)return;localStorage.setItem('rpgDigitalPrototypeV0648',JSON.stringify(state));log('Партия v0.6.48 сохранена в браузере.')}
@@ -3032,7 +2917,7 @@
       const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
-      state.version='0.6.76';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}if(isMobileViewport())els.sheetDrawer.hidden=true;else openCharacterSheet('overview',null,currentPlayer().id);updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.76.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
+      state.version='0.7.0';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.7.0.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
     }catch(e){console.error(e);alert('Не удалось загрузить сохранение.')}
   }
   function cloneJson(v){return JSON.parse(JSON.stringify(v))}
@@ -3050,7 +2935,7 @@
     if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
-    state.version='0.6.76';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    state.version='0.7.0';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){
@@ -3081,7 +2966,8 @@
   let pinchStartDist=0,pinchStartZoom=1;const touchDistance=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);if(els.boardWrap){els.boardWrap.addEventListener('touchstart',e=>{if(e.touches.length===2){pinchStartDist=touchDistance(e.touches);pinchStartZoom=Number(state.mapZoom||1)}},{passive:true});els.boardWrap.addEventListener('touchmove',e=>{if(e.touches.length===2&&pinchStartDist>0){e.preventDefault();const ratio=touchDistance(e.touches)/pinchStartDist;state.mapZoom=Math.round(clamp(pinchStartZoom*ratio,.6,2)*20)/20;applyMapZoom(false)}},{passive:false});els.boardWrap.addEventListener('touchend',e=>{if(e.touches.length<2)pinchStartDist=0},{passive:true})}
   if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
   els.startBtn.addEventListener('click',startGame);els.moveRollBtn.addEventListener('click',rollMove);els.endTurnBtn.addEventListener('click',()=>endTurn(false));els.saveBtn.addEventListener('click',saveGame);els.loadBtn.addEventListener('click',loadGame);els.resetBtn.addEventListener('click',resetGame);[['sheetSaveBtn','saveBtn'],['sheetLoadBtn','loadBtn'],['sheetResetBtn','resetBtn']].forEach(([mirror,source])=>{const btn=document.getElementById(mirror);if(btn)btn.addEventListener('click',()=>els[source].click())});els.inventoryBtn.addEventListener('click',()=>openCharacterSheet('overview'));els.sheetClose.addEventListener('click',closeCharacterSheet);els.modalClose.addEventListener('click',requestModalClose);
-  window.__RPG_DEBUG__={getState:()=>state,setState:v=>{state=v},freshState,HEROES,CARD_BY_ID,combatStart,combatFight,combatHeroAttack,finalizeHeroAttackRoll,applyHeroDamageNow,combatEnemyTurn,finalizeEnemyAttackRoll,acceptEnemyDamage,combatContinueAfterEnemyMiss,renderCombat,currentPlayer,getPlayer,ensurePlayerModel,supportedCombatEffect,applyCombatItemEffect,useHeroCombatAbility,combatReactionList,fullSetEquipped,completeSetNames,itemColorClass,mandatoryLootCount,setBonusActionInfo,useSetBonus,showRollPopup,heroImmuneStatus,combatPassiveDamageBonus,combatHeroDeath,combatVictory,movementFor,combatCanChangeEquipment,combatTickEnemyStatuses,equipTransaction,merchantSaleMultiplier,visitShrine,visitMerchant,showMerchantShop,renderTavernVisit,visitLocation,decorateNegativeEffects,generatePermanentLocations,locationVisibleToPlayer,revealLocationToPlayer,ensureTavernMercenary,restockTavernIfVacant,visitTavern,attemptDungeonExit,beginBonusExplorationTurnAfterDungeon,gameOverStats,showGameOverPopup,renderBoard,updateUI};
+  TabletopUI.connect({center:()=>centerMapOnPlayer(mapFocusPlayer()),closeSheet:closeCharacterSheet,closeModal:requestModalClose});
+  window.__RPG_DEBUG__={getState:()=>state,setState:v=>{state=v},freshState,HEROES,CARD_BY_ID,combatStart,combatFight,combatHeroAttack,finalizeHeroAttackRoll,applyHeroDamageNow,combatEnemyTurn,finalizeEnemyAttackRoll,acceptEnemyDamage,combatContinueAfterEnemyMiss,renderCombat,currentPlayer,getPlayer,ensurePlayerModel,supportedCombatEffect,applyCombatItemEffect,useHeroCombatAbility,combatReactionList,fullSetEquipped,completeSetNames,itemColorClass,mandatoryLootCount,setBonusActionInfo,useSetBonus,showRollPopup,heroImmuneStatus,combatPassiveDamageBonus,combatHeroDeath,combatVictory,movementFor,combatCanChangeEquipment,combatTickEnemyStatuses,equipTransaction,merchantSaleMultiplier,decorateNegativeEffects,generatePermanentLocations,locationVisibleToPlayer,revealLocationToPlayer,ensureTavernMercenary,restockTavernIfVacant,visitTavern,attemptDungeonExit,beginBonusExplorationTurnAfterDungeon,gameOverStats,showGameOverPopup,renderBoard,updateUI};
   window.__RPG_ONLINE__={startWithHeroes:startOnlineGame,exportState:exportOnlineState,applyState:applyOnlineState,currentPlayerId:()=>currentPlayer()?.id||null,isStarted:()=>!!state.started,sideInteractionOwnerId,sideInteractionActiveFor,exportSideState:sideInteractionPayload,endSideInteraction,refreshUI:()=>{renderJournal();updateUI();renderBoard()},setLocalHeroId:id=>{onlineLocalHeroId=id||null;if(onlineLocalHeroId){sheetView.playerId=onlineLocalHeroId;if(!els.sheetDrawer.hidden)renderCharacterSheet(sheetView.mode,sheetView.bonusKey)}renderJournal();updateUI();renderBoard()},canOffturnSharedAction:id=>!!id&&(state.tributeConsentPending?.ownerId===id||state.dungeonEntryNotice?.heroId===id),canOffturnModalActionFor,combatWindowIsHidden:()=>combatWindowHidden,showCombatWindow,hideCombatWindow};
   decorateNegativeEffects(document.body);negativeEffectObserver.observe(document.body,{childList:true,subtree:true});
   renderJournal();renderBoard();

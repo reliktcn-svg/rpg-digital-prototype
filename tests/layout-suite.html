@@ -1,0 +1,32 @@
+<!doctype html><meta charset="utf-8"><title>RPG responsive tests</title><style>body{background:#1b1b18;color:#eee;font:14px system-ui}iframe{display:block;border:0}pre{white-space:pre-wrap}</style><h1>Responsive regression</h1><div id="progress">Running</div><pre id="report"></pre><iframe id="fixture" title="Responsive fixture"></iframe><script>
+(async()=>{
+const f=document.getElementById('fixture'),out=document.getElementById('report'),results=[];
+const sizes=[[320,568],[360,800],[390,844],[430,932],[768,1024],[1024,768],[1280,720],[1440,1000],[1920,1080],[844,390],[667,375]];
+const scenes=['setup','board','inventory','item','combat','loot','trap','event','special','shrine','shrine-cursed','merchant','merchant-cursed','tavern','tavern-cursed','portal'];
+for(const [width,height] of sizes)for(const scene of scenes){
+ document.getElementById('progress').textContent=`${width}×${height} · ${scene}`;f.style.width=width+'px';f.style.height=height+'px';
+ await new Promise(r=>{f.onload=r;f.src='fixture.html?scene='+scene+'&t='+Date.now()});
+ await new Promise(r=>setTimeout(r,['shrine','shrine-cursed','merchant','merchant-cursed','tavern','tavern-cursed'].includes(scene)?850:450));
+ const fd=f.contentDocument,d=fd.querySelector('iframe').contentDocument,checks=[];
+ const check=(name,ok,details)=>checks.push({name,pass:!!ok,...(ok?{}:{details})});
+ const status=fd.getElementById('status').textContent;check('fixture loaded',!status,status);
+ check('no page horizontal overflow',d.documentElement.scrollWidth<=width+1,d.documentElement.scrollWidth);
+ const img=d.getElementById('mapVisual').getBoundingClientRect(),grid=d.getElementById('overlay').getBoundingClientRect();
+ check('map and hit grid aligned',Math.abs(img.x-grid.x)<1&&Math.abs(img.y-grid.y)<1&&Math.abs(img.width-grid.width)<1&&Math.abs(img.height-grid.height)<1);
+ const panel=scene==='inventory'||scene==='item'?d.getElementById('sheetDrawer'):!['setup','board'].includes(scene)?d.querySelector('.modal-card'):null;
+ if(panel){const r=panel.getBoundingClientRect();check('panel fits viewport',r.left>=-1&&r.right<=width+1&&r.top>=-1&&r.bottom<=height+1,JSON.stringify(r));}
+ if(scene==='combat'){
+  if(width>900){const action=d.getElementById('combatFight').getBoundingClientRect();check('first combat action visible',action.bottom<=height,JSON.stringify(action));}
+  const cards=[...d.querySelectorAll('.visual-combat-card')].map(e=>e.getBoundingClientRect());check('combat cards aligned',cards.length===2&&Math.abs(cards[0].y-cards[1].y)<1&&Math.abs(cards[0].height-cards[1].height)<1);
+  for(const side of d.querySelectorAll('.visual-combat-card')){const stats=side.querySelector('.visual-card-stats').getBoundingClientRect(),hp=side.querySelector('.visual-card-hp').getBoundingClientRect(),stage=side.querySelector('.visual-card-stage').getBoundingClientRect();check('stats do not overlap HP or art',stats.top>=hp.bottom-1&&stats.bottom<=stage.top+1,JSON.stringify({stats,hp,stage}));}
+ }
+ if(['trap','event','special','shrine','shrine-cursed','portal'].includes(scene)){const a=d.querySelector('.table-story-art').getBoundingClientRect(),b=d.querySelector('.table-story-content').getBoundingClientRect();check('story layout follows viewport',width<=700?b.top>=a.bottom-1:b.left>=a.right-1);const copy=d.querySelector('.table-story-copy');if(width>700&&copy.scrollHeight>copy.clientHeight){copy.scrollTop=copy.scrollHeight;check('long description can scroll to end',copy.scrollTop>0);}}
+ if(d.querySelector('.table-venue')){const a=d.querySelector('.table-venue-art').getBoundingClientRect(),b=d.querySelector('.table-venue-content').getBoundingClientRect();check('venue layout follows viewport',width<=700?b.top>=a.bottom-1:b.left>=a.right-1);}
+ if(['shrine','shrine-cursed','merchant','merchant-cursed'].includes(scene)){check('correct normal or cursed artwork',d.querySelector('[data-location-mode]')?.dataset.locationMode===(scene.endsWith('cursed')?'cursed':'normal'));}
+ if(scene==='loot'){const row=[...d.querySelectorAll('.loot-draft-card')].map(e=>e.getBoundingClientRect());const count=row.filter(r=>Math.abs(r.y-row[0].y)<2).length;check('loot columns',count===(width<=900?2:3),count);}
+ for(const i of d.querySelectorAll('img')){if(i.getAttribute('loading')!=='lazy')check('image loaded '+i.getAttribute('src'),i.complete&&i.naturalWidth>0);}
+ results.push({width,height,scene,pass:checks.every(x=>x.pass),checks});out.textContent=JSON.stringify(results.filter(r=>!r.pass),null,2);
+}
+document.getElementById('progress').textContent=`DONE: ${results.filter(x=>x.pass).length}/${results.length} scenarios passed`;out.textContent=JSON.stringify({finished:true,results},null,2);
+})();
+</script>

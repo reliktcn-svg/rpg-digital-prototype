@@ -1,0 +1,110 @@
+{
+  "checks": [
+    {
+      "name": "Six-digit room code",
+      "pass": true
+    },
+    {
+      "name": "Five players join",
+      "pass": true
+    },
+    {
+      "name": "Sixth player rejected",
+      "pass": true
+    },
+    {
+      "name": "Select warrior",
+      "pass": true
+    },
+    {
+      "name": "Select dwarf",
+      "pass": true
+    },
+    {
+      "name": "Select mage",
+      "pass": true
+    },
+    {
+      "name": "Select archer",
+      "pass": true
+    },
+    {
+      "name": "Select rogue",
+      "pass": true
+    },
+    {
+      "name": "Duplicate hero rejected",
+      "pass": true
+    },
+    {
+      "name": "Only host can start",
+      "pass": true
+    },
+    {
+      "name": "Difficulty selection by host",
+      "pass": true
+    },
+    {
+      "name": "Start with five heroes",
+      "pass": true
+    },
+    {
+      "name": "Difficulty locked after start",
+      "pass": true
+    },
+    {
+      "name": "Host initializes state",
+      "pass": true
+    },
+    {
+      "name": "All five clients read same state",
+      "pass": true
+    },
+    {
+      "name": "Invalid credential rejected",
+      "pass": true
+    },
+    {
+      "name": "Off-turn state publication rejected",
+      "pass": true
+    },
+    {
+      "name": "Active player publishes combat/item/journal",
+      "pass": true
+    },
+    {
+      "name": "Second client sees identical combat and inventory",
+      "pass": true
+    },
+    {
+      "name": "Stale revision rejected",
+      "pass": true
+    },
+    {
+      "name": "Turn handed to second hero",
+      "pass": true
+    },
+    {
+      "name": "Second client publishes on own turn",
+      "pass": true
+    },
+    {
+      "name": "Former active client can no longer publish",
+      "pass": true
+    },
+    {
+      "name": "Disconnected client resumes existing room",
+      "pass": true
+    },
+    {
+      "name": "Room restored after simulated server restart",
+      "pass": true
+    },
+    {
+      "name": "Restored inventory and combat preserved",
+      "pass": true
+    }
+  ],
+  "passed": 26,
+  "total": 26
+}

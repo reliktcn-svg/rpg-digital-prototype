@@ -1,0 +1,58 @@
+[
+  {
+    "location": "портал",
+    "variant": "normal",
+    "source_file": "портал.png",
+    "source_sha256": "60c2ef35f189b0924e42a27623efe7dc2a76a8345d112fd23acc600a88588c10",
+    "src": "assets/locations/portal-normal.webp"
+  },
+  {
+    "location": "портал",
+    "variant": "cursed",
+    "source_file": "портал проклятый.png",
+    "source_sha256": "5835dd4b01a7dfea49c96d5880d2d6924161299316851ac47495b6f7f2c1867d",
+    "src": "assets/locations/portal-cursed.webp"
+  },
+  {
+    "location": "торговец",
+    "variant": "normal",
+    "source_file": "торговец.png",
+    "source_sha256": "803e8733ee4a763393a5de533549122e4621209141a5e1d956dd50cc22c8b8b5",
+    "src": "assets/locations/merchant-normal.webp"
+  },
+  {
+    "location": "торговец",
+    "variant": "cursed",
+    "source_file": "торговец проклятый.png",
+    "source_sha256": "6926c2b1353cb3e25d9bac1286827664781db48ee6f882764a3dafc9b97ffe21",
+    "src": "assets/locations/merchant-cursed.webp"
+  },
+  {
+    "location": "таверна",
+    "variant": "normal",
+    "source_file": "таверна.png",
+    "source_sha256": "6b8a2d4b5cb6805547dbe91f106c7f964f23537d1cccdfc0b3493b14449f8a6e",
+    "src": "assets/locations/tavern-normal.webp"
+  },
+  {
+    "location": "таверна",
+    "variant": "cursed",
+    "source_file": "таверна проклятый.png",
+    "source_sha256": "ebf7242bbfc07fb5d4601eaec834c28d42c566b3117f46d8b6b612d8c94bacd4",
+    "src": "assets/locations/tavern-cursed.webp"
+  },
+  {
+    "location": "святилище",
+    "variant": "normal",
+    "source_file": "святилище.png",
+    "source_sha256": "0996542e7362f1c4106dff9df694cb99630bbf4a0bdd68abf334bd0fad191fab",
+    "src": "assets/locations/shrine-normal.webp"
+  },
+  {
+    "location": "святилище",
+    "variant": "cursed",
+    "source_file": "святилище проклятый.png",
+    "source_sha256": "9f9a4a1861bd89ff5f128825baec0a2b8153dbdc775230cd0051ead1e9bd2f72",
+    "src": "assets/locations/shrine-cursed.webp"
+  }
+]

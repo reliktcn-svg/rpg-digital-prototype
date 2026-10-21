@@ -1,0 +1,33 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tabletop fixture</title><style>html,body{margin:0;height:100%;background:#15120f}iframe{border:0;width:100%;height:100%;display:block}#status{position:fixed;bottom:0;left:0;font:10px Arial;background:#000;color:#fff;z-index:999}#status:empty{display:none}</style></head><body><iframe id="game" src="../index.html" title="Реальная игра"></iframe><output id="status"></output><script>
+// Test-only scenes use the game's existing debug interface. No test hooks in production.
+const scene=new URLSearchParams(location.search).get('scene')||'board';
+game.onload=async()=>{try{
+const w=game.contentWindow,d=w.document,D=w.__RPG_DEBUG__,E=w.__RPG_ONLINE__;
+d.getElementById('netLocal').click();
+if(scene==='setup')return;
+d.getElementById('startBtn').click();
+const s=D.getState();s.order=['warrior','dwarf','mage','archer','rogue'];s.currentIndex=0;
+const p=D.currentPlayer();p.gold=24;D.updateUI();D.renderBoard();
+if(scene==='inventory'||scene==='item'||scene==='pending'){
+p.equipment.weapon=141;p.equipment.armor=154;p.equipment.amulet=176;p.equipment.rings=[167,170];p.equipment.artifact=191;p.equipment.potions=[181,182];p.equipment.mercenary=198;p.backpack=[142,143,155,183];p.pendingItems=[144,145,146];D.updateUI();d.getElementById('mobileInventoryBtn').click();
+if(scene==='pending')d.getElementById('openPending').click();
+if(scene==='item'){d.querySelector('[data-slot="weapon"]').click();d.getElementById('itemFlip').click();}}
+if(scene==='combat'||scene==='loot'||scene==='boss'){
+D.combatStart(D.CARD_BY_ID[scene==='boss'?281:24]);
+if(scene==='loot'){const c=s.combat;c.phase='victory';c.victory={lootDraft:{candidates:[141,155,191,167,181,198],selected:[],keep:2,deckKey:'lootOuter',confirmed:false}};c.victoryUiStep=null;D.renderCombat();d.getElementById('combatPostVictory').click();}}
+if(scene==='trap'||scene==='event'||scene==='special'){
+const c=scene==='special'?D.CARD_BY_ID[133]:Object.values(D.CARD_BY_ID).find(c=>c.category===(scene==='trap'?'Ловушка':'Событие')&&c.deck==='Исследования внешних регионов');
+s.decks.exploreOuter.draw=[c.id];p.hex=Object.keys(w.MAP_DATA.hexes).find(h=>w.MAP_DATA.hexes[h].region==='kingdom'&&!s.locations[h]&&h!==w.MAP_DATA.startHex);s.rolled=true;s.turnMoved=true;s.movePending=false;D.updateUI();D.renderBoard();
+const b=[...d.querySelectorAll('#actionPanel button')].find(b=>b.textContent.startsWith('Исследовать'));if(!b)throw Error('Explore control missing');b.click();}
+if(['shrine','shrine-cursed','shrine-nat1','shrine-nat20','merchant','merchant-cursed','tavern','tavern-cursed'].includes(scene)){
+// Layout fixtures skip only the dice presenter; functional tests use real animation.
+w.FantasyDice=null;
+const name=scene.startsWith('shrine')?'Святилище':scene.startsWith('merchant')?'Торговец':'Таверна';const cursed=scene.includes('cursed')||scene.includes('nat');p.hex=Object.keys(s.locations).find(h=>s.locations[h].name===name&&w.MAP_DATA.hexes[h].region===(cursed?'cursed':'kingdom'));p.currentHp=5;p.gold=100;p.statuses=['Страх','Усталость'];s.rolled=true;s.turnMoved=true;s.locationActivationHex=p.hex;w.Math.random=()=>scene.endsWith('nat20')?.999:scene.endsWith('nat1')?0:.5;D.updateUI();D.renderBoard();[...d.querySelectorAll('#actionPanel button')].find(b=>b.textContent==='Посетить локацию').click();
+for(let i=0;i<4;i++){await new Promise(r=>setTimeout(r,80));if(!d.getElementById('rollOverlay').hidden)d.getElementById('rollPopupClose').click();}
+}
+if(scene==='portal'){const hex=Object.keys(s.locations).find(h=>s.locations[h].name==='Древний портал');p.hex=hex;s.turnMoved=true;s.portalPending={heroId:p.id,entryHex:hex,destinations:Object.keys(s.locations).filter(h=>s.locations[h].name==='Древний портал'&&h!==hex),remaining:0};D.updateUI();D.renderBoard();d.querySelector('.table-location-preview').click();}
+await new Promise(r=>setTimeout(r,350));
+// Report geometry without modifying layout. The host browser reads this report.
+window.fixtureReport={scene,width:innerWidth,gameWidth:d.documentElement.clientWidth,scrollWidth:d.documentElement.scrollWidth,errors:[],started:s.started};
+}catch(e){document.getElementById('status').textContent=e.stack;}};
+</script></body></html>
