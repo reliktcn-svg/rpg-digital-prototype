@@ -1,0 +1,8 @@
+RPG Digital Prototype v0.6.69 — Inventory Layout Fix
+Base: v0.6.68.
+
+- Backpack now lays item images left-to-right in rows (max 2 rows), with horizontal scrolling for more items. One or two items remain adjacent in the first row.
+- Pending/unresolved treasures use exactly the same compact square card layout as the backpack, with the existing detail actions unchanged.
+- Save / Load / Reset controls are accessible in the right-side hero/inventory pane during a running game, instead of being hidden with the old topbar.
+- The right panel's content scrolls vertically below its fixed tabs and save controls.
+- No card effects, drawing, combat, decks or network protocol changed.
