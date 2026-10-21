@@ -19,6 +19,10 @@
     .result{margin:0;color:#cec7b7;font-size:13px;text-align:center;flex:1;min-width:120px;overflow-wrap:anywhere}.result strong{font-weight:650;color:#f6dfad}
     .result.attack-breakdown{font-size:14px;line-height:1.65;color:#e7e8e5}
     .attack-line{display:flex;justify-content:center;align-items:baseline;gap:5px 6px;flex-wrap:wrap}
+    .result-line{display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:5px 7px}
+    .result-formula{font-size:14px;color:#e0e6e3;white-space:normal}
+    .result-line .attack-total{font-size:22px;color:#ffdd87;font-weight:850}
+    @media(max-width:420px){.result-formula{font-size:12px}.result-line .attack-total{font-size:19px}}
     .attack-prefix{font-size:12px;color:#c4cdd1;text-transform:uppercase;letter-spacing:.03em}
     .attack-mod{white-space:nowrap;color:#dde3e3}
     .attack-equal{color:#cdbb8a;font-weight:700}
@@ -61,16 +65,22 @@
     // Optional structured visual comparison supplied by the game. Never changes the dice.
     if(payload.breakdown!==undefined){
       const b=payload.breakdown;
-      if(!b || b.kind!=='attack' || !Array.isArray(b.modifiers) || b.modifiers.length>8 ||
-        ![b.base,b.total,b.defense].every(Number.isFinite) || typeof b.outcome!=='boolean')
-          throw new TypeError('Invalid attack breakdown');
-      const modifiers=b.modifiers.map(m=>{
-        if(!m||!Number.isFinite(m.value)||typeof m.label!=='string'||m.label.length>64)
-          throw new TypeError('Invalid attack modifier');
-        return Object.freeze({value:m.value,label:m.label});
-      });
-      roll.breakdown=Object.freeze({kind:'attack',base:b.base,modifiers:Object.freeze(modifiers),
-        total:b.total,defense:b.defense,outcome:b.outcome});
+      if(b?.kind==='result'){
+        if(!Number.isFinite(b.total)||typeof b.formula!=='string'||b.formula.length>128)
+          throw new TypeError('Invalid result breakdown');
+        roll.breakdown=Object.freeze({kind:'result',formula:b.formula,total:b.total});
+      }else{
+        if(!b || b.kind!=='attack' || !Array.isArray(b.modifiers) || b.modifiers.length>8 ||
+          ![b.base,b.total,b.defense].every(Number.isFinite) || typeof b.outcome!=='boolean')
+            throw new TypeError('Invalid attack breakdown');
+        const modifiers=b.modifiers.map(m=>{
+          if(!m||!Number.isFinite(m.value)||typeof m.label!=='string'||m.label.length>64)
+            throw new TypeError('Invalid attack modifier');
+          return Object.freeze({value:m.value,label:m.label});
+        });
+        roll.breakdown=Object.freeze({kind:'attack',base:b.base,modifiers:Object.freeze(modifiers),
+          total:b.total,defense:b.defense,outcome:b.outcome});
+      }
     }
     return Object.freeze(roll);
   }
@@ -173,7 +183,13 @@
       const values = roll.dice.map(d => 'D' + d.sides + ': ' + d.value).join(' · ');
       result.replaceChildren();
       result.classList.toggle('attack-breakdown',!!roll.breakdown);
-      if(roll.breakdown){
+      if(roll.breakdown?.kind==='result'){
+        const b=roll.breakdown,line=node('div','result-line');
+        const preceding=String(b.formula||'').replace(/\s*=\s*-?\d+\s*$/, '').trim();
+        if(preceding)line.append(node('span','result-formula',preceding),node('span','attack-equal','='));
+        line.append(node('span','attack-total',String(b.total)));
+        result.append(line);
+      }else if(roll.breakdown?.kind==='attack'){
         const b=roll.breakdown,line=node('div','attack-line');
         line.append(node('span','attack-prefix','Атака'),node('span','',String(b.base)));
         for(const m of b.modifiers){
