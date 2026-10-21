@@ -10,6 +10,22 @@ window.RPGTabletop = (() => {
     return `<div class="table-round"><small>РАУНД</small><strong>${Number(round)||1}</strong></div><div class="table-turns" role="group" aria-label="Очередь героев">${[active,...next].map(card).join('')}</div>${room?`<div class="turn-order-code">КОД ${escape(room)}</div>`:''}<button class="table-journal" type="button" data-table-journal>Журнал</button>`;
   }
   function token(svg,p,x,y,active,create){
+    // Reuse the actual SVG image element instead of replacing it on every state update.
+    // WebKit sometimes flashes newly attached SVG images until the first movement has cached them.
+    const preserved=[...svg.querySelectorAll('.table-token')].find(node=>node.getAttribute('data-token-hero')===p.id);
+    if(preserved){
+      const prev=lastTokens[p.id];
+      preserved.setAttribute('transform',`translate(${x} ${y})`);
+      preserved.setAttribute('class',`table-token ${active?'active':''}`);
+      preserved.setAttribute('aria-label',`${p.name}, ${p.hex}`);
+      const outer=preserved.querySelector('circle[stroke]');
+      if(outer){outer.setAttribute('stroke',active?'#f4d491':'#201b16');outer.setAttribute('stroke-width',active?5:3)}
+      if(prev&&Math.hypot(prev.x-x,prev.y-y)>1&&!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches&&preserved.animate){
+        preserved.animate([{transform:`translate(${prev.x}px,${prev.y}px)`},{transform:`translate(${x}px,${y}px)`}],{duration:450,easing:'cubic-bezier(.22,.61,.36,1)'});
+      }
+      svg.appendChild(preserved);
+      return;
+    }
     const g=create('g',{class:`table-token ${active?'active':''}`,transform:`translate(${x} ${y})`,'data-token-hero':p.id,'aria-label':`${p.name}, ${p.hex}`});
     const mask='table-portrait-'+p.id;
     const defs=create('defs');const clip=create('clipPath',{id:mask});clip.appendChild(create('circle',{cx:0,cy:-4,r:19}));defs.appendChild(clip);g.appendChild(defs);

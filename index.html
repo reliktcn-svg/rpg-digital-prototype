@@ -8,12 +8,18 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <title>RPG Digital Prototype v0.6.78 Tabletop UI</title>
-  <link rel="stylesheet" href="styles.css?v=0678ui" />
-  <link rel="stylesheet" href="location-ui.css?v=0678ui" />
-  <link rel="stylesheet" href="battle-result-ui.css?v=0678ui" />
-  <link rel="stylesheet" href="tabletop-enhancements.css?v=0678ui" />
-  <link rel="stylesheet" href="ui-fixes-v078.css?v=0678ui" />
+  <link rel="preload" as="image" href="assets/heroes/warrior.webp" />
+  <link rel="preload" as="image" href="assets/heroes/dwarf.webp" />
+  <link rel="preload" as="image" href="assets/heroes/mage.webp" />
+  <link rel="preload" as="image" href="assets/heroes/archer.webp" />
+  <link rel="preload" as="image" href="assets/heroes/rogue.webp" />
+  <title>RPG Digital Prototype v0.6.79 Tabletop UI</title>
+  <link rel="stylesheet" href="styles.css?v=0679ui" />
+  <link rel="stylesheet" href="location-ui.css?v=0679ui" />
+  <link rel="stylesheet" href="battle-result-ui.css?v=0679ui" />
+  <link rel="stylesheet" href="tabletop-enhancements.css?v=0679ui" />
+  <link rel="stylesheet" href="ui-fixes-v078.css?v=0679ui" />
+  <link rel="stylesheet" href="ui-fixes-v079.css?v=0679ui" />
 </head>
 <body class="tabletop-upgrade">
   
@@ -53,7 +59,7 @@
   <header class="topbar">
     <div>
       <div class="eyebrow">RPG DIGITAL PROTOTYPE</div>
-      <h1>Прототип v0.6.78 · Настольный интерфейс</h1>
+      <h1>Прототип v0.6.79 · Настольный интерфейс</h1>
       <div class="header-tools">
         <button id="journalBtn" class="journal-top" type="button">Журнал</button>
       </div>
@@ -131,11 +137,6 @@
       </div>
       <button id="sheetClose" class="sheet-close" aria-label="Закрыть">×</button>
     </div>
-    <div class="sheet-utility-tools" aria-label="Управление сохранением партии">
-      <button type="button" id="sheetSaveBtn" class="ghost">Сохранить</button>
-      <button type="button" id="sheetLoadBtn" class="ghost">Загрузить</button>
-      <button type="button" id="sheetResetBtn" class="danger">Сбросить</button>
-    </div>
     <div id="sheetContent" class="sheet-content"></div>
   </aside>
 
@@ -146,6 +147,11 @@
         <button id="journalMine" class="journal-filter active" type="button">Мои действия</button>
         <button id="journalAll" class="journal-filter" type="button">Все игроки</button>
       </div>
+    <div class="journal-utility-tools" aria-label="Управление сохранением партии">
+      <button type="button" id="sheetSaveBtn" class="ghost">Сохранить</button>
+      <button type="button" id="sheetLoadBtn" class="ghost">Загрузить</button>
+      <button type="button" id="sheetResetBtn" class="danger">Сбросить</button>
+    </div>
       <div id="log" class="log journal-log"></div>
     </div>
   </div>
@@ -171,13 +177,13 @@
     </div>
   </div>
 
-  <script src="map-data.js?v=0678ui"></script>
-  <script src="cards-data.js?v=0678ui"></script>
-  <script src="location-placement.js?v=0678ui"></script>
-  <script src="arcana/dice-renderer.js?v=0678ui"></script>
-  <script src="arcana/dice-animator.js?v=0678ui"></script>
-  <script src="tabletop-enhancements.js?v=0678ui"></script>
-  <script src="app.js?v=0678ui"></script>
-  <script src="network-lobby.js?v=0678ui"></script>
+  <script src="map-data.js?v=0679ui"></script>
+  <script src="cards-data.js?v=0679ui"></script>
+  <script src="location-placement.js?v=0679ui"></script>
+  <script src="arcana/dice-renderer.js?v=0679ui"></script>
+  <script src="arcana/dice-animator.js?v=0679ui"></script>
+  <script src="tabletop-enhancements.js?v=0679ui"></script>
+  <script src="app.js?v=0679ui"></script>
+  <script src="network-lobby.js?v=0679ui"></script>
 </body>
 </html>

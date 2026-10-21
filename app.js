@@ -970,7 +970,7 @@
     const visualHeroId=BATTLE_RESULT_HERO_IDS.has(x.visualHeroId)?x.visualHeroId:null;
     const outcomeArt=els.rollOverlay.querySelector('#rollPopupOutcomeArt');
     const outcomeImg=els.rollOverlay.querySelector('#rollPopupOutcomeImage');
-    els.rollOverlay.classList.toggle('battle-results-illustrated',x.title==='Результаты боя'&&!!visualHeroId);
+    els.rollOverlay.classList.toggle('battle-results-illustrated',x.title==='Результаты боя'&&!!visualHeroId);if(visualHeroId)els.rollOverlay.style.setProperty('--result-hero-color',getPlayer(visualHeroId)?.color||'#bc9960');else els.rollOverlay.style.removeProperty('--result-hero-color');
     if(outcomeArt&&outcomeImg){outcomeArt.hidden=!visualHeroId;if(visualHeroId){outcomeImg.src=`assets/results/${visualHeroId}-victory.webp`;outcomeImg.alt='Иллюстрация победы героя';}else outcomeImg.removeAttribute('src');}
     els.rollPopupTitle.textContent=x.title||'Бросок';
     els.rollPopupMain.textContent=x.main;
@@ -993,9 +993,9 @@
     }
 
   }
-  function announceCheck(title,d,statLabel,bonus,total,dc,ok,natural=null,extra=''){
+  function announceCheck(title,d,statLabel,bonus,total,dc,ok,natural=null,extra='',onClose=null){
     recordNatural(currentPlayer(),natural);
-    showRollPopup(title,d,`D20 <b>${d}</b> ${signed(bonus)} ${statLabel} = <b>${total}</b>`,`Сложность ${dc} · <b>${ok?'УСПЕХ':'ПРОВАЛ'}</b>${natural?` · Натуральная ${natural}`:''}${extra?`<br>${extra}`:''}`,natural);
+    showRollPopup(title,d,`D20 <b>${d}</b> ${signed(bonus)} ${statLabel} = <b>${total}</b>`,`Сложность ${dc} · <b>${ok?'УСПЕХ':'ПРОВАЛ'}</b>${natural?` · Натуральная ${natural}`:''}${extra?`<br>${extra}`:''}`,natural,onClose);
   }
 
   function beginExplore(deckKey){
@@ -1058,18 +1058,24 @@
     const check=card.fields['Проверка']||'',key=statKeyFromText(check),dc=Number((check.match(/(\d+)\+/)||[])[1]||13);
     const label=key?statName(key):'характеристика';
     const prep=playerHardMode(currentPlayer())?'':`<div class="trap-prep-note"><b>Подготовка к ловушке.</b><br>До броска можно открыть вкладку «ИНВЕНТАРЬ» справа и изменить экипировку. Когда будете готовы, нажмите «Проверка».</div>`;
-    showCard(card,prep,[
-      {label:`Проверка · ${label} ${dc}+`,className:'success',fn:()=>performTrapCheck(card)}
-    ]);
+    const p=currentPlayer(),boostId=key==='dex'?170:key==='str'?171:null;
+    const canBoost=!!boostId&&combatHasEquipped(p,boostId)&&p.itemUsage?.[boostId]?.turn!==p.personalTurn;
+    const armed=state.trapBonus?.cardId===card.id;
+    const actions=[];
+    if(canBoost||armed)actions.push({label:armed?'✓ +3 к проверке применено':'+3 к проверке',className:'secondary',disabled:armed,fn:()=>{
+      if(!canBoost||state.trapBonus?.cardId===card.id)return;
+      state.trapBonus={cardId:card.id,id:boostId,bonus:3};p.itemUsage=p.itemUsage||{};p.itemUsage[boostId]={turn:p.personalTurn};
+      log(`${p.name} применяет ${itemCard(boostId)?.name||'бонус'}: +3 к проверке.`);resolveTrap(card);updateUI();
+    }});
+    actions.push({label:`Проверка · ${label} ${dc}+`,className:'success',fn:()=>performTrapCheck(card)});
+    showCard(card,prep,actions);
   }
-  function performTrapCheck(card){
+  function performTrapCheck(card,options={}){
     const p=currentPlayer(),ex=state.exploration,deckKey=ex?.deckKey,check=card.fields['Проверка']||'',key=statKeyFromText(check),dc=Number((check.match(/(\d+)\+/)||[])[1]||13);
-    let bonus=key?effectiveStat(p,key):0;
-    const boostId=key==='dex'?170:key==='str'?171:null;
-    if(boostId&&combatHasEquipped(p,boostId)&&p.itemUsage?.[boostId]?.turn!==p.personalTurn&&confirm(`${itemCard(boostId).name}: применить +3 к этой проверке?`)){bonus+=3;p.itemUsage[boostId]={turn:p.personalTurn}}
+    const pending=state.trapBonus?.cardId===card.id?state.trapBonus:null;let bonus=options.reroll?Number(options.bonusOverride||0):(key?effectiveStat(p,key):0)+(pending?.bonus||0);if(!options.reroll)state.trapBonus=null;
     let d20=rand(20),total=d20+bonus,natural=d20===20?20:d20===1?1:null,ok=natural===20?true:natural===1?false:total>=dc;
-    if(!ok&&combatHasEquipped(p,163)&&confirm('Плащ Тени: перебросить проверку ловушки?')){d20=rand(20);total=d20+bonus;natural=d20===20?20:d20===1?1:null;ok=natural===20?true:natural===1?false:total>=dc;log(`${p.name}: Плащ Тени — переброс проверки ловушки.`)}
-    recordNatural(p,natural);
+    // Cloak reroll is a real in-game choice AFTER the failed roll animation, never a browser prompt.
+
     const outcome=String(ok?(card.fields['Успех']||'Ловушка пройдена без последствий.'):(card.fields['Провал']||'Проверка провалена.'));
     const damageExpr=(outcome.match(/(D(?:4|6|8|10|12|20))\s+урона/i)||[])[1]||null;
     const damageRoll=damageExpr?rollDiceText(damageExpr):0;
@@ -1078,7 +1084,7 @@
     // Gameplay effects and even death are delayed until the player has seen the check
     // and the damage animations. This is crucial on both mobile and network clients.
     const finishTrap=()=>{
-      if(!state.exploration)return;
+      if(!state.exploration)return;recordNatural(p,natural);
       if(!ok)state.exploration.failedTrap=true;
       const effectResult=applyEffectText(p,outcome,deckKey,{skipDamage:true})||{};
       if(!ok)addTrapFutureEffect(p,card);
@@ -1105,8 +1111,16 @@
     };
     const showCritical=()=>criticalRoll?showRollPopup('Ловушка · Натуральная 1',criticalRoll,`D6 = <b>${criticalRoll}</b>`,'Дополнительный урон',null,finishTrap,'Продолжить',true):finishTrap();
     const showDamage=()=>damageExpr?showRollPopup(`Ловушка · урон`,damageRoll,`${damageExpr} = <b>${damageRoll}</b>`,'Урон за провал проверки',null,showCritical,'Продолжить',true):showCritical();
+    const canCloakReroll=!ok&&!options.reroll&&combatHasEquipped(p,163)&&p.itemUsage?.[163]?.turn!==p.personalTurn;
+    const afterResult=()=>{
+      if(!canCloakReroll){showDamage();return}
+      showCard(card,`<b>ПРОВАЛ</b> проверки D20: ${d20} ${signed(bonus)} = ${total}, нужно ${dc}+. Плащ Тени №163 позволяет перебросить проверку один раз.`,[
+        {label:'Перебросить · Плащ Тени',className:'success',fn:()=>{p.itemUsage=p.itemUsage||{};p.itemUsage[163]={turn:p.personalTurn};log(`${p.name}: Плащ Тени №163 — повторная проверка.`);performTrapCheck(card,{reroll:true,bonusOverride:bonus})}},
+        {label:'Принять результат',className:'secondary',fn:()=>{closeModal();showDamage()}}
+      ]);
+    };
     closeModal();
-    showRollPopup(`Ловушка · ${key?statName(key):'проверка'}`,d20,`D20 ${d20} ${signed(bonus)} ${key?statName(key):''} = <b>${total}</b>`,`Сложность ${dc} · <b>${ok?'УСПЕХ':'ПРОВАЛ'}</b>`,natural,showDamage,'Продолжить',true);
+    showRollPopup(`Ловушка · ${key?statName(key):'проверка'}`,d20,`D20 ${d20} ${signed(bonus)} ${key?statName(key):''} = <b>${total}</b>`,`Сложность ${dc} · <b>${ok?'УСПЕХ':'ПРОВАЛ'}</b>`,natural,afterResult,'Продолжить',false);
   }
   function peekExploreTop(deckKey){const d=state.decks[deckKey];if(!d)return null;if(!d.draw.length&&!recycleDiscardIntoDraw(deckKey))return null;return itemCard(d.draw[d.draw.length-1])}
   function resolveReconnaissance(card){
@@ -1155,7 +1169,21 @@
   }
   function resolveCheckedEvent(card){
     const p=currentPlayer(),check=card.fields['Проверка']||'',key=statKeyFromText(check),dc=Number((check.match(/(\d+)\+/)||[])[1]||13);
-    const d=rand(20),bonus=key?effectiveStat(p,key):0,total=d+bonus,natural=d===20?20:d===1?1:null,ok=natural===20?true:natural===1?false:total>=dc;
+    const canRing=key==='dex'&&combatHasEquipped(p,170)&&p.itemUsage?.[170]?.turn!==p.personalTurn;
+    const armed=state.eventDexBonus?.cardId===card.id;
+    const actions=[];
+    if(canRing||armed)actions.push({label:armed?'✓ +3 к проверке применено':'+3 к проверке',className:'secondary',disabled:armed,fn:()=>{
+      if(!canRing||armed)return;state.eventDexBonus={cardId:card.id,bonus:3};p.itemUsage=p.itemUsage||{};p.itemUsage[170]={turn:p.personalTurn};
+      log(`${p.name}: Кольцо лёгкого шага №170 — +3 к проверке события.`);resolveCheckedEvent(card);
+    }});
+    actions.push({label:`Проверка · ${key?statName(key):'характеристика'} ${dc}+`,className:'success',fn:()=>performCheckedEvent(card)});
+    showCard(card,'Перед проверкой можно применить доступный бонус.',actions);
+  }
+  function performCheckedEvent(card){
+    const p=currentPlayer(),check=card.fields['Проверка']||'',key=statKeyFromText(check),dc=Number((check.match(/(\d+)\+/)||[])[1]||13);
+    const bonus=(key?effectiveStat(p,key):0)+(state.eventDexBonus?.cardId===card.id?Number(state.eventDexBonus.bonus||0):0);
+    state.eventDexBonus=null;
+    const d=rand(20),total=d+bonus,natural=d===20?20:d===1?1:null,ok=natural===20?true:natural===1?false:total>=dc;
     const resultText=ok?(card.fields['Успех']||''):(card.fields['Провал']||'');
     announceCheck(`Событие · ${card.name}`,d,key?statName(key):'характеристика',bonus,total,dc,ok,natural);
     log(`${p.name}: «${card.name}» — D20 ${d} + ${key?statName(key):'?'} ${signed(bonus)} = ${total} против ${dc}: <b>${ok?'успех':'провал'}</b>.`);
@@ -1304,13 +1332,13 @@
   function battleFateArt(hero,type){const src=battleOutcomeImage(hero,type);return `<div class="battle-fate-art"><img src="${src}" alt="${escapeCombatText(hero?.name||'Герой')} · ${type==='victory'?'Победа':'Поражение'}" onerror="this.hidden=true" /></div>`;}
   function showDefeatPopup(p,enemy,loss,turnEnded=false){
     rollPopupQueue.length=0;rollPopupAfterClose=null;if(els.rollOverlay)els.rollOverlay.hidden=true;
-    const source=enemy?`<b>${escapeCombatText(p.name)}</b> пал от <b class="defeat-enemy-rank ${enemyRankClass(enemy)}">${escapeCombatText(ENEMY_GENITIVE[enemy.id]||enemy.name)}</b>.`:`<b>${escapeCombatText(p.name)}</b> пал.`;
+    const source=enemy?`<b class="fate-hero-name">${escapeCombatText(p.name.toUpperCase())}</b> пал от <b class="defeat-enemy-rank ${enemyRankClass(enemy)}">${escapeCombatText(ENEMY_GENITIVE[enemy.id]||enemy.name)}</b>.`:`<b class="fate-hero-name">${escapeCombatText(p.name.toUpperCase())}</b> пал.`;
     modalOffturnOwnerId=p.id;modalCloseAction=null;
     els.modalContent.innerHTML=`<div class="battle-fate battle-fate-defeat" style="--result-hero-color:${p.color||'#a279c1'}">${battleFateArt(p,'defeat')}
-      <div class="battle-fate-right"><div class="battle-fate-scroll"><div class="battle-fate-kicker">ПОРАЖЕНИЕ</div><h2>Герой пал</h2>
-        <div class="battle-fate-info">${source}</div><div class="battle-fate-info battle-fate-gold"><span aria-hidden="true">🪙</span> Потеряно золота: <b>${loss}</b></div>
-        <div class="battle-fate-note">Герой возвращается в <b>Лагерь</b>.${turnEnded?' Ход уже завершён автоматически.':''}</div></div>
-        <div class="battle-fate-footer"><button id="defeatContinue" type="button" class="success">Далее</button></div></div></div>`;
+      <div class="battle-fate-right"><div class="battle-fate-scroll"><h2>Результаты боя</h2><div class="battle-fate-kicker">ПОРАЖЕНИЕ</div>
+        <div class="battle-fate-info">${source}</div><div class="battle-fate-info battle-fate-gold">Потеряно золота: <b>${loss}</b></div>
+        <div class="battle-fate-note">Герой возвращается в лагерь залечивать раны.</div></div>
+        <div class="battle-fate-footer"><button id="defeatContinue" type="button" class="success">Продолжить</button></div></div></div>`;
     els.modal.hidden=false;document.getElementById('defeatContinue').onclick=closeModal;
   }
   function gameOverStats(p){
@@ -1950,7 +1978,7 @@
     const reverse=!!sheetView.itemFlipped;
     const face=reverse?inventoryCardBackHtml(card):itemCardFrontHtml(card,p);
     const spent=itemEffectSpent(p,id);
-    els.sheetContent.innerHTML=`${ro}<div class="sheet-nav"><button class="ghost" id="itemBack">← Назад</button><span>${origin}</span></div><div class="item-detail-card ${itemColorClass(p,card)}">${lockBtn}${face}${lockNote}${spent?'<div class="item-use-badge">✓ Эффект использован · ожидает восстановления</div>':''}</div><button type="button" class="item-flip-button secondary" id="itemFlip" aria-pressed="${reverse}">${reverse?'↶ Показать рисунок':'↻ Перевернуть · описание'}</button>${showEquipError?`<div class="error-box">${equip.why}</div>`:''}<div class="modal-actions" id="itemActions"></div>`;
+    els.sheetContent.innerHTML=`${ro}<div class="sheet-nav"><button class="ghost" id="itemBack">← Назад</button><span>${origin}</span></div><div class="item-detail-card ${itemColorClass(p,card)}">${lockBtn}<button type="button" class="item-face-hit" id="itemFlip" aria-label="${reverse?'Показать изображение предмета':'Показать описание предмета'}">${face}</button>${lockNote}${spent?'<div class="item-use-badge">✓ Эффект использован · ожидает восстановления</div>':''}</div>${showEquipError?`<div class="error-box">${equip.why}</div>`:''}<div class="modal-actions" id="itemActions"></div>`;
     document.getElementById('itemFlip').onclick=()=>{sheetView.itemFlipped=!sheetView.itemFlipped;renderItemDetail(getPlayer(p.id)||p,id,ctx)};
     document.getElementById('itemBack').onclick=()=>ctx?.where==='backpack'?renderCharacterSheet('backpack'):ctx?.where==='pending'?renderCharacterSheet('pending'):renderCharacterSheet('inventory');const lockToggle=document.getElementById('itemLockToggle');if(lockToggle)lockToggle.onclick=()=>{setItemLocked(p,id,!isItemLocked(p,id));renderItemDetail(p,id,ctx);updateUI()};const box=document.getElementById('itemActions');for(const a of actions){const b=document.createElement('button');b.textContent=a.label;b.className=a.cls||'primary';b.disabled=!!a.disabled;if(a.title)b.title=a.title;b.onclick=a.fn;box.appendChild(b)}const close=document.createElement('button');close.textContent='Закрыть';close.className='ghost';close.onclick=()=>renderCharacterSheet('inventory');box.appendChild(close);
   }
@@ -2000,9 +2028,9 @@
   }
   function requestEquip(p,id,ctx){const card=itemCard(id),check=canEquipCard(p,card),heroCombat=heroIsActiveCombatant(p);if(!check.ok){alert(check.why);return}if(heroCombat&&!combatCanChangeEquipment(p,card)){alert('Экипировку можно изменить один раз в свой боевой раунд до атаки. Зелья перекладываются без ограничения.');return}if(heroCombat&&ctx?.where!=='backpack'){alert('Во время боя надевать предмет можно только из рюкзака.');return}const slots=targetSlots(card);if(!slots.length)return;const empty=slots.find(s=>getSlotId(p,s)==null);if(empty){const r=equipTransaction(p,id,ctx,empty,'backpack');if(!r.ok){alert(r.why);return}if(heroCombat&&itemType(card)==='зелье'){state.combat.potionUnlockRound=state.combat.potionUnlockRound||{};state.combat.potionUnlockRound[id]=state.combat.round+1;combatPush(`«${card.name}» переложено из рюкзака в быстрый слот. Оно станет доступно в следующий боевой ход героя.`);renderCombat()}window.dispatchEvent(new Event('rpg-local-mutation'));renderAfterPendingResolution(getPlayer(p.id)||p,ctx,'inventory');if(heroCombat)renderCombat();updateUI();return}if(slots.length===1){renderReplaceChoice(p,id,ctx,slots[0]);return}els.sheetContent.innerHTML=`<div class="sheet-nav"><button class="ghost" id="cancelEquip">← К предмету</button><b>Выберите слот для замены</b></div><div class="replace-list">${slots.map(s=>{const c=itemCard(getSlotId(p,s));return `<button class="item-row ${c?itemColorClass(p,c):''}" data-replace-slot="${s}"><span><b>${SLOT_LABELS[s]}</b><small>${c?.name||'пусто'}${c?.fields?.['Эффект']?` · ${c.fields['Эффект']}`:''}</small></span><span>›</span></button>`}).join('')}</div>`;document.getElementById('cancelEquip').onclick=()=>showItemInSheet(id,ctx);els.sheetContent.querySelectorAll('[data-replace-slot]').forEach(b=>b.onclick=()=>renderReplaceChoice(p,id,ctx,b.dataset.replaceSlot))}
   function renderReplaceChoice(p,id,ctx,slot){const oldId=getSlotId(p,slot),old=itemCard(oldId),card=itemCard(id),heroCombat=heroIsActiveCombatant(p);els.sheetContent.innerHTML=`<div class="sheet-nav"><button class="ghost" id="cancelReplace">← Назад</button><b>Замена: ${SLOT_LABELS[slot]}</b></div><div class="compare-box compare-rich"><div class="compare-item-card ${old?itemColorClass(p,old):''}"><small>Сейчас</small><b>${old?.name||'—'}</b>${old?`<div class="card-fields compact">${itemFieldsHtml(old)}</div>`:''}</div><div class="compare-arrow">→</div><div class="compare-item-card ${card?itemColorClass(p,card):''}"><small>Новый</small><b>${card?.name||'—'}</b>${card?`<div class="card-fields compact">${itemFieldsHtml(card)}</div>`:''}</div></div><div class="modal-actions" id="replaceActions"></div>`;document.getElementById('cancelReplace').onclick=()=>showItemInSheet(id,ctx);const box=document.getElementById('replaceActions');const add=(label,cls,mode)=>{const b=document.createElement('button');b.textContent=label;b.className=cls;if(mode==='discard'&&isItemLocked(p,oldId)){b.disabled=true;b.title='Предмет заблокирован для продажи и сброса.'}b.onclick=()=>{if(mode==='discard'&&isItemLocked(p,oldId)){alert('Предмет заблокирован для продажи и сброса.');return}const live=getPlayer(p.id)||p;const r=equipTransaction(live,id,ctx,slot,mode);if(!r.ok){alert(r.why);return}if(heroCombat&&itemType(card)==='зелье'&&ctx?.where==='backpack'){state.combat.potionUnlockRound=state.combat.potionUnlockRound||{};state.combat.potionUnlockRound[id]=state.combat.round+1;combatPush(`«${card.name}» переложено из рюкзака в быстрый слот. Оно станет доступно в следующий боевой ход героя.`);renderCombat()}window.dispatchEvent(new Event('rpg-local-mutation'));renderAfterPendingResolution(p,ctx,'inventory');if(heroCombat)renderCombat();updateUI()};box.appendChild(b)};if(slot==='mercenary'){const b=document.createElement('button');b.textContent='Взять нового наёмника, старого распустить';b.className='success';if(isItemLocked(p,oldId)){b.disabled=true;b.title='Предмет заблокирован для продажи и сброса.'}b.onclick=()=>{if(isItemLocked(p,oldId)){alert('Предмет заблокирован для продажи и сброса.');return}const live=getPlayer(p.id)||p;const r=equipTransaction(live,id,ctx,slot,'discard');if(!r.ok){alert(r.why);return}window.dispatchEvent(new Event('rpg-local-mutation'));renderAfterPendingResolution(p,ctx,'inventory');if(heroCombat)renderCombat();updateUI()};box.appendChild(b);return}add('Заменить, старый в рюкзак','success','backpack');if(!heroCombat)add('Заменить и сбросить старый','danger','discard');}
-  function territoryFullCost(hex){return MAP.hexes[hex]?.region==='cursed'?20:10}
+  function territoryFullCost(hex){return fullAreaForTerritory(hex)?20:10}
   function fullAreaForTerritory(hex){const t=state.territories[hex];if(!t?.areaId)return null;return state.areas.find(a=>a.id===t.areaId&&a.owner===t.owner)||null}
-  function tributeCostFor(hex){const base=MAP.hexes[hex]?.region==='cursed'?10:5;return fullAreaForTerritory(hex)?base*2:base}
+  function tributeCostFor(hex){return fullAreaForTerritory(hex)?20:10}
   function transferGold(from,to,amount){const paid=Math.min(Math.max(0,amount),from.gold);from.gold-=paid;if(to)gainGold(to,paid);return paid}
   function clearForeignTerritoryPending(){
     const pend=state.foreignTerritoryPending;state.foreignTerritoryPending=null;
@@ -2023,29 +2051,46 @@
   function transferTerritory(hex,newOwnerId,payment=0,oldOwnerId=null){
     const t=state.territories[hex];if(!t)return false;const oldOwner=getPlayer(oldOwnerId||t.owner),newOwner=getPlayer(newOwnerId);if(!oldOwner||!newOwner||oldOwner.id===newOwner.id)return false;
     const oldAreaId=t.areaId;if(oldAreaId)breakAreaById(oldAreaId,`территория ${hex} сменила владельца`);
-    oldOwner.maxHp=Math.max(oldOwner.hp||1,oldOwner.maxHp-1);oldOwner.currentHp=Math.min(oldOwner.currentHp,oldOwner.maxHp);
-    newOwner.maxHp+=1;newOwner.currentHp=Math.min(newOwner.maxHp,newOwner.currentHp+1);
+    oldOwner.maxHp=Math.max(oldOwner.hp||1,oldOwner.maxHp-2);oldOwner.currentHp=Math.min(oldOwner.currentHp,oldOwner.maxHp);
+    newOwner.maxHp+=2;newOwner.currentHp=Math.min(newOwner.maxHp,newOwner.currentHp+2);
     t.owner=newOwner.id;t.areaId=null;
     if(payment>0){const paid=transferGold(newOwner,oldOwner,payment);log(`${newOwner.name} выплачивает ${oldOwner.name} <b>${paid} золота</b> за территорию ${hex}.`)}
     log(`<b>${newOwner.name} захватывает территорию ${hex}</b>. Максимум ЗД: ${newOwner.maxHp}; у ${oldOwner.name}: ${oldOwner.maxHp}.`);return true;
   }
+  // Resolve a contest as a complete turn, never continue a path after a capture or avoidance attempt.
+  function finishTerritoryAttempt(p,reason){
+    state.foreignTerritoryPending=null;state.moveTransit=null;state.pendingMoveAction=null;
+    if(state.started&&!state.gameOver&&currentPlayer()?.id===p.id&&p.currentHp>0)advanceTurnState(p,reason);
+    else{updateUI();renderBoard()}
+  }
+  function territoryAttemptDamage(p,amount,expr,reason,after){
+    showRollPopup(reason,amount,`${expr} = <b>${amount}</b>`,`Урон герою ${p.name}`,null,()=>{
+      const died=damage(p,amount);if(!died)after();
+    },'Продолжить',false);
+  }
   function attemptAvoidTribute(){
-    const p=currentPlayer(),pend=state.foreignTerritoryPending;if(!pend||pend.heroId!==p.id)return;const owner=getPlayer(pend.ownerId),d=rand(20),cha=effectiveStat(p,'cha'),total=d+cha,cost=tributeCostFor(pend.hex),failedCost=cost*2,natural=d===20?20:d===1?1:null,ok=d===20?true:d===1?false:total>=12;
-    announceCheck(`Избегание дани · ${pend.hex}`,d,'ХАР',cha,total,12,ok,natural,ok?'Дань не платится':`При провале: ${failedCost} золота`);
-    if(d===20){const pay=Math.floor(territoryFullCost(pend.hex)*.5);log(`${p.name}: избегание дани — <b>натуральная 20</b>. Территория автоматически захвачена.`);transferTerritory(pend.hex,p.id,pay,owner.id);clearForeignTerritoryPending();return}
-    if(d===1){const paid=transferGold(p,owner,failedCost);const dmg=rand(6)+rand(6);log(`${p.name}: избегание дани — <b>натуральная 1</b>. Выплачено ${paid}/${failedCost} золота; дополнительно 2D6 = <b>${dmg}</b> урона.`);damage(p,dmg);if(p.currentHp>0)clearForeignTerritoryPending();return}
-    if(total>=12){log(`${p.name}: D20 ${d} + ХАР ${signed(cha)} = ${total}. <b>Дань успешно избегнута.</b>`);clearForeignTerritoryPending();return}
-    const paid=transferGold(p,owner,failedCost);if(paid<failedCost){const dmg=rand(6);log(`${p.name}: избегание дани провалено. Требуется ${failedCost} золота: отдано ${paid}, дополнительно D6 = ${dmg} урона.`);damage(p,dmg);if(p.currentHp>0)clearForeignTerritoryPending();return}
-    log(`${p.name}: D20 ${d} + ХАР ${signed(cha)} = ${total}. Избегание дани провалено — выплачено <b>${failedCost} золота</b>.`);clearForeignTerritoryPending();
+    const p=currentPlayer(),pend=state.foreignTerritoryPending;if(!pend||pend.heroId!==p.id)return;
+    const owner=getPlayer(pend.ownerId),d=rand(20),cha=effectiveStat(p,'cha'),total=d+cha,failedCost=15;
+    const natural=d===20?20:d===1?1:null,ok=d===20?true:d===1?false:total>=12;
+    announceCheck(`Избегание дани · ${pend.hex}`,d,'ХАР',cha,total,12,ok,natural,ok?'Дань не платится':`При провале: ${failedCost} золота`,()=>{
+      if(d===20){const pay=Math.floor(territoryFullCost(pend.hex)*.5);log(`${p.name}: избегание дани — натуральная 20, территория захвачена.`);transferTerritory(pend.hex,p.id,pay,owner.id);finishTerritoryAttempt(p,'автоматический захват территории');return}
+      if(ok){log(`${p.name}: дань успешно избегнута (D20 ${d} + ${signed(cha)} = ${total}).`);finishTerritoryAttempt(p,'избегание дани');return}
+      const paid=transferGold(p,owner,failedCost);
+      if(d===1){const r1=rand(6),r2=rand(6);log(`${p.name}: натуральная 1 при избегании дани: выплачено ${paid} золота, получено 2D6=${r1+r2} урона.`);territoryAttemptDamage(p,r1+r2,'2D6','Избегание дани · Натуральная 1',()=>finishTerritoryAttempt(p,'неудачное избегание дани'));return}
+      if(paid<failedCost){const dmg=rand(6);log(`${p.name}: избегание провалено: отдано всё золото (${paid}/${failedCost}), D6=${dmg} урона.`);territoryAttemptDamage(p,dmg,'D6','Не хватило золота · урон',()=>finishTerritoryAttempt(p,'неудачное избегание дани'));return}
+      log(`${p.name}: избегание провалено, выплачено ${paid} золота.`);finishTerritoryAttempt(p,'неудачное избегание дани');
+    });
   }
   function attemptCaptureTerritory(){
-    const p=currentPlayer(),pend=state.foreignTerritoryPending;if(!pend||pend.heroId!==p.id)return;const owner=getPlayer(pend.ownerId),cost=territoryFullCost(pend.hex);if(p.gold<cost){alert(`Для попытки захвата нужно иметь не меньше ${cost} золота.`);return}
+    const p=currentPlayer(),pend=state.foreignTerritoryPending;if(!pend||pend.heroId!==p.id)return;
+    const owner=getPlayer(pend.ownerId),cost=territoryFullCost(pend.hex);if(p.gold<cost)return;
     const d=rand(20),cha=effectiveStat(p,'cha'),total=d+cha,natural=d===20?20:d===1?1:null,ok=d===20?true:d===1?false:total>=15;
-    announceCheck(`Захват территории · ${pend.hex}`,d,'ХАР',cha,total,15,ok,natural);
-    if(d===20){log(`${p.name}: захват ${pend.hex} — <b>натуральная 20</b>. Захват автоматический, без выплаты.`);transferTerritory(pend.hex,p.id,0,owner.id);clearForeignTerritoryPending();return}
-    if(d===1){const paid=transferGold(p,owner,cost),dmg=rand(6);log(`${p.name}: захват ${pend.hex} — <b>натуральная 1</b>. Захват провален; выплачено ${paid} золота и получено D6 = <b>${dmg}</b> урона.`);damage(p,dmg);if(p.currentHp>0)clearForeignTerritoryPending();return}
-    if(total>=15){log(`${p.name}: D20 ${d} + ХАР ${signed(cha)} = ${total}. <b>Захват успешен.</b>`);transferTerritory(pend.hex,p.id,cost,owner.id);clearForeignTerritoryPending();return}
-    log(`${p.name}: D20 ${d} + ХАР ${signed(cha)} = ${total}. Захват провален — нужно заплатить дань.`);payTributeNow();
+    announceCheck(`Захват территории · ${pend.hex}`,d,'ХАР',cha,total,15,ok,natural,'',()=>{
+      if(d===20){log(`${p.name}: натуральная 20 — автоматический захват без выплаты.`);transferTerritory(pend.hex,p.id,0,owner.id);finishTerritoryAttempt(p,'захват территории');return}
+      if(d===1){const paid=transferGold(p,owner,cost),dmg=rand(6);log(`${p.name}: захват провален (натуральная 1), выплачено ${paid} золота, D6=${dmg} урона.`);territoryAttemptDamage(p,dmg,'D6','Захват · Натуральная 1',()=>finishTerritoryAttempt(p,'провал захвата'));return}
+      if(ok){log(`${p.name}: захват успешен (D20 ${d} + ${signed(cha)} = ${total}).`);transferTerritory(pend.hex,p.id,cost,owner.id);finishTerritoryAttempt(p,'захват территории');return}
+      const paid=transferGold(p,owner,cost);log(`${p.name}: захват провален — выплачено ${paid}/${cost} золота.`);finishTerritoryAttempt(p,'провал захвата');
+    });
   }
   function tradeSellEntries(seller){
     const out=[];
@@ -2281,7 +2326,8 @@
   function inCombat(){return !!state.combat}
   function combatEnemy(){return state.combat?itemCard(state.combat.cardId):null}
   function combatEnemyType(){return String(combatEnemy()?.fields?.['Тип']||'').toLowerCase()}
-  function combatPush(text){const c=state.combat;if(!c)return;c.history=c.history||[];c.history.unshift(text);c.history=c.history.slice(0,14)}
+  let combatJournalInstance=null,combatJournalVisible=false;
+  function combatPush(text){const c=state.combat;if(!c)return;c.history=c.history||[];c.history.unshift(text);}
   function rollExprDetailed(expr){
     const s=String(expr||'0').replace(/\s+/g,'');let total=0,parts=[];
     const re=/([+-]?)(\d*D\d+|\d+)/ig;let m;
@@ -2395,11 +2441,11 @@
     const stamp=++arcanaBattleStamp;
     arcanaBattleLayer.hidden=false;
     // Align the desktop popup with the central combat panel, never the full browser viewport.
-    const combatPane=document.querySelector('.board-panel') || els.modalContent;
+    const combatPane=els.modal?.querySelector('.modal-card:has(.combat-shell)') || els.modalContent;
     const paneRect=combatPane.getBoundingClientRect();
     arcanaBattleLayer.style.setProperty('--arcana-center-x',`${Math.round(paneRect.left+paneRect.width/2)}px`);
     // Slightly below the middle of the gameplay column, preserving the visible combat summary.
-    arcanaBattleLayer.style.setProperty('--arcana-center-y',`${Math.round(paneRect.top+paneRect.height*.56)}px`);
+    arcanaBattleLayer.style.setProperty('--arcana-center-y',`${Math.round(paneRect.top+paneRect.height*.50)}px`);
     document.body.classList.add('arcana-battle-presenting');
     arcanaPlaying=true;
     // Outcome is passed as resolved data and is revealed ONLY after the animation settles.
@@ -2410,7 +2456,7 @@
       Promise.resolve(arcanaAnimator.play(payload)).catch(error=>console.warn('Arcana combat playback:',error)).then(()=>{
         if(stamp!==arcanaBattleStamp)return;
         arcanaPlaying=false;
-        arcanaBattleHold=setTimeout(()=>{if(stamp===arcanaBattleStamp)stopArcanaBattlePresentation()},arcanaCombatHold(roll,c.phase));
+        arcanaBattleHold=setTimeout(()=>{if(stamp===arcanaBattleStamp){stopArcanaBattlePresentation();const extra=c.wanderingBonusAnimation;if(extra&&extra.rollSeq===roll.seq&&localControlsCombat()){c.wanderingBonusAnimation=null;showRollPopup('Бродячий наёмник · Натуральная 20',extra.value,`D4 = <b>${extra.value}</b>`,'Дополнительный урон после основного броска',null,null,'Продолжить',true)}}},arcanaCombatHold(roll,c.phase));
       });
     }catch(error){console.warn('Arcana combat payload:',error);stopArcanaBattlePresentation()}
   }
@@ -2567,11 +2613,11 @@
     if(c.enemySuccessfulHits===0&&[11,29].includes(e.id)){amount+=1;detail.push('первый успешный удар +1')}
     if(c.enemySuccessfulHits===0&&e.id===50){const r=rollExprDetailed('D4');amount+=r.total;detail.push(`первый удар +D4=${r.total}`)}
     const natural=direct?null:c.enemyAttackRoll?.natural,kept=direct?null:c.enemyAttackRoll?.chosen,eff=String(e.fields?.['Эффект']||''),repeatCurse=!direct&&natural===20&&e.id===54&&p.statuses.includes('Проклятие');
-    if(!direct&&natural===20){c.heroDisadvantage++;combatPush('<b>Натуральная 20 врага:</b> попадание; герой получает помеху на следующий D20.');if(e.id===17){const r=rollExprDetailed('D4');amount+=r.total;detail.push(`нат.20 +D4=${r.total}`)}if(repeatCurse){const r=rollExprDetailed('D6');amount+=r.total;detail.push(`повторное Проклятие +D6=${r.total}`)}if(e.id===51)combatLoseRandomEquippedItem(p)}
+    if(!direct&&natural===20){c.heroDisadvantage++;combatPush('<b>Натуральная 20 врага:</b> попадание; герой получает помеху на следующий D20.');if(e.id===17){const r=rollExprDetailed('D4');amount+=r.total;detail.push(`нат.20 +D4=${r.total}`);c.wanderingBonusD4=r.total}if(repeatCurse){const r=rollExprDetailed('D6');amount+=r.total;detail.push(`повторное Проклятие +D6=${r.total}`)}if(e.id===51)combatLoseRandomEquippedItem(p)}
     if(!direct)combatApplyEnemyTriggeredStatus(kept,repeatCurse?null:natural,eff,p);
     if(e.id===10&&kept>=18){amount+=1;detail.push('18–20 +1 урон')}if(e.id===41&&c.enemyAttackCount%3===0){const r=rollExprDetailed('D4');amount+=r.total;detail.push(`каждая 3-я атака +D4=${r.total}`)}if(e.id===281&&(c.enemyHitCount||0)%3===0){const r=rollExprDetailed('D4');amount+=r.total;detail.push(`Тёмный удар +D4=${r.total}`);combatPush(`Тёмный удар Владыки: каждая 3-я успешная атака получает +D4 (${r.total}) урона.`)}
     if(!direct&&c.nextEnemyHitBonus>0){const bonus=Number(c.nextEnemyHitBonus)||0;amount+=bonus;detail.push(`Зеркальный шип +${bonus}`);combatPush(`Зеркальный шип: следующая успешная атака врага получает +${bonus} урона.`);c.nextEnemyHitBonus=0;c.nextEnemyHitBonusLabel=null}
-    amount*=multiplier;c.pendingEnemyDamage={amount,original:amount,detail,direct,label,enemyRollTotal:c.enemyAttackRoll?.total||null,enemyDefense:combatEffectiveDefense(p)};c.phase='enemy_damage';combatSetRoll(`${label} · урон`,dr.total,`${e.fields?.['Урон']} = ${dr.total}${multiplier>1?` · ×${multiplier}`:''}`,`Текущий входящий урон: ${amount}${detail.length>1?' · '+detail.slice(1).join(' · '):''}`,null,dr.parts.filter(x=>x.kind==='dice'&&x.sign>0).flatMap(x=>x.rolls.map(value=>({sides:Number(x.expr.split('D')[1]),value}))));combatPush(`Урон врага: ${dr.text}; текущий входящий урон ${amount}.`);renderCombat();
+    amount*=multiplier;c.pendingEnemyDamage={amount,original:amount,detail,direct,label,enemyRollTotal:c.enemyAttackRoll?.total||null,enemyDefense:combatEffectiveDefense(p)};c.phase='enemy_damage';combatSetRoll(`${label} · урон`,dr.total,`${e.fields?.['Урон']} = ${dr.total}${multiplier>1?` · ×${multiplier}`:''}`,`Текущий входящий урон: ${amount}${detail.length>1?' · '+detail.slice(1).join(' · '):''}`,null,dr.parts.filter(x=>x.kind==='dice'&&x.sign>0).flatMap(x=>x.rolls.map(value=>({sides:Number(x.expr.split('D')[1]),value}))));combatPush(`Урон врага: ${dr.text}; текущий входящий урон ${amount}.`);if(c.wanderingBonusD4){c.wanderingBonusAnimation={value:c.wanderingBonusD4,rollSeq:c.lastRoll.seq};delete c.wanderingBonusD4}renderCombat();
   }
   function combatApplyEnemyTriggeredStatus(kept,natural,eff,p){const m=String(eff).match(/(18|19)[–-]20\s*—\s*(Кровотечение|Яд|Усталость|Слабость|Проклятие|Страх|Оглушение|Горение)/i);if(m&&kept>=Number(m[1])){combatApplyHeroStatus(p,m[2],3);return}const nat=String(eff).match(/Натуральная\s*20\s*—\s*(Кровотечение|Яд|Усталость|Слабость|Проклятие|Страх|Оглушение|Горение)/i);if(nat&&natural===20)combatApplyHeroStatus(p,nat[1],3)}
   function combatLoseRandomEquippedItem(p){const candidates=equippedEntries(p).filter(e=>!['mercenary','potion0','potion1'].includes(e.slot));if(!candidates.length)return;const x=candidates[Math.floor(Math.random()*candidates.length)];setSlotId(p,x.slot,null);discardHeldCard(itemCard(x.id));combatPush(`Натуральная 20: ${p.name} теряет надетый предмет «${itemCard(x.id)?.name}».`)}
@@ -2621,7 +2667,7 @@
     closeModal();updateUI();
     const showVictoryResults=()=>{
       const finalDamageText=searchDamage?`<br><b>${searchMishap}</b><br>Получено D6 = <b>${searchDamage}</b> урона · ЗД ${Math.max(0,p.currentHp)}/${p.maxHp}`:'';
-      showRollPopup('Результаты боя','✓',`<b>${p.name}</b> победил врага «<b>${e.name}</b>».<br>Заработано золота: <b>${goldEarned}</b>`,
+      showRollPopup('Результаты боя','✓',`<b style="color:${p.color||'#dfb86a'}">${escapeCombatText(p.name.toUpperCase())}</b> победил врага «<b class="defeat-enemy-rank ${enemyRankClass(e)}">${escapeCombatText(e.name)}</b>».<br>Заработано золота: <b class="result-gold">${goldEarned}</b>`,
         `${base===0?'Слабый враг: только золото, без Тщательного поиска.':`Тщательный поиск: D20 <b>${d}</b> ${signed(wis)} МУД = <b>${total}</b> · <b>${resultText}</b>${naturalText}`}<br>Награда: <b>${keepCount}</b> ${lootWord(keepCount)}${nat20Bonus?' (натуральная 20: +1 тайник)':''}.${success&&base>0?` Выбор из ${candidates.length} карт.`:''}${finalDamageText}`,
         null,()=>{if(searchDamage&&p.currentHp<=0){for(const id of candidates){const card=itemCard(id);if(card)returnCardToDeckRandom(lootKey,card)}state.combat=null;handleDeath(p);return}
           if(base>0&&candidates.length)openVictoryLootDraft();else showPostCombatTerritoryPrompt();},'К наградам',false,p.id);
@@ -2777,7 +2823,7 @@
     else if(c.phase==='enemy_roll')finalizeEnemyAttackRoll();
     else if(c.phase==='enemy_damage')combatAcceptDamageAndContinue();
   }
-  function combatAbilityButtonHtml(p){const h=HERO_COMBAT[p.id],used=state.combat?.heroAbilityUsed,available=combatClassAbilityAvailable(p);return h?`<button id="combatHeroAbility" class="${p.id==='warrior'||p.id==='dwarf'?'success':'secondary'}" ${(used||!available)?'disabled':''} title="${used?'Способность уже использована в этом бою.':available?'':'Сейчас способность применить нельзя.'}">Способность: ${h.ability}</button>`:''}
+  function combatAbilityButtonHtml(p){const h=HERO_COMBAT[p.id],available=combatClassAbilityAvailable(p);return h&&available?`<button id="combatHeroAbility" class="${p.id==='warrior'||p.id==='dwarf'?'success':'secondary'}">Способность: ${h.ability}</button>`:''}
   function enemyRankClass(e){const r=String(e?.fields?.['Ранг']||'').toLowerCase();if(r.includes('слаб'))return 'rank-weak';if(r.includes('обыч'))return 'rank-normal';if(r.includes('силь'))return 'rank-strong';if(r.includes('элит'))return 'rank-elite';if(e?.id===281||r.includes('босс'))return 'rank-boss';return ''}
   // Visual-only combat card helpers. IDs reference existing approved cards; no gameplay changes.
   let combatVisualUiState={combatId:null,heroBack:false,enemyBack:false};
@@ -2872,13 +2918,13 @@
     const mode=playerHardMode(p)?'Сложный режим · реакции скрыты':'Обычный режим · реакции включены';
     const observedName={warrior:'Воином',dwarf:'Дворфом',mage:'Магом',archer:'Лучником',rogue:'Разбойником'}[p.id]||p.name;
     const guide=localCombatant&&!playerHardMode(p)?`<div class="combat-effects-manual"><h4>Памятка боя</h4><div class="combat-note">Активные способности, предметы и наёмники применяет игрок. Натуральные 1 и 20 автоматические только при одиночном D20. Лечение доступно до атаки в свой боевой ход и после принятого нелетального урона.</div></div>`:'';
-    const history=c.journalOpen?`<div class="combat-history-wrap"><div class="combat-history">${(c.history||[]).map(x=>`<div>${x}</div>`).join('')||'<div>Записей пока нет.</div>'}</div></div>`:'';
+    const journalVisible=combatJournalInstance===c.instanceId?combatJournalVisible:!!c.journalOpen;const oldScroll=els.modalContent.querySelector('.combat-history')?.scrollTop||0;const history=journalVisible?`<div class="combat-history-wrap"><div class="combat-history">${(c.history||[]).map(x=>`<div>${x}</div>`).join('')||'<div>Записей пока нет.</div>'}</div></div>`:'';
     const controlBlock=localCombatant?`${reactions.length?`<div class="combat-reactions"><h4>РЕАКЦИИ — игра напоминает, но решение за игроком</h4><div class="combat-reaction-buttons">${reactions.map((r,i)=>`<button data-reaction="${i}" class="${/^(Каменная кровь|Железная стойкость)/.test(r.label)?'success':'secondary'}">${r.label}</button>`).join('')}</div></div>`:''}<div class="combat-actions">${actions}</div><div class="combat-sheet-actions"><button id="combatHeroSheet" class="secondary">Герой</button><button id="combatInventory" class="secondary">Инвентарь</button></div>${guide}`:'';
-    els.modalContent.innerHTML=`<div class="combat-shell ${localCombatant?'combat-owner-view':'combat-observer-view'}"><div class="combat-summary"><span class="combat-mode-badge">${localCombatant?mode:`Наблюдение за ${observedName}`}</span><span class="combat-pill">Раунд ${c.round}</span><button id="combatHide" class="combat-hide ghost" type="button">Скрыть бой</button></div><div class="combat-head visual-combat-head">${combatHeroVisualCard(p,c)}<div class="combat-vs">VS</div>${combatEnemyVisualCard(e,c)}</div>${phaseHtml}${controlBlock}<div class="combat-journal-control"><button id="combatJournalToggle" class="${c.journalOpen?'secondary active':'ghost'}">Журнал боя${c.journalOpen?' ▲':' ▼'}</button></div>${history}</div>`;els.modal.hidden=false;
+    els.modalContent.innerHTML=`<div class="combat-shell ${localCombatant?'combat-owner-view':'combat-observer-view'}"><div class="combat-summary"><span class="combat-mode-badge">${localCombatant?mode:`Наблюдение за ${observedName}`}</span><span class="combat-pill">Раунд ${c.round}</span><button id="combatHide" class="combat-hide ghost" type="button">Скрыть бой</button></div><div class="combat-head visual-combat-head">${combatHeroVisualCard(p,c)}<div class="combat-vs">VS</div>${combatEnemyVisualCard(e,c)}</div>${phaseHtml}${controlBlock}<div class="combat-journal-control"><button id="combatJournalToggle" class="${journalVisible?'secondary active':'ghost'}">Журнал боя${journalVisible?' ▲':' ▼'}</button></div>${history}</div>`;els.modal.hidden=false;if(journalVisible&&oldScroll)els.modalContent.querySelector('.combat-history')?.scrollTo(0,oldScroll);
     if(localCombatant){reactions.forEach((r,i)=>{const b=els.modalContent.querySelector(`[data-reaction="${i}"]`);if(b)b.onclick=r.fn});els.modalContent.querySelectorAll('[data-auto-choice]').forEach(b=>b.onclick=()=>decisions[Number(b.dataset.autoChoice)]?.fn());els.modalContent.querySelectorAll('[data-cleanse-status]').forEach(b=>b.onclick=()=>chooseCombatCleanseStatus((c.pendingCleanse?.options||[])[Number(b.dataset.cleanseStatus)]))}
     els.modalContent.querySelectorAll('[data-visual-toggle]').forEach(b=>b.onclick=()=>toggleCombatVisualFace(b.dataset.visualToggle));
     const bind=(id,fn)=>{const x=document.getElementById(id);if(x)x.onclick=fn};if(localCombatant){bind('combatFight',combatFight);bind('combatResolveEscape',resolveCombatEscapeResult);bind('combatEscapeBefore',combatEscapeBefore);bind('combatAttack',combatHeroAttack);bind('combatRollDamage',combatRollHeroDamage);bind('combatSkipChoice',skipCombatChoice);bind('combatEscape',combatEscapeDuring);bind('combatHeroAbility',useHeroCombatAbility);bind('combatFinalizeAttack',finalizeHeroAttackRoll);bind('mageLightning',()=>chooseMageNat20('lightning'));bind('mageFire',()=>chooseMageNat20('fire'));bind('combatApplyHeroDamage',applyHeroDamageNow);bind('combatEnemyTurn',combatEnemyTurn);bind('combatFinalizeEnemyRoll',finalizeEnemyAttackRoll);bind('combatAcceptDamage',combatAcceptDamageAndContinue);bind('combatContinueMiss',combatContinueAfterEnemyMiss);bind('combatContinueAfterDamage',combatContinueAfterDamage);bind('combatFinishVictory',finishCombatVictory);bind('combatPostVictory',()=>{if(c.victory?.lootDraft&&!c.victory.lootDraft.confirmed&&c.victory.lootDraft.keep>0)openVictoryLootDraft();else showPostCombatTerritoryPrompt()});bind('combatHeroSheet',()=>openCharacterSheet('overview'));bind('combatInventory',()=>openCharacterSheet('inventory'))}
-    bind('combatHide',hideCombatWindow);bind('combatJournalToggle',()=>{c.journalOpen=!c.journalOpen;renderCombat(true)});if(localCombatant&&!els.sheetDrawer.hidden&&sheetView.playerId===p.id)renderCharacterSheet(sheetView.mode,sheetView.bonusKey);arcanaPresentCombat(c);scheduleCombatAuto();
+    bind('combatHide',hideCombatWindow);bind('combatJournalToggle',()=>{combatJournalInstance=c.instanceId;combatJournalVisible=!journalVisible;c.journalOpen=combatJournalVisible;renderCombat(true)});if(localCombatant&&!els.sheetDrawer.hidden&&sheetView.playerId===p.id)renderCharacterSheet(sheetView.mode,sheetView.bonusKey);arcanaPresentCombat(c);scheduleCombatAuto();
   }
   function combatTickBuffsAtHeroAttack(){const c=state.combat;if(!c)return;for(const b of c.buffs||[])if(['attack','lightDamage','advantage'].includes(b.type)&&b.remaining>0)b.remaining--;c.buffs=(c.buffs||[]).filter(b=>b.remaining>0)}
   function combatTickBuffsAtEnemyTurn(){const c=state.combat;if(!c)return;for(const b of c.buffs||[])if(b.type==='defense'&&b.remaining>0)b.remaining--;c.buffs=(c.buffs||[]).filter(b=>b.remaining>0)}
@@ -2941,9 +2987,9 @@
     if(foreign&&foreign.heroId===p.id&&foreign.hex===p.hex){
       const owner=getPlayer(foreign.ownerId),tribute=tributeCostFor(foreign.hex),full=territoryFullCost(foreign.hex),transit=!!foreign.transitKey;
       addActionBox('Чужая территория',`${foreign.hex} принадлежит игроку <b>${owner?.name||'—'}</b>. ${transit?'После решения выбранный маршрут продолжится автоматически.':'Перед дальнейшими действиями нужно решить вопрос прохода.'} Дань: <b>${tribute} золота</b>${fullAreaForTerritory(foreign.hex)?' (территория входит в область владельца)':''}.`,[
-        {label:`Заплатить дань ${tribute}`,className:'secondary',fn:payTributeNow},
+        {label:`Заплатить дань ${tribute}`,className:'secondary',disabled:p.gold<tribute,why:`Нужно ${tribute} золота`,fn:payTributeNow},
         {label:'Попытаться избежать дани · ХАР 12+',className:'primary',fn:attemptAvoidTribute},
-        {label:`Попытаться захватить · ХАР 15+ (${full} зол.)`,className:'danger',fn:attemptCaptureTerritory},
+        {label:`Попытаться захватить · ХАР 15+ (${full} зол.)`,className:'danger',disabled:p.gold<full,why:`Нужно ${full} золота`,fn:attemptCaptureTerritory},
         {label:'Попросить пройти бесплатно',className:'success',fn:requestPassagePermission}
       ]);
     }
@@ -2966,7 +3012,7 @@
       addActionBox('Постоянная локация',`На этом гексе находится: ${loc.name}.${note}`,actions)
     }
   }
-  function addActionBox(title,text,actions){const box=document.createElement('div');box.className='action-box';box.innerHTML=`<div class="action-title">${title}</div><div class="muted small">${text}</div><div class="action-buttons"></div>`;const bxs=box.querySelector('.action-buttons');actions.forEach(a=>{const b=document.createElement('button');b.textContent=a.label;b.className=a.className||'';b.onclick=a.fn;bxs.appendChild(b)});els.actionPanel.appendChild(box)}
+  function addActionBox(title,text,actions){const box=document.createElement('div');box.className='action-box';box.innerHTML=`<div class="action-title">${title}</div><div class="muted small">${text}</div><div class="action-buttons"></div>`;const bxs=box.querySelector('.action-buttons');actions.forEach(a=>{const b=document.createElement('button');b.textContent=a.label;b.className=a.className||'';b.disabled=!!a.disabled;if(a.disabled)b.title=a.why||'Недостаточно золота';b.onclick=a.disabled?null:a.fn;bxs.appendChild(b)});els.actionPanel.appendChild(box)}
 
   function currentHexNeedsResolution(p){
     if(!state.turnMoved||p.inDungeon)return false;
@@ -3009,7 +3055,7 @@
     const previousScroll=els.turnOrderBanner.querySelector('.table-turns')?.scrollLeft||0;
     const changedActive=els.turnOrderBanner.dataset.scrollKey!==String(active?.id);
     const roomCode=els.turnOrderBanner.dataset.roomCode||'';
-    els.turnOrderBanner.innerHTML=RPGTabletop.turns(active,next,state.round,roomCode);
+    const bannerHtml=RPGTabletop.turns(active,next,state.round,roomCode);if(els.turnOrderBanner.dataset.lastMarkup===bannerHtml)return;els.turnOrderBanner.dataset.lastMarkup=bannerHtml;els.turnOrderBanner.innerHTML=bannerHtml;
     if(!changedActive&&previousScroll)els.turnOrderBanner.querySelector('.table-turns').scrollLeft=previousScroll;
     els.turnOrderBanner.querySelector('[data-table-journal]')?.addEventListener('click',()=>{renderJournal();els.journalOverlay.hidden=false});
     // Preserve horizontal scroll on mobile as the turn order refreshes.
@@ -3044,6 +3090,9 @@
   function applyMapZoom(recenter=false){if(!els.mapStage)return;const z=Number(state.mapZoom||1);if(isMobileViewport()){const vw=Math.max(320,els.boardWrap?.clientWidth||window.innerWidth||390),base=Math.max(980,Math.min(1420,vw*3));els.mapStage.style.width=`${Math.round(base*z)}px`}else els.mapStage.style.width=`${Math.round(z*100)}%`;if(recenter)centerMapOnPlayer(mapFocusPlayer())}
   function changeMapZoom(delta){state.mapZoom=Math.round(clamp(Number(state.mapZoom||1)+delta,.6,2)*10)/10;applyMapZoom(true)}
   function renderBoard(){
+    // Preserve existing hero portrait DOM nodes between map refreshes, particularly on Safari iOS.
+    const retainedTokens=document.createDocumentFragment();
+    els.overlay.querySelectorAll('.table-token').forEach(node=>retainedTokens.appendChild(node));
     els.overlay.innerHTML='';if(state.chosenPath&&state.chosenPath.length>1){const pts=state.chosenPath.map(h=>`${MAP.hexes[h].x},${MAP.hexes[h].y}`).join(' ');els.overlay.appendChild(svgEl('polyline',{points:pts,class:'path-line'}))}
     const portalChoices=new Set(state.portalPending?.destinations||[]);
     Object.entries(MAP.hexes).forEach(([id,h])=>{
@@ -3059,6 +3108,9 @@
     for(const id of portalChoices)drawPurpleHexOutline(id,'portal-choice-outline',66);
     if(!state.started){applyMapZoom(false);return}
     const dungeonHexes=new Set(state.players.filter(p=>p.inDungeon).map(p=>p.hex));for(const hex of dungeonHexes){const h=MAP.hexes[hex];if(!h)continue;els.overlay.appendChild(svgEl('polygon',{points:hexPolygonPoints(h,47).map(x=>x.join(',')).join(' '),class:'dungeon-grate-bg'}));for(const dx of [-28,-10,10,28])els.overlay.appendChild(svgEl('line',{x1:h.x+dx,y1:h.y-31,x2:h.x+dx,y2:h.y+31,class:'dungeon-grate-line'}));for(const dy of [-20,0,20])els.overlay.appendChild(svgEl('line',{x1:h.x-36,y1:h.y+dy,x2:h.x+36,y2:h.y+dy,class:'dungeon-grate-line'}))}
+    els.overlay.appendChild(retainedTokens);
+    const liveIds=new Set(state.players.map(p=>p.id));
+    els.overlay.querySelectorAll('.table-token').forEach(node=>{if(!liveIds.has(node.getAttribute('data-token-hero')))node.remove()});
     const groups={};state.players.forEach(p=>(groups[p.hex]??=[]).push(p));const tokenPositions={};Object.entries(groups).forEach(([hex,ps])=>{const h=MAP.hexes[hex];if(!h)return;const n=ps.length;ps.forEach((p,i)=>{const a=n===1?0:Math.PI*2*i/n,rad=n===1?0:24,x=h.x+Math.cos(a)*rad,y=h.y+Math.sin(a)*rad;tokenPositions[p.id]={x,y};RPGTabletop.token(els.overlay,p,x,y,p.id===currentPlayer().id,svgEl)})});RPGTabletop.rememberTokens(tokenPositions);applyMapZoom(false)
   }
 
