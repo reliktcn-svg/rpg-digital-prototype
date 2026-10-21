@@ -92,7 +92,7 @@
     const taken=new Map(r.players.filter(p=>p.heroId).map(p=>[p.heroId,p]));
     $('netHeroPicker').innerHTML=HEROES.map(([id,name,color])=>{
       const owner=taken.get(id), mine=owner?.id===session.playerId, disabled=owner&&!mine;
-      return `<button class="net-hero ${mine?'selected':''}" data-hero="${id}" ${disabled||r.started?'disabled':''} style="--hc:${color}"><span class="net-hero-dot"></span><b>${name}</b><small>${disabled?'занят: '+esc(owner.name):mine?'выбран вами':'свободен'}</small></button>`;
+      return `<button class="net-hero ${mine?'selected':''}" data-hero="${id}" ${disabled||r.started?'disabled':''} style="--hc:${color}"><img class="net-hero-art" src="assets/heroes/${id}.webp" alt="" loading="lazy"><b>${name}</b><small>${disabled?'занят: '+esc(owner.name):mine?'выбран вами':'свободен'}</small></button>`;
     }).join('');
     $('netHeroPicker').querySelectorAll('[data-hero]').forEach(b=>b.onclick=()=>selectHero(b.dataset.hero));
     const isHost=!!me?.host, ready=r.players.length>=2&&r.players.every(p=>p.heroId),hard=!!r.hardMode;
