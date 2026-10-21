@@ -183,7 +183,7 @@
     return o;
   }
   function freshState(){return {
-    version:'0.6.78', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
+    version:'0.6.81', started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
     decks:initialDecks(), cleaned:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, tradeDeal:null, dungeonEntryNotice:null, territoryBuiltNotice:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:3, sharedDifficulty:null, journal:[]
   };}
   let state=freshState();
@@ -548,7 +548,7 @@
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,potions:[null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:sharedHard,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats(),territoryBuildSeq:{kingdom:0,cursed:0}}});
     generatePermanentLocations({preserve:false});
     state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;els.sheetDrawer.hidden=true;setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
-    log(`<b>Партия v0.6.78 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
+    log(`<b>Партия v0.6.81 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
     state.order.forEach(id=>{const p=getPlayer(id);log(`Инициатива ${p.name}: D20 = <b>${p.initiative}</b>.`,p.id)});updateUI();renderBoard();
   }
 
@@ -1199,6 +1199,33 @@
     if(card.name==='Разведка'){resolveReconnaissance(card);return}
     if(card.name==='Старый тайник'){resolveOldCache(card);return}
     if(card.name==='Следы древнего героя'){resolveAncientHeroTracks(card);return}
+    // №115: allow the player to choose just as they do in a normal Shrine.
+    // Do not auto-heal a healthy hero who needs a curse/fear removed.
+    if(Number(card.id)===115){
+      const cleanse=p.statuses||[],canHeal=p.currentHp<p.maxHp;
+      const result=(message)=>{updateUI();showCard(card,message,[{label:'Продолжить',className:'success',fn:()=>continueExplore(card,state.exploration.deckKey)}])};
+      const choose=()=>{
+        const actions=[
+          {label:'Восстановить D10 ЗД',className:'success',disabled:!canHeal,fn:()=>{
+            const hr=rollHealing(p,'D10');closeModal();
+            showRollPopup('Покой мёртвого стража · лечение',hr.total,`${hr.used} = <b>${hr.total}</b>`,'Восстановление здоровья',null,()=>{
+              const healed=heal(p,hr.total);
+              log(`${p.name}: «Покой мёртвого стража» — восстановлено ${healed.restored} ЗД (${hr.used}).`);
+              result(`Восстановлено <b>${healed.restored}</b> ЗД (${escapeCombatText(hr.used)})`);
+            },'Продолжить');
+          }},
+          {label:'Снять негативный эффект',className:'danger',disabled:!cleanse.length,fn:()=>{
+            showCard(card,'Выберите один негативный эффект:',(p.statuses||[]).map(st=>({label:`Снять: ${st}`,className:'danger',fn:()=>{
+              removeStatus(p,st);log(`${p.name}: «Покой мёртвого стража» — снят эффект «${st}».`);
+              result(`Снят негативный эффект: <b>${escapeCombatText(st)}</b>.`);
+            }})).concat([{label:'Назад',className:'secondary',fn:choose}]));
+          }},
+          {label:'Продолжить без эффекта',className:'secondary',fn:()=>continueExplore(card,state.exploration.deckKey)}
+        ];
+        showCard(card,'Выберите одно действие карты. Лечение и очищение применяются только по выбору героя.',actions);
+      };
+      choose();return;
+    }
     if(card.fields['Проверка']){resolveCheckedEvent(card);return}
     if(NON_STACKING_EVENT_EFFECTS.has(card.name)){const duplicate=(p.combatEffects||[]).some(e=>Number(e.sourceCardId)===Number(card.id)||e.label===card.name);if(duplicate){log(`${p.name}: дубль карты «${card.name}» — эффект уже активен и не суммируется.`);updateUI();showCard(card,`<b>Дубль карты «${card.name}».</b><br>Этот эффект уже есть у героя и не суммируется. Новая копия эффекта пропущена.`,[{label:'Продолжить',className:'success',fn:()=>continueExplore(card,state.exploration.deckKey)}]);return}const note=addNextBattleEventEffect(p,card);log(`${p.name}: «${card.name}» — ${note}`);updateUI();showCard(card,`<b>Эффект применён к герою.</b><br>${note}<br>Он будет виден в листе героя до начала следующего боя.`,[{label:'Продолжить',className:'success',fn:()=>continueExplore(card,state.exploration.deckKey)}]);return}
     const prayer=/сними\s+Страх\s+или\s+Проклятие/i.test(eff);
@@ -1239,7 +1266,10 @@
   }
 
   function resolveCursedStep(card){
-    const p=currentPlayer(),wis=effectiveStat(p,'wis'),d20=rand(20),total=d20+wis,ok=d20===20?true:d20===1?false:total>=14;
+    const p=currentPlayer();
+    // The illustrated event card is shown BEFORE any dice are rolled.
+    const performCheck=()=>{
+      const wis=effectiveStat(p,'wis'),d20=rand(20),total=d20+wis,ok=d20===20?true:d20===1?false:total>=14;
     const resolveRoll=(roll,sum,success)=>{
       const natural=roll===20?20:roll===1?1:null,has=p.statuses.includes('Проклятие');
       announceCheck('Проклятый шаг',roll,'МУД',wis,sum,14,success,natural);
@@ -1251,8 +1281,12 @@
       if(natural===20&&p.currentHp>0){const options=[...p.statuses];if(options.length){showCard(card,'Натуральная 20: проверка успешна. Дополнительно снимите 1 негативный эффект:',options.map(st=>({label:`Снять: ${st}`,className:'success',fn:()=>{removeStatus(p,st);log(`${p.name}: Натуральная 20 Проклятого шага — снят эффект «${st}».`);finish()}})));return}}
       if(state.exploration&&p.currentHp>0)finish();
     };
-    if(maybeOfferHeartCompass(p,card,'Проклятый шаг',d20,total,ok,wis,resolveRoll))return;
-    resolveRoll(d20,total,ok);
+      if(maybeOfferHeartCompass(p,card,'Проклятый шаг',d20,total,ok,wis,resolveRoll))return;
+      resolveRoll(d20,total,ok);
+    };
+    showCard(card,'Перед вами Проклятый шаг. Для разрешения события выполните проверку МУД 14+.',[
+      {label:'ПРОВЕРКА МУД 14+',className:'success',fn:()=>{closeModal();performCheck()}}
+    ]);
   }
   function resolveDarkTrial(card){
     const p=currentPlayer();showStatChoice(card,14,'Тёмное испытание',(key,d20,total,ok)=>{
@@ -1447,7 +1481,7 @@
       const hr=rollHealing(p,'D8');closeModal();
       showRollPopup('Святилище · лечение',hr.total,`${hr.used} = <b>${hr.total}</b>`,'Лечение',null,()=>{
         const healed=heal(p,hr.total);log(`${p.name} выбирает лечение в Святилище: +${healed.restored} ЗД (${hr.used}).`);
-        showResult(`Восстановлено <b>${healed.restored} ЗД</b> (${hr.used}). ЗД: <b>${p.currentHp}/${p.maxHp}</b>.`);
+        showResult(`Восстановлено <b>${healed.restored}</b> ЗД (<b>${escapeCombatText(hr.used)}</b>)`);
       },'Продолжить');
     };
     const chooseClean=()=>{
@@ -2844,29 +2878,81 @@
     return '';
   }
   function escapeCombatText(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
-  function combatCardStageHtml(side,kind,id,name,c,backHtml){
+  function combatCardStageHtml(side,kind,id,name,c,backHtml,frontMetrics=''){
     const path=combatPortraitUrl(kind,id),ui=getCombatVisualUiState(c),back=side==='enemy'?ui.enemyBack:ui.heroBack;
-    const usedMarker=side==='hero'&&c.heroAbilityUsed?'<span class="visual-ability-used-marker">✓ Способность использована</span>':'';
-    return `<button type="button" class="visual-card-stage ${back?'is-back':''}" data-visual-toggle="${side}" aria-pressed="${back?'true':'false'}" title="${back?'Показать портрет':'Показать описание'}"><span class="visual-card-face visual-card-front"><div class="visual-combat-portrait${path?'':' portrait-not-found'}">${path?`<img src="${path}" alt="${escapeCombatText(name)}" loading="eager" decoding="async" onerror="this.style.display='none';this.parentElement.classList.add('portrait-not-found')">`:''}<div class="portrait-placeholder">Портрет готовится</div></div>${usedMarker}</span><span class="visual-card-face visual-card-back">${backHtml}</span></button>`;
+    const usedMarker=side==='hero'&&c.heroAbilityUsed?'<span class="visual-ability-used-marker" title="Способность героя использована">✓</span>':'';
+    return `<button type="button" class="visual-card-stage ${back?'is-back':''}" data-visual-toggle="${side}" aria-pressed="${back?'true':'false'}" title="${back?'Показать портрет':'Показать описание'}"><span class="visual-card-face visual-card-front"><div class="visual-combat-portrait${path?'':' portrait-not-found'}">${path?`<img src="${path}" alt="${escapeCombatText(name)}" loading="eager" decoding="async" onerror="this.style.display='none';this.parentElement.classList.add('portrait-not-found')">`:''}<div class="portrait-placeholder">Портрет готовится</div></div>${frontMetrics}${usedMarker}</span><span class="visual-card-face visual-card-back">${backHtml}</span></button>`;
+  }
+  // v0.6.80: tabletop battle card inspired by the approved Codex mockups.
+  // All actions below the cards and the combat state machine stay unchanged.
+  // v0.6.81 — live character statistics sit over the 1:1 portrait, not below it.
+  // These values are read from the same game state as the old metrics; no combat rules change.
+  function battleMetric(label,value,position,tone=''){
+    return `<span class="battle-overlay-stat ${position} ${tone}" aria-label="${escapeCombatText(label)}: ${escapeCombatText(value)}"><span class="stat-label">${escapeCombatText(label)}</span><strong>${escapeCombatText(value)}</strong></span>`;
+  }
+  function battleHeroMetrics(p){
+    const h=HEROES.find(x=>x.id===p.id)||p;
+    return `<span class="battle-portrait-stats hero-portrait-stats" aria-label="Характеристики героя">
+      ${battleMetric('ЗД',`${p.currentHp}/${p.maxHp}`,'stat-hp')}
+      ${battleMetric('ЗЩ',String(combatEffectiveDefense(p)),'stat-defense')}
+      ${battleMetric('УР',currentHeroDamage(p),'stat-damage')}
+      ${battleMetric('АТ',statName(h.baseAttack||'str'),'stat-attack')}
+      ${battleMetric('СИЛ',signed(effectiveStat(p,'str')),'stat-str')}
+      ${battleMetric('ЛОВ',signed(effectiveStat(p,'dex')),'stat-dex')}
+      ${battleMetric('МУД',signed(effectiveStat(p,'wis')),'stat-wis')}
+      ${battleMetric('ХАР',signed(effectiveStat(p,'cha')),'stat-cha')}
+    </span>`;
+  }
+  function battleEnemyMetrics(e,c){
+    return `<span class="battle-portrait-stats enemy-portrait-stats" aria-label="Характеристики врага">
+      ${battleMetric('ЗД',`${Math.max(0,c.enemyHp)}/${c.enemyMaxHp}`,'stat-hp')}
+      ${battleMetric('ЗЩ',String(e.fields?.['ЗЩ']||'—'),'stat-defense')}
+      ${battleMetric('УР',String(e.fields?.['Урон']||'—'),'stat-damage')}
+      ${battleMetric('АТ',String(e.fields?.['АТК']||'—'),'stat-attack')}
+    </span>`;
+  }
+  function battleBackRow(label,value,caption=''){
+    return `<div class="battle-back-detail"><span>${escapeCombatText(label)}</span><strong>${escapeCombatText(value)}</strong>${caption?`<small>${escapeCombatText(caption)}</small>`:''}</div>`;
   }
   function combatHeroBackHtml(p,c){
     const h=HERO_COMBAT[p.id];if(!h)return '<div class="visual-card-back-wrap"></div>';
+    const base=HEROES.find(x=>x.id===p.id)||{};
     const nat=h.natural20||'—',parts=nat.split(' — '),effects=combatActiveEffectsHtml(c,p);
     const used=!!c.heroAbilityUsed;
-    return `<div class="visual-card-back-wrap hero-back"><div class="visual-back-block ${used?'ability-used':''}"><small>СПОСОБНОСТЬ ГЕРОЯ ${used?'<span class="visual-ability-used-state">✓ ИСПОЛЬЗОВАНО</span>':''}</small><b>${escapeCombatText(h.ability)}</b><span>${escapeCombatText(h.effect)}</span></div><div class="visual-back-block accent"><small>НАТУРАЛЬНАЯ 20</small><b>${escapeCombatText(parts[0]||'Эффект героя')}</b><span>${escapeCombatText(parts.length>1?parts.slice(1).join(' — '):nat)}</span></div>${effects}</div>`;
+    return `<div class="visual-card-back-wrap hero-back battle-v080-back">
+      <h4>Текущие характеристики</h4>
+      ${battleBackRow('Здоровье',`${p.currentHp}/${p.maxHp}`,'Текущее / максимальное')}
+      ${battleBackRow('ЗЩ',String(combatEffectiveDefense(p)),`База ${base.defense??'—'} · экипировка и эффекты учтены`)}
+      ${battleBackRow('СИЛ',signed(effectiveStat(p,'str')),`База ${signed(base.str||0)}`)}
+      ${battleBackRow('ЛОВ',signed(effectiveStat(p,'dex')),`База ${signed(base.dex||0)}`)}
+      ${battleBackRow('МУД',signed(effectiveStat(p,'wis')),`База ${signed(base.wis||0)}`)}
+      ${battleBackRow('ХАР',signed(effectiveStat(p,'cha')),`База ${signed(base.cha||0)}`)}
+      ${battleBackRow('Атака',statName(base.baseAttack||'str'),`Урон ${currentHeroDamage(p)}`)}
+      <div class="visual-back-block ${used?'ability-used':''}"><small>СПОСОБНОСТЬ ГЕРОЯ ${used?'· ИСПОЛЬЗОВАНА':''}</small><b>${escapeCombatText(h.ability)}</b><span>${escapeCombatText(h.effect)}</span></div>
+      <div class="visual-back-block accent"><small>НАТУРАЛЬНАЯ 20</small><b>${escapeCombatText(parts[0]||'Эффект героя')}</b><span>${escapeCombatText(parts.length>1?parts.slice(1).join(' — '):nat)}</span></div>${effects}
+    </div>`;
   }
   function combatEnemyBackHtml(e,c){
     const effect=String(e.fields?.['Эффект']||'').trim()||'Без постоянного эффекта';
     const extra=combatEnemyEffectsHtml(c);
-    return `<div class="visual-card-back-wrap enemy-back">${c.elite?'<div class="visual-card-warning">ЭЛИТНАЯ ОПАСНОСТЬ · АТАКУЕТ ПЕРВОЙ</div>':''}<div class="visual-back-block accent"><small>ЭФФЕКТ ВРАГА</small><span>${escapeCombatText(effect)}</span></div>${extra}</div>`;
+    return `<div class="visual-card-back-wrap enemy-back battle-v080-back"><h4>Характеристики врага</h4>
+      ${battleBackRow('Здоровье',`${Math.max(0,c.enemyHp)}/${c.enemyMaxHp}`)}
+      ${battleBackRow('ЗЩ',String(e.fields?.['ЗЩ']||'—'))}
+      ${battleBackRow('АТК',String(e.fields?.['АТК']||'—'))}
+      ${battleBackRow('Урон',String(e.fields?.['Урон']||'—'))}
+      ${c.elite?'<div class="visual-card-warning">ЭЛИТНАЯ ОПАСНОСТЬ · АТАКУЕТ ПЕРВОЙ</div>':''}
+      <div class="visual-back-block accent"><small>ПОСТОЯННЫЙ ЭФФЕКТ</small><span>${escapeCombatText(effect)}</span></div>${extra}
+    </div>`;
   }
   function combatHeroVisualCard(p,c){
-    return `<section class="combatant hero visual-combat-card" style="--visual-accent:${p.color||'#4f85dc'}"><div class="visual-card-heading hero-heading"><div class="visual-card-title-row"><h3>${escapeCombatText(p.name)}</h3><span class="visual-card-hp">ЗД ${p.currentHp}/${p.maxHp}</span></div><div class="visual-card-stats"><b>ЗЩ ${combatEffectiveDefense(p)}</b><b>Урон ${escapeCombatText(currentHeroDamage(p))}</b><span>СИЛ ${signed(effectiveStat(p,'str'))}</span><span>ЛОВ ${signed(effectiveStat(p,'dex'))}</span><span>МУД ${signed(effectiveStat(p,'wis'))}</span><span>ХАР ${signed(effectiveStat(p,'cha'))}</span></div></div>${combatCardStageHtml('hero','hero',p.id,p.name,c,combatHeroBackHtml(p,c))}</section>`;
+    const statuses=(p.statuses||[]).map(st=>`<span title="${escapeCombatText(st)}" aria-label="Эффект ${escapeCombatText(st)}" class="tabletop-status-dot">${st==='Горение'?'♨':st==='Страх'?'◉':st==='Проклятие'?'◆':'✦'}</span>`).join('');
+    return `<section class="combatant hero visual-combat-card tabletop-battle-card" style="--visual-accent:${p.color||'#4f85dc'}"><div class="tabletop-card-heading"><small>ГЕРОЙ · БОЕВОЙ ПЛАНШЕТ</small><h3>${escapeCombatText(p.name)}</h3></div>${combatCardStageHtml('hero','hero',p.id,p.name,c,combatHeroBackHtml(p,c),battleHeroMetrics(p))}${statuses?`<div class="tabletop-status-row">${statuses}</div>`:''}<div class="tabletop-card-note"><small>СПОСОБНОСТЬ · ${c.heroAbilityUsed?'ИСПОЛЬЗОВАНА':'ДОСТУПНА'}</small><strong>${escapeCombatText(HERO_COMBAT[p.id]?.ability||'—')}</strong><span>${escapeCombatText(HERO_COMBAT[p.id]?.effect||'')}</span></div><button type="button" class="tabletop-card-flip" data-visual-toggle="hero">⟳ <span>${getCombatVisualUiState(c).heroBack?'Лицевая сторона':'Полное описание'}</span></button></section>`;
   }
   function combatEnemyVisualCard(e,c){
-    const isBoss=e.id===281,rank=String(e.fields?.['Ранг']|| (isBoss?'Босс':'—')).toUpperCase();
+    const isBoss=e.id===281,rank=String(e.fields?.['Ранг']||(isBoss?'Босс':'—')).toUpperCase();
     const type=String(e.fields?.['Тип']||'—').toUpperCase();
-    return `<section class="combatant enemy visual-combat-card ${enemyRankClass(e)}" aria-label="Враг ${escapeCombatText(e.name)}"><div class="visual-card-heading enemy-heading"><div class="visual-card-kicker">${escapeCombatText(isBoss?'БОСС':rank)} · ${escapeCombatText(type)}</div><div class="visual-card-title-row"><h3>${escapeCombatText(e.name)}</h3><span class="visual-card-hp">ЗД ${Math.max(0,c.enemyHp)}/${c.enemyMaxHp}</span></div><div class="visual-card-stats visual-enemy-stats"><b>ЗЩ ${escapeCombatText(e.fields?.['ЗЩ']||'—')}</b><b>АТК ${escapeCombatText(e.fields?.['АТК']||'—')}</b><b>Урон ${escapeCombatText(e.fields?.['Урон']||'—')}</b></div></div>${combatCardStageHtml('enemy','enemy',e.id,e.name,c,combatEnemyBackHtml(e,c))}</section>`;
+    const permanent=String(e.fields?.['Эффект']||'').trim();
+    return `<section class="combatant enemy visual-combat-card tabletop-battle-card ${enemyRankClass(e)}" aria-label="Враг ${escapeCombatText(e.name)}"><div class="tabletop-card-heading"><small>${escapeCombatText(isBoss?'БОСС':rank)} · ${escapeCombatText(type)}</small><h3>${escapeCombatText(e.name)}</h3></div>${combatCardStageHtml('enemy','enemy',e.id,e.name,c,combatEnemyBackHtml(e,c),battleEnemyMetrics(e,c))}${permanent?`<div class="tabletop-card-note enemy-note"><small>ПОСТОЯННЫЙ ЭФФЕКТ</small><strong>Особенность врага</strong><span>${escapeCombatText(permanent)}</span></div>`:''}<button type="button" class="tabletop-card-flip" data-visual-toggle="enemy">⟳ <span>${getCombatVisualUiState(c).enemyBack?'Лицевая сторона':'Полное описание'}</span></button></section>`;
   }
   function combatHeroRulesHtml(p){const h=HERO_COMBAT[p.id];if(!h)return '';const nat=h.natural20||'—',parts=nat.split(' — ');return `<div class="combat-hero-rules"><div><small>СПОСОБНОСТЬ ГЕРОЯ</small><b>${h.ability}</b><span>${h.effect}</span></div><div><small>НАТУРАЛЬНАЯ 20</small><b>${parts[0]||'Эффект героя'}</b><span>${parts.length>1?parts.slice(1).join(' — '):nat}</span></div></div>`}
   function combatActiveEffectsHtml(c,p){
@@ -3127,7 +3213,7 @@
       const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
-      state.version='0.6.78';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.78.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
+      state.version='0.6.81';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.81.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
     }catch(e){console.error(e);alert('Не удалось загрузить сохранение.')}
   }
   function cloneJson(v){return JSON.parse(JSON.stringify(v))}
@@ -3145,7 +3231,7 @@
     if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
-    state.version='0.6.78';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    state.version='0.6.81';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){
