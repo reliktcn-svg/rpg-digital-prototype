@@ -54,7 +54,7 @@
       for(const key of allowed){if(Object.prototype.hasOwnProperty.call(item,key)&&snap(item[key])!==snap(was[key]))patch[key]=item[key]}
       if(Object.keys(patch).length>1)out.players.push(patch);
     }
-    for(const key of ['decks','locations','tradeDeal']){
+    for(const key of ['decks','locations','tradeDeal','territories','areas','nextAreaId']){
       if(Object.prototype.hasOwnProperty.call(source,key)&&snap(source[key])!==snap(baseline[key]))out[key]=source[key];
     }
     if(Array.isArray(source.journal)&&snap(source.journal)!==snap(baseline.journal))out.journal=source.journal;
@@ -109,7 +109,7 @@
   async function fetchGame(){
     return api(`/api/rooms/${session.code}/game?playerId=${encodeURIComponent(session.playerId)}&playerSecret=${encodeURIComponent(session.playerSecret)}`);
   }
-  function enterGame(state,revision){
+  function enterGame(state,revision){window.__RPG_NET_CONNECTED__=true;
     const e=engine();if(!e||!state)return;
     if(session.code){const q=$('turnOrderBanner');if(q)q.dataset.roomCode=session.code;window.__RPG_ROOM_CODE__=session.code}if(session.room?.recoveryKey)session.recoveryKey=session.room.recoveryKey;e.applyState(state);e.setLocalHeroId?.(myHeroId());session.gameEntered=true;session.lastRevision=Number(revision||0);session.lastServerState=state;session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(state);session.lastSideSnapshot=sideSnap(e,myHeroId());saveResumeSession();saveRecoverySnapshot(e.exportState());
     overlay.hidden=true;document.body.classList.remove('net-lobby-open');updateTurnGuard();startGameSync();
@@ -181,7 +181,7 @@
         session.syncBusy=true;
         try{
           const d=await api(`/api/rooms/${session.code}/game/side`,{method:'POST',body:JSON.stringify({...auth(),side:sideDelta(sideNow)})});
-          session.lastRevision=Number(d.revision??session.lastRevision);acknowledgeSideVersions(d);session.lastSideSnapshot=ss;saveRecoverySnapshot(e.exportState());
+          session.lastRevision=Number(d.revision??session.lastRevision);acknowledgeSideVersions(d);session.lastSideSnapshot=ss;saveRecoverySnapshot(e.exportState());if(sideNow.type==='victory')e.acknowledgeVictorySide?.();
         }catch(err){console.warn('online side push',err)}finally{session.syncBusy=false}
       }
       // После любого фонового изменения сразу забираем объединённое состояние сервера.
@@ -263,7 +263,7 @@
       Object.assign(session,{mode:'online',code:saved.code,playerId:saved.playerId,playerSecret:saved.playerSecret,recoveryKey:room.recoveryKey||saved.recoveryKey||session.recoveryKey,room});if($('netName'))$('netName').value=me.name||saved.name||'';saveResumeSession();renderRoom();poll();if(room.started)await ensureOnlineGame();showError(d.revived?'Партия восстановлена после перезапуска сервера.':'');
     }catch(err){if(err.status===410||err.status===403)clearResumeSession();showError(`Не удалось продолжить партию: ${err.message}`)}
   }
-  function localGame(){clearInterval(session.timer);clearInterval(session.gameTimer);overlay.hidden=true;document.body.classList.remove('net-lobby-open')}
+  function localGame(){window.__RPG_NET_CONNECTED__=false;clearInterval(session.timer);clearInterval(session.gameTimer);overlay.hidden=true;document.body.classList.remove('net-lobby-open')}
 
   document.addEventListener('click',e=>{
     if(!session.gameEntered)return;

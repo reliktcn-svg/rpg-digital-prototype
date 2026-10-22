@@ -3,7 +3,7 @@
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
 #mapTable{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(#3b2b1b,#15100c 72%)}
-.field{position:relative;flex:none;width:min(100vw,141.448dvh);max-height:100dvh;aspect-ratio:2481 / 1754;box-shadow:0 0 0 2px #977747,0 0 35px #000a;user-select:none;-webkit-user-select:none}
+.field{position:relative;flex:none;width:min(100vw,139.415dvh);max-height:100dvh;aspect-ratio:2048 / 1469;box-shadow:0 0 0 2px #977747,0 0 35px #000a;user-select:none;-webkit-user-select:none}
 .field img{display:block;width:100%;height:100%;pointer-events:none;-webkit-user-drag:none}
 .field svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 /* Territories and areas use the same class colours and coordinates as app.js. */
@@ -37,3 +37,13 @@ button:disabled{opacity:.5;cursor:default}
 .waiting-inner{display:grid;justify-items:center;text-align:center;gap:9px;max-width:350px;background:#251a12ea;border:1px solid #967749;border-radius:12px;padding:23px;color:#f3deaf}
 .waiting-icon{font-size:28px}.waiting-inner small{color:#cab89c;line-height:1.5}
 @media (prefers-reduced-motion:reduce){.tablet-token{transition:none!important}}
+
+/* v0.6.90: proportional terrain glyphs in new map coordinates */
+.area-boundary{stroke-width:7}
+.area-number-text{font-size:12px}
+.location-text{font-size:19px}
+.area-number-bg{stroke-width:2}
+.territory-marker{stroke-width:4}
+.location-marker{stroke-width:5}
+.dungeon-grate-line{stroke-width:4}
+.tablet-token-label{font-size:11px}

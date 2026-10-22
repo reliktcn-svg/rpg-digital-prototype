@@ -21,8 +21,8 @@
   input.value=codeFromUrl;
   function svg(name,attrs={}){const e=document.createElementNS(NS,name);for(const [key,val] of Object.entries(attrs))e.setAttribute(key,val);return e}
   function pos(hex){return MAP.hexes[hex]||null}
-  function polygon(h,r=62){const pts=[];for(let i=0;i<6;i++){const a=i*Math.PI/3;pts.push([h.x+Math.cos(a)*r,h.y+Math.sin(a)*r])}return pts}
-  function polyAttr(h,r=62){return polygon(h,r).map(([x,y])=>`${x},${y}`).join(' ')}
+  function polygon(h,r=49.8){const pts=[];for(let i=0;i<6;i++){const a=i*Math.PI/3;pts.push([h.x+Math.cos(a)*r,h.y+Math.sin(a)*r])}return pts}
+  function polyAttr(h,r=49.8){return polygon(h,r).map(([x,y])=>`${x},${y}`).join(' ')}
   function add(parent,element){parent.appendChild(element);return element}
   function line(a,b,attrs={}){return svg('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],...attrs})}
   function areaNeighbor(area,hex,angle){const h=pos(hex);if(!h)return false;return (h.neighbors||[]).some(n=>{
@@ -38,44 +38,44 @@
     for(const [hex,t] of Object.entries(state.territories||{})){
       const h=pos(hex);if(!h)continue;
       const colors=HERO_COLORS[t.owner]||{fill:'#8ea0b7',stroke:'#4a5460'};
-      add(terrain,svg('polygon',{points:polyAttr(h,29),class:'territory-marker',fill:colors.fill,stroke:colors.stroke}));
+      add(terrain,svg('polygon',{points:polyAttr(h,23),class:'territory-marker',fill:colors.fill,stroke:colors.stroke}));
     }
     for(const area of state.areas||[]){
       const colors=HERO_COLORS[area.owner]||{stroke:'#4a5460'};
       for(const hex of area.hexes||[]){
         const h=pos(hex);if(!h)continue;
-        const pts=polygon(h,62);
+        const pts=polygon(h,49.8);
         for(let i=0;i<6;i++){
           const normal=(30+i*60)%360;if(areaNeighbor(area,hex,normal))continue;
           const a=pts[i],b=pts[(i+1)%6],mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;
-          const vx=h.x-mx,vy=h.y-my,len=Math.hypot(vx,vy)||1,shift=4;
+          const vx=h.x-mx,vy=h.y-my,len=Math.hypot(vx,vy)||1,shift=3;
           add(terrain,line([a[0]+vx/len*shift,a[1]+vy/len*shift],[b[0]+vx/len*shift,b[1]+vy/len*shift],{class:'area-boundary',stroke:colors.stroke}));
         }
-        add(terrain,svg('circle',{cx:h.x+39,cy:h.y+28,r:13,class:'area-number-bg',fill:colors.stroke}));
-        const t=add(terrain,svg('text',{x:h.x+39,y:h.y+29,class:'area-number-text'}));t.textContent=String(area.ownerAreaNumber||area.id||'');
+        add(terrain,svg('circle',{cx:h.x+30,cy:h.y+21,r:10,class:'area-number-bg',fill:colors.stroke}));
+        const t=add(terrain,svg('text',{x:h.x+30,y:h.y+22,class:'area-number-text'}));t.textContent=String(area.ownerAreaNumber||area.id||'');
       }
     }
     for(const [hex,l] of Object.entries(state.locations||{})){
       const h=pos(hex);if(!h)continue;
       const colors=LOC_COLORS[l.name]||{fill:'#f3d25c',stroke:'#8f7740'};
-      add(terrain,svg('polygon',{points:polyAttr(h,29),class:'location-marker',fill:colors.fill,stroke:colors.stroke}));
+      add(terrain,svg('polygon',{points:polyAttr(h,23),class:'location-marker',fill:colors.fill,stroke:colors.stroke}));
       const t=add(terrain,svg('text',{x:h.x,y:h.y+1,class:'location-text'}));t.textContent=SYMBOLS[l.name]||'●';
     }
     const dungeon=new Set((state.players||[]).filter(p=>p.inDungeon).map(p=>p.hex));
     for(const hex of dungeon){
       const h=pos(hex);if(!h)continue;
-      add(terrain,svg('polygon',{points:polyAttr(h,47),class:'dungeon-grate-bg'}));
-      for(const dx of [-28,-10,10,28])add(terrain,line([h.x+dx,h.y-31],[h.x+dx,h.y+31],{class:'dungeon-grate-line'}));
-      for(const dy of [-20,0,20])add(terrain,line([h.x-36,h.y+dy],[h.x+36,h.y+dy],{class:'dungeon-grate-line'}));
+      add(terrain,svg('polygon',{points:polyAttr(h,37),class:'dungeon-grate-bg'}));
+      for(const dx of [-21,-8,8,21])add(terrain,line([h.x+dx,h.y-24],[h.x+dx,h.y+24],{class:'dungeon-grate-line'}));
+      for(const dy of [-15,0,15])add(terrain,line([h.x-27,h.y+dy],[h.x+27,h.y+dy],{class:'dungeon-grate-line'}));
     }
   }
   function createToken(p,x,y){
     const g=svg('g',{'data-token-hero':p.id,class:'tablet-token',transform:`translate(${x} ${y})`});
-    const defs=add(g,svg('defs'));const clip=add(defs,svg('clipPath',{id:'viewer-portrait-'+p.id}));add(clip,svg('circle',{cx:0,cy:-4,r:19}));
-    add(g,svg('ellipse',{cx:0,cy:20,rx:27,ry:9,fill:'#000',opacity:'.45'}));
-    add(g,svg('circle',{cx:0,cy:0,r:24,fill:HERO_PALETTE[p.id]||'#71869c',stroke:'#201b16','stroke-width':3}));
-    add(g,svg('image',{href:`assets/heroes/${encodeURIComponent(p.id)}.webp`,x:-19,y:-30,width:38,height:58,preserveAspectRatio:'xMidYMid slice','clip-path':`url(#viewer-portrait-${p.id})`}));
-    const label=add(g,svg('text',{x:0,y:25,class:'tablet-token-label'}));label.textContent=p.initial||String(p.name||'').slice(0,1);
+    const defs=add(g,svg('defs'));const clip=add(defs,svg('clipPath',{id:'viewer-portrait-'+p.id}));add(clip,svg('circle',{cx:0,cy:-3,r:15}));
+    add(g,svg('ellipse',{cx:0,cy:16,rx:21,ry:7,fill:'#000',opacity:'.45'}));
+    add(g,svg('circle',{cx:0,cy:0,r:19,fill:HERO_PALETTE[p.id]||'#71869c',stroke:'#201b16','stroke-width':3}));
+    add(g,svg('image',{href:`assets/heroes/${encodeURIComponent(p.id)}.webp`,x:-15,y:-23,width:30,height:45,preserveAspectRatio:'xMidYMid slice','clip-path':`url(#viewer-portrait-${p.id})`}));
+    const label=add(g,svg('text',{x:0,y:19,class:'tablet-token-label'}));label.textContent=p.initial||String(p.name||'').slice(0,1);
     add(heroes,g);
     const entry={g,x,y,hex:p.hex,animation:null};tokens.set(p.id,entry);return entry;
   }
@@ -111,7 +111,7 @@
     for(const [hex,ps] of groups){
       const center=pos(hex),n=ps.length;
       ps.forEach((p,i)=>{
-        const angle=n===1?0:Math.PI*2*i/n,dist=n===1?0:24,target={x:center.x+Math.cos(angle)*dist,y:center.y+Math.sin(angle)*dist};
+        const angle=n===1?0:Math.PI*2*i/n,dist=n===1?0:18,target={x:center.x+Math.cos(angle)*dist,y:center.y+Math.sin(angle)*dist};
         next.add(p.id);
         let entry=tokens.get(p.id);
         if(!entry)entry=createToken(p,target.x,target.y);

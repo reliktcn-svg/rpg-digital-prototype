@@ -360,6 +360,38 @@ class Handler(SimpleHTTPRequestHandler):
                         if key in incoming and cur.get(key)!=incoming[key]:
                             cur[key]=incoming[key]
                             changed_by_hero.setdefault(hid,{})[key]=incoming[key]
+                # Victory rewards/building are handled after the turn moves on.
+                # Merge only territories and areas created by the off-turn winner;
+                # never overwrite another hero's active-turn edits.
+                if side.get('type')=='victory':
+                    current_territories=game.setdefault('territories',{})
+                    incoming_territories=side.get('territories') or {}
+                    new_territories={}
+                    for hex_id,entry in incoming_territories.items():
+                        if not isinstance(entry,dict) or entry.get('owner')!=owner:continue
+                        current=current_territories.get(hex_id)
+                        # The winner can add a new territory or assign their
+                        # existing territory to an area after combat.
+                        if current is None or (current.get('owner')==owner and current.get('areaId')!=entry.get('areaId')):
+                            current_territories[hex_id]=entry
+                            new_territories[hex_id]=entry
+                    existing_areas=game.setdefault('areas',[])
+                    incoming_areas=side.get('areas') or []
+                    known_ids={a.get('id') for a in existing_areas if isinstance(a,dict)}
+                    new_areas=[]
+                    for area in incoming_areas:
+                        if isinstance(area,dict) and area.get('owner')==owner and area.get('id') not in known_ids:
+                            existing_areas.append(area)
+                            known_ids.add(area.get('id'))
+                            new_areas.append(area)
+                    if new_areas or new_territories:
+                        game['nextAreaId']=max(int(game.get('nextAreaId') or 1),int(side.get('nextAreaId') or 1))
+                        pending=room.setdefault('sideTerritoryOverrides',{})
+                        record=pending.setdefault(owner,{'territories':{},'areas':[],'nextAreaId':1})
+                        record['territories'].update(new_territories)
+                        ids={a.get('id') for a in record['areas']}
+                        record['areas'].extend(a for a in new_areas if a.get('id') not in ids)
+                        record['nextAreaId']=max(record['nextAreaId'],game['nextAreaId'])
                 if isinstance(side.get('decks'),dict): game['decks']=side['decks']
                 if isinstance(side.get('locations'),dict): game['locations']=side['locations']
                 if isinstance(side.get('journal'),list):
@@ -453,6 +485,26 @@ class Handler(SimpleHTTPRequestHandler):
                     for key,value in (entry.get('fields') or {}).items(): inc[key]=value
                 if overlays: room['sidePlayerOverrides']=overlays
                 else: room.pop('sidePlayerOverrides',None)
+                # Do not let a stale full-state from the newly active hero erase
+                # a territory/area just built by the previous winner.
+                current_territories=game.setdefault('territories',{})
+                current_areas=game.setdefault('areas',[])
+                existing_area_ids={a.get('id') for a in current_areas if isinstance(a,dict)}
+                for off_owner,record in list((room.get('sideTerritoryOverrides') or {}).items()):
+                    changes=record.get('territories') or {}
+                    known_original=all(current_territories.get(h)==entry for h,entry in changes.items())
+                    for h,entry in changes.items():
+                        current=current_territories.get(h)
+                        if current is None or (current.get('owner')==off_owner and current.get('areaId')!=entry.get('areaId')):
+                            current_territories[h]=entry
+                    for area in record.get('areas') or []:
+                        if area.get('id') not in existing_area_ids:
+                            current_areas.append(area)
+                            existing_area_ids.add(area.get('id'))
+                    game['nextAreaId']=max(int(game.get('nextAreaId') or 1),int(record.get('nextAreaId') or 1))
+                    if known_original and all(any(a.get('id')==item.get('id') for a in game['areas']) for item in record.get('areas') or []):
+                        # Overlay is now part of an authoritative main snapshot.
+                        room['sideTerritoryOverrides'].pop(off_owner,None)
                 merge_journal(existing, game)
                 room['gameState']=game; room['gameRevision']=base+1; room['gameUpdatedAt']=int(time.time())
                 return self._json(200, {'revision':room['gameRevision']})

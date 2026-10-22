@@ -1707,3 +1707,12 @@ body.game-running #modal:has(.story-card-shell) .modal-card,
 /* v0.6.87: the sixth lobby role opens the separate spectator-only tabletop map. */
 .net-map-art{grid-row:1/3;grid-column:1;display:grid;place-items:center;width:66px;height:75px;border:2px solid #d7b570;border-radius:7px;background:radial-gradient(#574b32,#201b13);font-size:36px}
 @media(max-width:480px){.net-map-art{width:45px;height:56px;font-size:26px}}
+
+/* v0.6.90: rebased on the centred 2048×1469 map and schema */
+.area-boundary{stroke-width:7}
+.area-number-text{font-size:12px}
+.location-text{font-size:19px}
+.area-number-bg{stroke-width:2}
+.territory-marker{stroke-width:4}
+.location-marker{stroke-width:5}
+.dungeon-grate-line{stroke-width:4}

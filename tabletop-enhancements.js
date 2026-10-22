@@ -28,11 +28,11 @@ window.RPGTabletop = (() => {
     }
     const g=create('g',{class:`table-token ${active?'active':''}`,transform:`translate(${x} ${y})`,'data-token-hero':p.id,'aria-label':`${p.name}, ${p.hex}`});
     const mask='table-portrait-'+p.id;
-    const defs=create('defs');const clip=create('clipPath',{id:mask});clip.appendChild(create('circle',{cx:0,cy:-4,r:19}));defs.appendChild(clip);g.appendChild(defs);
-    g.appendChild(create('ellipse',{cx:0,cy:20,rx:27,ry:9,fill:'#000',opacity:'.45'}));
-    g.appendChild(create('circle',{cx:0,cy:0,r:24,fill:p.color||'#71869c',stroke:active?'#f4d491':'#201b16','stroke-width':active?5:3}));
-    g.appendChild(create('image',{href:`assets/heroes/${p.id}.webp`,x:-19,y:-30,width:38,height:58,preserveAspectRatio:'xMidYMid slice','clip-path':`url(#${mask})`}));
-    const label=create('text',{x:0,y:25,'text-anchor':'middle',class:'table-token-label'});label.textContent=p.initial||String(p.name||'').slice(0,1);g.appendChild(label);
+    const defs=create('defs');const clip=create('clipPath',{id:mask});clip.appendChild(create('circle',{cx:0,cy:-3,r:15}));defs.appendChild(clip);g.appendChild(defs);
+    g.appendChild(create('ellipse',{cx:0,cy:16,rx:21,ry:7,fill:'#000',opacity:'.45'}));
+    g.appendChild(create('circle',{cx:0,cy:0,r:19,fill:p.color||'#71869c',stroke:active?'#f4d491':'#201b16','stroke-width':active?5:3}));
+    g.appendChild(create('image',{href:`assets/heroes/${p.id}.webp`,x:-15,y:-23,width:30,height:45,preserveAspectRatio:'xMidYMid slice','clip-path':`url(#${mask})`}));
+    const label=create('text',{x:0,y:19,'text-anchor':'middle',class:'table-token-label'});label.textContent=p.initial||String(p.name||'').slice(0,1);g.appendChild(label);
     svg.appendChild(g);
     const prev=lastTokens[p.id];const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if(prev&&Math.hypot(prev.x-x,prev.y-y)>1&&!reduced&&g.animate){

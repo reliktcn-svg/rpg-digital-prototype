@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#16120d">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>RPG Digital Prototype v0.6.87 — Карта</title>
+  <title>RPG Digital Prototype v0.6.91 — Карта</title>
   <link rel="icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="map-viewer.css?v=0687map">
+  <link rel="stylesheet" href="map-viewer.css?v=0691scale">
 </head>
 <body>
   <main id="mapTable" aria-label="Общее игровое поле">
     <div class="field" id="field">
-      <img id="mapArt" src="assets/map-visual-v0654.png" alt="Карта мира" draggable="false">
-      <svg id="fieldOverlay" viewBox="0 0 2481 1754" preserveAspectRatio="none" aria-label="Герои, локации и владения">
+      <img id="mapArt" src="assets/map-visual-v0691.png" alt="Карта мира" draggable="false">
+      <svg id="fieldOverlay" viewBox="0 0 2048 1469" preserveAspectRatio="none" aria-label="Герои, локации и владения">
         <g id="fieldTerrain"></g><g id="fieldHeroes"></g>
       </svg>
     </div>
@@ -21,7 +21,7 @@
     <button class="map-fullscreen" id="fullscreen" type="button" title="На весь экран" aria-label="На весь экран">⛶</button>
     <section id="mapLogin" class="map-login">
       <div class="map-login-box">
-        <div class="brand">RPG DIGITAL PROTOTYPE · v0.6.87</div>
+        <div class="brand">RPG DIGITAL PROTOTYPE · v0.6.91</div>
         <h1>Режим «Карта»</h1>
         <p>Планшет показывает общее игровое поле. Герой не выбирается, место игрока не занимается.</p>
         <label for="mapRoomCode">Код комнаты</label>
@@ -35,7 +35,7 @@
       <div class="waiting-inner"><div class="waiting-icon">⌛</div><strong>Ждём начала партии</strong><small>Когда хозяин создаст игровое поле, карта появится автоматически.</small></div>
     </section>
   </main>
-  <script src="map-data.js?v=0687map"></script>
-  <script src="map-viewer.js?v=0687map"></script>
+  <script src="map-data.js?v=0691scale"></script>
+  <script src="map-viewer.js?v=0691scale"></script>
 </body>
 </html>
