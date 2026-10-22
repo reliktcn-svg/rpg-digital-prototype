@@ -1,0 +1,39 @@
+/* v0.6.87: independent read-only tabletop display; no in-game controls. */
+:root{color-scheme:dark;font-family:system-ui,-apple-system,Arial,sans-serif;background:#13100c;color:#f3e4c5}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
+#mapTable{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(#3b2b1b,#15100c 72%)}
+.field{position:relative;flex:none;width:min(100vw,141.448dvh);max-height:100dvh;aspect-ratio:2481 / 1754;box-shadow:0 0 0 2px #977747,0 0 35px #000a;user-select:none;-webkit-user-select:none}
+.field img{display:block;width:100%;height:100%;pointer-events:none;-webkit-user-drag:none}
+.field svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+/* Territories and areas use the same class colours and coordinates as app.js. */
+.territory-marker{fill-opacity:.59;stroke-width:5;stroke-linejoin:round}
+.location-marker{stroke-width:6;stroke-linejoin:round}
+.location-text{fill:#17130d;font-size:24px;font-weight:900;text-anchor:middle;dominant-baseline:middle;paint-order:stroke}
+.area-boundary{stroke-width:9;stroke-linecap:round;filter:drop-shadow(0px 1px 2px #000e)}
+.area-number-bg{stroke:#151515;stroke-width:3}
+.area-number-text{font-size:16px;font-weight:900;fill:#111;text-anchor:middle;dominant-baseline:middle}
+.dungeon-grate-bg{fill:#0c101090;stroke:#b2b8c1;stroke-width:4}
+.dungeon-grate-line{stroke:#e0e5e6;stroke-width:5;opacity:.87}
+.tablet-token{filter:drop-shadow(0 2px 4px #000e);will-change:transform}
+.tablet-token.active{filter:drop-shadow(0 1px 7px #ffcc57)}
+.tablet-token-label{font-size:13px;fill:#f7f1e7;font-weight:900;text-anchor:middle;paint-order:stroke;stroke:#1a120c;stroke-width:2}
+.map-mini-status{position:absolute;top:8px;left:8px;z-index:4;display:flex;align-items:center;gap:7px;background:#19160fcc;border:1px solid #aa865755;border-radius:5px;padding:5px 8px;font-size:11px;letter-spacing:.04em;color:#edddb7;opacity:.62;pointer-events:none}
+.map-mini-status[hidden]{display:none}
+.connection-light{width:7px;height:7px;background:#71d28b;border-radius:50%;box-shadow:0 0 5px #71d28b}
+.map-mini-status.disconnected .connection-light{background:#e4916d;box-shadow:0 0 5px #e4916d}
+.map-fullscreen{position:absolute;right:8px;bottom:8px;z-index:5;color:#e5c88d;border:1px solid #81663eb3;border-radius:7px;background:#20190fd9;padding:2px 11px;font-size:23px;cursor:pointer;opacity:.42;line-height:1.45}
+.map-fullscreen:hover,.map-fullscreen:focus-visible{opacity:1}
+.map-login{position:absolute;inset:0;z-index:10;background:#140f0edb;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
+.map-login[hidden],.map-waiting[hidden]{display:none}
+.map-login-box{width:min(410px,100%);background:linear-gradient(150deg,#36291b,#1b1714);border:1px solid #8f7145;border-radius:15px;padding:24px;box-shadow:0 15px 50px #000d;display:grid;gap:12px}
+.brand{font-size:10px;letter-spacing:.15em;color:#d0af77}
+h1{font:27px Georgia,serif;margin:0}p{margin:0 0 7px;line-height:1.5;color:#d0c0a5;font-size:14px}label{font-size:14px;font-weight:700}
+input{width:100%;min-height:56px;background:#14110e;border:1px solid #8f754f;border-radius:9px;color:white;letter-spacing:.22em;text-align:center;font-weight:800;font-size:25px}
+button.primary{background:#926837;color:white;border:1px solid #d2ac73;border-radius:9px;min-height:49px;font-size:16px;font-weight:800;cursor:pointer}
+button:disabled{opacity:.5;cursor:default}
+.map-error{min-height:17px;color:#ffaea3;font-size:13px}.back-link{color:#bbaa8f;text-align:center;font-size:12px}
+.map-waiting{position:absolute;inset:0;z-index:6;display:grid;place-items:center;pointer-events:none;background:#0a080866}
+.waiting-inner{display:grid;justify-items:center;text-align:center;gap:9px;max-width:350px;background:#251a12ea;border:1px solid #967749;border-radius:12px;padding:23px;color:#f3deaf}
+.waiting-icon{font-size:28px}.waiting-inner small{color:#cab89c;line-height:1.5}
+@media (prefers-reduced-motion:reduce){.tablet-token{transition:none!important}}

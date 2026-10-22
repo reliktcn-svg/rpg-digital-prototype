@@ -13,8 +13,8 @@
   <link rel="preload" as="image" href="assets/heroes/mage.webp" />
   <link rel="preload" as="image" href="assets/heroes/archer.webp" />
   <link rel="preload" as="image" href="assets/heroes/rogue.webp" />
-  <title>RPG Digital Prototype v0.6.86 Tabletop UI</title>
-  <link rel="stylesheet" href="styles.css?v=0685ui" />
+  <title>RPG Digital Prototype v0.6.87 · Режим Карта</title>
+  <link rel="stylesheet" href="styles.css?v=0687map" />
   <link rel="stylesheet" href="location-ui.css?v=0685ui" />
   <link rel="stylesheet" href="battle-result-ui.css?v=0685ui" />
   <link rel="stylesheet" href="tabletop-enhancements.css?v=0685ui" />
@@ -41,6 +41,7 @@
         <div class="net-or">или</div>
         <label class="net-label">Код комнаты<input id="netCodeInput" inputmode="numeric" maxlength="6" placeholder="000000" /></label>
         <button id="netJoin" class="secondary wide" type="button">Присоединиться</button>
+        <button id="netMapJoin" class="ghost wide" type="button">🗺 Присоединиться как Карта (планшет)</button>
         <button id="netLocal" class="ghost wide" type="button">Локальная игра на этом устройстве</button>
       </div>
       <div id="onlineRoom" hidden>
@@ -66,7 +67,7 @@
   <header class="topbar">
     <div>
       <div class="eyebrow">RPG DIGITAL PROTOTYPE</div>
-      <h1>Прототип v0.6.85 · Настольный интерфейс</h1>
+      <h1>Прототип v0.6.87 · Настольный интерфейс</h1>
       <div class="header-tools">
         <button id="journalBtn" class="journal-top" type="button">Журнал</button>
       </div>
@@ -191,6 +192,6 @@
   <script src="arcana/dice-animator.js?v=0685ui"></script>
   <script src="tabletop-enhancements.js?v=0685ui"></script>
   <script src="app.js?v=0686ui"></script>
-  <script src="network-lobby.js?v=0685ui"></script>
+  <script src="network-lobby.js?v=0687map"></script>
 </body>
 </html>

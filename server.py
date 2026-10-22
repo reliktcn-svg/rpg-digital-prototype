@@ -49,6 +49,7 @@ def public_room(room, include_recovery=False):
         'gameReady': room.get('gameState') is not None,
         'gameRevision': int(room.get('gameRevision') or 0),
         'roomIdleTtl': ROOM_IDLE_TTL,
+        'mapViewers': len(room.get('mapViewers') or {}),
     }
     if include_recovery:
         data['recoveryKey']=room.get('recoveryKey')
@@ -71,6 +72,43 @@ def merge_journal(existing_game, incoming_game, limit=600):
     if isinstance(incoming_game, dict):
         incoming_game['journal'] = merged
     return merged
+
+def public_map_snapshot(room):
+    """Read-only field projection: never publish inventories, decks or hidden locations."""
+    game=room.get('gameState') or {}
+    heroes=[{
+        'id':p.get('id'), 'name':p.get('name'), 'hex':p.get('hex'),
+        'color':p.get('color'), 'initial':p.get('initial'),
+        'inDungeon':bool(p.get('inDungeon')),
+    } for p in game.get('players', []) if isinstance(p, dict)]
+    hidden=bool(room.get('hardMode'))
+    discovered=set()
+    if hidden:
+        for p in game.get('players', []):
+            if not isinstance(p, dict):continue
+            for hex_id,value in (p.get('discoveredLocations') or {}).items():
+                if value:discovered.add(hex_id)
+    locations={hid:{'name':loc.get('name')} for hid,loc in (game.get('locations') or {}).items()
+               if isinstance(loc,dict) and (not hidden or hid in discovered)}
+    order=game.get('order') or []
+    index=int(game.get('currentIndex') or 0)
+    active=order[index%len(order)] if order else None
+    move=game.get('mapLastMove') or None
+    if not isinstance(move,dict):move=None
+    if move:
+        path=move.get('path')
+        move={'heroId':move.get('heroId'),'path':path if isinstance(path,list) else [],
+              'at':move.get('at'),'teleport':bool(move.get('teleport'))}
+    return {
+        'started':bool(room.get('started')), 'ready':bool(room.get('gameState')),
+        'revision':int(room.get('gameRevision') or 0), 'round':game.get('round',1),
+        'activeHeroId':active,'players':heroes,'locations':locations,
+        'territories':{hid:{'owner':t.get('owner'),'areaId':t.get('areaId')}
+                       for hid,t in (game.get('territories') or {}).items() if isinstance(t,dict)},
+        'areas':[{'id':a.get('id'),'owner':a.get('owner'),'ownerAreaNumber':a.get('ownerAreaNumber'),'hexes':a.get('hexes',[])}
+                 for a in (game.get('areas') or []) if isinstance(a,dict)],
+        'mapLastMove':move
+    }
 
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -99,6 +137,20 @@ class Handler(SimpleHTTPRequestHandler):
         with LOCK: cleanup_rooms()
         if p.path == '/api/health':
             return self._json(200, {'ok':True,'rooms':len(ROOMS)})
+        # Spectator-only endpoint, completely separate from player game access.
+        if p.path.startswith('/api/rooms/') and p.path.endswith('/map'):
+            parts=[x for x in p.path.split('/') if x]
+            code=parts[2] if len(parts)==4 else ''
+            q=urllib.parse.parse_qs(p.query)
+            wid=(q.get('viewerId') or [''])[0];secret=(q.get('viewerSecret') or [''])[0]
+            with LOCK:
+                room=ROOMS.get(code)
+                if not room:return self._json(404, {'error':'Комната не найдена'})
+                viewer=(room.get('mapViewers') or {}).get(wid)
+                if not viewer or viewer.get('secret')!=secret:
+                    return self._json(403, {'error':'Нет доступа к карте'})
+                viewer['lastSeenAt']=int(time.time())
+                return self._json(200, public_map_snapshot(room))
         if p.path.startswith('/api/rooms/') and p.path.endswith('/game'):
             parts=[x for x in p.path.split('/') if x]
             code=parts[2] if len(parts)>=4 else ''
@@ -178,6 +230,21 @@ class Handler(SimpleHTTPRequestHandler):
                 }
                 ROOMS[code]=room
                 return self._json(200, {'room':public_room(room, True),'revived':True})
+        # An unlimited-turn, read-only map observer. No hero, no player slot.
+        if p.endswith('/map/join') and p.startswith('/api/rooms/'):
+            code=p.split('/')[-3]
+            with LOCK:
+                room=ROOMS.get(code)
+                if not room:return self._json(404, {'error':'Комната не найдена'})
+                viewers=room.setdefault('mapViewers', {})
+                now=int(time.time())
+                for wid,record in list(viewers.items()):
+                    if now-int(record.get('lastSeenAt') or now)>600:viewers.pop(wid,None)
+                if len(viewers)>=8:return self._json(409, {'error':'Слишком много подключённых экранов карты'})
+                wid=token(12);secret=token(24)
+                viewers[wid]={'secret':secret,'lastSeenAt':now}
+                return self._json(200, {'code':code,'viewerId':wid,'viewerSecret':secret,
+                                        'started':bool(room.get('started'))})
         if p.endswith('/join') and p.startswith('/api/rooms/'):
             code=p.split('/')[-2]; name=(body.get('name') or 'Игрок').strip()[:24] or 'Игрок'
             with LOCK:
@@ -189,6 +256,27 @@ class Handler(SimpleHTTPRequestHandler):
                 room['players'][pid]={'id':pid,'secret':secret,'name':name,'heroId':None,'host':False}
                 touch_room(room); data=public_room(room, True)
             return self._json(200, {'room':data,'playerId':pid,'playerSecret':secret})
+        # Convert an already-joined non-host lobby player into the Map role.
+        # This frees the hero slot and preserves the familiar "choose a role" UX.
+        if p.endswith('/map/convert') and p.startswith('/api/rooms/'):
+            code=p.split('/')[-3];pid=body.get('playerId');secret=body.get('playerSecret')
+            with LOCK:
+                room=ROOMS.get(code)
+                if not room:return self._json(404, {'error':'Комната не найдена'})
+                account=authorized_player(room,pid,secret)
+                if not account:return self._json(403, {'error':'Нет доступа'})
+                if account.get('host'):return self._json(409, {'error':'Хозяин комнаты должен остаться игроком. Для карты откройте второе устройство.'})
+                if room.get('started'):return self._json(409, {'error':'После старта нельзя менять героя на карту'})
+                viewers=room.setdefault('mapViewers',{})
+                now=int(time.time())
+                for wid,record in list(viewers.items()):
+                    if now-int(record.get('lastSeenAt') or now)>600:viewers.pop(wid,None)
+                if len(viewers)>=8:return self._json(409, {'error':'Слишком много подключённых экранов карты'})
+                wid=token(12);vs=token(24)
+                viewers[wid]={'secret':vs,'lastSeenAt':now}
+                room['players'].pop(pid,None)
+                touch_room(room)
+                return self._json(200, {'code':code,'viewerId':wid,'viewerSecret':vs})
         if p.endswith('/select') and p.startswith('/api/rooms/'):
             code=p.split('/')[-2]; pid=body.get('playerId'); secret=body.get('playerSecret'); hero=body.get('heroId')
             if hero not in HERO_IDS: return self._json(400, {'error':'Неизвестный герой'})

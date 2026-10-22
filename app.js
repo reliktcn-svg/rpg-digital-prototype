@@ -758,6 +758,7 @@
   function finishCommittedMove(transit){
     const p=currentPlayer(),plan=transit.plan,realPath=plan.path,startHex=realPath[0],final=realPath.at(-1),crossed=!!plan.segments?.some(seg=>seg.boundary);
     p.hex=final;
+    if(final!==startHex)state.mapLastMove={heroId:p.id,path:[...realPath],at:Date.now(),teleport:false};
     if(final!==startHex){ensurePlayerStats(p);p.stats.distanceTravelled+=Number(plan.cost||0);restockTavernIfVacant(startHex)}
     applyAreaHealingOnStop(p,final);
     state.moveTransit=null;state.movePending=false;state.reachable=[];state.moveOriginHex=null;state.chosenMovePlan=null;state.foreignTerritoryPending=null;
@@ -799,7 +800,7 @@
   }
 
   function completePortalTeleport(p,entryHex,dest,remaining){
-    p.hex=dest;revealLocationToPlayer(p,dest);recordLocationVisit(p,dest);state.portalPending=null;state.turnLocked=false;state.movePoints=remaining;setForeignTerritoryPending(p,dest);setTradeOpportunityForArrival(p,dest);
+    p.hex=dest;state.mapLastMove={heroId:p.id,path:[entryHex,dest],at:Date.now(),teleport:true};revealLocationToPlayer(p,dest);recordLocationVisit(p,dest);state.portalPending=null;state.turnLocked=false;state.movePoints=remaining;setForeignTerritoryPending(p,dest);setTradeOpportunityForArrival(p,dest);
     log(`${p.name}: портал <b>${entryHex} → ${dest}</b>. Телепортация не расходует движение.${remaining>0?` Осталось движения: ${remaining}.`:''}`);
     if(remaining>0){state.turnMoved=false;state.movePending=false;state.moveOriginHex=dest;state.chosenPath=[dest];state.chosenMovePlan=null;refreshManualMoveReachable(p)}else{state.turnMoved=true;state.movePending=false;state.moveOriginHex=null;state.reachable=[];state.chosenPath=null;state.chosenMovePlan=null}
     updateUI();renderBoard();setTimeout(()=>{if(currentPlayer()?.id===p.id)advanceTurnState(p,'использование Древнего портала')},0);

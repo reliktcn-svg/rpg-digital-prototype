@@ -1,0 +1,7 @@
+RPG Digital Prototype v0.6.83 — Combat Status & Ability Marking
+
+- Negative conditions appear as a compact horizontal row over the upper middle of the hero portrait.
+- Status icons on touch/mobile are approximately half their previous desktop diameter.
+- Used hero class ability is crossed through with one diagonal line on its own ability panel, including the reverse face.
+- Removed the old check mark drawn on the hero portrait when class ability is used.
+- Kept character art, combat stats, battle buttons, game rules and network modules unchanged.

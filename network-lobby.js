@@ -3,7 +3,7 @@
     ['warrior','Воин','#4c83ff'],['dwarf','Дворф','#d34b45'],['mage','Маг','#9d5cff'],['archer','Лучник','#4db76d'],['rogue','Разбойник','#444b55']
   ];
   let session={mode:null,code:null,playerId:null,playerSecret:null,recoveryKey:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:'',lastServerState:null,sideAcks:{}};
-  const CLIENT_BUILD='0.6.6';
+  const CLIENT_BUILD='0.6.6'; // v0.6.87: map observers are independent from this player session
   const SESSION_KEY='rpg-online-session';
   const RECOVERY_KEY='rpg-online-recovery-v0635';
   const LEGACY_RECOVERY_KEYS=['rpg-online-recovery-v0634'];
@@ -89,13 +89,15 @@
     $('onlineHome').hidden=true;$('onlineRoom').hidden=false;
     $('roomCode').textContent=r.code;
     const me=myPlayer();$('roomWho').textContent=me?`${me.name}${me.host?' · хозяин':''}`:'';
-    $('roomPlayers').innerHTML=r.players.map(p=>`<div class="net-player ${p.id===session.playerId?'me':''}"><b>${esc(p.name)}</b><span>${p.heroId?esc(heroName(p.heroId)):'герой не выбран'}</span>${p.host?'<em>Хозяин</em>':''}</div>`).join('');
+    $('roomPlayers').innerHTML=r.players.map(p=>`<div class="net-player ${p.id===session.playerId?'me':''}"><b>${esc(p.name)}</b><span>${p.heroId?esc(heroName(p.heroId)):'герой не выбран'}</span>${p.host?'<em>Хозяин</em>':''}</div>`).join('')+((Number(r.mapViewers)||0)>0?`<div class="net-player net-map-observer"><b>🗺 Карта</b><span>Подключено экранов: ${Number(r.mapViewers)}</span></div>`:'');
     const taken=new Map(r.players.filter(p=>p.heroId).map(p=>[p.heroId,p]));
     $('netHeroPicker').innerHTML=HEROES.map(([id,name,color])=>{
       const owner=taken.get(id), mine=owner?.id===session.playerId, disabled=owner&&!mine;
       return `<button class="net-hero ${mine?'selected':''}" data-hero="${id}" ${disabled||r.started?'disabled':''} style="--hc:${color}"><img class="net-hero-art" src="assets/heroes/${id}.webp" alt="" loading="lazy"><b>${name}</b><small>${disabled?'занят: '+esc(owner.name):mine?'выбран вами':'свободен'}</small></button>`;
-    }).join('');
+    }).join('')+`<button class="net-hero net-hero-map" type="button" id="netSelectMap" style="--hc:#d7b570" ${me?.host||r.started?'disabled':''}><span class="net-map-art" aria-hidden="true">🗺</span><b>Карта</b><small>${me?.host?'Только с другого устройства':'Общее поле без выбора героя'}</small></button>`;
     $('netHeroPicker').querySelectorAll('[data-hero]').forEach(b=>b.onclick=()=>selectHero(b.dataset.hero));
+    $('netSelectMap').onclick=convertToMap;
+
     const isHost=!!me?.host, ready=r.players.length>=2&&r.players.every(p=>p.heroId),hard=!!r.hardMode;
     const normalBtn=$('netModeNormal'),hardBtn=$('netModeHard');
     if(normalBtn){normalBtn.classList.toggle('selected',!hard);normalBtn.disabled=!isHost||r.started;normalBtn.onclick=()=>setRoomMode(false)}
@@ -236,6 +238,14 @@
     const name=$('netName').value.trim()||'Игрок',code=$('netCodeInput').value.replace(/\D/g,'').slice(0,6);if(code.length!==6)return showError('Введите 6-значный код комнаты.');
     showError('');try{const d=await api(`/api/rooms/${code}/join`,{method:'POST',body:JSON.stringify({name})});Object.assign(session,{mode:'online',code:d.room.code,playerId:d.playerId,playerSecret:d.playerSecret,recoveryKey:d.room.recoveryKey||null,room:d.room});saveResumeSession();renderRoom();poll()}catch(e){showError(e.message)}
   }
+  async function convertToMap(){
+    try{
+      const d=await api(`/api/rooms/${session.code}/map/convert`,{method:'POST',body:JSON.stringify(auth())});
+      localStorage.setItem('rpg-map-viewer-v0687',JSON.stringify(d));
+      clearResumeSession();
+      location.href=`map.html?code=${encodeURIComponent(session.code)}`;
+    }catch(e){showError(e.message);refresh()}
+  }
   async function selectHero(heroId){
     try{const d=await api(`/api/rooms/${session.code}/select`,{method:'POST',body:JSON.stringify({...auth(),heroId})});acceptRoom(d.room);renderRoom()}catch(e){showError(e.message);refresh()}
   }
@@ -270,6 +280,11 @@
 
   window.addEventListener('rpg-side-interaction-change',e=>{if(!session.gameEntered)return;if(e.detail?.active){session.lastSideSnapshot=''}else{session.lastSideSnapshot='';setTimeout(()=>syncGame(),80)}});
 
+  $('netMapJoin').onclick=()=>{
+    const code=$('netCodeInput').value.replace(/\D/g,'').slice(0,6);
+    if(code.length!==6){showError('Введите 6-значный код комнаты для карты.');return}
+    window.location.href=`map.html?code=${encodeURIComponent(code)}`;
+  };
   $('netCreate').onclick=createRoom;$('netJoin').onclick=joinRoom;$('netResume').onclick=resumeRoom;$('netStart').onclick=startRoom;$('netBack').onclick=showHome;$('netLocal').onclick=localGame;
   $('netCodeInput').addEventListener('input',e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,6));
   document.body.classList.add('net-lobby-open');overlay.hidden=false;showHome();
