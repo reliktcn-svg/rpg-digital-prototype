@@ -1,0 +1,10 @@
+RPG Digital Prototype v0.6.68 — Front / Back Cards & Automatic Shield 157
+
+- Item details open on artwork first; a dedicated Flip button shows card ID, type, class, price and effect.
+- Pending loot presents illustrated square item cards and front-first details.
+- Careful-search post-battle reward selection shows artwork first, description on click/flip, separate Choose button.
+- Shield №157 automatically negates an ordinary exact-defense enemy hit once per battle (no manual reaction); notification is shown.
+- Equipment usage markers use the real one-battle and location/shrine cooldown states, not an independent timer.
+- Existing game logic, loot probabilities and server left unchanged.
+- Additional existing one-use passive effects now mark their cooldown: №155, №228, №229.
+- Per-turn badge for existing Boots №201 and Tracker №198 cooldown state.

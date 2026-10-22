@@ -3036,20 +3036,79 @@
       <div class="visual-back-block accent"><small>ПОСТОЯННЫЙ ЭФФЕКТ</small><span>${escapeCombatText(effect)}</span></div>${extra}
     </div>`;
   }
+  // v0.6.86: presentation-only effect badges and segmented HP, adapted from
+  // the supplied Codex combat-cards layout. Battle rules and actions are unchanged.
+  const BATTLE_V086_EFFECT_PATHS={
+    flame:'M12 2c2 6 8 8 8 13a8 8 0 0 1-16 0c0-3 2-6 4-8 0 5 4 5 4-5Z',
+    drop:'M12 2S4 11 4 15a8 8 0 0 0 16 0c0-4-8-13-8-13Z',
+    star:'m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z',
+    eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0',
+    poison:'M9 2h6m-5 0v6l-6 10q-1 3 3 3h10q4 0 3-3L14 8V2M7 15h10',
+    moon:'M19 16A9 9 0 0 1 8 3a9 9 0 1 0 11 13Z',
+    stun:'m8 2 2 4 4 1-3 3 1 4-4-2-4 2 1-4-3-3 4-1Zm10 12 1 3 3 1-3 1-1 3-1-3-3-1 3-1Z',
+    chain:'m9 15 6-6M8 17l-2 2a4 4 0 0 1-5-5l5-5a4 4 0 0 1 5 0m2-2 2-2a4 4 0 0 1 5 5l-5 5a4 4 0 0 1-5 0',
+    clock:'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M12 6v6l4 3',
+    shield:'M12 3 21 6v6c0 5-9 9-9 9S3 17 3 12V6Z M12 7v10',
+    sword:'m5 19 11-11 2-5-5 2L2 16m1-3 8 8m-6-2-2 2',
+    heart:'M20 5c-3-3-6-1-8 1C10 4 7 2 4 5c-4 5 3 11 8 15 5-4 12-10 8-15Z',
+    dex:'M4 3c15 1 15 17 0 18L14 12Z M2 12h20m-4-3 4 3-4 3',
+    wis:'M12 6C8 3 4 3 2 4v15c3-1 7-1 10 2 3-3 7-3 10-2V4c-2-1-6-1-10 2Zm0 0v15'
+  };
+  function battleV086EffectIcon(label,detail=''){
+    const t=String(label)+' '+String(detail);
+    return /Горение/i.test(t)?'flame':/Кровотечение/i.test(t)?'drop':/Яд/i.test(t)?'poison':/Оглушение/i.test(t)?'stun':/Проклятие/i.test(t)?'moon':/Усталость/i.test(t)?'clock':/Слабость/i.test(t)?'chain':/Страх|помех/i.test(t)?'eye':/блок|безмолви/i.test(t)?'chain':/защит|покров|стойк|кровь|ЗЩ/i.test(t)?'shield':/урон|атак|удар|ярост/i.test(t)?'sword':/лечени|здоровье|восстанов/i.test(t)?'heart':/ловкост|ЛОВ/i.test(t)?'dex':/мудрост|МУД/i.test(t)?'wis':'star';
+  }
+  function battleV086Badges(rows){
+    if(!rows.length)return '';
+    return `<span class="tabletop-effect-overlay" aria-label="Активные эффекты">${rows.map(({label,detail,tone})=>{
+      const path=BATTLE_V086_EFFECT_PATHS[battleV086EffectIcon(label,detail)]||BATTLE_V086_EFFECT_PATHS.star;
+      const description=escapeCombatText(`${label}${detail?' — '+detail:''}`);
+      return `<span class="tabletop-effect-icon ${tone==='negative'?'negative':'positive'}" title="${description}" aria-label="${description}"><svg viewBox="0 0 24 24" width="100%" height="100%" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${path}"/></svg></span>`;
+    }).join('')}</span>`;
+  }
+  function battleV086HeroEffects(p,c){
+    const out=[],seen=new Set();
+    const add=(label,detail='',tone='positive')=>{if(!label)return;const key=`${label}|${detail}|${tone}`;if(seen.has(key))return;seen.add(key);out.push({label,detail,tone})};
+    for(const st of p.statuses||[])add(st,'','negative');
+    for(const e of p.temporaryEffects||[])add(e.label||'Временный эффект',e.amount?`${signed(e.amount)} ${BONUS_KEYS[e.key]||e.key||''}`:'',Number(e.amount)<0?'negative':'positive');
+    for(const e of c.pendingStartEffects||[])add(e.label||'Боевой эффект',e.type||'',/Disadvantage|AbilityLocked|EnemyFirst|EnemyHit/.test(e.type||'')?'negative':'positive');
+    for(const e of p.combatEffects||[])if(!String(e.type||'').startsWith('nextBattle'))add(e.label||'Боевой эффект',e.type||'','positive');
+    for(const b of c.buffs||[])if(b.remaining>0)add(b.label||'Боевой эффект',b.type||'','positive');
+    if(c.heroAllAdvantage)add(c.heroAllAdvantageLabel||'Преимущество');
+    if(c.battleDefenseBonus>0)add(c.battleDefenseLabel||'Защита',`+${c.battleDefenseBonus} ЗЩ`);
+    if(c.heroIncomingHalf)add(c.heroIncomingHalfLabel||'Защита от урона');
+    if(c.heroDamageMultiplier>1)add(c.heroDamageMultiplierLabel||'Усиление атаки');
+    if(c.heroDisadvantage>0)add(c.heroDisadvantageLabel||'Помеха','','negative');
+    if(c.heroStunned>0&&!p.statuses?.includes('Оглушение'))add('Оглушение','','negative');
+    if(c.heroAbilityLocked)add(c.heroAbilityLockedLabel||'Блок способности','','negative');
+    if(c.heroAdvantage>0)add(c.heroAdvantageLabel||'Преимущество');
+    if(c.freeEscape)add(c.freeEscapeLabel||'Свободный побег');
+    return battleV086Badges(out);
+  }
+  function battleV086EnemyEffects(c){
+    const out=[];
+    for(const [key,label] of [['enemyBurn','Горение'],['enemyBleed','Кровотечение'],['enemyStunned','Оглушение'],['enemyDisadvantage','Помеха'],['enemyAdvantage','Преимущество']])if(c[key]>0)out.push({label,detail:`${c[key]}`,tone:key==='enemyAdvantage'?'positive':'negative'});
+    if(c.enemyAllDisadvantage)out.push({label:'Помеха',detail:'Все атаки врага',tone:'negative'});
+    return battleV086Badges(out);
+  }
+  function battleV086HealthSegments(hp,maxHp){
+    const max=Math.max(1,Math.floor(Number(maxHp)||1)),now=Math.max(0,Math.min(max,Math.floor(Number(hp)||0)));
+    const parts=Array.from({length:max},(_,i)=>`<span class="battle-v086-hp-segment${i<now?' filled':''}" aria-hidden="true"></span>`).join('');
+    return `<div class="battle-v086-health" role="meter" aria-label="Здоровье: ${now} из ${max}" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${now}" style="--battle-v086-hp-count:${max}" title="ЗД ${now}/${max}">${parts}</div>`;
+  }
   function combatHeroVisualCard(p,c){
-    const statuses=(p.statuses||[]).map(st=>`<span title="${escapeCombatText(st)}" aria-label="Эффект ${escapeCombatText(st)}" class="tabletop-status-dot">${st==='Горение'?'♨':st==='Страх'?'◉':st==='Проклятие'?'◆':'✦'}</span>`).join('');
     const playerName=String(window.__RPG_HERO_PLAYER_NAMES__?.[p.id]||'').trim();
     const heroHeading=playerName&&playerName!==p.name?`${p.name} — ${playerName}`:p.name;
     // v0.6.83: the negative effects belong to the upper central area of the portrait,
     // while a spent class ability is crossed out on its OWN panel (not on the image).
-    const portraitDetails=battleHeroMetrics(p)+(statuses?`<span class="tabletop-status-overlay" aria-label="Негативные эффекты">${statuses}</span>`:'');
-    return `<section class="combatant hero visual-combat-card tabletop-battle-card" style="--visual-accent:${p.color||'#4f85dc'}"><div class="tabletop-card-heading"><h3 title="${escapeCombatText(heroHeading)}">${escapeCombatText(heroHeading)}</h3></div>${combatCardStageHtml('hero','hero',p.id,p.name,c,combatHeroBackHtml(p,c),portraitDetails)}<div class="tabletop-card-note ${c.heroAbilityUsed?'ability-used':''}"><small>СПОСОБНОСТЬ · ${c.heroAbilityUsed?'ИСПОЛЬЗОВАНА':'ДОСТУПНА'}</small><strong>${escapeCombatText(HERO_COMBAT[p.id]?.ability||'—')}</strong><span>${escapeCombatText(HERO_COMBAT[p.id]?.effect||'')}</span></div></section>`;
+    const portraitDetails=battleHeroMetrics(p)+battleV086HeroEffects(p,c);
+    return `<section class="combatant hero visual-combat-card tabletop-battle-card" style="--visual-accent:${p.color||'#4f85dc'}"><div class="tabletop-card-heading"><h3 title="${escapeCombatText(heroHeading)}">${escapeCombatText(heroHeading)}</h3></div>${combatCardStageHtml('hero','hero',p.id,p.name,c,combatHeroBackHtml(p,c),portraitDetails)}${battleV086HealthSegments(p.currentHp,p.maxHp)}<div class="tabletop-card-note ${c.heroAbilityUsed?'ability-used':''}"><small>СПОСОБНОСТЬ · ${c.heroAbilityUsed?'ИСПОЛЬЗОВАНА':'ДОСТУПНА'}</small><strong>${escapeCombatText(HERO_COMBAT[p.id]?.ability||'—')}</strong><span>${escapeCombatText(HERO_COMBAT[p.id]?.effect||'')}</span></div></section>`;
   }
   function combatEnemyVisualCard(e,c){
     const isBoss=e.id===281,rank=String(e.fields?.['Ранг']||(isBoss?'Босс':'—')).toUpperCase();
     const type=String(e.fields?.['Тип']||'—').toUpperCase();
     const permanent=String(e.fields?.['Эффект']||'').trim();
-    return `<section class="combatant enemy visual-combat-card tabletop-battle-card ${enemyRankClass(e)}" aria-label="Враг ${escapeCombatText(e.name)}"><div class="tabletop-card-heading"><h3 title="${escapeCombatText(e.name)}">${escapeCombatText(e.name)}</h3></div>${combatCardStageHtml('enemy','enemy',e.id,e.name,c,combatEnemyBackHtml(e,c),battleEnemyMetrics(e,c))}${permanent?`<div class="tabletop-card-note enemy-note"><small>ПОСТОЯННЫЙ ЭФФЕКТ</small><strong>Особенность врага</strong><span>${escapeCombatText(permanent)}</span></div>`:''}</section>`;
+    return `<section class="combatant enemy visual-combat-card tabletop-battle-card ${enemyRankClass(e)}" aria-label="Враг ${escapeCombatText(e.name)}"><div class="tabletop-card-heading"><h3 title="${escapeCombatText(e.name)}">${escapeCombatText(e.name)}</h3></div>${combatCardStageHtml('enemy','enemy',e.id,e.name,c,combatEnemyBackHtml(e,c),battleEnemyMetrics(e,c)+battleV086EnemyEffects(c))}${battleV086HealthSegments(c.enemyHp,c.enemyMaxHp)}${permanent?`<div class="tabletop-card-note enemy-note"><small>ПОСТОЯННЫЙ ЭФФЕКТ</small><strong>Особенность врага</strong><span>${escapeCombatText(permanent)}</span></div>`:''}</section>`;
   }
   function combatHeroRulesHtml(p){const h=HERO_COMBAT[p.id];if(!h)return '';const nat=h.natural20||'—',parts=nat.split(' — ');return `<div class="combat-hero-rules"><div><small>СПОСОБНОСТЬ ГЕРОЯ</small><b>${h.ability}</b><span>${h.effect}</span></div><div><small>НАТУРАЛЬНАЯ 20</small><b>${parts[0]||'Эффект героя'}</b><span>${parts.length>1?parts.slice(1).join(' — '):nat}</span></div></div>`}
   function combatActiveEffectsHtml(c,p){
