@@ -88,8 +88,12 @@
     options = options || {};
     const container = options.container;
     if (!container || container.nodeType !== 1 || typeof container.appendChild !== 'function') throw new TypeError('container must be a DOM element');
-    const duration = finite(options.duration === undefined ? 1800 : options.duration, 0, 10000, 'duration');
+    const duration = finite(options.duration === undefined ? 2400 : options.duration, 0, 10000, 'duration');
     const staggerMs = finite(options.staggerMs === undefined ? 500 : options.staggerMs, 0, 5000, 'staggerMs');
+    let motionStyle=options.motion||'bounce';
+    if(!['bounce','roll'].includes(motionStyle))throw new TypeError('Unknown dice motion');
+    let skinId=options.skin||global.FantasyDiceSkins?.defaultId||'classic';
+    if(global.FantasyDiceSkins)global.FantasyDiceSkins.get(skinId);
     let speed = finite(options.speed === undefined ? 1 : options.speed, 0.25, 4, 'speed');
     const reduced = options.reducedMotion === undefined ? 'auto' : options.reducedMotion;
     if (!['auto', 'always', 'never'].includes(reduced)) throw new TypeError('reducedMotion must be auto, always or never');
@@ -137,7 +141,7 @@
       const preferred = n <= 2 ? n : n <= 6 ? 3 : n <= 12 ? 4 : 6;
       const cols = Math.max(1, Math.min(preferred, Math.floor(width / 140)));
       const rows = Math.ceil(n / cols), cellW = width / cols;
-      const radius = Math.max(20, Math.min(width < 460 ? 64 : 78, (cellW - 20) * 0.31));
+      const radius = Math.max(20, Math.min(width < 460 ? 64 : 78, (cellW - 20) * 0.23));
       const cellH = radius * 2 + (width < 460 ? 52 : 70);
       height = roll ? Math.max(width < 460 ? 205 : 210, rows * cellH + 20) : 240;
       stage.style.height = height + 'px';
@@ -167,12 +171,10 @@
       const t = active ? Math.min(1, active.elapsed / Math.max(1, active.totalDuration)) : 1;
       const items = roll.dice.map((die, i) => {
         const p = positions[i], local = active ? Math.max(0, Math.min(1, (active.elapsed - i * staggerMs) / Math.max(1, active.baseDuration))) : 1;
-        const rest = Math.pow(1 - local, 3), wobble = Math.sin(local * Math.PI * 5 + i * .6) * Math.pow(1 - local, 2);
-        return { sides: die.sides, value: die.value, index: i, x: p.x + Math.sin(local * 9 + i) * rest * p.size * .26,
-          y: p.y, size: p.size, rx: rest * (Math.PI * 4 + i * .37), ry: rest * (Math.PI * 5 + i * .61), rz: rest * (Math.PI * 2 + i * .23) + wobble * .12,
-          lift: Math.abs(Math.sin(local * Math.PI * 3)) * (1 - local) * p.size * .35, glow: t === 1 ? .7 : .2 };
+        const pose=global.FantasyDiceMotion.sample(local,p,i,motionStyle);
+        return {sides:die.sides,value:die.value,index:i,...pose};
       });
-      try { global.FantasyDiceRenderer.render(ctx, width, height, items, { time: t, detail: items.length > 8 || width < 600 ? 'low' : 'high' }); }
+      try { global.FantasyDiceRenderer.render(ctx, width, height, items, { time: t, skin:global.FantasyDiceSkins?.get(skinId), detail: items.length > 8 || width < 600 ? 'low' : 'high' }); }
       catch (_) {
         // A graphics failure can never replace, recalculate or drop an engine result.
         mode = 'text'; stage.classList.add('fallback'); canvas.style.display = 'none';
@@ -248,6 +250,8 @@
         else frame = win.requestAnimationFrame(tick);
         return promise;
       },
+      setMotion(style){checkAlive();if(!['bounce','roll'].includes(style))throw new TypeError('Unknown dice motion');motionStyle=style;draw();return style;},
+      setSkin(id){checkAlive();if(!global.FantasyDiceSkins)throw new Error('Dice skins module is missing');global.FantasyDiceSkins.get(id);skinId=id;draw();return skinId;},
       skip() { if (status !== 'destroyed') finish('skipped'); },
       setSpeed(value) {
         checkAlive(); finite(value, .25, 4, 'speed');
@@ -260,7 +264,7 @@
         roll = null; status = 'idle'; title.textContent = 'Кубики готовы'; stateLabel.textContent = 'Ожидание';
         empty.hidden = false; empty.style.display = ''; result.textContent = 'Значения определяет игровой движок.'; live.textContent = ''; layout();
       },
-      getState() { return Object.freeze({ status, speed, roll, mode }); },
+      getState() { return Object.freeze({ status, speed, skin:skinId, motion:motionStyle, roll, mode }); },
       destroy() {
         if (status === 'destroyed' || disposing) return;
         disposing = true; ++operation;
@@ -285,5 +289,5 @@
     layout();
     return Object.freeze(api);
   }
-  global.FantasyDice = Object.freeze({ version: '1.0.0', supportedSides: SIDES, create, validate: normalize });
+  global.FantasyDice = Object.freeze({ version: '1.1.0', supportedSides: SIDES, create, validate: normalize });
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -13,20 +13,21 @@
   <link rel="preload" as="image" href="assets/heroes/mage.webp" />
   <link rel="preload" as="image" href="assets/heroes/archer.webp" />
   <link rel="preload" as="image" href="assets/heroes/rogue.webp" />
-  <title>RPG Digital Prototype v0.6.91 · Режим Карта</title>
-  <link rel="stylesheet" href="styles.css?v=0691scale" />
-  <link rel="stylesheet" href="location-ui.css?v=0691scale" />
-  <link rel="stylesheet" href="battle-result-ui.css?v=0691scale" />
-  <link rel="stylesheet" href="tabletop-enhancements.css?v=0691scale" />
-  <link rel="stylesheet" href="ui-fixes-v078.css?v=0691scale" />
-  <link rel="stylesheet" href="ui-fixes-v079.css?v=0691scale" />
-  <link rel="stylesheet" href="battle-tabletop-v080.css?v=0691scale" />
-  <link rel="stylesheet" href="battle-tabletop-v081.css?v=0691scale" />
-  <link rel="stylesheet" href="battle-tabletop-v082.css?v=0691scale" />
-  <link rel="stylesheet" href="battle-tabletop-v083.css?v=0691scale" />
-  <link rel="stylesheet" href="battle-tabletop-v084.css?v=0691scale" />
-  <link rel="stylesheet" href="battle-tabletop-v085.css?v=0691scale" />
-  <link rel="stylesheet" href="battle-tabletop-v086.css?v=0691scale" />
+  <title>RPG Digital Prototype v0.6.94 · Режим Карта</title>
+  <link rel="stylesheet" href="styles.css?v=0694fix" />
+  <link rel="stylesheet" href="location-ui.css?v=0694fix" />
+  <link rel="stylesheet" href="battle-result-ui.css?v=0694fix" />
+  <link rel="stylesheet" href="tabletop-enhancements.css?v=0694fix" />
+  <link rel="stylesheet" href="ui-fixes-v078.css?v=0694fix" />
+  <link rel="stylesheet" href="ui-fixes-v079.css?v=0694fix" />
+  <link rel="stylesheet" href="battle-tabletop-v080.css?v=0694fix" />
+  <link rel="stylesheet" href="battle-tabletop-v081.css?v=0694fix" />
+  <link rel="stylesheet" href="battle-tabletop-v082.css?v=0694fix" />
+  <link rel="stylesheet" href="battle-tabletop-v083.css?v=0694fix" />
+  <link rel="stylesheet" href="battle-tabletop-v084.css?v=0694fix" />
+  <link rel="stylesheet" href="battle-tabletop-v085.css?v=0694fix" />
+  <link rel="stylesheet" href="battle-tabletop-v086.css?v=0694fix" />
+  <link rel="stylesheet" href="arcana/dice-settings.css?v=0694fix">
 </head>
 <body class="tabletop-upgrade">
   
@@ -67,7 +68,7 @@
   <header class="topbar">
     <div>
       <div class="eyebrow">RPG DIGITAL PROTOTYPE</div>
-      <h1>Прототип v0.6.91 · Настольный интерфейс</h1>
+      <h1>Прототип v0.6.94 · Настольный интерфейс</h1>
       <div class="header-tools">
         <button id="journalBtn" class="journal-top" type="button">Журнал</button>
       </div>
@@ -156,6 +157,7 @@
         <button id="journalAll" class="journal-filter" type="button">Все игроки</button>
       </div>
     <div class="journal-utility-tools" aria-label="Управление сохранением партии">
+      <button type="button" id="journalDiceBtn" class="ghost">Кубик</button>
       <button type="button" id="sheetSaveBtn" class="ghost">Сохранить</button>
       <button type="button" id="sheetLoadBtn" class="ghost">Загрузить</button>
       <button type="button" id="sheetResetBtn" class="danger">Сбросить</button>
@@ -185,13 +187,16 @@
     </div>
   </div>
 
-  <script src="map-data.js?v=0691scale"></script>
-  <script src="cards-data.js?v=0691scale"></script>
-  <script src="location-placement.js?v=0691scale"></script>
-  <script src="arcana/dice-renderer.js?v=0691scale"></script>
-  <script src="arcana/dice-animator.js?v=0691scale"></script>
-  <script src="tabletop-enhancements.js?v=0691scale"></script>
-  <script src="app.js?v=0691scale"></script>
-  <script src="network-lobby.js?v=0691scale"></script>
+  <script src="map-data.js?v=0694fix"></script>
+  <script src="cards-data.js?v=0694fix"></script>
+  <script src="location-placement.js?v=0694fix"></script>
+  <script src="arcana/dice-motion.js?v=0694fix"></script>
+  <script src="arcana/dice-skins.js?v=0694fix"></script>
+  <script src="arcana/dice-renderer.js?v=0694fix"></script>
+  <script src="arcana/dice-animator.js?v=0694fix"></script>
+  <script src="arcana/dice-settings.js?v=0694fix"></script>
+  <script src="tabletop-enhancements.js?v=0694fix"></script>
+  <script src="app.js?v=0694fix"></script>
+  <script src="network-lobby.js?v=0694fix"></script>
 </body>
 </html>

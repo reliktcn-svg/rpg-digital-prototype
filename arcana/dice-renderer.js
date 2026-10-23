@@ -154,13 +154,19 @@
     return [xx * cz - y * sz, xx * sz + y * cz, zz];
   }
 
-  function orientation(face, rx, ry, rz, sides) {
+  function orientation(face, rx, ry, rz, sides, rotation) {
     var targetNormal = sides === 4 ? unit([-0.30, 0.54, 0.82]) : TARGET_NORMAL;
     var targetUp = sides === 4 ? unit([0, 1, -targetNormal[1] / targetNormal[2]]) : TARGET_UP;
     var targetRight = sides === 4 ? unit(cross(targetUp, targetNormal)) : TARGET_RIGHT;
     return function (v) {
       var x = dot(v, face.right), y = dot(v, face.up), z = dot(v, face.normal);
-      return rotate(add(add(mul(targetRight, x), mul(targetUp, y)), mul(targetNormal, z)), rx, ry, rz);
+      var v=rotate(add(add(mul(targetRight, x), mul(targetUp, y)), mul(targetNormal, z)), rx, ry, rz);
+      if(!rotation)return v;
+      // Rodrigues rotation keeps one axis throughout travel, without Euler-axis reversals.
+      var axis=unit(rotation.axis),c=Math.cos(rotation.angle),s=Math.sin(rotation.angle);
+      v=add(add(mul(v,c),mul(cross(axis,v),s)),mul(axis,dot(axis,v)*(1-c)));
+      if(rotation.secondaryAxis){axis=unit(rotation.secondaryAxis);c=Math.cos(rotation.secondaryAngle||0);s=Math.sin(rotation.secondaryAngle||0);v=add(add(mul(v,c),mul(cross(axis,v),s)),mul(axis,dot(axis,v)*(1-c)));}
+      return v;
     };
   }
 
@@ -169,10 +175,10 @@
     return [point[0] * scale, -point[1] * scale];
   }
 
-  function project(sides, value, rx, ry, rz) {
+  function project(sides, value, rx, ry, rz, rotation) {
     var mesh = getGeometry(sides);
     if (!Number.isInteger(value) || value < 1 || value > sides) throw new RangeError('D' + sides + ' result must be an integer from 1 to ' + sides);
-    var transform = orientation(mesh.faceData[value - 1], rx || 0, ry || 0, rz || 0, sides);
+    var transform = orientation(mesh.faceData[value - 1], rx || 0, ry || 0, rz || 0, sides, rotation);
     var vertices = mesh.vertices.map(transform);
     var projected = vertices.map(perspective);
     var faces = mesh.faces.map(function (indices, index) {
@@ -224,7 +230,7 @@
     return perspective(add(face.center, add(mul(face.right, x), mul(face.up, y))));
   }
 
-  function drawNumber(ctx, face, size, selected) {
+  function drawNumber(ctx, face, size, selected, skin) {
     var center = face.screenCenter;
     var right = facePoint(face, 0.1, 0), up = facePoint(face, 0, 0.1);
     var ux = (right[0] - center[0]) * 10, uy = (right[1] - center[1]) * 10;
@@ -237,15 +243,15 @@
     // metrics between browser engines when scaled up by the canvas transform.
     var fontScale = f / 100;
     ctx.transform(ux * fontScale, uy * fontScale, vx * fontScale, vy * fontScale, center[0], center[1]);
-    ctx.font = 'bold 100px Georgia, "Times New Roman", serif';
+    ctx.font = 'bold 100px '+skin.font;
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
     var metrics = ctx.measureText(String(face.value));
     var baseline = typeof metrics.actualBoundingBoxAscent === 'number'
       ? (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2 : 35;
     ctx.lineJoin = 'round'; ctx.lineWidth = 5;
-    ctx.strokeStyle = 'rgba(4,7,10,0.95)';
+    ctx.strokeStyle = skin.numberOutline;
     ctx.strokeText(String(face.value), 0, baseline);
-    ctx.fillStyle = selected ? '#fff2c9' : '#e5dfd0';
+    ctx.fillStyle = selected ? skin.numberSelected : skin.number;
     ctx.shadowColor = 'rgba(255,223,160,0.24)'; ctx.shadowBlur = selected ? 4 / size : 0;
     ctx.fillText(String(face.value), 0, baseline);
     ctx.shadowBlur = 0;
@@ -255,61 +261,48 @@
     ctx.restore();
   }
 
-  function drawFace(ctx, face, sides, selected, size, detail) {
+  function drawFace(ctx, face, sides, selected, size, detail, skin) {
     var diffuse = Math.max(0, dot(face.normal, LIGHT));
     var specular = Math.pow(Math.max(0, dot(face.normal, unit(add(LIGHT, [0, 0, 1])))), 18);
-    var base = 16 + diffuse * 32 + specular * 29;
+    var light=.5+diffuse*.85;
+    var color=skin.face.map(function(c){return clamp(c*light+specular*24,0,255);});
     var points = face.points, center = face.screenCenter;
     var gradient = ctx.createLinearGradient(-0.9, -1.2, 0.9, 1.3);
-    gradient.addColorStop(0, rgb(base + 18, base + 22, base + 26));
-    gradient.addColorStop(0.5, rgb(base, base + 5, base + 10));
-    gradient.addColorStop(1, rgb(base * 0.58, base * 0.64, base * 0.78));
+    gradient.addColorStop(0, rgb(color[0]+12,color[1]+12,color[2]+12));
+    gradient.addColorStop(0.5, rgb(color[0],color[1],color[2]));
+    gradient.addColorStop(1, rgb(color[0]*.65,color[1]*.65,color[2]*.65));
     path(ctx, points, 1); ctx.fillStyle = gradient; ctx.fill();
     ctx.lineJoin = 'round'; ctx.lineWidth = 0.024;
     ctx.strokeStyle = '#090e13'; ctx.stroke();
 
     // A raised metallic rim follows the actual projected polygon edges.
     var rim = ctx.createLinearGradient(-0.7, -0.8, 0.8, 1);
-    rim.addColorStop(0, '#ddc49a'); rim.addColorStop(0.3, '#897451');
-    rim.addColorStop(0.52, '#b69a6d'); rim.addColorStop(1, '#3b342c');
-    path(ctx, points, 0.94); ctx.lineWidth = 0.024; ctx.strokeStyle = rim; ctx.stroke();
-    path(ctx, points, 0.83); ctx.lineWidth = 0.009;
-    ctx.strokeStyle = selected ? 'rgba(219,183,115,0.78)' : 'rgba(163,148,116,0.48)'; ctx.stroke();
-    path(ctx, points, 0.79); ctx.lineWidth = 0.008;
-    ctx.strokeStyle = 'rgba(4,6,9,0.62)'; ctx.stroke();
-
-    ctx.save(); path(ctx, points, 0.80); ctx.clip();
-    // Fixed analytic surface pattern; it never samples or derives a dice result.
-    if (detail !== 'low') {
-      for (var i = 0; i < 24; i++) {
-        var seed = sides * 109 + face.value * 71 + i * 3;
-        var edge = points[i % points.length];
-        var next = points[(i + 1) % points.length];
-        var u = pattern(seed), v = Math.sqrt(pattern(seed + 1)) * 0.8;
-        var x = center[0] + ((edge[0] * u + next[0] * (1 - u)) - center[0]) * v;
-        var y = center[1] + ((edge[1] * u + next[1] * (1 - u)) - center[1]) * v;
-        ctx.fillStyle = i % 3 ? 'rgba(218,229,230,0.055)' : 'rgba(0,0,0,0.20)';
-        ctx.beginPath(); ctx.arc(x, y, 0.004 + pattern(seed + 2) * 0.009, 0, PI * 2); ctx.fill();
-      }
+    rim.addColorStop(0, skin.rim[0]); rim.addColorStop(0.3, skin.rim[1]);
+    rim.addColorStop(0.52, skin.rim[2]); rim.addColorStop(1, skin.rim[3]);
+    path(ctx, points, .94); ctx.lineWidth = .035; ctx.strokeStyle = rim; ctx.stroke();
+    // Texture coordinates follow the face basis, so the material rotates with the die.
+    ctx.save(); path(ctx,points,skin.inset);ctx.clip();
+    var right=facePoint(face,.1,0),up=facePoint(face,0,.1),cx=center[0],cy=center[1];
+    ctx.save();ctx.transform((right[0]-cx)*10,(right[1]-cy)*10,(up[0]-cx)*10,(up[1]-cy)*10,cx,cy);
+    if(skin.texture){ctx.globalAlpha=skin.textureOpacity;ctx.drawImage(skin.texture,-1,-1,2,2);ctx.globalAlpha=1;}
+    if(detail!=='low')for(var i=0;i<32;i++){
+      var seed=sides*109+face.value*71+i*3,x=pattern(seed)*2-1,y=pattern(seed+1)*2-1;
+      ctx.fillStyle='rgba(230,233,235,'+skin.grain+')';ctx.fillRect(x,y,.012,.012);
+      if(skin.wear>0){ctx.strokeStyle='rgba(215,210,194,'+skin.wear+')';ctx.lineWidth=.004;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+.04,y+.012);ctx.stroke();}
     }
+    ctx.restore();
     var shine = ctx.createRadialGradient(center[0] - 0.3, center[1] - 0.4, 0, center[0], center[1], 0.85);
     shine.addColorStop(0, 'rgba(189,222,235,' + (0.10 + specular * 0.12) + ')');
     shine.addColorStop(1, 'rgba(17,27,37,0)'); ctx.fillStyle = shine;
     ctx.fillRect(-2, -2, 4, 4); ctx.restore();
 
-    // Engraved corner marks / rivets, kept outside the numeral field.
-    points.forEach(function (point) {
-      var px = center[0] + (point[0] - center[0]) * 0.73;
-      var py = center[1] + (point[1] - center[1]) * 0.73;
-      ctx.fillStyle = diffuse > 0.5 ? '#b99c67' : '#6c5e47';
-      ctx.beginPath(); ctx.arc(px, py, sides >= 12 ? 0.010 : 0.013, 0, PI * 2); ctx.fill();
-    });
-    drawNumber(ctx, face, size, selected);
+    drawNumber(ctx, face, size, selected,skin);
   }
 
   function render(ctx, width, height, items, options) {
     options = options || {};
     if (!ctx || !Array.isArray(items)) throw new TypeError('A Canvas 2D context and an array of dice are required');
+    var skin=options.skin||{face:[35,43,49],rim:['#ddc49a','#897451','#b69a6d','#3b342c'],number:'#e5dfd0',numberSelected:'#fff2c9',numberOutline:'#04070a',font:'Georgia, serif',inset:.86,grain:.055,wear:0};
     var results = [];
     // Preserve caller-owned transforms, styles, clipping and stage background.
     ctx.save();
@@ -321,16 +314,35 @@
         var y = typeof item.y === 'number' ? item.y : height / 2;
         var lift = typeof item.lift === 'number' ? item.lift : 0;
         var glow = clamp(typeof item.glow === 'number' ? item.glow : 0, 0, 1);
-        var projection = project(item.sides, item.value, item.rx, item.ry, item.rz);
+        var projection = project(item.sides, item.value, item.rx, item.ry, item.rz, item.rotation);
+        // A scrolling contact patch represents a longer tabletop: the camera follows
+        // the die while preserving distance/radius rotation, even on a narrow phone.
+        if(item.grounded){
+          ctx.save();
+          var lane=item.cellW||width,patch=size*1.4,offset=item.cameraX||0;
+          ctx.beginPath();ctx.rect(Math.max(0,x-lane*.5),y+size*.45,lane,size*.8);ctx.clip();
+          for(var j=-18;j<=18;j++){
+            var px=(item.groundOrigin||x)+j*14-(offset%14),alpha=Math.max(0,1-Math.abs(px-x)/patch)*.16;
+            ctx.strokeStyle='rgba(168,179,164,'+alpha+')';ctx.lineWidth=.6;
+            for(var row=0;row<3;row++){
+              var py=y+size*(.7+row*.12),len=3+pattern(j+Math.floor(offset/14)+row*77)*5;
+              ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px+len,py);ctx.stroke();
+            }
+          }
+          ctx.restore();
+        }
         ctx.save();
-        ctx.translate(x, y);
+        var bottom=Math.max.apply(Math,projection.points.map(function(p){return p[1];}));
+        var groundY=y+size*.9;
+        var centerY=item.grounded?groundY-bottom*size:y;
+        ctx.translate(x, groundY);
         ctx.save(); ctx.scale(1, 0.24);
         var spread = size * (0.9 + Math.max(0, lift) / (size * 3));
-        var shadow = ctx.createRadialGradient(0, size * 2.5, 0, 0, size * 2.5, spread);
+        var shadow = ctx.createRadialGradient(0, 0, 0, 0, 0, spread);
         shadow.addColorStop(0, 'rgba(0,0,0,' + (0.50 / (1 + Math.max(0, lift) / size)) + ')');
         shadow.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = shadow; ctx.fillRect(-spread, size * 2.5 - spread, spread * 2, spread * 2); ctx.restore();
-        ctx.translate(0, -lift); ctx.scale(size, size);
+        ctx.fillStyle = shadow; ctx.fillRect(-spread, -spread, spread * 2, spread * 2); ctx.restore();
+        ctx.translate(0,centerY-groundY-lift); ctx.scale(size, size);
         if (glow > 0) {
           var halo = ctx.createRadialGradient(0, 0, 0.4, 0, 0, 1.5);
           halo.addColorStop(0, 'rgba(208,160,71,' + glow * 0.12 + ')');
@@ -338,15 +350,15 @@
           ctx.fillStyle = halo; ctx.fillRect(-1.5, -1.5, 3, 3);
         }
         projection.faces.filter(function (face) { return face.visible; }).sort(function (a, b) { return a.depth - b.depth; }).forEach(function (face) {
-          drawFace(ctx, face, item.sides, face.value === item.value, size, options.detail);
+          drawFace(ctx, face, item.sides, face.value === item.value, size, options.detail, skin);
         });
         // A tiny fixed glint on the uppermost vertex adds a metal highlight.
         var top = projection.points.reduce(function (best, p) { return p[1] < best[1] ? p : best; }, projection.points[0]);
-        ctx.globalAlpha = 0.45 + glow * 0.35; ctx.strokeStyle = '#f1dbb4'; ctx.lineWidth = 0.008;
+        ctx.globalAlpha = 0.45 + glow * 0.35; ctx.strokeStyle = skin.rim[0]; ctx.lineWidth = 0.008;
         ctx.beginPath(); ctx.moveTo(top[0] - 0.045, top[1]); ctx.lineTo(top[0] + 0.045, top[1]);
         ctx.moveTo(top[0], top[1] - 0.045); ctx.lineTo(top[0], top[1] + 0.045); ctx.stroke();
         ctx.restore();
-        results.push({ value: item.value, sides: item.sides, faces: projection.faces, x: x, y: y - lift, size: size });
+        results.push({ value: item.value, sides: item.sides, faces: projection.faces, x: x, y: centerY - lift, size: size });
       });
     } finally { ctx.restore(); }
     return results;

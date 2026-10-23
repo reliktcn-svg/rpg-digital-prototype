@@ -1716,3 +1716,9 @@ body.game-running #modal:has(.story-card-shell) .modal-card,
 .territory-marker{stroke-width:4}
 .location-marker{stroke-width:5}
 .dungeon-grate-line{stroke-width:4}
+
+/* v0.6.94: tap-to-dismiss status details on mobile and desktop. */
+.negative-effect-tooltip{pointer-events:auto;box-sizing:border-box;min-width:210px;padding:12px 34px 12px 12px;touch-action:manipulation}
+.negative-effect-tooltip-close{position:absolute;right:5px;top:4px;width:26px;height:26px;min-width:26px;min-height:26px;border-radius:6px;border:1px solid #996265;background:#42272a;color:#fbe5e5;font-size:20px;font-weight:800;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1}
+.negative-effect-tooltip-close:hover,.negative-effect-tooltip-close:focus-visible{background:#754046;border-color:#d99797}
+.battle-fate-merc-loss{color:#efdfcd}

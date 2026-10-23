@@ -1,0 +1,28 @@
+{
+  "base": "v0.6.92",
+  "unchangedFiles": 442,
+  "changedFiles": [
+    "app.js",
+    "arcana/dice-settings.css",
+    "arcana/dice-settings.js",
+    "docs-dice/SKINS.md",
+    "index.html",
+    "sw.js",
+    "tests-dice/checks.html",
+    "tests-dice/game-menu.html",
+    "tests-dice/preview.html"
+  ],
+  "verifiedUnchanged": [
+    "map-data.js",
+    "map-viewer.js",
+    "map-viewer.css",
+    "map.html",
+    "network-lobby.js",
+    "server.py",
+    "assets/map-visual-v0691.png",
+    "arcana/dice-motion.js",
+    "arcana/dice-renderer.js",
+    "arcana/dice-animator.js",
+    "arcana/dice-skins.js"
+  ]
+}

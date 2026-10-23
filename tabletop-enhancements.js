@@ -6,7 +6,7 @@ window.RPGTabletop = (() => {
   let lastTokens={};
   function turns(active,next,round,room){
     if(!active)return '';
-    const card=(p,i)=>`<div class="table-turn ${i===0?'is-active':''}" style="--hero-color:${escape(p.color||'#b58e4f')}"><img src="assets/heroes/${escape(p.id)}.webp" alt=""><span><small>${i===0?'СЕЙЧАС ХОДИТ':`СЛЕДУЮЩИЙ · ${i}`}</small><b>${escape(p.name)}</b><em>♥ ${escape(p.currentHp)}/${escape(p.maxHp)} <strong>● ${escape(p.gold)} зол.</strong></em></span></div>`;
+    const card=(p,i)=>`<div class="table-turn ${i===0?'is-active':''}" data-turn-hero="${escape(p.id)}" style="--hero-color:${escape(p.color||'#b58e4f')}"><img src="assets/heroes/${escape(p.id)}.webp" alt=""><span><small>${i===0?'СЕЙЧАС ХОДИТ':`СЛЕДУЮЩИЙ · ${i}`}</small><b>${escape(p.name)}</b><em>♥ ${escape(p.currentHp)}/${escape(p.maxHp)} <strong>● ${escape(p.gold)} зол.</strong></em></span></div>`;
     return `<div class="table-round"><small>РАУНД</small><strong>${Number(round)||1}</strong></div><div class="table-turns" role="group" aria-label="Очередь героев">${[active,...next].map(card).join('')}</div>${room?`<div class="turn-order-code">КОД ${escape(room)}</div>`:''}<button class="table-journal" type="button" data-table-journal>Журнал</button>`;
   }
   function token(svg,p,x,y,active,create){
@@ -23,7 +23,7 @@ window.RPGTabletop = (() => {
       if(prev&&Math.hypot(prev.x-x,prev.y-y)>1&&!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches&&preserved.animate){
         preserved.animate([{transform:`translate(${prev.x}px,${prev.y}px)`},{transform:`translate(${x}px,${y}px)`}],{duration:450,easing:'cubic-bezier(.22,.61,.36,1)'});
       }
-      svg.appendChild(preserved);
+      // Re-appending an already mounted portrait invalidates SVG image compositing in WebKit.
       return;
     }
     const g=create('g',{class:`table-token ${active?'active':''}`,transform:`translate(${x} ${y})`,'data-token-hero':p.id,'aria-label':`${p.name}, ${p.hex}`});
