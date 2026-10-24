@@ -1,28 +1,33 @@
 {
-  "base": "v0.6.92",
-  "unchangedFiles": 442,
-  "changedFiles": [
-    "app.js",
-    "arcana/dice-settings.css",
+  "baseArchive": "RPG_Digital_Prototype_v0.6.94_Status_Mercenary_Flicker_Fixes.zip",
+  "baseSHA256": "9e6720b4e5ebb5d0924d82520281e5439b7b5ca6ec5adcf9beac01abba11aa22",
+  "changedOriginalFiles": [
+    "arcana/dice-renderer.js",
     "arcana/dice-settings.js",
-    "docs-dice/SKINS.md",
     "index.html",
+    "server.py",
     "sw.js",
     "tests-dice/checks.html",
-    "tests-dice/game-menu.html",
-    "tests-dice/preview.html"
+    "tests-dice/personal.html"
   ],
-  "verifiedUnchanged": [
-    "map-data.js",
-    "map-viewer.js",
-    "map-viewer.css",
-    "map.html",
-    "network-lobby.js",
-    "server.py",
-    "assets/map-visual-v0691.png",
-    "arcana/dice-motion.js",
-    "arcana/dice-renderer.js",
-    "arcana/dice-animator.js",
-    "arcana/dice-skins.js"
-  ]
+  "allOtherOriginalFilesPreserved": true,
+  "appAndStylesIdenticalToUser0694": true,
+  "serverDiffOnlyAddsReadOnlyDiceCatalog": true,
+  "animationLock": {
+    "source": "v0.6.92",
+    "sha256": {
+      "arcana/dice-motion.js": "76c507eb40b2faee064f014be65bc553ad830e42622197ac6b0d73d16fc24147",
+      "arcana/dice-animator.js": "2bb29b6a81bb29e454e63d9bfe2862ebaa95568585c3dc241255e47442eb9323"
+    }
+  },
+  "browserChecks": {
+    "pack-results.json": 14,
+    "personal-results.json": 11,
+    "browser-results.json": 24
+  },
+  "motionChecks": {
+    "trajectories": 36,
+    "frames": 6516,
+    "finalResults": 60
+  }
 }

@@ -261,7 +261,31 @@
     ctx.restore();
   }
 
+  // Surface artwork uses the same flat, padded UV layout as the supplied templates.
+  // This code changes only paint; projection, mesh and motion are untouched.
+  var surfaceTintCache=new WeakMap();
+  function tintedSurface(image,color){
+    var variants=surfaceTintCache.get(image);if(!variants){variants=new Map();surfaceTintCache.set(image,variants);}
+    if(variants.has(color))return variants.get(color);
+    var canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;var c=canvas.getContext('2d');
+    c.drawImage(image,0,0,512,512);c.globalCompositeOperation='multiply';c.fillStyle=color;c.fillRect(0,0,512,512);
+    c.globalCompositeOperation='destination-in';c.drawImage(image,0,0,512,512);c.globalCompositeOperation='source-over';
+    // Bound cache growth when many colors are tried in one session.
+    if(variants.size>=4)variants.delete(variants.keys().next().value);variants.set(color,canvas);return canvas;
+  }
+  function drawSurface(ctx,face,sides,image,color){
+    var mesh=getGeometry(sides),fd=mesh.faceData[face.value-1];
+    var uv=mesh.faces[face.value-1].map(function(i){var p=sub(mesh.vertices[i],fd.center);return [dot(p,fd.right),dot(p,fd.up)];});
+    var us=uv.map(function(p){return p[0];}),vs=uv.map(function(p){return p[1];});
+    var loU=Math.min.apply(Math,us),hiU=Math.max.apply(Math,us),loV=Math.min.apply(Math,vs),hiV=Math.max.apply(Math,vs);
+    var span=Math.max(hiU-loU,hiV-loV)/.875,left=(loU+hiU-span)/2,top=-(loV+hiV+span)/2;
+    var center=face.screenCenter,right=facePoint(face,.1,0),up=facePoint(face,0,.1);
+    ctx.save();ctx.transform((right[0]-center[0])*10,(right[1]-center[1])*10,-(up[0]-center[0])*10,-(up[1]-center[1])*10,center[0],center[1]);
+    ctx.drawImage(tintedSurface(image,color),left,top,span,span);ctx.restore();
+  }
+
   function drawFace(ctx, face, sides, selected, size, detail, skin) {
+    var surface=skin.surfacePack?.faces?.[String(sides)];
     var diffuse = Math.max(0, dot(face.normal, LIGHT));
     var specular = Math.pow(Math.max(0, dot(face.normal, unit(add(LIGHT, [0, 0, 1])))), 18);
     var light=.5+diffuse*.85;
@@ -279,18 +303,20 @@
     var rim = ctx.createLinearGradient(-0.7, -0.8, 0.8, 1);
     rim.addColorStop(0, skin.rim[0]); rim.addColorStop(0.3, skin.rim[1]);
     rim.addColorStop(0.52, skin.rim[2]); rim.addColorStop(1, skin.rim[3]);
-    path(ctx, points, .94); ctx.lineWidth = .035; ctx.strokeStyle = rim; ctx.stroke();
+    if(!surface?.rim){path(ctx, points, .94); ctx.lineWidth = .035; ctx.strokeStyle = rim; ctx.stroke();}
     // Texture coordinates follow the face basis, so the material rotates with the die.
-    ctx.save(); path(ctx,points,skin.inset);ctx.clip();
+    ctx.save(); path(ctx,points,surface?1:skin.inset);ctx.clip();
     var right=facePoint(face,.1,0),up=facePoint(face,0,.1),cx=center[0],cy=center[1];
     ctx.save();ctx.transform((right[0]-cx)*10,(right[1]-cy)*10,(up[0]-cx)*10,(up[1]-cy)*10,cx,cy);
-    if(skin.texture){ctx.globalAlpha=skin.textureOpacity;ctx.drawImage(skin.texture,-1,-1,2,2);ctx.globalAlpha=1;}
+    if(skin.texture&&!surface?.face){ctx.globalAlpha=skin.textureOpacity;ctx.drawImage(skin.texture,-1,-1,2,2);ctx.globalAlpha=1;}
     if(detail!=='low')for(var i=0;i<32;i++){
       var seed=sides*109+face.value*71+i*3,x=pattern(seed)*2-1,y=pattern(seed+1)*2-1;
       ctx.fillStyle='rgba(230,233,235,'+skin.grain+')';ctx.fillRect(x,y,.012,.012);
       if(skin.wear>0){ctx.strokeStyle='rgba(215,210,194,'+skin.wear+')';ctx.lineWidth=.004;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+.04,y+.012);ctx.stroke();}
     }
     ctx.restore();
+    if(surface?.face){ctx.save();ctx.globalAlpha=.88;drawSurface(ctx,face,sides,surface.face,rgb(skin.face[0],skin.face[1],skin.face[2]));ctx.restore();}
+    if(surface?.rim)drawSurface(ctx,face,sides,surface.rim,skin.rim[2]);
     var shine = ctx.createRadialGradient(center[0] - 0.3, center[1] - 0.4, 0, center[0], center[1], 0.85);
     shine.addColorStop(0, 'rgba(189,222,235,' + (0.10 + specular * 0.12) + ')');
     shine.addColorStop(1, 'rgba(17,27,37,0)'); ctx.fillStyle = shine;

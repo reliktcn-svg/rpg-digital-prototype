@@ -1,0 +1,31 @@
+{
+  "format": "rpg-dice-skin-v1",
+  "name": "Технический образец — все формы",
+  "faces": {
+    "4": {
+      "face": "d4-face.png",
+      "rim": "d4-rim.png"
+    },
+    "6": {
+      "face": "d6-face.png",
+      "rim": "d6-rim.png"
+    },
+    "8": {
+      "face": "d8-face.png",
+      "rim": "d8-rim.png"
+    },
+    "10": {
+      "face": "d10-face.png",
+      "rim": "d10-rim.png"
+    },
+    "12": {
+      "face": "d12-face.png",
+      "rim": "d12-rim.png"
+    },
+    "20": {
+      "face": "d20-face.png",
+      "rim": "d20-rim.png"
+    }
+  },
+  "id": "studio-sample"
+}

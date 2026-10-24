@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json, os, random, string, threading, time, urllib.parse
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+from dice_pack_catalog import dice_pack_catalog
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 ROOMS = {}
@@ -135,6 +136,8 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         p=urllib.parse.urlparse(self.path)
         with LOCK: cleanup_rooms()
+        if p.path == '/api/dice-packs':
+            return self._json(200, dice_pack_catalog(ROOT))
         if p.path == '/api/health':
             return self._json(200, {'ok':True,'rooms':len(ROOMS)})
         # Spectator-only endpoint, completely separate from player game access.
