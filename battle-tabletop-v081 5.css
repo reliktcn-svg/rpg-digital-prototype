@@ -1,0 +1,98 @@
+/* v0.6.81 — compact battle stats over the picture.
+   All metrics are display-only; the portrait remains a single flip button. */
+body.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .battle-portrait-stats{
+  display:block!important;position:absolute!important;inset:0!important;
+  z-index:2;pointer-events:none!important;overflow:hidden;
+  --battle-stat-size:clamp(34px,4.05vw,52px);
+  --battle-stat-inset:9px;
+}
+body.game-running #modal .tabletop-battle-card .battle-overlay-stat{
+  position:absolute;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  padding:1px;box-sizing:border-box;
+  width:var(--battle-stat-size);height:var(--battle-stat-size);
+  border:1.4px solid color-mix(in srgb,var(--visual-accent) 85%,#e3e7c9);
+  border-radius:50%;background:rgba(11,20,21,.70);
+  box-shadow:0 2px 8px rgba(0,0,0,.44);
+  color:#f7efd9;text-align:center;line-height:1.08;
+  font-variant-numeric:tabular-nums;
+  -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
+}
+body.game-running #modal .tabletop-battle-card .battle-overlay-stat .stat-label{
+  display:block;font-family:Arial,sans-serif;font-size:clamp(8px,.79vw,10px);
+  font-weight:800;letter-spacing:.025em;line-height:1.1;color:#eadbb9;
+}
+body.game-running #modal .tabletop-battle-card .battle-overlay-stat strong{
+  display:block;font-family:Georgia,'Times New Roman',serif;font-size:clamp(12px,1.33vw,17px);
+  line-height:1.1;font-weight:900;color:#fff5d7;white-space:nowrap;
+}
+body.game-running #modal .tabletop-battle-card .battle-overlay-stat.stat-hp{
+  top:var(--battle-stat-inset);left:var(--battle-stat-inset);
+}
+body.game-running #modal .tabletop-battle-card .battle-overlay-stat.stat-defense{
+  top:calc(var(--battle-stat-inset) + var(--battle-stat-size) + 5px);
+  left:var(--battle-stat-inset);
+}
+body.game-running #modal .tabletop-battle-card .battle-overlay-stat.stat-damage{
+  top:var(--battle-stat-inset);right:var(--battle-stat-inset);
+}
+body.game-running #modal .tabletop-battle-card .battle-overlay-stat.stat-attack{
+  top:calc(var(--battle-stat-inset) + var(--battle-stat-size) + 5px);
+  right:var(--battle-stat-inset);
+}
+body.game-running #modal .tabletop-battle-card .hero-portrait-stats .stat-str,
+body.game-running #modal .tabletop-battle-card .hero-portrait-stats .stat-dex,
+body.game-running #modal .tabletop-battle-card .hero-portrait-stats .stat-wis,
+body.game-running #modal .tabletop-battle-card .hero-portrait-stats .stat-cha{
+  bottom:var(--battle-stat-inset);
+}
+body.game-running #modal .tabletop-battle-card .hero-portrait-stats .stat-str{left:7%}
+body.game-running #modal .tabletop-battle-card .hero-portrait-stats .stat-dex{left:29%}
+body.game-running #modal .tabletop-battle-card .hero-portrait-stats .stat-wis{right:29%}
+body.game-running #modal .tabletop-battle-card .hero-portrait-stats .stat-cha{right:7%}
+/* Preserve visible used feedback, but don't obscure the bottom row of statistics. */
+body.game-running #modal .tabletop-battle-card .visual-card-front .visual-ability-used-marker{
+  top:5px!important;left:50%!important;bottom:auto!important;
+  transform:translateX(-50%);padding:2px 6px!important;
+  width:auto;max-width:28px;white-space:nowrap;line-height:1.2;font-size:13px!important;
+}
+/* Smaller typography and tighter vertical card margins also keep combat controls in sight. */
+body.game-running #modal .tabletop-battle-card .tabletop-card-note{margin-top:5px!important;margin-bottom:3px!important}
+body.game-running #modal .tabletop-battle-card .tabletop-card-flip{padding:6px 4px!important}
+@media (max-width:900px),(pointer:coarse){
+  body.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .battle-portrait-stats{
+    --battle-stat-size:clamp(25px,8vw,38px);
+    --battle-stat-inset:4px;
+  }
+  body.game-running #modal .tabletop-battle-card .battle-overlay-stat{
+    border-width:1px;background:rgba(9,17,19,.77);box-shadow:0 1px 4px #000a;
+  }
+  body.game-running #modal .tabletop-battle-card .battle-overlay-stat .stat-label{
+    font-size:clamp(6.6px,1.8vw,8px);letter-spacing:-.015em;
+  }
+  body.game-running #modal .tabletop-battle-card .battle-overlay-stat strong{
+    font-size:clamp(9px,2.75vw,13px);letter-spacing:-.02em;
+  }
+  body.game-running #modal .tabletop-battle-card .battle-overlay-stat.stat-defense,
+  body.game-running #modal .tabletop-battle-card .battle-overlay-stat.stat-attack{
+    top:calc(var(--battle-stat-inset) + var(--battle-stat-size) + 3px);
+  }
+  body.game-running #modal .tabletop-battle-card .hero-portrait-stats .stat-str{left:3%}
+  body.game-running #modal .tabletop-battle-card .hero-portrait-stats .stat-dex{left:26%}
+  body.game-running #modal .tabletop-battle-card .hero-portrait-stats .stat-wis{right:26%}
+  body.game-running #modal .tabletop-battle-card .hero-portrait-stats .stat-cha{right:3%}
+  body.game-running #modal .tabletop-battle-card .visual-card-front .visual-ability-used-marker{
+    top:3px!important;max-width:22px;font-size:9px!important;padding:1px 4px!important;
+  }
+}
+@media(max-width:360px){
+  body.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .battle-portrait-stats{
+    --battle-stat-size:clamp(24px,8vw,29px);
+    --battle-stat-inset:3px;
+  }
+  body.game-running #modal .tabletop-battle-card .battle-overlay-stat .stat-label{font-size:6.2px}
+  body.game-running #modal .tabletop-battle-card .battle-overlay-stat strong{font-size:8.9px}
+}
+/* Keep the battle controls inside the window even on shorter desktop displays. */
+@media (min-width:901px) and (max-height:820px) and (pointer:fine){
+  body.game-running #modal .modal-card:has(.combat-shell){width:min(700px,92vw)!important}
+}

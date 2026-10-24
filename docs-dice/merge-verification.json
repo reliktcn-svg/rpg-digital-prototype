@@ -1,18 +1,19 @@
 {
-  "baseArchive": "RPG_Digital_Prototype_v0.6.94_Status_Mercenary_Flicker_Fixes.zip",
-  "baseSHA256": "9e6720b4e5ebb5d0924d82520281e5439b7b5ca6ec5adcf9beac01abba11aa22",
-  "changedOriginalFiles": [
-    "arcana/dice-renderer.js",
-    "arcana/dice-settings.js",
+  "base": "RPG_Digital_Prototype_v0.6.94_Dice_Collection.zip",
+  "originalUserBase": "RPG_Digital_Prototype_v0.6.94_Status_Mercenary_Flicker_Fixes.zip",
+  "changedFilesFromCollection": [
     "index.html",
-    "server.py",
+    "app.js",
     "sw.js",
-    "tests-dice/checks.html",
-    "tests-dice/personal.html"
+    "docs-dice/INSTALL_IN_GAME.md",
+    "docs-dice/base-0694-verification.json"
   ],
-  "allOtherOriginalFilesPreserved": true,
-  "appAndStylesIdenticalToUser0694": true,
-  "serverDiffOnlyAddsReadOnlyDiceCatalog": true,
+  "fix": "Capture immutable per-roll dice preferences; use shared snapshot for spectators; wait for external texture and cancel obsolete playback",
+  "browserChecksThisFix": {
+    "spectator-results.json": 10,
+    "personal-results.json": 11,
+    "browser-results.json": 24
+  },
   "animationLock": {
     "source": "v0.6.92",
     "sha256": {
@@ -20,14 +21,6 @@
       "arcana/dice-animator.js": "2bb29b6a81bb29e454e63d9bfe2862ebaa95568585c3dc241255e47442eb9323"
     }
   },
-  "browserChecks": {
-    "pack-results.json": 14,
-    "personal-results.json": 11,
-    "browser-results.json": 24
-  },
-  "motionChecks": {
-    "trajectories": 36,
-    "frames": 6516,
-    "finalResults": 60
-  }
+  "serverAndNetworkCodeUnchanged": true,
+  "allCSSUnchanged": true
 }

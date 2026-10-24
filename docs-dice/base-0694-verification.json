@@ -8,9 +8,12 @@
     "server.py",
     "sw.js",
     "tests-dice/checks.html",
-    "tests-dice/personal.html"
+    "tests-dice/personal.html",
+    "app.js"
   ],
   "allOtherOriginalFilesUnchanged": true,
-  "appAndAllCSSIdenticalToUser0694": true,
-  "motionAndAnimatorUnchanged": true
+  "appAndAllCSSIdenticalToUser0694": false,
+  "motionAndAnimatorUnchanged": true,
+  "allCSSIdenticalToUser0694": true,
+  "appChanges": "Only shared combat dice presentation snapshot and loading; source 0.6.94 fixes preserved"
 }

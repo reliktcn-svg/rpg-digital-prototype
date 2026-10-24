@@ -1,0 +1,53 @@
+/* v0.6.86 — Codex-style status icons and segmented health ONLY.
+   The base v0.6.85 cards, flip behaviour, actions and combat logic stay unchanged. */
+body.game-running #modal .combat-shell .tabletop-battle-card .visual-card-front .tabletop-effect-overlay {
+  position:absolute;z-index:5;left:calc(var(--battle-v086-badge-size) + 15px);right:calc(var(--battle-v086-badge-size) + 15px);top:7px;
+  display:flex;align-items:center;justify-content:safe center;gap:5px;
+  --battle-v086-badge-size:clamp(34px,4.05vw,52px);
+  overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
+  pointer-events:none;white-space:nowrap;padding:0 2px 3px;max-height:35px;
+}
+body.game-running #modal .tabletop-battle-card .tabletop-effect-overlay::-webkit-scrollbar{display:none}
+body.game-running #modal .tabletop-battle-card .tabletop-effect-icon{
+  display:grid;place-items:center;box-sizing:border-box;
+  flex:0 0 auto;width:clamp(17px,2.03vw,26px);height:clamp(17px,2.03vw,26px);
+  padding:4px;border:1.2px solid #5caa92;border-radius:50%;
+  color:#c6f0dc;background:rgba(16,42,37,.89);box-shadow:0 2px 5px #0007;
+  -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
+}
+body.game-running #modal .tabletop-battle-card .tabletop-effect-icon.negative{
+  color:#ffdad8;border-color:#ca7279;background:rgba(55,28,32,.89);
+}
+body.game-running #modal .tabletop-battle-card .tabletop-effect-icon svg{width:100%;height:100%;display:block;overflow:visible}
+/* One segment per maximum health point; missing HP are muted segments. */
+body.game-running #modal .combat-shell .tabletop-battle-card .battle-v086-health {
+  width:100%;display:grid!important;grid-template-columns:repeat(var(--battle-v086-hp-count),minmax(0,1fr));
+  gap:2px;align-items:stretch;height:9px;min-height:9px;
+  padding:1px 2px;margin:0;border-top:1px solid #121c1c;border-bottom:1px solid #0f1617;
+  background:#101616;box-sizing:border-box;overflow:hidden;
+}
+body.game-running #modal .tabletop-battle-card .battle-v086-hp-segment{
+  display:block;min-width:0;height:100%;background:#34403d;border-radius:1px;
+}
+body.game-running #modal .tabletop-battle-card .battle-v086-hp-segment.filled{
+  background:var(--visual-accent);box-shadow:0 0 3px var(--visual-accent);
+}
+@media(max-width:900px),(pointer:coarse){
+  body.game-running #modal .combat-shell .tabletop-battle-card .visual-card-front .tabletop-effect-overlay{
+    --battle-v086-badge-size:clamp(25px,8vw,38px);
+    top:3px;left:calc(var(--battle-v086-badge-size) + 6px);right:calc(var(--battle-v086-badge-size) + 6px);
+    gap:3px;max-height:22px;
+  }
+  body.game-running #modal .tabletop-battle-card .tabletop-effect-icon{
+    width:clamp(12px,4vw,19px);height:clamp(12px,4vw,19px);padding:2px;border-width:1px;
+  }
+  body.game-running #modal .combat-shell .tabletop-battle-card .battle-v086-health{
+    height:7px;min-height:7px;gap:1px;
+  }
+}
+@media(max-width:360px){
+  body.game-running #modal .combat-shell .tabletop-battle-card .visual-card-front .tabletop-effect-overlay{
+    --battle-v086-badge-size:clamp(24px,8vw,29px);gap:2px;
+  }
+  body.game-running #modal .tabletop-battle-card .tabletop-effect-icon{width:12px;height:12px;padding:2px}
+}

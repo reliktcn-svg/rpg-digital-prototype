@@ -2466,7 +2466,7 @@
   function arcanaPreferences(heroId){return window.RPGDiceSettings?.get(heroId===undefined?currentPlayer()?.id:heroId)||{skin:'classic',speed:1,motion:'bounce'}}
   function applyArcanaPreferences(animator,s){s=s||arcanaPreferences(null);animator.setSkin(window.RPGDiceSettings?.resolveSkin(s)||s.skin);animator.setSpeed(s.speed);animator.setMotion(s.motion);}
   function arcanaRollDuration(dice,speed=1){return (ARCANA_DURATION+Math.max(0,(dice?.length||1)-1)*500)/speed;}
-  function arcanaCombatDuration(c){const shown=arcanaAnimator?.getState(),key=`${c.instanceId||'combat'}:${c.lastRoll?.seq||0}`;return arcanaRollDuration(c.lastRoll?.dice,shown?.roll?.id===key?shown.speed:arcanaPreferences(arcanaCombatOwner(c)).speed);}
+  function arcanaCombatDuration(c){const shown=arcanaAnimator?.getState(),key=`${c.instanceId||'combat'}:${c.lastRoll?.seq||0}`;return arcanaRollDuration(c.lastRoll?.dice,shown?.roll?.id===key?shown.speed:arcanaCombatPreferences(c).speed);}
 
   // v0.6.54: attack results stay 1s longer; damage results 0.5s shorter.
   const ARCANA_ATTACK_HOLD=4000, ARCANA_DAMAGE_HOLD=2500;
@@ -2522,11 +2522,19 @@
     if(Object.hasOwn(c?.lastRoll||{},'diceHeroId'))return c.lastRoll.diceHeroId;
     return /^(Атака врага|Урон врага|Защита врага)/.test(c?.lastRoll?.title||'')?null:(c?.heroId||currentPlayer()?.id||null);
   }
+  function arcanaCombatPreferences(c){
+    // A roll carries its owner's presentation snapshot across devices. Never
+    // save these remote preferences into the spectator's personal profiles.
+    const snapshot=c?.lastRoll?.dicePreferences;
+    if(!snapshot||typeof snapshot!=='object'||Array.isArray(snapshot))return arcanaPreferences(arcanaCombatOwner(c));
+    return {...snapshot,speed:[1,2,4].includes(snapshot.speed)?snapshot.speed:1,motion:snapshot.motion==='roll'?'roll':'bounce'};
+  }
   function combatSetEnemyRoll(...args){while(args.length<6)args.push(undefined);args[6]=null;return combatSetRoll(...args)}
   function combatSetRoll(title,main,math='',detail='',natural=null,dice=null,diceHeroId=undefined){
     const c=state.combat;if(!c)return;
     c.rollPresentationSeq=(Number(c.rollPresentationSeq)||0)+1;
-    c.lastRoll={diceHeroId:diceHeroId===undefined?(c.heroId||currentPlayer()?.id||null):diceHeroId,title,main:String(main),math,detail,natural,seq:c.rollPresentationSeq,dice:arcanaDiceFromRoll(title,main,math,dice)};
+    const actorId=diceHeroId===undefined?(c.heroId||currentPlayer()?.id||null):diceHeroId;
+    c.lastRoll={diceHeroId:actorId,dicePreferences:arcanaPreferences(actorId),title,main:String(main),math,detail,natural,seq:c.rollPresentationSeq,dice:arcanaDiceFromRoll(title,main,math,dice)};
   }
   // v0.6.54: compact, standalone dice overlay. It does not alter game logic.
   let arcanaBattleLayer=null,arcanaBattleHold=null,arcanaBattleStamp=0;
@@ -2589,7 +2597,13 @@
     if(breakdown)payload.breakdown=breakdown;
     else if(Number.isFinite(rollFinal))payload.breakdown={kind:'result',formula,total:rollFinal};
     try{
-      Promise.resolve((applyArcanaPreferences(arcanaAnimator,arcanaPreferences(arcanaCombatOwner(c))),arcanaAnimator.play(payload))).catch(error=>console.warn('Arcana combat playback:',error)).then(()=>{
+      const preferences=arcanaCombatPreferences(c);
+      const play=()=>{if(stamp!==arcanaBattleStamp)return;applyArcanaPreferences(arcanaAnimator,preferences);return arcanaAnimator.play(payload)};
+      // A freshly joined spectator can receive combat before textures finish
+      // loading. Await the requested pack, but never replay an obsolete roll.
+      const packs=window.FantasyDicePacks;
+      const playback=preferences.pack&&packs&&!packs.get(preferences.pack)?packs.refresh().then(play):play();
+      Promise.resolve(playback).catch(error=>console.warn('Arcana combat playback:',error)).then(()=>{
         if(stamp!==arcanaBattleStamp)return;
         arcanaPlaying=false;
         arcanaBattleHold=setTimeout(()=>{if(stamp===arcanaBattleStamp){stopArcanaBattlePresentation();const extra=c.wanderingBonusAnimation;if(extra&&extra.rollSeq===roll.seq&&localControlsCombat()){c.wanderingBonusAnimation=null;showHeroRollPopup(null,'Бродячий наёмник · Натуральная 20',extra.value,`D4 = <b>${extra.value}</b>`,'Дополнительный урон после основного броска',null,null,'Продолжить',true)}}},arcanaCombatHold(roll,c.phase));
