@@ -1,3 +1,7 @@
+Актуальная сборка: v0.6.97 — развитие шести героев и исцеляющий контрудар Паладина.
+Инструкция по дереву, опыту, атласу и PNG-значкам: HERO_PROGRESSION_README.txt
+Изменения: CHANGELOG_v0.6.97.txt
+
 RPG Digital Prototype v0.6.43 Online Flow Alpha
 Тайники: редакция v0.53
 

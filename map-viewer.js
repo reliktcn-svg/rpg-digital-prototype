@@ -8,9 +8,9 @@
   const HERO_COLORS={
     warrior:{fill:'#73a8ff',stroke:'#2c5fab'},dwarf:{fill:'#f07a7a',stroke:'#9f2e2e'},
     archer:{fill:'#76d87f',stroke:'#2f8a39'},rogue:{fill:'#5a5a5a',stroke:'#111111'},
-    mage:{fill:'#b07be9',stroke:'#6f37aa'}
+    mage:{fill:'#b07be9',stroke:'#6f37aa'},paladin:{fill:'#f6da67',stroke:'#ba8f0d'}
   };
-  const HERO_PALETTE={warrior:'#3f7bd9',dwarf:'#c84a4a',archer:'#3f9d5f',rogue:'#555b63',mage:'#9452c7'};
+  const HERO_PALETTE={warrior:'#3f7bd9',dwarf:'#c84a4a',archer:'#3f9d5f',rogue:'#555b63',mage:'#9452c7',paladin:'#e9ca46'};
   const LOC_COLORS={'Таверна':{fill:'#f3d25c',stroke:'#2f8a39'},'Торговец':{fill:'#f3d25c',stroke:'#2d63b4'},'Святилище':{fill:'#f3d25c',stroke:'#b33a3a'},'Древний портал':{fill:'#f3d25c',stroke:'#7d43ba'}};
   const SYMBOLS={'Таверна':'Т','Торговец':'$','Святилище':'С','Древний портал':'П'};
   let creds=null,connection=null,timer=null,fetching=false,lastMap=null,lastLayout='',lastMovement='',lastRevision=-1;

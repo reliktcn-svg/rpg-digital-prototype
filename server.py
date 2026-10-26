@@ -2,13 +2,14 @@
 import json, os, random, string, threading, time, urllib.parse
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from dice_pack_catalog import dice_pack_catalog
+from hero_atlas import read_atlas, learn_ability
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 ROOMS = {}
 LOCK = threading.RLock()
 ROOM_IDLE_TTL = max(30, int(os.environ.get('RPG_ROOM_IDLE_TTL', '10800')))  # 3 часа без активности
 
-HERO_IDS = ['warrior','dwarf','mage','archer','rogue']
+HERO_IDS = ['warrior','dwarf','mage','archer','rogue','paladin']
 
 
 def token(n=20):
@@ -138,6 +139,12 @@ class Handler(SimpleHTTPRequestHandler):
         with LOCK: cleanup_rooms()
         if p.path == '/api/dice-packs':
             return self._json(200, dice_pack_catalog(ROOT))
+        if p.path in ('/hero-atlas-data.js','/api/hero-atlas'):
+            try: data=read_atlas(ROOT)
+            except (ValueError,OSError) as exc:return self._json(500, {'error':'Ошибка атласа: '+str(exc)})
+            if p.path=='/api/hero-atlas':return self._json(200,data)
+            payload=('window.RPG_HERO_ATLAS = '+json.dumps(data,ensure_ascii=False).replace('</','<\\/')+';').encode('utf-8')
+            self.send_response(200);self.send_header('Content-Type','application/javascript; charset=utf-8');self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(payload)));self.end_headers();self.wfile.write(payload);return
         if p.path == '/api/health':
             return self._json(200, {'ok':True,'rooms':len(ROOMS)})
         # Spectator-only endpoint, completely separate from player game access.
@@ -215,7 +222,7 @@ class Handler(SimpleHTTPRequestHandler):
                     return self._json(400, {'error':'Нет данных игроков для восстановления'})
                 restored={}
                 host_id=None
-                for item in players[:5]:
+                for item in players[:6]:
                     if not isinstance(item,dict) or not item.get('id'): continue
                     qid=str(item.get('id')); host=bool(item.get('host'))
                     restored[qid]={'id':qid,'secret':None,'name':str(item.get('name') or 'Игрок')[:24],'heroId':item.get('heroId'),'host':host}
@@ -254,7 +261,7 @@ class Handler(SimpleHTTPRequestHandler):
                 room=ROOMS.get(code)
                 if not room: return self._json(404, {'error':'Комната не найдена'})
                 if room['started']: return self._json(409, {'error':'Партия уже началась'})
-                if len(room['players'])>=5: return self._json(409, {'error':'В комнате уже 5 игроков'})
+                if len(room['players'])>=6: return self._json(409, {'error':'В комнате уже 6 игроков'})
                 pid=token(12); secret=token(24)
                 room['players'][pid]={'id':pid,'secret':secret,'name':name,'heroId':None,'host':False}
                 touch_room(room); data=public_room(room, True)
@@ -336,6 +343,23 @@ class Handler(SimpleHTTPRequestHandler):
                 if room.get('gameState') is None:
                     room['gameState']=game; room['gameRevision']=1; room['gameUpdatedAt']=int(time.time())
                 return self._json(200, {'revision':room['gameRevision'],'state':room['gameState']})
+        if p.endswith('/game/ability') and p.startswith('/api/rooms/'):
+            code=p.split('/')[-3]
+            with LOCK:
+                room=ROOMS.get(code)
+                if not room:return self._json(404,{'error':'Комната не найдена'})
+                account=authorized_player(room,body.get('playerId'),body.get('playerSecret'))
+                if not account:return self._json(403,{'error':'Нет доступа'})
+                game=room.get('gameState') or {}
+                player=next((q for q in game.get('players',[]) if q.get('id')==account.get('heroId')),None)
+                if not room.get('started') or not player:return self._json(409,{'error':'Партия ещё не готова'})
+                try:learned=learn_ability(ROOT,player,body.get('nodeId'))
+                except (ValueError,OSError) as exc:return self._json(409,{'error':str(exc)})
+                room['sideMutationCounter']=int(room.get('sideMutationCounter') or 0)+1
+                entry=room.setdefault('sidePlayerOverrides',{}).setdefault(player['id'],{'fields':{},'dealRev':0})
+                entry['fields']['learnedAbilities']=list(learned);entry['seq']=room['sideMutationCounter']
+                touch_room(room)
+                return self._json(200,{'heroId':player['id'],'learnedAbilities':learned,'sideVersions':{hid:int(e.get('seq') or 0) for hid,e in room['sidePlayerOverrides'].items()}})
         if p.endswith('/game/side') and p.startswith('/api/rooms/'):
             code=p.split('/')[-3]; pid=body.get('playerId'); secret=body.get('playerSecret'); side=body.get('side') or {}
             with LOCK:
@@ -469,6 +493,9 @@ class Handler(SimpleHTTPRequestHandler):
                 if existing_deal_rev>incoming_deal_rev:
                     game['tradeDeal']=existing_deal
                 incoming_players={q.get('id'):q for q in game.get('players',[]) if isinstance(q,dict)}
+                for prior in existing.get('players',[]):
+                    inc=incoming_players.get(prior.get('id'))
+                    if inc is not None:inc['learnedAbilities']=list(prior.get('learnedAbilities') or [])
                 overlays=room.get('sidePlayerOverrides') or {}
                 side_acks=body.get('sideAcks') or {}
                 if not isinstance(side_acks,dict):side_acks={}

@@ -1,6 +1,6 @@
 (()=>{
   const HEROES=[
-    ['warrior','Воин','#4c83ff'],['dwarf','Дворф','#d34b45'],['mage','Маг','#9d5cff'],['archer','Лучник','#4db76d'],['rogue','Разбойник','#444b55']
+    ['warrior','Воин','#4c83ff'],['dwarf','Дворф','#d34b45'],['mage','Маг','#9d5cff'],['archer','Лучник','#4db76d'],['rogue','Разбойник','#444b55'],['paladin','Паладин','#e9ca46']
   ];
   let session={mode:null,code:null,playerId:null,playerSecret:null,recoveryKey:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:'',lastServerState:null,sideAcks:{}};
   const CLIENT_BUILD='0.6.6'; // v0.6.87: map observers are independent from this player session
@@ -104,7 +104,7 @@
     if(hardBtn){hardBtn.classList.toggle('selected',hard);hardBtn.disabled=!isHost||r.started;hardBtn.onclick=()=>setRoomMode(true)}
     if($('roomModeHint'))$('roomModeHint').textContent=`Режим партии: ${hard?'СЛОЖНЫЙ':'ОБЫЧНЫЙ'}. ${isHost&&!r.started?'Выбор хозяина применяется ко всем героям и блокируется после старта.':'Изменить режим во время партии нельзя.'}`;
     $('netStart').hidden=!isHost;$('netStart').disabled=!ready||r.started;$('netStart').textContent=r.started?'Комната запущена':'Начать сетевую игру';
-    $('roomStatus').textContent=r.started?(r.gameReady?'Общая партия создана. Открываем карту…':'Комната запущена. Хозяин создаёт общую карту…'):ready?`Все готовы. Хозяин может начать · ${hard?'сложный':'обычный'} режим.`:`Игроков: ${r.players.length}/5. Нужно минимум 2 и каждый выбирает героя.`;
+    $('roomStatus').textContent=r.started?(r.gameReady?'Общая партия создана. Открываем карту…':'Комната запущена. Хозяин создаёт общую карту…'):ready?`Все готовы. Хозяин может начать · ${hard?'сложный':'обычный'} режим.`:`Игроков: ${r.players.length}/6. Нужно минимум 2 и каждый выбирает героя.`;
   }
   async function fetchGame(){
     return api(`/api/rooms/${session.code}/game?playerId=${encodeURIComponent(session.playerId)}&playerSecret=${encodeURIComponent(session.playerSecret)}`);
@@ -226,6 +226,12 @@
       throw new Error('Данные изменились во время сохранения. Повторите попытку.');
     }finally{session.syncBusy=false}
   }
+  window.__RPG_NETWORK_PROGRESSION__={active:()=>session.gameEntered,learn:async(heroId,nodeId)=>{
+    if(heroId!==myHeroId())throw Error('Можно развивать только своего героя');
+    const started=Date.now();const waitIdle=async()=>{while(session.syncBusy){if(Date.now()-started>15000)throw Error('Сервер занят. Попробуйте снова.');await new Promise(r=>setTimeout(r,40))}};
+    await waitIdle();await syncGame();await waitIdle();session.syncBusy=true;
+    try{const result=await api(`/api/rooms/${session.code}/game/ability`,{method:'POST',body:JSON.stringify({...auth(),nodeId})});return result}finally{session.syncBusy=false}
+  }};
   window.__RPG_NET_FLUSH_MERCHANT__=flushMerchant;
   let localMutationTimer=null;
   window.addEventListener('rpg-local-mutation',()=>{if(!session.gameEntered)return;clearTimeout(localMutationTimer);localMutationTimer=setTimeout(syncGame,30)});
@@ -274,7 +280,7 @@
     if(modalAllowed&&t.closest('#modal'))return;
     if(t.closest('#combatHide,#combatJournalToggle,#combatRestoreButton'))return;
     if(sideMine&&t.closest('#modal,#sheetDrawer,#rollOverlay,#mobileHeroBtn,#mobileInventoryBtn'))return;
-    if(t.closest('#mobileHeroBtn,#mobileInventoryBtn,#mobileJournalBtn,#inventoryBtn,#journalBtn,#sheetDrawer,#journalOverlay,.map-zoom-controls'))return;
+    if(t.closest('#mobileHeroBtn,#mobileInventoryBtn,#mobileJournalBtn,#inventoryBtn,#journalBtn,#sheetDrawer,#journalOverlay,.skill-tree-dialog,.skill-detail-dialog,.map-zoom-controls'))return;
     if(t.closest('#gameSection,#overlay,#modal,#rollOverlay')){e.preventDefault();e.stopImmediatePropagation();updateTurnGuard()}
   },true);
 

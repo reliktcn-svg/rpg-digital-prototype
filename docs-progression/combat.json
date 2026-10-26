@@ -1,0 +1,202 @@
+[
+  {
+    "name": "Hero menu shows initial level and cumulative 0/10, then 2/10",
+    "pass": true
+  },
+  {
+    "name": "warrior ability 1 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "warrior ability 2 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "warrior ability 3 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "warrior ability 4 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "warrior ability 5 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "dwarf ability 1 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "dwarf ability 2 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "dwarf ability 3 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "dwarf ability 4 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "dwarf ability 5 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "archer ability 1 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "archer ability 2 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "archer ability 3 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "archer ability 4 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "archer ability 5 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "rogue ability 1 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "rogue ability 2 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "rogue ability 3 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "rogue ability 4 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "rogue ability 5 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "mage ability 1 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "mage ability 2 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "mage ability 3 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "mage ability 4 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "mage ability 5 applies atlas dice and only once",
+    "pass": true
+  },
+  {
+    "name": "Ability cannot bypass silence lock",
+    "pass": true
+  },
+  {
+    "name": "Mage IV can cleanse at full HP; selected status removed",
+    "pass": true
+  },
+  {
+    "name": "Resistance Кровотечение success prevents status and timers; failure applies",
+    "pass": true
+  },
+  {
+    "name": "Resistance Яд success prevents status and timers; failure applies",
+    "pass": true
+  },
+  {
+    "name": "Resistance Горение success prevents status and timers; failure applies",
+    "pass": true
+  },
+  {
+    "name": "Resistance Оглушение success prevents status and timers; failure applies",
+    "pass": true
+  },
+  {
+    "name": "Natural20 I gives one enemy disadvantage, not the previous hero effect",
+    "pass": true
+  },
+  {
+    "name": "Natural20 path extra damage and successful D4 effect apply together",
+    "pass": true
+  },
+  {
+    "name": "Enemy poison ticks and appears on combat card",
+    "pass": true
+  },
+  {
+    "name": "Victory XP is granted once and multiple thresholds grant matching points",
+    "pass": true
+  },
+  {
+    "name": "Save/export + reload preserves XP and independent resistance paths",
+    "pass": true
+  },
+  {
+    "name": "Opening tree with no points is allowed; all icons have Roman levels",
+    "pass": true
+  },
+  {
+    "name": "Tree purchase UI spends a point and sibling Natural20 path stays locked",
+    "pass": true
+  },
+  {
+    "name": "Paladin counter 1 uses its die, heals actual damage and preserves normal attack",
+    "pass": true
+  },
+  {
+    "name": "Paladin counter 2 uses its die, heals actual damage and preserves normal attack",
+    "pass": true
+  },
+  {
+    "name": "Paladin counter 3 uses its die, heals actual damage and preserves normal attack",
+    "pass": true
+  },
+  {
+    "name": "Paladin counter 4 uses its die, heals actual damage and preserves normal attack",
+    "pass": true
+  },
+  {
+    "name": "Paladin counter 5 uses its die, heals actual damage and preserves normal attack",
+    "pass": true
+  },
+  {
+    "name": "Paladin cannot counter before damage, after zero damage or when dead",
+    "pass": true
+  },
+  {
+    "name": "Declining counter preserves the ability for a later hit",
+    "pass": true
+  },
+  {
+    "name": "Counter applies armor and caps healing at actual remaining enemy HP",
+    "pass": true
+  },
+  {
+    "name": "Lethal enemy damage does not offer counter or consume it",
+    "pass": true
+  },
+  {
+    "name": "Six heroes start and Paladin uses atlas Natural20 I",
+    "pass": true
+  },
+  {
+    "name": "All rank dice colors and speed x2; personal choice stays individual",
+    "pass": true
+  }
+]

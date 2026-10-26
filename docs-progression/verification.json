@@ -1,0 +1,26 @@
+{
+  "version": "0.6.97",
+  "base": "RPG_Digital_Prototype_v0.6.95_Paladin_6_Players.zip",
+  "browser_tests": {
+    "combat": 50,
+    "network": 4,
+    "responsive": 8,
+    "dice": 24,
+    "personal": 11,
+    "spectator": 10,
+    "packs": 14
+  },
+  "rules_assertions": 585,
+  "http_tests": 7,
+  "dice_motion": {
+    "trajectories": 36,
+    "frames": 6516,
+    "finalResults": 60,
+    "sha256": {
+      "dice-motion.js": "76c507eb40b2faee064f014be65bc553ad830e42622197ac6b0d73d16fc24147",
+      "dice-animator.js": "2bb29b6a81bb29e454e63d9bfe2862ebaa95568585c3dc241255e47442eb9323"
+    }
+  },
+  "responsive": "320x568, 390x844, 568x320, 768x1024, 844x390, 1024x768, 1280x720, 1920x1080",
+  "device_note": "Browser viewport tests, not physical device testing."
+}

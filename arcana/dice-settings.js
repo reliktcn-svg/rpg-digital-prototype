@@ -9,14 +9,14 @@
     ['Зелёный','#388E3C'],['Изумрудный','#00896B'],['Голубой','#45B8E8'],
     ['Синий','#2454C6'],['Фиолетовый','#8B45BD'],['Розовый','#E86AA6']
   ].map(([name,hex])=>Object.freeze({name,hex})));
-  const defaults={skin:'classic',speed:1,motion:'bounce',colors:{rim:'#D4AF37',face:'#60646C',number:'#FFFFFF'}};
-  const heroIds=new Set(['warrior','dwarf','mage','archer','rogue']);
+  const defaults={skin:'classic',speed:2,motion:'bounce',colors:{rim:'#D4AF37',face:'#60646C',number:'#FFFFFF'}};
+  const heroIds=new Set(['warrior','dwarf','mage','archer','rogue','paladin']);
   let context=()=>null,profiles={};
   function valid(value={}){
     if(!value||typeof value!=='object')value={};
     const colors={};for(const part of ['rim','face','number'])colors[part]=typeof value.colors?.[part]==='string'&&/^#[0-9a-f]{6}$/i.test(value.colors[part])?value.colors[part].toUpperCase():defaults.colors[part];
     const skin=value.skin==='custom'||['classic','satin-red','worn-crimson'].includes(value.skin)?value.skin:defaults.skin;
-    return {skin,pack:value.pack==='custom'?'studio-sample':typeof value.pack==='string'&&/^[a-z0-9][a-z0-9_-]{0,63}$/.test(value.pack)?value.pack:null,speed:speeds.includes(value.speed)?value.speed:1,motion:motions.includes(value.motion)?value.motion:'bounce',colors};
+    return {skin,pack:value.pack==='custom'?'studio-sample':typeof value.pack==='string'&&/^[a-z0-9][a-z0-9_-]{0,63}$/.test(value.pack)?value.pack:null,speed:speeds.includes(value.speed)?value.speed:defaults.speed,motion:motions.includes(value.motion)?value.motion:'bounce',colors};
   }
   try{const saved=JSON.parse(localStorage.getItem(key)||'{}');for(const id of heroIds)if(Object.hasOwn(saved||{},id))profiles[id]=valid(saved[id]);}catch(_){}
   global.addEventListener('storage',event=>{if(event.key!==key)return;try{const saved=JSON.parse(event.newValue||'{}');for(const id of heroIds)profiles[id]=valid(saved?.[id]);}catch(_){}});

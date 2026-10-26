@@ -1,0 +1,49 @@
+{
+  "finished": true,
+  "results": [
+    {
+      "name": "Warrior and mage keep separate speed, motion and colors",
+      "pass": true
+    },
+    {
+      "name": "Online journal edits local hero during another hero turn",
+      "pass": true
+    },
+    {
+      "name": "Each part offers 15 colors; three changes do not mutate game state",
+      "pass": true
+    },
+    {
+      "name": "Changing only the rim preserves background and numeral colors",
+      "pass": true
+    },
+    {
+      "name": "An open menu stays attached to its hero when the turn changes",
+      "pass": true
+    },
+    {
+      "name": "Profiles survive reload independently",
+      "pass": true
+    },
+    {
+      "name": "Movement rolls use acting hero, not online viewer",
+      "pass": true
+    },
+    {
+      "name": "Queued rolls retain original owner and material snapshot",
+      "pass": true
+    },
+    {
+      "name": "Off-turn shrine healing uses the visiting hero",
+      "pass": true
+    },
+    {
+      "name": "Combat hero has personal dice; enemy dice use rank colors at x2",
+      "pass": true
+    },
+    {
+      "name": "A second tab cannot overwrite another hero profile",
+      "pass": true
+    }
+  ]
+}

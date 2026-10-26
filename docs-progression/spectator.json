@@ -1,0 +1,45 @@
+{
+  "finished": true,
+  "results": [
+    {
+      "name": "Combat roll captures serializable actor colors, texture and speed",
+      "pass": true
+    },
+    {
+      "name": "Server round trip gives observer actor texture despite different local defaults",
+      "pass": true
+    },
+    {
+      "name": "Repeated network state does not restart roll or overwrite viewer preferences",
+      "pass": true
+    },
+    {
+      "name": "Changing owner settings does not alter an existing roll snapshot",
+      "pass": true
+    },
+    {
+      "name": "Next roll transmits new owner appearance",
+      "pass": true
+    },
+    {
+      "name": "Enemy rank color and x2 speed reach the observer device",
+      "pass": true
+    },
+    {
+      "name": "Observer waits for texture instead of showing standard material on first load",
+      "pass": true
+    },
+    {
+      "name": "A late texture cannot replace a newer roll",
+      "pass": true
+    },
+    {
+      "name": "Closing combat while texture loads cancels pending presentation",
+      "pass": true
+    },
+    {
+      "name": "Legacy saves without dice snapshot remain readable",
+      "pass": true
+    }
+  ]
+}
