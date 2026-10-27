@@ -13,22 +13,22 @@
   <link rel="preload" as="image" href="assets/heroes/mage.webp" />
   <link rel="preload" as="image" href="assets/heroes/archer.webp" />
   <link rel="preload" as="image" href="assets/heroes/rogue.webp" />
-  <title>RPG Digital Prototype v0.6.97 · Режим Карта</title>
-  <link rel="stylesheet" href="styles.css?v=0697progression" />
-  <link rel="stylesheet" href="location-ui.css?v=0697progression" />
-  <link rel="stylesheet" href="battle-result-ui.css?v=0697progression" />
-  <link rel="stylesheet" href="tabletop-enhancements.css?v=0697progression" />
-  <link rel="stylesheet" href="ui-fixes-v078.css?v=0697progression" />
-  <link rel="stylesheet" href="ui-fixes-v079.css?v=0697progression" />
-  <link rel="stylesheet" href="battle-tabletop-v080.css?v=0697progression" />
-  <link rel="stylesheet" href="battle-tabletop-v081.css?v=0697progression" />
-  <link rel="stylesheet" href="battle-tabletop-v082.css?v=0697progression" />
-  <link rel="stylesheet" href="battle-tabletop-v083.css?v=0697progression" />
-  <link rel="stylesheet" href="battle-tabletop-v084.css?v=0697progression" />
-  <link rel="stylesheet" href="battle-tabletop-v085.css?v=0697progression" />
-  <link rel="stylesheet" href="battle-tabletop-v086.css?v=0697progression" />
-  <link rel="stylesheet" href="arcana/dice-settings.css?v=0697progression">
-  <link rel="stylesheet" href="hero-progression.css?v=0697">
+  <title>RPG Digital Prototype v0.6.100 · Режим Карта</title>
+  <link rel="stylesheet" href="styles.css?v=06100progression" />
+  <link rel="stylesheet" href="location-ui.css?v=06100progression" />
+  <link rel="stylesheet" href="battle-result-ui.css?v=06100progression" />
+  <link rel="stylesheet" href="tabletop-enhancements.css?v=06100progression" />
+  <link rel="stylesheet" href="ui-fixes-v078.css?v=06100progression" />
+  <link rel="stylesheet" href="ui-fixes-v079.css?v=06100progression" />
+  <link rel="stylesheet" href="battle-tabletop-v080.css?v=06100progression" />
+  <link rel="stylesheet" href="battle-tabletop-v081.css?v=06100progression" />
+  <link rel="stylesheet" href="battle-tabletop-v082.css?v=06100progression" />
+  <link rel="stylesheet" href="battle-tabletop-v083.css?v=06100progression" />
+  <link rel="stylesheet" href="battle-tabletop-v084.css?v=06100progression" />
+  <link rel="stylesheet" href="battle-tabletop-v085.css?v=06100progression" />
+  <link rel="stylesheet" href="battle-tabletop-v086.css?v=06100progression" />
+  <link rel="stylesheet" href="arcana/dice-settings.css?v=06100progression">
+  <link rel="stylesheet" href="hero-progression.css?v=06100">
 </head>
 <body class="tabletop-upgrade">
   
@@ -44,7 +44,7 @@
         <label class="net-label">Код комнаты<input id="netCodeInput" inputmode="numeric" maxlength="6" placeholder="000000" /></label>
         <button id="netJoin" class="secondary wide" type="button">Присоединиться</button>
         <button id="netMapJoin" class="ghost wide" type="button">🗺 Присоединиться как Карта (планшет)</button>
-        <button id="netLocal" class="ghost wide" type="button">Локальная игра на этом устройстве</button>
+        <button id="netLocal" class="ghost wide" type="button">Соло-режим · один герой</button>
       </div>
       <div id="onlineRoom" hidden>
         <div class="net-code-box"><span>КОД КОМНАТЫ</span><strong id="roomCode">------</strong><small id="roomWho"></small></div>
@@ -69,7 +69,7 @@
   <header class="topbar">
     <div>
       <div class="eyebrow">RPG DIGITAL PROTOTYPE</div>
-      <h1>Прототип v0.6.97 · Настольный интерфейс</h1>
+      <h1>Прототип v0.6.100 · Настольный интерфейс</h1>
       <div class="header-tools">
         <button id="journalBtn" class="journal-top" type="button">Журнал</button>
       </div>
@@ -87,8 +87,8 @@
     <aside class="panel side-panel">
       <section id="setupSection">
         <div class="setup-kicker">НАЧАЛО ПАРТИИ</div>
-        <h2>Выбор героев</h2>
-        <p class="muted setup-copy">Выберите от 2 до 6 героев. На телефоне каждый герой отображается отдельной карточкой.</p>
+        <h2>Выбор героя · соло-режим</h2>
+        <p class="muted setup-copy">Выберите одного героя. Все возможности игры доступны в соло-режиме.</p>
         <div id="heroPicker" class="hero-picker"></div>
         <button id="startBtn" class="primary wide">Начать партию</button>
         <div id="setupError" class="error"></div>
@@ -188,20 +188,21 @@
     </div>
   </div>
 
-  <script src="map-data.js?v=0697progression"></script>
-  <script src="cards-data.js?v=0697progression"></script>
-  <script src="location-placement.js?v=0697progression"></script>
-  <script src="arcana/dice-motion.js?v=0697progression"></script>
-  <script src="arcana/dice-skins.js?v=0697progression"></script>
-  <script src="arcana/dice-renderer.js?v=0697progression"></script>
-  <script src="arcana/dice-animator.js?v=0697progression"></script>
-  <script src="arcana/dice-packs.js?v=0697progression"></script>
-  <script src="arcana/dice-settings.js?v=0697progression"></script>
-  <script src="tabletop-enhancements.js?v=0697progression"></script>
-  <script src="hero-atlas-data.js?v=0697"></script>
-  <script src="hero-progression.js?v=0697"></script>
-  <script src="hero-progression-ui.js?v=0697"></script>
-  <script src="app.js?v=0697progression"></script>
-  <script src="network-lobby.js?v=0697progression"></script>
+  <script src="map-data.js?v=06100progression"></script>
+  <script src="cards-data.js?v=06100progression"></script>
+  <script src="location-placement.js?v=06100progression"></script>
+  <script src="arcana/dice-motion.js?v=06100progression"></script>
+  <script src="arcana/dice-skins.js?v=06100progression"></script>
+  <script src="arcana/dice-renderer.js?v=06100progression"></script>
+  <script src="arcana/dice-animator.js?v=06100progression"></script>
+  <script src="arcana/dice-packs.js?v=06100progression"></script>
+  <script src="arcana/dice-settings.js?v=06100progression"></script>
+  <script src="tabletop-enhancements.js?v=06100progression"></script>
+  <script src="hero-atlas-data.js?v=06100"></script>
+  <script src="hero-progression.js?v=06100"></script>
+  <script src="hero-atlas-loader.js?v=06100"></script>
+  <script src="hero-progression-ui.js?v=06100"></script>
+  <script src="app.js?v=06100progression"></script>
+  <script src="network-lobby.js?v=06100progression"></script>
 </body>
 </html>

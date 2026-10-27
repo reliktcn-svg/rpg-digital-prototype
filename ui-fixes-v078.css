@@ -126,3 +126,19 @@ body.game-running .header-tools:has(#journalBtn){display:none!important}
 @media(max-width:900px),(pointer:coarse){
   .location-ui .loc-art .loc-mobile-status{display:flex!important}
 }
+
+/* v0.6.98 — fixed portrait/text columns in desktop and mobile solo selection. */
+body:not(.game-running) .hero-option{display:grid;grid-template-columns:68px minmax(0,1fr) 26px;align-items:center;gap:12px}
+.hero-option .hero-choice-art{grid-column:1;grid-row:1}
+.hero-option .hero-choice-main{grid-column:2;grid-row:1;overflow-wrap:anywhere}
+.hero-option .hero-choice-check{grid-column:3;grid-row:1}
+.hero-option:focus-within{outline:2px solid var(--gold);outline-offset:3px}
+body:not(.game-running) .hero-choice-stats{font-size:12px;line-height:1.4}
+@media(max-width:600px){body:not(.game-running) .hero-picker{grid-template-columns:1fr}body:not(.game-running) .hero-option{grid-template-columns:58px minmax(0,1fr) 26px;gap:9px}body:not(.game-running) .hero-choice-stats{font-size:11px}}
+@media(max-width:900px){
+  body.tabletop-upgrade:not(.game-running) .topbar{height:auto!important;min-height:66px;flex-wrap:wrap;padding:10px 12px!important}
+  body.tabletop-upgrade:not(.game-running) .topbar>div{min-width:0;max-width:100%}
+  body.tabletop-upgrade:not(.game-running) .topbar h1{font-size:16px;white-space:normal;line-height:1.2}
+  body.tabletop-upgrade:not(.game-running) .top-actions{margin-left:0;flex-wrap:wrap}
+  body.tabletop-upgrade:not(.game-running) .layout{padding-top:18px}
+}

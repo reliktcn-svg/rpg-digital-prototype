@@ -54,7 +54,13 @@ class ProgressionServer(unittest.TestCase):
   self.assertEqual(len(server.ROOMS[h['room']['code']]['players']),6)
   self.assertEqual(self.api(url+'/start',auth)[0],200)
  def test_atlas_endpoint(self):
-  code,d=self.api('/api/hero-atlas');self.assertEqual(code,200);self.assertEqual(len(d['characters']),6);self.assertNotIn('%',json.dumps(d))
+  code,d=self.api('/api/hero-atlas');self.assertEqual(code,200);self.assertEqual(len(d['characters']),6);self.assertIn('100% сопротивление',json.dumps(d,ensure_ascii=False))
+ def test_public_map_stats_and_privacy(self):
+  game=server.ROOMS[self.code]['gameState'];p=game['players'][0];p.update(name='Воин',currentHp=7,maxHp=12,gold=15,masteryPoints=270,equipment={'secret':42})
+  game['territories']={str(i):{'owner':'warrior'} for i in range(5)};game['areas']=[{'id':1,'owner':'warrior','hexes':list(game['territories'])}]
+  _,viewer=self.api(self.url+'/map/join',{});query=urllib.parse.urlencode({k:viewer[k] for k in ('viewerId','viewerSecret')})
+  code,data=self.api(self.url+'/map?'+query);self.assertEqual(code,200)
+  hero=data['players'][0];self.assertEqual([hero[k] for k in ('level','currentHp','maxHp','gold','territoryCount','areaCount')],[10,7,12,15,5,1]);self.assertNotIn('equipment',hero);self.assertNotIn('decks',data);self.assertEqual(data['order'],['warrior','mage'])
  def test_snapshot_cannot_forge_skills(self):
   stale=copy.deepcopy(self.initial);stale['players'][0]['learnedAbilities']=['n1_C16']
   self.api(self.url+'/game/state',{**self.h,'baseRevision':1,'state':stale})

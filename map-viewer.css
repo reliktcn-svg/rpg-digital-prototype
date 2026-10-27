@@ -47,3 +47,13 @@ button:disabled{opacity:.5;cursor:default}
 .location-marker{stroke-width:5}
 .dungeon-grate-line{stroke-width:4}
 .tablet-token-label{font-size:11px}
+
+/* Player summaries occupy their own strip; the map retains its proportions. */
+.map-players{position:fixed;inset:0 0 auto;height:100px;padding:8px 48px 8px 8px;display:flex;gap:8px;overflow-x:auto;z-index:4;background:#211a13;border-bottom:1px solid #927347}
+.map-players[hidden]{display:none}
+.map-player{display:flex;align-items:center;gap:9px;padding:6px 9px;flex:1 0 190px;max-width:320px;min-width:0;border:1px solid var(--hero-color);border-radius:10px;background:#30261c}
+.map-player.active{box-shadow:inset 0 0 0 2px #edc678;background:#443421}
+.map-player img{width:43px;height:60px;object-fit:cover;object-position:top;border-radius:5px;flex:none}
+.map-player div{display:grid;gap:4px;min-width:0}.map-player strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.map-player span{font-size:12px;white-space:nowrap;color:#e2d1b2}
+.with-players #mapTable{top:100px}.with-players .field{width:min(100vw,calc((100dvh - 100px)*2048/1469));max-height:calc(100dvh - 100px)}
+@media(max-height:450px){.map-players{height:76px;padding-top:4px;padding-bottom:4px}.map-player img{height:48px;width:34px}.map-player div{gap:1px}.with-players #mapTable{top:76px}.with-players .field{width:min(100vw,calc((100dvh - 76px)*2048/1469));max-height:calc(100dvh - 76px)}}

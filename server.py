@@ -82,6 +82,11 @@ def public_map_snapshot(room):
         'id':p.get('id'), 'name':p.get('name'), 'hex':p.get('hex'),
         'color':p.get('color'), 'initial':p.get('initial'),
         'inDungeon':bool(p.get('inDungeon')),
+        'currentHp':p.get('currentHp',0),'maxHp':p.get('maxHp',p.get('hp',0)),
+        'gold':p.get('gold',0),
+        'level':int(( (9+1.6*max(0,int(p.get('masteryPoints') or 0)))**0.5-1)//2),
+        'territoryCount':sum(1 for t in (game.get('territories') or {}).values() if isinstance(t,dict) and t.get('owner')==p.get('id')),
+        'areaCount':sum(1 for a in (game.get('areas') or []) if isinstance(a,dict) and a.get('owner')==p.get('id')),
     } for p in game.get('players', []) if isinstance(p, dict)]
     hidden=bool(room.get('hardMode'))
     discovered=set()
@@ -104,7 +109,7 @@ def public_map_snapshot(room):
     return {
         'started':bool(room.get('started')), 'ready':bool(room.get('gameState')),
         'revision':int(room.get('gameRevision') or 0), 'round':game.get('round',1),
-        'activeHeroId':active,'players':heroes,'locations':locations,
+        'activeHeroId':active,'order':order,'players':heroes,'locations':locations,
         'territories':{hid:{'owner':t.get('owner'),'areaId':t.get('areaId')}
                        for hid,t in (game.get('territories') or {}).items() if isinstance(t,dict)},
         'areas':[{'id':a.get('id'),'owner':a.get('owner'),'ownerAreaNumber':a.get('ownerAreaNumber'),'hexes':a.get('hexes',[])}

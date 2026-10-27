@@ -134,7 +134,21 @@
     }
     for(const [id,entry] of tokens){if(!next.has(id)){if(entry.animation)cancelAnimationFrame(entry.animation);entry.g.remove();tokens.delete(id)}}
   }
-  function draw(state){if(!state?.ready)return;redrawTerrain(state);redrawHeroes(state);lastRevision=state.revision}
+  let lastRoster='';
+  function redrawPlayers(state){
+    const roster=$('mapPlayers'),order=state.order||[],players=[...(state.players||[])].sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));
+    const key=JSON.stringify([players,state.activeHeroId]);if(key===lastRoster)return;lastRoster=key;
+    roster.replaceChildren();roster.hidden=false;document.body.classList.add('with-players');
+    for(const p of players){
+      const card=document.createElement('article');card.className='map-player'+(p.id===state.activeHeroId?' active':'');card.style.setProperty('--hero-color',HERO_PALETTE[p.id]||'#aa936a');
+      const img=document.createElement('img');img.src='assets/heroes/'+encodeURIComponent(p.id)+'.webp';img.alt='';card.append(img);
+      const info=document.createElement('div'),title=document.createElement('strong'),stats=document.createElement('span');title.textContent=(p.name||p.id)+' · '+(p.level||1)+' УР';
+      stats.textContent='ЗД '+(p.currentHp??0)+'/'+(p.maxHp??0)+' · Золото '+(p.gold??0);
+      const lands=document.createElement('span');lands.textContent='Владения '+(p.territoryCount??0)+'/'+(p.areaCount??0);lands.title='Территории / области';
+      info.append(title,stats,lands);card.append(info);if(p.id===state.activeHeroId)card.setAttribute('aria-label','Сейчас ходит: '+title.textContent);roster.append(card);
+    }
+  }
+  function draw(state){if(!state?.ready)return;redrawPlayers(state);redrawTerrain(state);redrawHeroes(state);lastRevision=state.revision}
   function saveCreds(obj){try{localStorage.setItem(STORAGE,JSON.stringify(obj))}catch{}}
   function readCreds(){try{const x=JSON.parse(localStorage.getItem(STORAGE)||'null');return x?.code&&x.viewerId&&x.viewerSecret?x:null}catch{return null}}
   async function getJson(url,opts={}){
