@@ -1722,3 +1722,11 @@ body.game-running #modal:has(.story-card-shell) .modal-card,
 .negative-effect-tooltip-close{position:absolute;right:5px;top:4px;width:26px;height:26px;min-width:26px;min-height:26px;border-radius:6px;border:1px solid #996265;background:#42272a;color:#fbe5e5;font-size:20px;font-weight:800;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1}
 .negative-effect-tooltip-close:hover,.negative-effect-tooltip-close:focus-visible{background:#754046;border-color:#d99797}
 .battle-fate-merc-loss{color:#efdfcd}
+
+/* Victory level notice: an overlay, never changes the result card's layout. */
+.victory-level-up{position:fixed;z-index:20000;left:50%;top:50%;transform:translate(-50%,-50%);width:min(360px,calc(100vw - 36px));box-sizing:border-box;padding:22px 16px;text-align:center;pointer-events:none;border:1px solid #e3b653;border-radius:18px;background:radial-gradient(ellipse at 50% 0,#785529 0,#241c11 64%);box-shadow:0 0 25px #e6ac4b99,0 0 90px #ffc85c55,inset 0 0 25px #d6a54b22;color:#ffe6a0;animation:level-up-arrive .3s ease-out}
+.victory-level-up strong{display:block;font:700 clamp(30px,8vw,46px)/1.2 Georgia,serif;letter-spacing:.06em;color:#ffdc77;text-shadow:0 0 12px #ffd16d88}
+.victory-level-up span,.victory-level-up small{display:block;margin-top:8px;font:600 15px/1.35 system-ui;color:#fff0c8}
+.victory-level-up small{font-size:13px;color:#dbc28a}.level-up-emblem{font-size:30px;color:#ffe4a0;text-shadow:0 0 22px #ffd26c}
+@keyframes level-up-arrive{from{opacity:0;transform:translate(-50%,-45%) scale(.92)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@media(prefers-reduced-motion:reduce){.victory-level-up{animation:none}}

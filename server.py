@@ -2,7 +2,7 @@
 import json, os, random, string, threading, time, urllib.parse
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from dice_pack_catalog import dice_pack_catalog
-from hero_atlas import read_atlas, learn_ability
+from hero_atlas import read_atlas, learn_ability, ensure_progression, progression_level
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 ROOMS = {}
@@ -84,7 +84,7 @@ def public_map_snapshot(room):
         'inDungeon':bool(p.get('inDungeon')),
         'currentHp':p.get('currentHp',0),'maxHp':p.get('maxHp',p.get('hp',0)),
         'gold':p.get('gold',0),
-        'level':int(( (9+1.6*max(0,int(p.get('masteryPoints') or 0)))**0.5-1)//2),
+        'level':progression_level(p),
         'territoryCount':sum(1 for t in (game.get('territories') or {}).values() if isinstance(t,dict) and t.get('owner')==p.get('id')),
         'areaCount':sum(1 for a in (game.get('areas') or []) if isinstance(a,dict) and a.get('owner')==p.get('id')),
     } for p in game.get('players', []) if isinstance(p, dict)]
@@ -346,6 +346,8 @@ class Handler(SimpleHTTPRequestHandler):
                 touch_room(room)
                 if not room.get('started'): return self._json(409, {'error':'Сначала запустите комнату'})
                 if room.get('gameState') is None:
+                    
+                    for hero in game.get('players',[]):ensure_progression(hero)
                     room['gameState']=game; room['gameRevision']=1; room['gameUpdatedAt']=int(time.time())
                 return self._json(200, {'revision':room['gameRevision'],'state':room['gameState']})
         if p.endswith('/game/ability') and p.startswith('/api/rooms/'):
@@ -541,6 +543,8 @@ class Handler(SimpleHTTPRequestHandler):
                         # Overlay is now part of an authoritative main snapshot.
                         room['sideTerritoryOverrides'].pop(off_owner,None)
                 merge_journal(existing, game)
+                
+                for hero in game.get('players',[]):ensure_progression(hero)
                 room['gameState']=game; room['gameRevision']=base+1; room['gameUpdatedAt']=int(time.time())
                 return self._json(200, {'revision':room['gameRevision']})
         return self._json(404, {'error':'Неизвестный запрос'})

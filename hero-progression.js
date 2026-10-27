@@ -22,9 +22,15 @@ function load(data){
  heroes=next;project=data;revision++;return data;
 }
 function hero(id){return heroes.get(id)||null}
-function ensure(p){if(!p)return;const xp=Number(p.masteryPoints);p.masteryPoints=Number.isSafeInteger(xp)&&xp>=0?xp:0;if(!Array.isArray(p.learnedAbilities))p.learnedAbilities=[];p.learnedAbilities=[...new Set(p.learnedAbilities.filter(id=>typeof id==='string'))]}
-const threshold=level=>5*(Math.max(1,level)*(Math.max(1,level)+1)/2-1);
-function info(p){ensure(p);const xp=p?.masteryPoints||0,level=Math.floor((Math.sqrt(9+1.6*xp)-1)/2);const free=new Set(baseNodes(p?.id).map(n=>n.id)),spent=(p?.learnedAbilities||[]).filter(id=>!free.has(id)).length;return {level,xp,next:threshold(level+1),floor:threshold(level),earned:level-1,spent,points:Math.max(0,level-1-spent)}}
+const BALANCE_VERSION=2;
+function ensure(p){if(!p)return;const xp=Number(p.masteryPoints);p.masteryPoints=Number.isSafeInteger(xp)&&xp>=0?xp:0;if(!Array.isArray(p.learnedAbilities))p.learnedAbilities=[];p.learnedAbilities=[...new Set(p.learnedAbilities.filter(id=>typeof id==='string'))];
+ if(p.progressionVersion!==BALANCE_VERSION){const old=p.masteryPoints,bosses=Math.min(Math.floor(old/12),Math.max(0,Math.floor(Number(p.stats?.enemies?.boss)||0)));p.masteryPoints=old*50+bosses*200;p.progressionVersion=BALANCE_VERSION;}
+}
+const threshold=level=>{const n=Math.max(0,Math.floor(level)-1);return 25*n*(n+9)};
+const levelForXp=xp=>1+Math.floor((Math.sqrt(81+.16*Math.max(0,xp))-9)/2);
+function cost(n){if(!n)return 0;if(n.kind==='resistance')return n.level>=3?2:1;return n.level<=1?0:n.level===2?1:n.level<=4?2:3}
+function pointLabel(n){const a=n%100,b=n%10;return n+' '+(a>=11&&a<=14?'очков':b===1?'очко':b>=2&&b<=4?'очка':'очков')}
+function info(p){ensure(p);const xp=p?.masteryPoints||0,level=levelForXp(xp),spent=(p?.learnedAbilities||[]).reduce((sum,id)=>sum+cost(node(p,id)),0);return {level,xp,next:threshold(level+1),floor:threshold(level),earned:level-1,spent,points:Math.max(0,level-1-spent)}}
 function baseNodes(id){return (hero(id)?.branches||[]).filter(a=>a.kind!=='resistance').flatMap(a=>a.nodes.filter(n=>!n.parent).slice(0,1))}
 function unlocked(p){ensure(p);return new Set([...baseNodes(p?.id).map(n=>n.id),...(p?.learnedAbilities||[])])}
 function node(p,id){return hero(p?.id)?.nodes.find(n=>n.id===id)||null}
@@ -32,11 +38,11 @@ function canLearn(p,id){const n=node(p,id),h=hero(p?.id);if(!n||!h)return {ok:fa
  if(n.parent&&!known.has(n.parent))return {ok:false,reason:'Сначала изучите предыдущую ступень этой ветки'};
  const branch=h.branches.find(a=>a.id===n.branchId),ancestors=new Set();let q=n;while(q.parent){ancestors.add(q.parent);q=branch.nodes.find(x=>x.id===q.parent)}
  if(branch.nodes.some(x=>known.has(x.id)&&!ancestors.has(x.id)))return {ok:false,reason:'В этой ветке уже выбран другой путь'};
- if(info(p).points<1)return {ok:false,reason:'Нужно 1 очко способности'};return {ok:true,reason:''};
+ if(info(p).points<cost(n))return {ok:false,reason:'Нужно '+pointLabel(cost(n))+' способности'};return {ok:true,reason:''};
 }
 function learn(p,id){const result=canLearn(p,id);if(!result.ok)return result;p.learnedAbilities.push(id);return {ok:true,...info(p)}}
 function selected(p,kind,status=-1){const branch=hero(p?.id)?.branches.find(a=>a.kind===kind&&(kind!=='resistance'||a.status===status));if(!branch)return null;const known=unlocked(p);return branch.nodes.filter(n=>known.has(n.id)).sort((a,b)=>b.level-a.level)[0]||null}
-function reward(enemy,combat={}){const rank=String(enemy?.fields?.['Ранг']||''),type=String(enemy?.fields?.['Тип']||'');if(/мини[\s-]*босс/i.test(rank+' '+type))return 12;if(combat.isBoss||enemy?.id===281)return 12;if(combat.elite||/элит|эпич/i.test(rank))return 8;if(/силь/i.test(rank))return 5;if(/обыч/i.test(rank))return 3;return 2}
+function reward(enemy,combat={}){const rank=String(enemy?.fields?.['Ранг']||''),type=String(enemy?.fields?.['Тип']||'');if(/мини[\s-]*босс/i.test(rank+' '+type))return 600;if(combat.isBoss||enemy?.id===281)return 800;if(combat.elite||/элит|эпич/i.test(rank))return 400;if(/силь/i.test(rank))return 250;if(/обыч/i.test(rank))return 150;return 100}
 function award(p,enemy,combat){ensure(p);if(combat?.masteryAwarded)return {amount:0,levels:0,...info(p)};const before=info(p),amount=reward(enemy,combat);p.masteryPoints+=amount;if(combat)combat.masteryAwarded=true;const after=info(p);return {...after,amount,levels:after.level-before.level}}
 function roman(value){let n=Math.max(1,Math.floor(value)),s='';for(const [v,t] of [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']])while(n>=v){s+=t;n-=v}return s}
 function chance(percent){if(percent>=100)return {sides:0,success:[],actual:100};if(percent===75)return {sides:6,success:[4,5,6],actual:50};if(percent===50)return {sides:4,success:[3,4],actual:50};return {sides:100,success:Array.from({length:Math.max(0,Math.min(100,percent))},(_,i)=>i+1),actual:percent}}
@@ -51,5 +57,5 @@ function rules(n){if(!n)return null;const text=n.description.replace(/\s+/g,' ')
 }
 function icon(p,n){const name=n.kind==='ability'?p.id:n.kind==='natural'?'natural20':'resistance-'+statusKeys[n.status];return 'assets/ability-icons/'+name+'-'+n.level+'.png'}
 function checkNote(n){const r=rules(n);if(r?.resistance?.immune)return 'Эффект предотвращается без броска.';if(r?.chance){const c=r.chance;return c.sides?'Проверка: D'+c.sides+'; успех '+c.success.join(', ')+'.':'Эффект накладывается без проверки.'}if(r?.resistance)return 'Проверка: D'+r.resistance.sides+'; эффект предотвращён на '+r.resistance.success.join(', ')+'.';return ''}
-return {load,hero,ensure,info,threshold,baseNodes,unlocked,node,canLearn,learn,selected,reward,award,roman,rules,chance,icon,checkNote,statusNames,get revision(){return revision},get project(){return project}};
+return {load,hero,ensure,info,threshold,levelForXp,cost,pointLabel,BALANCE_VERSION,baseNodes,unlocked,node,canLearn,learn,selected,reward,award,roman,rules,chance,icon,checkNote,statusNames,get revision(){return revision},get project(){return project}};
 });

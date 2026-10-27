@@ -19,15 +19,15 @@ class ProgressionServer(unittest.TestCase):
   _,h=self.api('/api/rooms',{'name':'test host'});self.code=h['room']['code'];_,g=self.api('/api/rooms/'+self.code+'/join',{'name':'test guest'})
   self.h={k:h[k] for k in ('playerId','playerSecret')};self.g={k:g[k] for k in ('playerId','playerSecret')};self.url='/api/rooms/'+self.code
   for auth,hero in [(self.h,'warrior'),(self.g,'mage')]:self.api(self.url+'/select',{**auth,'heroId':hero})
-  self.api(self.url+'/start',self.h);self.initial={'started':True,'players':[{'id':'warrior','masteryPoints':10,'learnedAbilities':[]},{'id':'mage','masteryPoints':70,'learnedAbilities':[]}],'order':['warrior','mage'],'currentIndex':0,'territories':{},'areas':[]}
+  self.api(self.url+'/start',self.h);self.initial={'started':True,'players':[{'id':'warrior','masteryPoints':250,'progressionVersion':2,'learnedAbilities':[]},{'id':'mage','masteryPoints':1300,'progressionVersion':2,'learnedAbilities':[]}],'order':['warrior','mage'],'currentIndex':0,'territories':{},'areas':[]}
   self.api(self.url+'/game/init',{**self.h,'state':self.initial})
  def learn(self,node,auth=None):return self.api(self.url+'/game/ability',{**(auth or self.g),'nodeId':node})
  def test_offturn_independent_branches_and_stale_snapshot(self):
   for node in ['n5_R8','n5_R10','n5_Q8']:
    code,data=self.learn(node);self.assertEqual(code,200,data)
-  stale=copy.deepcopy(self.initial);stale['players'][1]['masteryPoints']=82
+  stale=copy.deepcopy(self.initial);stale['players'][1]['masteryPoints']=1700
   code,_=self.api(self.url+'/game/state',{**self.h,'baseRevision':1,'state':stale});self.assertEqual(code,200)
-  p=server.ROOMS[self.code]['gameState']['players'][1];self.assertEqual(p['masteryPoints'],82);self.assertEqual(p['learnedAbilities'],['n5_R8','n5_R10','n5_Q8'])
+  p=server.ROOMS[self.code]['gameState']['players'][1];self.assertEqual(p['masteryPoints'],1700);self.assertEqual(p['learnedAbilities'],['n5_R8','n5_R10','n5_Q8'])
  def test_paths_sequential_exclusive_and_owner(self):
   self.assertEqual(self.learn('n5_C12')[0],409)
   self.assertEqual(self.learn('n1_C10')[0],409)
@@ -56,11 +56,23 @@ class ProgressionServer(unittest.TestCase):
  def test_atlas_endpoint(self):
   code,d=self.api('/api/hero-atlas');self.assertEqual(code,200);self.assertEqual(len(d['characters']),6);self.assertIn('100% сопротивление',json.dumps(d,ensure_ascii=False))
  def test_public_map_stats_and_privacy(self):
-  game=server.ROOMS[self.code]['gameState'];p=game['players'][0];p.update(name='Воин',currentHp=7,maxHp=12,gold=15,masteryPoints=270,equipment={'secret':42})
+  game=server.ROOMS[self.code]['gameState'];p=game['players'][0];p.update(name='Воин',currentHp=7,maxHp=12,gold=15,masteryPoints=4050,equipment={'secret':42})
   game['territories']={str(i):{'owner':'warrior'} for i in range(5)};game['areas']=[{'id':1,'owner':'warrior','hexes':list(game['territories'])}]
   _,viewer=self.api(self.url+'/map/join',{});query=urllib.parse.urlencode({k:viewer[k] for k in ('viewerId','viewerSecret')})
   code,data=self.api(self.url+'/map?'+query);self.assertEqual(code,200)
   hero=data['players'][0];self.assertEqual([hero[k] for k in ('level','currentHp','maxHp','gold','territoryCount','areaCount')],[10,7,12,15,5,1]);self.assertNotIn('equipment',hero);self.assertNotIn('decks',data);self.assertEqual(data['order'],['warrior','mage'])
+ def test_variable_cost_and_last_points(self):
+  p=server.ROOMS[self.code]['gameState']['players'][0];p['masteryPoints']=550
+  self.assertEqual(self.learn('n1_C10',self.h)[0],200)
+  self.assertEqual(self.learn('n1_C12',self.h)[0],409)
+  self.assertEqual(p['learnedAbilities'],['n1_C10'])
+  p['masteryPoints']=900
+  self.assertEqual(self.learn('n1_C12',self.h)[0],200)
+  self.assertEqual(self.learn('n1_Q8',self.h)[0],409)
+ def test_legacy_migration_same_as_client(self):
+  p=server.ROOMS[self.code]['gameState']['players'][0];p.update(masteryPoints=128,stats={'enemies':{'boss':1}});p.pop('progressionVersion',None)
+  self.assertEqual(server.progression_level(p),13);self.assertEqual(p['masteryPoints'],6600)
+  self.assertEqual(server.progression_level(p),13);self.assertEqual(p['masteryPoints'],6600)
  def test_snapshot_cannot_forge_skills(self):
   stale=copy.deepcopy(self.initial);stale['players'][0]['learnedAbilities']=['n1_C16']
   self.api(self.url+'/game/state',{**self.h,'baseRevision':1,'state':stale})

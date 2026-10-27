@@ -1,0 +1,112 @@
+test_atlas_endpoint (__main__.ProgressionServer) ... ok
+test_atomic_last_point (__main__.ProgressionServer) ... ok
+test_legacy_migration_same_as_client (__main__.ProgressionServer) ... ok
+test_no_point_or_auth (__main__.ProgressionServer) ... ok
+test_offturn_independent_branches_and_stale_snapshot (__main__.ProgressionServer) ... ok
+test_paths_sequential_exclusive_and_owner (__main__.ProgressionServer) ... ok
+test_public_map_stats_and_privacy (__main__.ProgressionServer) ... ok
+test_six_players_and_map_slot (__main__.ProgressionServer) ... ok
+test_snapshot_cannot_forge_skills (__main__.ProgressionServer) ... ok
+test_variable_cost_and_last_points (__main__.ProgressionServer) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.567s
+
+OK
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms HTTP/1.1" 201 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/226899/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/226899/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/226899/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/226899/start HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/226899/game/init HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "GET /api/hero-atlas HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms HTTP/1.1" 201 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/874310/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/874310/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/874310/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/874310/start HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/874310/game/init HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/874310/game/ability HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/874310/game/ability HTTP/1.1" 409 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms HTTP/1.1" 201 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/653508/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/653508/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/653508/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/653508/start HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/653508/game/init HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms HTTP/1.1" 201 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/591706/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/591706/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/591706/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/591706/start HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/591706/game/init HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/591706/game/ability HTTP/1.1" 409 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/591706/game/ability HTTP/1.1" 403 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms HTTP/1.1" 201 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/059612/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/059612/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/059612/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/059612/start HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/059612/game/init HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/059612/game/ability HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/059612/game/ability HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/059612/game/ability HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/059612/game/state HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms HTTP/1.1" 201 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/716956/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/716956/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/716956/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/716956/start HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/716956/game/init HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/716956/game/ability HTTP/1.1" 409 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/716956/game/ability HTTP/1.1" 409 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/716956/game/ability HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/716956/game/ability HTTP/1.1" 409 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/716956/game/ability HTTP/1.1" 409 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/716956/game/ability HTTP/1.1" 409 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms HTTP/1.1" 201 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/736892/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/736892/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/736892/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/736892/start HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/736892/game/init HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/736892/map/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "GET /api/rooms/736892/map?viewerId=Ao9AJqiyksuv&viewerSecret=H7oph37CyfgGMHgQmlzLqC17 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms HTTP/1.1" 201 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/404736/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/404736/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/404736/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/404736/start HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/404736/game/init HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms HTTP/1.1" 201 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/400416/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/400416/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/400416/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/400416/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/400416/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/400416/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/400416/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/400416/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/400416/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/400416/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/400416/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/400416/join HTTP/1.1" 409 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/400416/map/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/400416/start HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms HTTP/1.1" 201 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/103779/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/103779/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/103779/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/103779/start HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/103779/game/init HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/103779/game/state HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms HTTP/1.1" 201 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/326997/join HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/326997/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/326997/select HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/326997/start HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/326997/game/init HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/326997/game/ability HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/326997/game/ability HTTP/1.1" 409 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/326997/game/ability HTTP/1.1" 200 -
+127.0.0.1 - - [27/Oct/2026 18:26:45] "POST /api/rooms/326997/game/ability HTTP/1.1" 409 -
