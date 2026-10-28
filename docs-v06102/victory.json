@@ -1,0 +1,81 @@
+{
+  "results": [
+    {
+      "name": "Victory first, no automatic roll or loot draw; level notice starts at 1s and closes after 3s",
+      "pass": true
+    },
+    {
+      "name": "Search D20=5 opens 1 and keeps 1; repeated click cannot reroll",
+      "pass": true
+    },
+    {
+      "name": "Search D20=15 opens 2 and keeps 1; repeated click cannot reroll",
+      "pass": true
+    },
+    {
+      "name": "Search D20=20 opens 3 and keeps 2; repeated click cannot reroll",
+      "pass": true
+    },
+    {
+      "name": "Natural 1 resolves injury after explicit search and retains base loot",
+      "pass": true
+    },
+    {
+      "name": "Lethal search injury returns undelivered loot and handles death",
+      "pass": true
+    },
+    {
+      "name": "Weak enemy has no search; no level notification without a new level",
+      "pass": true
+    },
+    {
+      "name": "Final boss also opens victory with level up and final completion",
+      "pass": true
+    },
+    {
+      "name": "Pending search survives exported saved combat and can be resumed",
+      "pass": true
+    },
+    {
+      "name": "Search damage survives state refresh and is applied only once",
+      "pass": true
+    },
+    {
+      "name": "Two heroes: search belongs to winner and handoff happens after its result",
+      "pass": true
+    },
+    {
+      "name": "Rolling save resumes existing result without reroll or extra loot draw",
+      "pass": true
+    },
+    {
+      "name": "Post-victory healing does not precede the victory window",
+      "pass": true
+    },
+    {
+      "name": "Real dice animation finishes automatically and returns to victory result",
+      "pass": true
+    },
+    {
+      "name": "Rogue 1 correct damage die ×2 and bleeding",
+      "pass": true
+    },
+    {
+      "name": "Rogue 2 correct damage die ×2 and bleeding",
+      "pass": true
+    },
+    {
+      "name": "Rogue 3 correct damage die ×2 and bleeding",
+      "pass": true
+    },
+    {
+      "name": "Rogue 4 correct damage die ×2 and bleeding",
+      "pass": true
+    },
+    {
+      "name": "Rogue 5 correct damage die ×2 and bleeding",
+      "pass": true
+    }
+  ],
+  "status": "PASS 19"
+}
