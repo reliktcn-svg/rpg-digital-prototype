@@ -1,0 +1,19 @@
+{
+  "sourceArchive": "RPG_Digital_Prototype_v0.6.94_Status_Mercenary_Flicker_Fixes.zip",
+  "sourceSHA256": "9e6720b4e5ebb5d0924d82520281e5439b7b5ca6ec5adcf9beac01abba11aa22",
+  "changedOriginalFiles": [
+    "arcana/dice-renderer.js",
+    "arcana/dice-settings.js",
+    "index.html",
+    "server.py",
+    "sw.js",
+    "tests-dice/checks.html",
+    "tests-dice/personal.html",
+    "app.js"
+  ],
+  "allOtherOriginalFilesUnchanged": true,
+  "appAndAllCSSIdenticalToUser0694": false,
+  "motionAndAnimatorUnchanged": true,
+  "allCSSIdenticalToUser0694": true,
+  "appChanges": "Only shared combat dice presentation snapshot and loading; source 0.6.94 fixes preserved"
+}

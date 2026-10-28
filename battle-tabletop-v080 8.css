@@ -1,0 +1,123 @@
+/* v0.6.80 — battle cards: visual-only upgrade, existing action controls remain unchanged. */
+:root{--battle-paper:#eddfc0;--battle-ink:#58412a;--battle-gold:#d6b87d}
+/* Half-strength backdrop behind dialogs, including battle, story, locations and dice. */
+body.game-running #modal.modal:not([hidden]),
+body #modal.modal:not([hidden]){background:rgba(0,0,0,.36)!important}
+body.game-running #modal.modal:has(.location-ui):not([hidden]),
+body #modal.modal:has(.location-ui):not([hidden]){background:rgba(0,0,0,.365)!important}
+body.game-running .roll-overlay:not([hidden]),.roll-overlay:not([hidden]){background:rgba(0,0,0,.21)!important}
+body.game-running .journal-overlay:not([hidden]),.journal-overlay:not([hidden]){background:rgba(0,0,0,.34)!important}
+
+/* A centered, symmetric combat board. */
+body.game-running #modal .combat-shell .visual-combat-head{
+  display:grid!important;grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr)!important;
+  gap:12px!important;align-items:start!important;
+}
+body.game-running #modal .combat-shell .visual-combat-head .combat-vs{font-size:13px;align-self:center}
+body.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card{
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  width:100%!important;min-width:0!important;height:auto!important;max-height:none!important;
+  padding:0!important;border:1.5px solid var(--visual-accent)!important;border-radius:12px!important;
+  background:linear-gradient(170deg,#1d2824,#131b1b)!important;
+  color:#e9dfc9;overflow:hidden!important;
+  box-shadow:inset 0 0 0 4px #101719,0 8px 20px #0008!important;
+}
+body.game-running #modal .combat-shell .visual-combat-head .tabletop-card-heading{
+  height:auto!important;min-height:64px!important;padding:8px 9px 7px!important;
+  text-align:center;background:linear-gradient(#242c28,#1a2420);
+  border-bottom:3px solid var(--visual-accent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+}
+body.game-running #modal .tabletop-card-heading small{
+  display:block;max-width:100%;font-size:9px;line-height:1.2;letter-spacing:.12em;font-weight:850;
+  color:#d5c6a8;overflow-wrap:anywhere;text-transform:uppercase;
+}
+body.game-running #modal .tabletop-card-heading h3{
+  margin:0!important;color:#f2e8d0!important;font:700 clamp(20px,2.35vw,30px)/1.12 Georgia,'Times New Roman',serif!important;
+  text-align:center;overflow-wrap:anywhere;
+}
+body.game-running #modal .combat-shell .tabletop-battle-card .visual-card-stage{
+  width:100%!important;aspect-ratio:1!important;height:auto!important;max-height:none!important;
+  margin:0!important;flex:none!important;border-radius:0!important;
+  border-bottom:3px solid var(--visual-accent)!important;background:#0b0f10!important;
+}
+body.game-running #modal .tabletop-battle-card .visual-combat-portrait img{
+  width:100%!important;height:100%!important;object-fit:cover!important;border-radius:0!important;
+}
+body.game-running #modal .tabletop-battle-card .visual-card-back{background:var(--battle-paper)!important}
+body.game-running #modal .tabletop-battle-card .battle-v080-back{
+  background:linear-gradient(140deg,#f6ebd0,#e6d8b6)!important;color:#4b3927!important;
+  padding:10px 12px!important;gap:0!important;overflow-y:auto!important;
+}
+body.game-running #modal .tabletop-battle-card .battle-v080-back h4{
+  margin:0 0 10px!important;font:700 clamp(15px,2.2vw,23px)/1.14 Georgia,serif!important;color:#4f3821!important;
+}
+body.game-running #modal .tabletop-battle-card .battle-back-detail{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:4px 10px;
+  padding:9px 0;border-bottom:1px solid #9c876059;color:#533d24;text-align:left;
+}
+body.game-running #modal .tabletop-battle-card .battle-back-detail>span{font-size:12px;font-weight:800}
+body.game-running #modal .tabletop-battle-card .battle-back-detail>strong{font-size:13px;font-weight:900}
+body.game-running #modal .tabletop-battle-card .battle-back-detail>small{grid-column:1/-1;font-size:11px;line-height:1.3;color:#5c503c}
+body.game-running #modal .tabletop-battle-card .battle-v080-back .visual-back-block{
+  background:#ebd9b2!important;border:1px solid #a58c5f!important;color:#483522!important;margin-top:9px!important;
+}
+body.game-running #modal .tabletop-battle-card .battle-v080-back .visual-back-block small{color:#6e4930!important}
+body.game-running #modal .tabletop-battle-card .battle-v080-back .visual-back-block b,
+body.game-running #modal .tabletop-battle-card .battle-v080-back .visual-back-block span{color:#493722!important}
+body.game-running #modal .tabletop-battle-card .battle-v080-back .combat-active-effects{color:#333!important}
+
+body.game-running #modal .tabletop-battle-card .tabletop-metric-grid{
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:7px 5px!important;
+  width:100%!important;padding:10px 12px 6px!important;
+}
+body.game-running #modal .tabletop-battle-card .tabletop-metric{
+  width:100%;min-width:0;aspect-ratio:1;min-height:0;border:1.5px solid color-mix(in srgb,var(--visual-accent) 75%,#c7b887);
+  border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+  background:#202b28;text-align:center;color:#e8e0cf;
+}
+body.game-running #modal .tabletop-battle-card .tabletop-metric.metric-defense{border-color:#a8c991}
+body.game-running #modal .tabletop-battle-card .metric-icon{font-size:15px;line-height:1;color:#c6b885}
+body.game-running #modal .tabletop-battle-card .metric-label{font-size:9px;line-height:1.07;color:#e0d9c2;letter-spacing:.04em}
+body.game-running #modal .tabletop-battle-card .tabletop-metric strong{
+  font:700 clamp(15px,1.8vw,23px)/1.07 Georgia,serif;color:#f3e7c6;
+}
+body.game-running #modal .tabletop-battle-card .tabletop-status-row{display:flex;gap:8px;align-items:center;justify-content:center;padding:4px 5px 6px}
+body.game-running #modal .tabletop-battle-card .tabletop-status-dot{font-size:16px;color:#f6b7c2;border:1px solid #bf747c;border-radius:50%;min-width:29px;height:29px;display:grid;place-items:center;background:#382127}
+body.game-running #modal .tabletop-battle-card .tabletop-card-note{
+  margin:6px 11px 5px;padding:8px;border-left:3px solid var(--visual-accent);
+  background:#202c28;border-radius:5px;min-height:0;display:flex;flex-direction:column;gap:3px;color:#e9dfc5;
+}
+body.game-running #modal .tabletop-battle-card .tabletop-card-note small{font-size:9px;color:#d8c9ad;letter-spacing:.05em}
+body.game-running #modal .tabletop-battle-card .tabletop-card-note strong{font:700 clamp(14px,1.6vw,18px)/1.14 Georgia,serif;color:#f3e5c5}
+body.game-running #modal .tabletop-battle-card .tabletop-card-note span{font-size:11px;line-height:1.3}
+body.game-running #modal .tabletop-battle-card .tabletop-card-flip{
+  width:100%;min-width:0!important;margin-top:auto;padding:9px 4px;color:#cbb78e;
+  background:#202b27!important;border:0!important;border-top:1px solid #776a4e!important;
+  font-size:12px;font-weight:850;border-radius:0!important;
+}
+body.game-running #modal .tabletop-battle-card .tabletop-card-flip:hover{background:#2a392f!important}
+@media (max-width:900px),(pointer:coarse){
+  body.game-running #modal .combat-shell .visual-combat-head{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
+  body.game-running #modal .combat-shell .visual-combat-head .combat-vs{display:none!important}
+  body.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card{border-radius:9px!important}
+  body.game-running #modal .combat-shell .visual-combat-head .tabletop-card-heading{min-height:47px!important;padding:5px 3px 4px!important}
+  body.game-running #modal .tabletop-card-heading h3{font:700 clamp(12px,3.5vw,18px)/1.1 Georgia,serif!important}
+  body.game-running #modal .tabletop-card-heading small{font-size:clamp(6px,1.7vw,8px);letter-spacing:0;line-height:1.1}
+  body.game-running #modal .tabletop-battle-card .tabletop-metric-grid{gap:4px 2px!important;padding:6px 4px 5px!important}
+  body.game-running #modal .tabletop-battle-card .tabletop-metric{border-width:1px;}
+  body.game-running #modal .tabletop-battle-card .metric-icon{font-size:clamp(8px,2.4vw,12px)}
+  body.game-running #modal .tabletop-battle-card .metric-label{font-size:clamp(6px,1.5vw,8px);letter-spacing:-.04em}
+  body.game-running #modal .tabletop-battle-card .tabletop-metric strong{font-size:clamp(10px,2.9vw,15px);line-height:1}
+  body.game-running #modal .tabletop-battle-card .tabletop-card-note{margin:4px 4px 3px;padding:5px;gap:2px;border-left-width:2px}
+  body.game-running #modal .tabletop-battle-card .tabletop-card-note small{font-size:7px}
+  body.game-running #modal .tabletop-battle-card .tabletop-card-note strong{font-size:11px}
+  body.game-running #modal .tabletop-battle-card .tabletop-card-note span{font-size:9px;line-height:1.22}
+  body.game-running #modal .tabletop-battle-card .tabletop-card-flip{font-size:9px;padding:8px 1px}
+  body.game-running #modal .tabletop-battle-card .battle-v080-back{padding:7px!important}
+  body.game-running #modal .tabletop-battle-card .battle-v080-back h4{font-size:13px!important;margin-bottom:5px!important}
+  body.game-running #modal .tabletop-battle-card .battle-back-detail{padding:5px 0}
+  body.game-running #modal .tabletop-battle-card .battle-back-detail>span,
+  body.game-running #modal .tabletop-battle-card .battle-back-detail>strong{font-size:9px}
+  body.game-running #modal .tabletop-battle-card .battle-back-detail>small{font-size:8px}
+}
+@media (prefers-reduced-motion:reduce){body.game-running #modal .tabletop-battle-card .visual-card-face{transition:none!important}}

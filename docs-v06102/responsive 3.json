@@ -1,0 +1,197 @@
+{
+  "results": [
+    {
+      "detail": {
+        "bottom": 340.6484375,
+        "height": 113.296875,
+        "left": 14,
+        "right": 306,
+        "top": 227.3515625,
+        "width": 292,
+        "x": 14,
+        "y": 227.3515625
+      },
+      "name": "stun 320×568",
+      "notice": {
+        "bottom": 340.6484375,
+        "height": 113.296875,
+        "left": 14,
+        "right": 306,
+        "top": 227.3515625,
+        "width": 292,
+        "x": 14,
+        "y": 227.3515625
+      },
+      "pass": true
+    },
+    {
+      "detail": {
+        "bottom": 461,
+        "height": 72,
+        "left": 18,
+        "right": 302,
+        "top": 389,
+        "width": 284,
+        "x": 18,
+        "y": 389
+      },
+      "name": "resist 320×568",
+      "notice": {
+        "bottom": 528,
+        "height": 489,
+        "left": 9,
+        "right": 311,
+        "top": 39,
+        "width": 302,
+        "x": 9,
+        "y": 39
+      },
+      "pass": true
+    },
+    {
+      "detail": {
+        "bottom": 478.6484375,
+        "height": 113.296875,
+        "left": 14,
+        "right": 376,
+        "top": 365.3515625,
+        "width": 362,
+        "x": 14,
+        "y": 365.3515625
+      },
+      "name": "stun 390×844",
+      "notice": {
+        "bottom": 478.6484375,
+        "height": 113.296875,
+        "left": 14,
+        "right": 376,
+        "top": 365.3515625,
+        "width": 362,
+        "x": 14,
+        "y": 365.3515625
+      },
+      "pass": true
+    },
+    {
+      "detail": {
+        "bottom": 599,
+        "height": 72,
+        "left": 18,
+        "right": 372,
+        "top": 527,
+        "width": 354,
+        "x": 18,
+        "y": 527
+      },
+      "name": "resist 390×844",
+      "notice": {
+        "bottom": 666,
+        "height": 489,
+        "left": 9,
+        "right": 381,
+        "top": 177,
+        "width": 372,
+        "x": 9,
+        "y": 177
+      },
+      "pass": true
+    },
+    {
+      "detail": {
+        "bottom": 251.6484375,
+        "height": 113.296875,
+        "left": 237,
+        "right": 607,
+        "top": 138.3515625,
+        "width": 370,
+        "x": 237,
+        "y": 138.3515625
+      },
+      "name": "stun 844×390",
+      "notice": {
+        "bottom": 251.6484375,
+        "height": 113.296875,
+        "left": 237,
+        "right": 607,
+        "top": 138.3515625,
+        "width": 370,
+        "x": 237,
+        "y": 138.3515625
+      },
+      "pass": true
+    },
+    {
+      "detail": {
+        "bottom": 175.9453125,
+        "height": 72,
+        "left": 444.46875,
+        "right": 759,
+        "top": 103.9453125,
+        "width": 314.53125,
+        "x": 444.46875,
+        "y": 103.9453125
+      },
+      "name": "resist 844×390",
+      "notice": {
+        "bottom": 325.59375,
+        "height": 262.1953125,
+        "left": 72,
+        "right": 772,
+        "top": 63.3984375,
+        "width": 700,
+        "x": 72,
+        "y": 63.3984375
+      },
+      "pass": true
+    },
+    {
+      "detail": {
+        "bottom": 440.6484375,
+        "height": 113.296875,
+        "left": 498,
+        "right": 868,
+        "top": 327.3515625,
+        "width": 370,
+        "x": 498,
+        "y": 327.3515625
+      },
+      "name": "stun 1366×768",
+      "notice": {
+        "bottom": 440.6484375,
+        "height": 113.296875,
+        "left": 498,
+        "right": 868,
+        "top": 327.3515625,
+        "width": 370,
+        "x": 498,
+        "y": 327.3515625
+      },
+      "pass": true
+    },
+    {
+      "detail": {
+        "bottom": 572.25,
+        "height": 48,
+        "left": 451,
+        "right": 915,
+        "top": 524.25,
+        "width": 464,
+        "x": 451,
+        "y": 524.25
+      },
+      "name": "resist 1366×768",
+      "notice": {
+        "bottom": 634.75,
+        "height": 501.5,
+        "left": 438,
+        "right": 928,
+        "top": 133.25,
+        "width": 490,
+        "x": 438,
+        "y": 133.25
+      },
+      "pass": true
+    }
+  ],
+  "status": "PASS 8"
+}

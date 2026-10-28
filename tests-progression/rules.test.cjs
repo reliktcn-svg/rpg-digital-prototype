@@ -13,7 +13,7 @@ for(const id of ['warrior','dwarf','archer','rogue','mage','paladin']){
 }
 const p=player('warrior');const c={};eq(P.award(p,{fields:{'Ранг':'Слабый'}},c).amount,100);eq(P.award(p,{fields:{'Ранг':'Слабый'}},c).amount,0);eq(p.masteryPoints,100);
 for(const [rank,reward] of [['Слабый',100],['Обычный',150],['Сильный',250],['Элитный',400],['Мини-босс',600]])eq(P.reward({fields:{'Ранг':rank}}),reward);
-const arch=P.hero('archer').branches[0].nodes;eq(P.rules(arch[2]).dice,'D10');eq(P.rules(arch[2]).effect,'Яд');eq(P.rules(arch[2]).chance,{sides:6,success:[4,5,6]});eq(P.rules(arch[3]).chance,{sides:4,success:[3,4]});eq(P.rules(arch[4]).chance.sides,0);
+const arch=P.hero('archer').branches[0].nodes;eq(P.rules(arch[2]).dice,'D10');eq(P.rules(arch[2]).effect,'Яд');eq(P.rules(arch[2]).chance,{sides:6,success:[5,6]});eq(P.rules(arch[3]).chance,{sides:4,success:[3,4]});eq(P.rules(arch[4]).chance.sides,0);
 const nat=P.hero('mage').branches[1].nodes;eq(P.rules(nat[2]).dice,null);eq(P.rules(nat[2]).effect,'Оглушение');eq(P.rules(nat[3]).dice,'D6');eq(P.rules(nat[6]).enemyDisadvantage,2);
 console.log(`${checks} progression assertions passed`);
 
@@ -39,3 +39,8 @@ const replay=player('paladin');for(const [rank,count] of [['Слабый',5],['�
 const old={id:'paladin',masteryPoints:128,learnedAbilities:['n6_C10'],stats:{enemies:{boss:1}}};eq(P.info(old).xp,6600);eq(P.info(old).level,13);eq(P.info(old).spent,1);eq(P.info(old).xp,6600);eq(old.progressionVersion,2);
 const poor=player('warrior');poor.masteryPoints=550;P.learn(poor,'n1_C10');eq(P.info(poor).points,1);eq(P.canLearn(poor,'n1_C12').ok,false);eq(P.learn(poor,'n1_C12').ok,false);eq(poor.learnedAbilities.length,1);
 console.log('Variable costs, exact 26-win replay, minimum XP and legacy migration passed');
+
+for(const n of P.hero('archer').branches[0].nodes)eq(P.rules(n).multiplier,1);
+for(const n of P.hero('rogue').branches[0].nodes)eq(P.rules(n).multiplier,2);
+for(const id of ['warrior','dwarf','mage','archer','rogue','paladin'])for(const n of P.hero(id).branches[1].nodes)eq(P.rules(n).multiplier,1);
+console.log('Success thresholds never become damage multipliers');

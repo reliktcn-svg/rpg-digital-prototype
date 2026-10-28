@@ -1,0 +1,33 @@
+{
+  "results": [
+    {
+      "name": "Offturn hero receives authoritative XP from active client",
+      "pass": true
+    },
+    {
+      "name": "Real offturn skill UI purchases and syncs to active player",
+      "pass": true
+    },
+    {
+      "name": "Offturn tree can close without affecting the active turn",
+      "pass": true
+    },
+    {
+      "name": "Another hero tree is read only",
+      "pass": true
+    },
+    {
+      "name": "Heart cleansing deadline is shared exactly and not extended by remote reload",
+      "pass": true
+    },
+    {
+      "name": "Enemy stun appears for observer; only active client advances battle",
+      "pass": true
+    },
+    {
+      "name": "Observer receives separate damage and status dice; only owner commits HP and effect",
+      "pass": true
+    }
+  ],
+  "status": "PASS 7"
+}

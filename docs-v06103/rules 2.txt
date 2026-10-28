@@ -1,0 +1,4 @@
+586 progression assertions passed
+Shared atlas, immunity and fixed reduction checks passed
+Variable costs, exact 26-win replay, minimum XP and legacy migration passed
+Success thresholds never become damage multipliers

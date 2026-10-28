@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Map displays six players, level, HP, gold and 5/1 lands",
+    "pass": true
+  },
+  {
+    "name": "Map layout 320×568",
+    "pass": true
+  },
+  {
+    "name": "Map layout 390×844",
+    "pass": true
+  },
+  {
+    "name": "Map layout 844×390",
+    "pass": true
+  },
+  {
+    "name": "Map layout 1280×720",
+    "pass": true
+  },
+  {
+    "name": "Map layout 1920×1080",
+    "pass": true
+  },
+  {
+    "name": "Live map updates HP, gold, level, lands and active hero",
+    "pass": true
+  }
+]

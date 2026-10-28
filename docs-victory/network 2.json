@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "name": "Offturn hero receives authoritative XP from active client",
+      "pass": true
+    },
+    {
+      "name": "Real offturn skill UI purchases and syncs to active player",
+      "pass": true
+    },
+    {
+      "name": "Offturn tree can close without affecting the active turn",
+      "pass": true
+    },
+    {
+      "name": "Another hero tree is read only",
+      "pass": true
+    }
+  ],
+  "status": "PASS 4"
+}

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#16120d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>RPG Digital Prototype v0.6.101 — Карта</title>
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="map-viewer.css?v=06101">
+</head>
+<body>
+  <section id="mapPlayers" class="map-players" aria-label="Игроки" hidden></section>
+  <main id="mapTable" aria-label="Общее игровое поле">
+    <div class="field" id="field">
+      <img id="mapArt" src="assets/map-visual-v0691.png" alt="Карта мира" draggable="false">
+      <svg id="fieldOverlay" viewBox="0 0 2048 1469" preserveAspectRatio="none" aria-label="Герои, локации и владения">
+        <g id="fieldTerrain"></g><g id="fieldHeroes"></g>
+      </svg>
+    </div>
+    <div class="map-mini-status" id="miniStatus" aria-live="polite" hidden><span class="connection-light"></span><span id="miniRoom"></span></div>
+    <button class="map-fullscreen" id="fullscreen" type="button" title="На весь экран" aria-label="На весь экран">⛶</button>
+    <section id="mapLogin" class="map-login">
+      <div class="map-login-box">
+        <div class="brand">RPG DIGITAL PROTOTYPE · v0.6.91</div>
+        <h1>Режим «Карта»</h1>
+        <p>Планшет показывает общее игровое поле. Герой не выбирается, место игрока не занимается.</p>
+        <label for="mapRoomCode">Код комнаты</label>
+        <input id="mapRoomCode" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000">
+        <button id="mapConnect" class="primary" type="button">Подключить карту</button>
+        <div id="mapError" class="map-error" role="alert"></div>
+        <a href="index.html" class="back-link">← К обычному входу</a>
+      </div>
+    </section>
+    <section id="mapWaiting" class="map-waiting" hidden aria-live="polite">
+      <div class="waiting-inner"><div class="waiting-icon">⌛</div><strong>Ждём начала партии</strong><small>Когда хозяин создаст игровое поле, карта появится автоматически.</small></div>
+    </section>
+  </main>
+  <script src="map-data.js?v=06101"></script>
+  <script src="map-viewer.js?v=06101"></script>
+</body>
+</html>
