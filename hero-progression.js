@@ -1,20 +1,20 @@
-/* Atlas-backed rules. Descriptions remain in the editable atlas HTML. */
-(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else{root.RPGProgression=api;api.load(root.RPG_HERO_ATLAS)}})(typeof window!=='undefined'?window:globalThis,function(){
+/* Skill rules based on local hero-abilities.js. No network request or external editor needed. */
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else{root.RPGProgression=api;api.load(root.RPG_HERO_ABILITIES)}})(typeof window!=='undefined'?window:globalThis,function(){
 'use strict';
 const names={warrior:'Воин',dwarf:'Дворф',archer:'Лучник',rogue:'Разбойник',mage:'Маг',paladin:'Паладин'},statusNames=['Кровотечение','Яд','Горение','Оглушение'],statusKeys=['bleeding','poison','burning','stun'];
 let project=null,revision=0,heroes=new Map();
 function load(data){
- if(!data||data.version!==1||!Array.isArray(data.characters))throw Error('Неверный формат атласа');
+ if(!data||data.version!==1||!Array.isArray(data.characters))throw Error('Неверный формат способностей');
  const next=new Map(),ids=new Set();
  for(const h of data.characters){
   const heroId=Object.keys(names).find(id=>names[id].toLowerCase()===String(h.name).trim().toLowerCase());
-  if(!Array.isArray(h.abilities))throw Error('В атласе отсутствуют ветки');
+  if(!Array.isArray(h.abilities))throw Error('В справочнике способностей отсутствуют ветки');
   const branches=h.abilities.map((a,i)=>{
    if(!a.id||ids.has(a.id)||!Array.isArray(a.nodes))throw Error('Некорректный ID ветки');ids.add(a.id);
    const kind=/регенерац/i.test(a.name)?'regeneration':/натуральн/i.test(a.name)?'natural':/сопротив/i.test(a.name)?'resistance':'ability';
    const status=kind==='resistance'?(/кров/i.test(a.name)?0:/яд/i.test(a.name)?1:/гор/i.test(a.name)?2:/оглуш/i.test(a.name)?3:-1):-1;
-   const nodes=a.nodes.map(n=>{if(!n.id||ids.has(n.id)||typeof n.description!=='string')throw Error('Некорректная карточка атласа');ids.add(n.id);return {...n,branchId:a.id,kind,status}}),map=new Map(nodes.map(n=>[n.id,n]));
-   for(const n of nodes){let q=n,seen=new Set();n.level=1;while(q.parent){if(seen.has(q.id)||!map.has(q.parent))throw Error('Некорректная связь в атласе');seen.add(q.id);n.level++;q=map.get(q.parent)}}
+   const nodes=a.nodes.map(n=>{if(!n.id||ids.has(n.id)||typeof n.description!=='string')throw Error('Некорректная карточка способностей');ids.add(n.id);return {...n,branchId:a.id,kind,status}}),map=new Map(nodes.map(n=>[n.id,n]));
+   for(const n of nodes){let q=n,seen=new Set();n.level=1;while(q.parent){if(seen.has(q.id)||!map.has(q.parent))throw Error('Некорректная связь в справочнике способностей');seen.add(q.id);n.level++;q=map.get(q.parent)}}
    return {...a,kind,status,nodes};
   });
   if(heroId)next.set(heroId,{...h,gameId:heroId,branches,nodes:branches.flatMap(a=>a.nodes)});
@@ -34,7 +34,7 @@ function info(p){ensure(p);const xp=p?.masteryPoints||0,level=levelForXp(xp),spe
 function baseNodes(id){return (hero(id)?.branches||[]).filter(a=>['ability','natural'].includes(a.kind)).flatMap(a=>a.nodes.filter(n=>!n.parent).slice(0,1))}
 function unlocked(p){ensure(p);return new Set([...baseNodes(p?.id).map(n=>n.id),...(p?.learnedAbilities||[])])}
 function node(p,id){return hero(p?.id)?.nodes.find(n=>n.id===id)||null}
-function canLearn(p,id){const n=node(p,id),h=hero(p?.id);if(!n||!h)return {ok:false,reason:'Карточка отсутствует в атласе'};const known=unlocked(p);if(n.kind==='regeneration'&&info(p).level<n.level*2+1)return {ok:false,reason:'Требуется '+(n.level*2+1)+' уровень героя'};if(known.has(id))return {ok:false,reason:'Уже изучено'};
+function canLearn(p,id){const n=node(p,id),h=hero(p?.id);if(!n||!h)return {ok:false,reason:'Карточка отсутствует в справочнике способностей'};const known=unlocked(p);if(n.kind==='regeneration'&&info(p).level<n.level*2+1)return {ok:false,reason:'Требуется '+(n.level*2+1)+' уровень героя'};if(known.has(id))return {ok:false,reason:'Уже изучено'};
  if(n.parent&&!known.has(n.parent))return {ok:false,reason:'Сначала изучите предыдущую ступень этой ветки'};
  const branch=h.branches.find(a=>a.id===n.branchId),ancestors=new Set();let q=n;while(q.parent){ancestors.add(q.parent);q=branch.nodes.find(x=>x.id===q.parent)}
  if(branch.nodes.some(x=>known.has(x.id)&&!ancestors.has(x.id)))return {ok:false,reason:'В этой ветке уже выбран другой путь'};

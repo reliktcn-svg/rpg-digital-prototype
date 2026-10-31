@@ -146,7 +146,7 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json(200, dice_pack_catalog(ROOT))
         if p.path in ('/hero-atlas-data.js','/api/hero-atlas'):
             try: data=read_atlas(ROOT)
-            except (ValueError,OSError) as exc:return self._json(500, {'error':'Ошибка атласа: '+str(exc)})
+            except (ValueError,OSError) as exc:return self._json(500, {'error':'Ошибка справочника способностей: '+str(exc)})
             if p.path=='/api/hero-atlas':return self._json(200,data)
             payload=('window.RPG_HERO_ATLAS = '+json.dumps(data,ensure_ascii=False).replace('</','<\\/')+';').encode('utf-8')
             self.send_response(200);self.send_header('Content-Type','application/javascript; charset=utf-8');self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(payload)));self.end_headers();self.wfile.write(payload);return

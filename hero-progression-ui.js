@@ -1,4 +1,4 @@
-/* Accessible, atlas-driven skill tree; all text is inserted as text or escaped. */
+/* Accessible tree using bundled descriptions; no external request. */
 window.RPGSkillTree=(()=>{
  const P=window.RPGProgression,esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let dialog,detail,adapter,selectedId,busy=false,lastSignature='';
@@ -20,7 +20,7 @@ window.RPGSkillTree=(()=>{
  detail.innerHTML=`<header class="skill-header"><h2>${esc(n.title)} ${P.roman(n.level)}</h2><button data-close aria-label="Закрыть описание">×</button></header><div class="skill-detail-content"><img src="${P.icon(p,n)}" alt=""><p>${esc(n.description)}</p>${n.kind==='ability'?'<p class="skill-hint">После улучшения используется новая ступень способности.</p>':''}<p class="skill-node-state">${learned?'Изучено':!adapter.editable()?'Просмотр другого героя':check.ok?'Стоимость: '+P.pointLabel(P.cost(n))+' способности':esc(check.reason)}</p><p class="skill-error" role="alert"></p></div><footer class="skill-footer">${!learned?`<button data-learn ${can?'':'disabled'}>${busy?'Сохранение…':'Изучить · '+P.pointLabel(P.cost(n))}</button>`:''}<button data-close>Закрыть</button></footer>`;
  detail.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>detail.close());const btn=detail.querySelector('[data-learn]');if(btn)btn.onclick=async()=>{if(busy)return;busy=true;showNode(id);try{await adapter.learn(id);lastSignature='';render()}catch(e){detail.querySelector('.skill-error').textContent=e.message}finally{busy=false;const error=detail.querySelector('.skill-error')?.textContent;showNode(id);if(error)detail.querySelector('.skill-error').textContent=error}};if(!detail.open)detail.showModal();
  }
- async function open(a){setup();adapter=a;selectedId=null;lastSignature='';if(!dialog.open)dialog.showModal();render();await window.RPGAtlas?.refresh();if(adapter!==a)return;lastSignature='';render();a.changed?.()}
+ async function open(a){setup();adapter=a;selectedId=null;lastSignature='';if(!dialog.open)dialog.showModal();render()}
 
  return {open,refresh:render,close:()=>dialog?.close()};
 })();
