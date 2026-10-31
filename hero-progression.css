@@ -7,3 +7,6 @@
 @media(max-width:900px){.skill-panel:first-child .skill-graph{height:68px!important;max-width:none}.skill-panel:first-child .skill-graph svg{display:none}.skill-panel:first-child .skill-graph:before{content:"";position:absolute;top:33px;left:10%;right:10%;height:1px;background:#576566}.skill-panel:first-child .skill-node{top:8px!important;left:calc((var(--skill-level) - .5) * 20%)!important}}
 
 .atlas-load-notice{position:fixed;bottom:8px;left:8px;right:8px;z-index:99999;max-height:25vh;overflow:auto;padding:12px;border:1px solid #d5a35c;border-radius:9px;background:#352719;color:#ffe7b8;font:14px/1.4 system-ui;box-shadow:0 4px 20px #0008}.atlas-load-notice button{margin-left:8px;min-height:40px}
+
+/* Fourth independent branch, compact desktop and stacked phone layout. */
+@media(min-width:901px){.skill-tree-dialog{width:min(1260px,calc(100vw - 24px));max-width:1260px}.skill-columns{grid-template-columns:minmax(140px,.8fr) minmax(220px,1.3fr) minmax(240px,1.3fr) minmax(140px,.8fr);gap:10px}}

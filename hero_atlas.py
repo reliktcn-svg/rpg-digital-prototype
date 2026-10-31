@@ -31,6 +31,7 @@ def node_cost(n,nodes,branches):
     while q.get('parent'):
         if q['parent'] in seen or q['parent'] not in nodes:raise ValueError('Ошибка связей атласа')
         seen.add(q['parent']);q=nodes[q['parent']];level+=1
+    if 'регенерац' in branches[n['branch']]['name'].lower():return level
     if 'сопротив' in branches[n['branch']]['name'].lower():return 2 if level>=3 else 1
     return 0 if level==1 else 1 if level==2 else 2 if level<=4 else 3
 
@@ -43,7 +44,7 @@ def learn_ability(root, player, node_id):
     for b in hero['abilities']:
         branches[b['id']]=b
         for n in b['nodes']:nodes[n['id']]={**n,'branch':b['id']}
-        if 'сопротив' not in b['name'].lower():free.extend(n['id'] for n in b['nodes'] if not n.get('parent'))
+        if not any(k in b['name'].lower() for k in ('сопротив','регенерац')):free.extend(n['id'] for n in b['nodes'] if not n.get('parent'))
     learned=list(dict.fromkeys(player.get('learnedAbilities') or []));known=set(free+learned)
     n=nodes.get(node_id)
     if not n:raise ValueError('Карточка отсутствует в атласе')
@@ -55,6 +56,7 @@ def learn_ability(root, player, node_id):
         ancestors.add(q['parent']);q=nodes[q['parent']]
     if any(x['id'] in known and x['id'] not in ancestors for x in branches[n['branch']]['nodes']):raise ValueError('В этой ветке уже выбран другой путь')
     level=progression_level(player);spent=sum(node_cost(nodes[x],nodes,branches) for x in learned if x in nodes);cost=node_cost(n,nodes,branches)
+    if 'регенерац' in branches[n['branch']]['name'].lower() and level<cost*2+1:raise ValueError('Требуется '+str(cost*2+1)+' уровень героя')
     if level-1-spent<cost:raise ValueError('Недостаточно очков способности: требуется '+str(cost))
     learned.append(node_id);player['learnedAbilities']=learned
     return learned

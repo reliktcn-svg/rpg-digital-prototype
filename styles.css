@@ -1740,3 +1740,8 @@ body.game-running #modal:has(.story-card-shell) .modal-card,
   #rollOverlay.status-check-popup .roll-popup-detail{grid-column:2;grid-row:1;margin:0}
   #rollOverlay.status-check-popup #rollPopupClose{grid-column:2;grid-row:2;margin:0 auto}
 }
+
+/* Mercenary quality is independent of region and hero class. */
+.merc-tier-common{--merc-color:#9a9fa5}.merc-tier-improved{--merc-color:#4faf65}.merc-tier-rare{--merc-color:#4a92e5}.merc-tier-epic{--merc-color:#a469d7}.merc-tier-legendary{--merc-color:#e4bc4f}
+[class*="merc-tier-"]{border:2px solid var(--merc-color)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--merc-color) 20%,transparent);border-radius:12px}
+.loc-merc[class*="merc-tier-"]{padding:10px}.loc-merc-text small{display:block;color:#d3c5a5}

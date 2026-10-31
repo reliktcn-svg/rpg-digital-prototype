@@ -1,0 +1,95 @@
+{
+  "tool": "built-in image_gen",
+  "images": [
+    {
+      "id": 372,
+      "name": "Носильщик",
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 portrait illustration for a premium medieval fantasy tabletop RPG mercenary card. Subject: a sturdy kind middle-aged male porter with a large canvas backpack, bedroll, rope and leather travelling clothes, standing beside a medieval tavern. One character, waist-up, clear readable silhouette, realistic painterly cinematic fantasy, detailed natural face, tactile cloth and metal, softly blurred environment, warm natural light. Face unobstructed, centered with breathing room. No lettering, numbers, border, UI, watermark, modern equipment. Finished game illustration, not a sketch.",
+      "path": "assets/items/372.png"
+    },
+    {
+      "id": 373,
+      "name": "Сельский лекарь",
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 portrait illustration for a premium medieval fantasy tabletop RPG mercenary card. Subject: an elderly village healer with a grey beard, simple linen robe, a wooden medicine box and bandages, warm rural cottage background. One character, waist-up, clear readable silhouette, realistic painterly cinematic fantasy, detailed natural face, tactile cloth and metal, softly blurred environment, warm natural light. Face unobstructed, centered with breathing room. No lettering, numbers, border, UI, watermark, modern equipment. Finished game illustration, not a sketch.",
+      "path": "assets/items/373.png"
+    },
+    {
+      "id": 374,
+      "name": "Новобранец со щитом",
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 portrait illustration for a premium medieval fantasy tabletop RPG mercenary card. Subject: a young adult recruit with a simple round wooden shield, modest leather armor and an iron helmet, medieval training yard. One character, waist-up, clear readable silhouette, realistic painterly cinematic fantasy, detailed natural face, tactile cloth and metal, softly blurred environment, warm natural light. Face unobstructed, centered with breathing room. No lettering, numbers, border, UI, watermark, modern equipment. Finished game illustration, not a sketch.",
+      "path": "assets/items/374.png"
+    },
+    {
+      "id": 375,
+      "name": "Проводник",
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 portrait illustration for a premium medieval fantasy tabletop RPG mercenary card. Subject: a weathered adult female wilderness guide with green hood, walking staff and small compass, misty forest path. One character waist-up, clear readable silhouette, realistic painterly cinematic fantasy, detailed natural face, tactile cloth and metal, softly blurred environment, dramatic natural light. Face unobstructed, centered with breathing room. No lettering, readable text, numbers, border, UI, watermark or modern equipment. Finished polished game illustration.",
+      "path": "assets/items/375.png"
+    },
+    {
+      "id": 376,
+      "name": "Боевая травница",
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 portrait illustration for a premium medieval fantasy tabletop RPG mercenary card. Subject: an adult red-haired battle herbalist woman in practical leather armor with herb pouches and a green antidote vial, medieval camp. One character waist-up, clear readable silhouette, realistic painterly cinematic fantasy, detailed natural face, tactile cloth and metal, softly blurred environment, dramatic natural light. Face unobstructed, centered with breathing room. No lettering, readable text, numbers, border, UI, watermark or modern equipment. Finished polished game illustration.",
+      "path": "assets/items/376.png"
+    },
+    {
+      "id": 377,
+      "name": "Сержант",
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 portrait illustration for a premium medieval fantasy tabletop RPG mercenary card. Subject: a stern mature male sergeant in chainmail with a crimson shoulder cape, holding a spear upright, fortress courtyard. One character waist-up, clear readable silhouette, realistic painterly cinematic fantasy, detailed natural face, tactile cloth and metal, softly blurred environment, dramatic natural light. Face unobstructed, centered with breathing room. No lettering, readable text, numbers, border, UI, watermark or modern equipment. Finished polished game illustration.",
+      "path": "assets/items/377.png"
+    },
+    {
+      "id": 378,
+      "name": "Искатель ловушек",
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 portrait illustration for a premium medieval fantasy tabletop RPG mercenary card. Subject: a cunning dwarven trap seeker with leather gloves, lockpicks and a short probing rod examining an ancient stone mechanism, torchlit dungeon, no explosives. One character waist-up, clear readable silhouette, realistic painterly cinematic fantasy, detailed natural face, tactile cloth and metal, softly blurred environment, dramatic natural light. Face unobstructed, centered with breathing room. No lettering, readable text, numbers, border, UI, watermark or modern equipment. Finished polished game illustration.",
+      "path": "assets/items/378.png"
+    },
+    {
+      "id": 379,
+      "name": "Полевой хирург",
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 portrait illustration for a premium medieval fantasy tabletop RPG mercenary card. Subject: a focused middle-aged field surgeon with rolled sleeves, leather apron, clean bandages and a medical satchel, medieval field tent, no gore. One character waist-up, clear readable silhouette, realistic painterly cinematic fantasy, detailed natural face, tactile cloth and metal, softly blurred environment, dramatic natural light. Face unobstructed, centered with breathing room. No lettering, readable text, numbers, border, UI, watermark or modern equipment. Finished polished game illustration.",
+      "path": "assets/items/379.png"
+    },
+    {
+      "id": 380,
+      "name": "Заклинатель тумана",
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 portrait illustration for a premium medieval fantasy tabletop RPG mercenary card. Subject: an enigmatic adult elven mist sorcerer in grey blue robes, conjuring silver mist around one raised hand, foggy ruined arch. One character waist-up, clear readable silhouette, realistic painterly cinematic fantasy, detailed natural face, tactile cloth and metal, softly blurred environment, dramatic natural light. Face unobstructed, centered with breathing room. No lettering, readable text, numbers, border, UI, watermark or modern equipment. Finished polished game illustration.",
+      "path": "assets/items/380.png"
+    },
+    {
+      "id": 381,
+      "name": "Хранитель бастиона",
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 portrait illustration for a premium medieval fantasy tabletop RPG mercenary card. Subject: a mature heroic fortress guardian in heavy steel plate armor, broad engraved tower shield, sturdy battlements at dusk. One character waist-up, clear readable silhouette, realistic painterly cinematic fantasy, detailed natural face, tactile cloth and metal, softly blurred environment, dramatic natural light. Face unobstructed, centered with breathing room. No lettering, readable text, numbers, border, UI, watermark or modern equipment. Finished polished game illustration.",
+      "path": "assets/items/381.png"
+    },
+    {
+      "id": 382,
+      "name": "Светоносная целительница",
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 portrait illustration for a premium medieval fantasy tabletop RPG mercenary card. Subject: an adult radiant healer woman in ivory robes with subtle silver armor, warm healing light flowing from her hands, ruined sanctuary. One character waist-up, clear readable silhouette, realistic painterly cinematic fantasy, detailed natural face, tactile cloth and metal, softly blurred environment, dramatic natural light. Face unobstructed, centered with breathing room. No lettering, readable text, numbers, border, UI, watermark or modern equipment. Finished polished game illustration.",
+      "path": "assets/items/382.png"
+    },
+    {
+      "id": 383,
+      "name": "Арканист орков",
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 portrait illustration for a premium medieval fantasy tabletop RPG mercenary card. Subject: a wise powerful orc arcanist with green skin and small tusks, layered dark robes, carved wooden staff, crackling amber binding magic, ancient forest ruins. One character waist-up, clear readable silhouette, realistic painterly cinematic fantasy, detailed natural face, tactile cloth and metal, softly blurred environment, dramatic natural light. Face unobstructed, centered with breathing room. No lettering, readable text, numbers, border, UI, watermark or modern equipment. Finished polished game illustration.",
+      "path": "assets/items/383.png"
+    },
+    {
+      "id": 384,
+      "name": "Страж небесной клятвы",
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 portrait illustration for a premium medieval fantasy tabletop RPG mercenary card. Subject: a legendary noble celestial oath guardian in refined silver gold plate armor, luminous protective shield, cathedral courtyard at dawn, no wings. One character waist-up, clear readable silhouette, realistic painterly cinematic fantasy, detailed natural face, tactile cloth and metal, softly blurred environment, dramatic natural light. Face unobstructed, centered with breathing room. No lettering, readable text, numbers, border, UI, watermark or modern equipment. Finished polished game illustration.",
+      "path": "assets/items/384.png"
+    },
+    {
+      "id": 385,
+      "name": "Хранительница жизни",
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 portrait illustration for a premium medieval fantasy tabletop RPG mercenary card. Subject: a legendary adult life keeper woman in green and gold embroidered robes, holding a glowing living branch, ancient sacred grove. One character waist-up, clear readable silhouette, realistic painterly cinematic fantasy, detailed natural face, tactile cloth and metal, softly blurred environment, dramatic natural light. Face unobstructed, centered with breathing room. No lettering, readable text, numbers, border, UI, watermark or modern equipment. Finished polished game illustration.",
+      "path": "assets/items/385.png"
+    },
+    {
+      "id": 386,
+      "name": "Летописец судеб",
+      "prompt": "Use case: stylized-concept. Asset type: square 1:1 portrait illustration for a premium medieval fantasy tabletop RPG mercenary card. Subject: a legendary elderly chronicler of fate with silver hair, midnight blue embroidered cloak, open ancient book and small floating golden magical symbols, candlelit library. One character waist-up, clear readable silhouette, realistic painterly cinematic fantasy, detailed natural face, tactile cloth and metal, softly blurred environment, dramatic natural light. Face unobstructed, centered with breathing room. No lettering, readable text, numbers, border, UI, watermark or modern equipment. Finished polished game illustration.",
+      "path": "assets/items/386.png"
+    }
+  ]
+}

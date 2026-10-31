@@ -11,7 +11,7 @@ function load(data){
   if(!Array.isArray(h.abilities))throw Error('В атласе отсутствуют ветки');
   const branches=h.abilities.map((a,i)=>{
    if(!a.id||ids.has(a.id)||!Array.isArray(a.nodes))throw Error('Некорректный ID ветки');ids.add(a.id);
-   const kind=/натуральн/i.test(a.name)?'natural':/сопротив/i.test(a.name)?'resistance':'ability';
+   const kind=/регенерац/i.test(a.name)?'regeneration':/натуральн/i.test(a.name)?'natural':/сопротив/i.test(a.name)?'resistance':'ability';
    const status=kind==='resistance'?(/кров/i.test(a.name)?0:/яд/i.test(a.name)?1:/гор/i.test(a.name)?2:/оглуш/i.test(a.name)?3:-1):-1;
    const nodes=a.nodes.map(n=>{if(!n.id||ids.has(n.id)||typeof n.description!=='string')throw Error('Некорректная карточка атласа');ids.add(n.id);return {...n,branchId:a.id,kind,status}}),map=new Map(nodes.map(n=>[n.id,n]));
    for(const n of nodes){let q=n,seen=new Set();n.level=1;while(q.parent){if(seen.has(q.id)||!map.has(q.parent))throw Error('Некорректная связь в атласе');seen.add(q.id);n.level++;q=map.get(q.parent)}}
@@ -28,13 +28,13 @@ function ensure(p){if(!p)return;const xp=Number(p.masteryPoints);p.masteryPoints
 }
 const threshold=level=>{const n=Math.max(0,Math.floor(level)-1);return 25*n*(n+9)};
 const levelForXp=xp=>1+Math.floor((Math.sqrt(81+.16*Math.max(0,xp))-9)/2);
-function cost(n){if(!n)return 0;if(n.kind==='resistance')return n.level>=3?2:1;return n.level<=1?0:n.level===2?1:n.level<=4?2:3}
+function cost(n){if(!n)return 0;if(n.kind==='regeneration')return n.level;if(n.kind==='resistance')return n.level>=3?2:1;return n.level<=1?0:n.level===2?1:n.level<=4?2:3}
 function pointLabel(n){const a=n%100,b=n%10;return n+' '+(a>=11&&a<=14?'очков':b===1?'очко':b>=2&&b<=4?'очка':'очков')}
 function info(p){ensure(p);const xp=p?.masteryPoints||0,level=levelForXp(xp),spent=(p?.learnedAbilities||[]).reduce((sum,id)=>sum+cost(node(p,id)),0);return {level,xp,next:threshold(level+1),floor:threshold(level),earned:level-1,spent,points:Math.max(0,level-1-spent)}}
-function baseNodes(id){return (hero(id)?.branches||[]).filter(a=>a.kind!=='resistance').flatMap(a=>a.nodes.filter(n=>!n.parent).slice(0,1))}
+function baseNodes(id){return (hero(id)?.branches||[]).filter(a=>['ability','natural'].includes(a.kind)).flatMap(a=>a.nodes.filter(n=>!n.parent).slice(0,1))}
 function unlocked(p){ensure(p);return new Set([...baseNodes(p?.id).map(n=>n.id),...(p?.learnedAbilities||[])])}
 function node(p,id){return hero(p?.id)?.nodes.find(n=>n.id===id)||null}
-function canLearn(p,id){const n=node(p,id),h=hero(p?.id);if(!n||!h)return {ok:false,reason:'Карточка отсутствует в атласе'};const known=unlocked(p);if(known.has(id))return {ok:false,reason:'Уже изучено'};
+function canLearn(p,id){const n=node(p,id),h=hero(p?.id);if(!n||!h)return {ok:false,reason:'Карточка отсутствует в атласе'};const known=unlocked(p);if(n.kind==='regeneration'&&info(p).level<n.level*2+1)return {ok:false,reason:'Требуется '+(n.level*2+1)+' уровень героя'};if(known.has(id))return {ok:false,reason:'Уже изучено'};
  if(n.parent&&!known.has(n.parent))return {ok:false,reason:'Сначала изучите предыдущую ступень этой ветки'};
  const branch=h.branches.find(a=>a.id===n.branchId),ancestors=new Set();let q=n;while(q.parent){ancestors.add(q.parent);q=branch.nodes.find(x=>x.id===q.parent)}
  if(branch.nodes.some(x=>known.has(x.id)&&!ancestors.has(x.id)))return {ok:false,reason:'В этой ветке уже выбран другой путь'};
@@ -55,7 +55,7 @@ function rules(n){if(!n)return null;const text=n.description.replace(/\s+/g,' ')
  }
  return result;
 }
-function icon(p,n){const name=n.kind==='ability'?p.id:n.kind==='natural'?'natural20':'resistance-'+statusKeys[n.status];return 'assets/ability-icons/'+name+'-'+n.level+'.png'}
+function icon(p,n){const name=n.kind==='ability'?p.id:n.kind==='natural'?'natural20':n.kind==='regeneration'?'regeneration':'resistance-'+statusKeys[n.status];return 'assets/ability-icons/'+name+'-'+n.level+'.png'}
 function checkNote(n){const r=rules(n);if(r?.resistance?.immune)return 'Эффект предотвращается без броска.';if(r?.chance){const c=r.chance;return c.sides?'Проверка: D'+c.sides+'; успех '+c.success.join(', ')+'.':'Эффект накладывается без проверки.'}if(r?.resistance)return 'Проверка: D'+r.resistance.sides+'; эффект предотвращён на '+r.resistance.success.join(', ')+'.';return ''}
 return {load,hero,ensure,info,threshold,levelForXp,cost,pointLabel,BALANCE_VERSION,baseNodes,unlocked,node,canLearn,learn,selected,reward,award,roman,rules,chance,icon,checkNote,statusNames,get revision(){return revision},get project(){return project}};
 });
