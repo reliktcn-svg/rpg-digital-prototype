@@ -201,7 +201,7 @@
     return o;
   }
   function freshState(){return {
-    version:'0.6.105', mercenaryRevision:1, started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
+    version:'0.6.104', mercenaryRevision:1, started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
     decks:initialDecks(), cleaned:{}, cleanedUntil:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, tradeDeal:null, dungeonEntryNotice:null, territoryBuiltNotice:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:3, sharedDifficulty:null, journal:[]
   };}
   let state=freshState();
@@ -213,6 +213,30 @@
   let modalCloseAction=null;
   let combatWindowHidden=false;
   let combatWindowInstance=null;
+  let savedObserverModal=null;
+  let combatNoticeTimer=null;
+  function notifyOtherCombat(hero){
+    const n=document.getElementById('otherCombatNotice');if(!n)return;
+    const who=String(window.__RPG_HERO_PLAYER_NAMES__?.[hero?.id]||hero?.name||'Герой');
+    n.textContent=`${who} вступил в бой · нажмите на глаз, чтобы смотреть`;
+    n.hidden=false;clearTimeout(combatNoticeTimer);combatNoticeTimer=setTimeout(()=>{n.hidden=true},3600);
+  }
+  function parkModalForObservedCombat(){
+    if(savedObserverModal||els.modal.hidden||els.modalContent.querySelector('.combat-shell'))return;
+    const content=document.createDocumentFragment();while(els.modalContent.firstChild)content.appendChild(els.modalContent.firstChild);
+    savedObserverModal={content,closeAction:modalCloseAction,offturnOwnerId:modalOffturnOwnerId,closeDisplay:els.modalClose.style.display,postCombat:els.modal.classList.contains('post-combat-prompt')};
+    els.modal.classList.remove('post-combat-prompt');
+  }
+  function restoreModalAfterObservedCombat(){
+    if(!savedObserverModal)return false;
+    const saved=savedObserverModal;savedObserverModal=null;
+    els.modalContent.replaceChildren(saved.content);els.modal.hidden=false;
+    modalCloseAction=saved.closeAction;modalOffturnOwnerId=saved.offturnOwnerId;
+    els.modalClose.style.display=saved.closeDisplay;
+    els.modal.classList.toggle('post-combat-prompt',saved.postCombat);
+    return true;
+  }
+
   // Локальный выбор игрока: сетевые опросы не должны заново открывать закрытую
   // статистику, однако вручную итог партии можно показать из меню.
   let dismissedGameOverKey=null;
@@ -224,19 +248,47 @@
 
   function localControlsCombat(){return !onlineLocalHeroId||onlineLocalHeroId===currentPlayer()?.id}
   function combatInstanceKey(){const c=state.combat;if(!c)return null;return String(c.instanceId||`${currentPlayer()?.id||''}:${c.cardId||''}:${c.startedAt||''}`)}
-  function ensureCombatRestoreButton(){
-    let b=document.getElementById('combatRestoreButton');if(b)return b;
-    b=document.createElement('button');b.id='combatRestoreButton';b.className='combat-restore-button';b.type='button';b.textContent='Показать бой';b.hidden=true;b.onclick=showCombatWindow;document.body.appendChild(b);return b;
+  function updateCombatRestoreButton(){
+    const old=document.getElementById('combatRestoreButton');if(old)old.hidden=true;
+    const b=els.turnOrderBanner?.querySelector('[data-table-combat]');
+    if(b){
+      b.disabled=!state.combat;b.setAttribute('aria-pressed',String(!!state.combat&&!combatWindowHidden));
+      b.classList.toggle('is-watching',!!state.combat&&!combatWindowHidden);
+      b.title=!state.combat?'Нет текущего боя':combatWindowHidden?'Смотреть бой':'Скрыть бой';
+      b.setAttribute('aria-label',b.title);
+      const eye=b.querySelector('svg');if(eye)eye.classList.toggle('eye-closed',!!state.combat&&combatWindowHidden);
+    }
+    document.body.classList.toggle('combat-window-hidden',!!state.combat&&combatWindowHidden);
   }
-  function updateCombatRestoreButton(){const b=ensureCombatRestoreButton();b.hidden=!(state.combat&&combatWindowHidden);document.body.classList.toggle('combat-window-hidden',!!state.combat&&combatWindowHidden)}
   function syncLocalCombatWindowState(){
     const key=combatInstanceKey();let isNew=false;
-    if(key&&key!==combatWindowInstance){combatWindowInstance=key;combatWindowHidden=false;isNew=true}
-    if(!key){combatWindowInstance=null;combatWindowHidden=false}
+    if(key&&key!==combatWindowInstance){
+      if(savedObserverModal)restoreModalAfterObservedCombat();
+      combatWindowInstance=key;
+      combatWindowHidden=!localControlsCombat();
+      isNew=true;
+      if(combatWindowHidden&&onlineLocalHeroId)notifyOtherCombat(currentPlayer());
+    }
+    if(!key){
+      combatWindowInstance=null;combatWindowHidden=false;
+      if(savedObserverModal)restoreModalAfterObservedCombat();
+    }
     updateCombatRestoreButton();return isNew;
   }
-  function hideCombatWindow(){if(!state.combat)return;if(arcanaBattleLayer&&!arcanaBattleLayer.hidden)stopArcanaBattlePresentation();combatWindowHidden=true;updateCombatRestoreButton();if(!els.modal.hidden&&els.modalContent.querySelector('.combat-shell'))closeModal();updateUI();renderBoard()}
-  function showCombatWindow(){if(!state.combat)return;combatWindowHidden=false;updateCombatRestoreButton();renderCombat(true)}
+  function hideCombatWindow(){
+    if(!state.combat)return;
+    if(arcanaBattleLayer&&!arcanaBattleLayer.hidden)stopArcanaBattlePresentation();
+    combatWindowHidden=true;
+    if(!els.modal.hidden&&els.modalContent.querySelector('.combat-shell')){
+      if(!restoreModalAfterObservedCombat())closeModal();
+    }
+    updateCombatRestoreButton();updateUI();renderBoard();
+  }
+  function showCombatWindow(){
+    if(!state.combat)return;
+    if(!localControlsCombat())parkModalForObservedCombat();
+    combatWindowHidden=false;updateCombatRestoreButton();renderCombat(true);
+  }
   function canOffturnModalActionFor(heroId){return !!heroId&&modalOffturnOwnerId===heroId}
   function beginSideInteraction(p,type,participantIds=[p?.id].filter(Boolean)){
     if(!p)return;sideInteraction={ownerId:p.id,type,participantIds:[...new Set(participantIds.filter(Boolean))]};
@@ -305,6 +357,14 @@
   function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
   function localViewHeroId(){return onlineLocalHeroId||null}
   function journalOwnerId(){return localViewHeroId()||currentPlayer()?.id||null}
+  function showJournalOverlay(){
+    const settings=document.getElementById('settingsOverlay');if(settings)settings.hidden=true;
+    renderJournal();els.journalOverlay.hidden=false;
+  }
+  function showSettingsOverlay(){
+    els.journalOverlay.hidden=true;
+    const settings=document.getElementById('settingsOverlay');if(settings)settings.hidden=false;
+  }
   function renderJournal(){
     const roomCode=String(window.__RPG_ROOM_CODE__||'').trim();
     if(els.journalTitle)els.journalTitle.textContent=roomCode?`Журнал партии / комната №${roomCode}`:'Журнал партии';
@@ -582,7 +642,7 @@
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,progressionVersion:2,masteryPoints:0,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,potions:[null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:sharedHard,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats(),territoryBuildSeq:{kingdom:0,cursed:0}}});
     generatePermanentLocations({preserve:false});
     state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;els.sheetDrawer.hidden=true;setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
-    log(`<b>Партия v0.6.105 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
+    log(`<b>Партия v0.6.106 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
     state.order.forEach(id=>{const p=getPlayer(id);log(`Инициатива ${p.name}: D20 = <b>${p.initiative}</b>.`,p.id)});updateUI();renderBoard();
   }
 
@@ -1460,14 +1520,14 @@
   const BATTLE_RESULT_HERO_IDS=new Set(['warrior','dwarf','mage','archer','rogue','paladin']);
   function battleOutcomeImage(hero,type){return BATTLE_RESULT_HERO_IDS.has(hero?.id)&&['victory','defeat'].includes(type)?`assets/results/${hero.id}-${type}.webp`:''}
   function battleFateArt(hero,type){const src=battleOutcomeImage(hero,type);return `<div class="battle-fate-art"><img src="${src}" alt="${escapeCombatText(hero?.name||'Герой')} · ${type==='victory'?'Победа':'Поражение'}" onerror="this.hidden=true" /></div>`;}
-  function showDefeatPopup(p,enemy,loss,turnEnded=false,departedMercenaryName=null){
+  function showDefeatPopup(p,enemy,loss,turnEnded=false,departedMercenaryName=null,xpLost=0){
     rollPopupQueue.length=0;rollPopupAfterClose=null;if(els.rollOverlay)els.rollOverlay.hidden=true;
     const source=enemy?`<b class="fate-hero-name">${escapeCombatText(p.name.toUpperCase())}</b> пал от <b class="defeat-enemy-rank ${enemyRankClass(enemy)}">${escapeCombatText(ENEMY_GENITIVE[enemy.id]||enemy.name)}</b>.`:`<b class="fate-hero-name">${escapeCombatText(p.name.toUpperCase())}</b> пал.`;
     modalOffturnOwnerId=p.id;modalCloseAction=null;
     els.modalContent.innerHTML=`<div class="battle-fate battle-fate-defeat" style="--result-hero-color:${p.color||'#a279c1'}">${battleFateArt(p,'defeat')}
       <div class="battle-fate-right"><div class="battle-fate-scroll"><h2>Результаты боя</h2><div class="battle-fate-kicker">ПОРАЖЕНИЕ</div>
         <div class="battle-fate-info">${source}</div><div class="battle-fate-info battle-fate-gold">Потеряно золота: <b>${loss}</b>${departedMercenaryName?` <span class="battle-fate-merc-loss">/ Наёмник: «${escapeCombatText(departedMercenaryName)}» покинул героя.</span>`:''}</div>
-        <div class="battle-fate-note">Герой возвращается в лагерь залечивать раны.</div></div>
+        <div class="battle-fate-note">${xpLost?`Потеряно опыта текущего уровня: <b>${xpLost} ОМ</b>. Уровень сохранён.<br>`:""}Герой возвращается в лагерь залечивать раны.</div></div>
         <div class="battle-fate-footer"><button id="defeatContinue" type="button" class="success">Продолжить</button></div></div></div>`;
     els.modal.hidden=false;document.getElementById('defeatContinue').onclick=closeModal;
   }
@@ -1497,7 +1557,10 @@
     p.reexploreRiskHex=null;if(state.dungeonEntryNotice?.heroId===p.id)state.dungeonEntryNotice=null;state.foreignTerritoryPending=null;state.tributeConsentPending=null;state.tradeOpportunity=null;state.moveTransit=null;state.pendingMoveAction=null;state.movePending=false;state.reachable=[];
     p.combatEffects=(p.combatEffects||[]).filter(e=>e.type!=='nextBattleFreeEscape');
     const mercId=getSlotId(p,'mercenary'),departedMercenaryName=mercId?(itemCard(mercId)?.name||String(mercId)):null;if(mercId){const merc=itemCard(mercId);setSlotId(p,'mercenary',null);discardHeldCard(merc);log(`${p.name}: наёмник «${departedMercenaryName}» уходит в сброс после смерти героя.`)}
-    const region=MAP.hexes[deathHex]?.region;const die=region==='heart_of_darkness'?10:region==='cursed'?8:6;const loss=Math.min(p.gold,rand(die));p.gold-=loss;p.hex=MAP.startHex;restockTavernIfVacant(deathHex);p.currentHp=p.maxHp;p.statuses=[];p.statusTimers={};p.statusTickedTurn={};p.inDungeon=false;p.dungeonCard=null;p.dungeonEnteredTurn=null;state.exploration=null;state.turnLocked=false;resetItemUsage(p,'camp');log(`<b>${p.name} погибает</b>, возвращается в ЛГ01, полностью лечится и теряет ${loss} золота.`);closeModal();closeCharacterSheet();showDefeatPopup(p,defeatedBy,loss,autoAdvance,departedMercenaryName);if(autoAdvance)advanceTurnState(p,'поражение героя');else{updateUI();renderBoard()}
+    // Total XP includes prior levels: lose only progress earned toward the next level.
+    const xpPenalty=RPGProgression.resetCurrentLevelExperience(p);
+    if(xpPenalty.lost)log(`${p.name}: поражение — потеряно ${xpPenalty.lost} ОМ текущего уровня. Уровень ${xpPenalty.level} сохранён.`);
+    const region=MAP.hexes[deathHex]?.region;const die=region==='heart_of_darkness'?10:region==='cursed'?8:6;const loss=Math.min(p.gold,rand(die));p.gold-=loss;p.hex=MAP.startHex;restockTavernIfVacant(deathHex);p.currentHp=p.maxHp;p.statuses=[];p.statusTimers={};p.statusTickedTurn={};p.inDungeon=false;p.dungeonCard=null;p.dungeonEnteredTurn=null;state.exploration=null;state.turnLocked=false;resetItemUsage(p,'camp');log(`<b>${p.name} погибает</b>, возвращается в ЛГ01, полностью лечится и теряет ${loss} золота.`);closeModal();closeCharacterSheet();showDefeatPopup(p,defeatedBy,loss,autoAdvance,departedMercenaryName,xpPenalty.lost);if(autoAdvance)advanceTurnState(p,'поражение героя');else{updateUI();renderBoard()}
   }
 
   // Three complete rounds measured from the initiative position that cleared the hex.
@@ -2045,7 +2108,7 @@
     if(els.sheetHeroTab){els.sheetHeroTab.classList.toggle('active',!inventory);els.sheetHeroTab.setAttribute('aria-selected',String(!inventory))}
     if(els.sheetInventoryTab){els.sheetInventoryTab.classList.toggle('active',inventory);els.sheetInventoryTab.setAttribute('aria-selected',String(inventory))}
   }
-  function openCharacterSheet(mode='overview',bonusKey=null,playerId=null){if(!state.started)return;const active=currentPlayer(),sideTarget=sideInteractionOwnerId(),target=sideTarget||playerId||onlineLocalHeroId||(playerHardMode(active)?active.id:(state.inspectPlayerId||active.id));sheetView={mode,bonusKey,itemId:null,context:null,playerId:target};els.sheetDrawer.hidden=false;document.body.classList.toggle('sheet-over-combat',!!state.combat&&!els.modal.hidden);renderCharacterSheet(mode,bonusKey);RPGTabletop.syncTabs(true,mode)}
+  function openCharacterSheet(mode='overview',bonusKey=null,playerId=null){if(!state.started)return;window.RPGAtlas?.refresh();const active=currentPlayer(),sideTarget=sideInteractionOwnerId(),target=sideTarget||playerId||onlineLocalHeroId||(playerHardMode(active)?active.id:(state.inspectPlayerId||active.id));sheetView={mode,bonusKey,itemId:null,context:null,playerId:target};els.sheetDrawer.hidden=false;document.body.classList.toggle('sheet-over-combat',!!state.combat&&!els.modal.hidden);renderCharacterSheet(mode,bonusKey);RPGTabletop.syncTabs(true,mode)}
   function toggleCharacterSheet(mode='overview',playerId=null){
     if(!state.started)return;
     const requested=mode==='overview'?'overview':'inventory';
@@ -3549,6 +3612,7 @@
     return rows.length?`<div class="combat-enemy-effects"><b>Активные эффекты:</b> ${rows.join(' · ')}</div>`:'';
   }
   function renderCombat(force=false){
+    if(state.combat&&!localControlsCombat()&&combatWindowHidden&&!force){updateCombatRestoreButton();return;}
     // A previous winner may still be choosing loot while the next hero fights.
     // Do not overwrite that winner's local result/loot window with the remote battle.
     if(postVictorySession&&onlineLocalHeroId===postVictorySession.heroId)return;
@@ -3583,11 +3647,11 @@
     const guide=localCombatant&&!playerHardMode(p)?`<div class="combat-effects-manual"><h4>Памятка боя</h4><div class="combat-note">Активные способности, предметы и наёмники применяет игрок. Натуральные 1 и 20 автоматические только при одиночном D20. Лечение доступно до атаки в свой боевой ход и после принятого нелетального урона.</div></div>`:'';
     const journalVisible=combatJournalInstance===c.instanceId?combatJournalVisible:!!c.journalOpen;const oldScroll=els.modalContent.querySelector('.combat-history')?.scrollTop||0;const history=journalVisible?`<div class="combat-history-wrap"><div class="combat-history">${(c.history||[]).map(x=>`<div>${x}</div>`).join('')||'<div>Записей пока нет.</div>'}</div></div>`:'';
     const controlBlock=localCombatant?`${reactions.length?`<div class="combat-reactions"><h4>РЕАКЦИИ — игра напоминает, но решение за игроком</h4><div class="combat-reaction-buttons">${reactions.map((r,i)=>`<button data-reaction="${i}" class="${/^(Каменная кровь|Железная стойкость)/.test(r.label)?'success':'secondary'}">${r.label}</button>`).join('')}</div></div>`:''}<div class="combat-actions">${actions}</div><div class="combat-sheet-actions"><button id="combatHeroSheet" class="secondary">Герой</button><button id="combatInventory" class="secondary">Инвентарь</button></div>${guide}`:'';
-    els.modalContent.innerHTML=`<div class="combat-shell ${localCombatant?'combat-owner-view':'combat-observer-view'}"><div class="combat-summary"><span class="combat-mode-badge">${localCombatant?mode:`Наблюдение за ${observedName}`}</span><span class="combat-pill">Раунд ${c.round}</span><button id="combatHide" class="combat-hide ghost" type="button">Скрыть бой</button></div><div class="combat-head visual-combat-head">${combatHeroVisualCard(p,c)}<div class="combat-vs">VS</div>${combatEnemyVisualCard(e,c)}</div>${phaseHtml}${controlBlock}<div class="combat-journal-control"><button id="combatJournalToggle" class="${journalVisible?'secondary active':'ghost'}">Журнал боя${journalVisible?' ▲':' ▼'}</button></div>${history}</div>`;els.modal.hidden=false;if(journalVisible&&oldScroll)els.modalContent.querySelector('.combat-history')?.scrollTo(0,oldScroll);
+    els.modalContent.innerHTML=`<div class="combat-shell ${localCombatant?'combat-owner-view':'combat-observer-view'}"><div class="combat-summary"><span class="combat-mode-badge">${localCombatant?mode:`Наблюдение за ${observedName}`}</span><span class="combat-pill">Раунд ${c.round}</span></div><div class="combat-head visual-combat-head">${combatHeroVisualCard(p,c)}<div class="combat-vs">VS</div>${combatEnemyVisualCard(e,c)}</div>${phaseHtml}${controlBlock}<div class="combat-journal-control"><button id="combatJournalToggle" class="${journalVisible?'secondary active':'ghost'}">Журнал боя${journalVisible?' ▲':' ▼'}</button></div>${history}</div>`;els.modal.hidden=false;if(journalVisible&&oldScroll)els.modalContent.querySelector('.combat-history')?.scrollTo(0,oldScroll);
     if(localCombatant){reactions.forEach((r,i)=>{const b=els.modalContent.querySelector(`[data-reaction="${i}"]`);if(b)b.onclick=r.fn});els.modalContent.querySelectorAll('[data-auto-choice]').forEach(b=>b.onclick=()=>decisions[Number(b.dataset.autoChoice)]?.fn());els.modalContent.querySelectorAll('[data-cleanse-status]').forEach(b=>b.onclick=()=>chooseCombatCleanseStatus((c.pendingCleanse?.options||[])[Number(b.dataset.cleanseStatus)]))}
     els.modalContent.querySelectorAll('[data-visual-toggle]').forEach(b=>b.onclick=()=>toggleCombatVisualFace(b.dataset.visualToggle));
     const bind=(id,fn)=>{const x=document.getElementById(id);if(x)x.onclick=fn};if(localCombatant){bind('mercAcceptAbility',resolveHeroAbilityAttack);bind('combatFight',combatFight);bind('combatResolveEscape',resolveCombatEscapeResult);bind('combatEscapeBefore',combatEscapeBefore);bind('combatAttack',combatHeroAttack);bind('combatRollDamage',combatRollHeroDamage);bind('combatSkipChoice',skipCombatChoice);bind('combatEscape',combatEscapeDuring);bind('combatHeroAbility',useHeroCombatAbility);bind('combatFinalizeAttack',finalizeHeroAttackRoll);bind('mageLightning',()=>chooseMageNat20('lightning'));bind('mageFire',()=>chooseMageNat20('fire'));bind('combatApplyHeroDamage',applyHeroDamageNow);bind('combatEnemyTurn',combatEnemyTurn);bind('combatFinalizeEnemyRoll',finalizeEnemyAttackRoll);bind('combatAcceptDamage',combatAcceptDamageAndContinue);bind('combatContinueMiss',combatContinueAfterEnemyMiss);bind('combatContinueAfterDamage',combatContinueAfterDamage);bind('combatFinishVictory',()=>showVictoryResults(p,c));bind('combatPostVictory',()=>{if(c.victory?.searchState==='pending'){showVictoryResults(p,c);return}if(c.victory?.searchState==='rolling'){presentVictorySearch(p,c);return}if(c.victory?.lootDraft&&!c.victory.lootDraft.confirmed&&c.victory.lootDraft.keep>0)openVictoryLootDraft();else showPostCombatTerritoryPrompt()});bind('combatHeroSheet',()=>openCharacterSheet('overview'));bind('combatInventory',()=>openCharacterSheet('inventory'))}
-    bind('combatHide',hideCombatWindow);bind('combatJournalToggle',()=>{combatJournalInstance=c.instanceId;combatJournalVisible=!journalVisible;c.journalOpen=combatJournalVisible;renderCombat(true)});if(localCombatant&&!els.sheetDrawer.hidden&&sheetView.playerId===p.id)renderCharacterSheet(sheetView.mode,sheetView.bonusKey);arcanaPresentCombat(c);scheduleCombatAuto();
+    bind('combatJournalToggle',()=>{combatJournalInstance=c.instanceId;combatJournalVisible=!journalVisible;c.journalOpen=combatJournalVisible;renderCombat(true)});if(localCombatant&&!els.sheetDrawer.hidden&&sheetView.playerId===p.id)renderCharacterSheet(sheetView.mode,sheetView.bonusKey);arcanaPresentCombat(c);scheduleCombatAuto();
   }
   function combatTickBuffsAtHeroAttack(){const c=state.combat;if(!c)return;for(const b of c.buffs||[])if(['attack','lightDamage','advantage'].includes(b.type)&&b.remaining>0)b.remaining--;c.buffs=(c.buffs||[]).filter(b=>b.remaining>0)}
   function combatTickBuffsAtEnemyTurn(){const c=state.combat;if(!c)return;for(const b of c.buffs||[])if(b.type==='defense'&&b.remaining>0){if(b.skipCurrentEnemyTick)b.skipCurrentEnemyTick=false;else b.remaining--;}c.buffs=(c.buffs||[]).filter(b=>b.remaining>0)}
@@ -3737,7 +3801,10 @@
       const oldCode=els.turnOrderBanner.querySelector('.turn-order-code'),newCode=incoming.querySelector('.turn-order-code');if(oldCode&&newCode&&oldCode.textContent!==newCode.textContent)oldCode.textContent=newCode.textContent;
     }else els.turnOrderBanner.innerHTML=bannerHtml;
     if(!changedActive&&previousScroll)els.turnOrderBanner.querySelector('.table-turns').scrollLeft=previousScroll;
-    els.turnOrderBanner.querySelector('[data-table-journal]')?.addEventListener('click',()=>{renderJournal();els.journalOverlay.hidden=false});
+    els.turnOrderBanner.querySelector('[data-table-journal]')?.addEventListener('click',showJournalOverlay);
+    els.turnOrderBanner.querySelector('[data-table-settings]')?.addEventListener('click',showSettingsOverlay);
+    els.turnOrderBanner.querySelector('[data-table-combat]')?.addEventListener('click',()=>{if(!state.combat)return;combatWindowHidden?showCombatWindow():hideCombatWindow()});
+    updateCombatRestoreButton();
     // Preserve horizontal scroll on mobile as the turn order refreshes.
     if(els.turnOrderBanner.dataset.scrollKey!==String(active?.id)){
       els.turnOrderBanner.dataset.scrollKey=String(active?.id);els.turnOrderBanner.querySelector('.table-turns')?.scrollTo({left:0,behavior:'instant'});
@@ -3808,7 +3875,7 @@
     const groups={};state.players.forEach(p=>(groups[p.hex]??=[]).push(p));const tokenPositions={};Object.entries(groups).forEach(([hex,ps])=>{const h=MAP.hexes[hex];if(!h)return;const n=ps.length;ps.forEach((p,i)=>{const a=n===1?0:Math.PI*2*i/n,rad=n===1?0:18,x=h.x+Math.cos(a)*rad,y=h.y+Math.sin(a)*rad;tokenPositions[p.id]={x,y};RPGTabletop.token(els.overlay,p,x,y,p.id===currentPlayer().id,svgEl)})});RPGTabletop.rememberTokens(tokenPositions);applyMapZoom(false)
   }
 
-  function saveGame(){if(!state.started)return;localStorage.setItem('rpgDigitalPrototypeV0648',JSON.stringify(state));log('Партия v0.6.104 сохранена в браузере.')}
+  function saveGame(){if(!state.started)return;localStorage.setItem('rpgDigitalPrototypeV0648',JSON.stringify(state));log('Партия v0.6.106 сохранена в браузере.')}
   function loadGame(){
     const raw=localStorage.getItem('rpgDigitalPrototypeV0654')||localStorage.getItem('rpgDigitalPrototypeV0653')||localStorage.getItem('rpgDigitalPrototypeV0652')||localStorage.getItem('rpgDigitalPrototypeV0651')||localStorage.getItem('rpgDigitalPrototypeV0648')||localStorage.getItem('rpgDigitalPrototypeV0647')||localStorage.getItem('rpgDigitalPrototypeV0646')||localStorage.getItem('rpgDigitalPrototypeV0645')||localStorage.getItem('rpgDigitalPrototypeV0639')||localStorage.getItem('rpgDigitalPrototypeV0638')||localStorage.getItem('rpgDigitalPrototypeV0637')||localStorage.getItem('rpgDigitalPrototypeV0636')||localStorage.getItem('rpgDigitalPrototypeV0635')||localStorage.getItem('rpgDigitalPrototypeV0634')||localStorage.getItem('rpgDigitalPrototypeV0633')||localStorage.getItem('rpgDigitalPrototypeV0632')||localStorage.getItem('rpgDigitalPrototypeV0631')||localStorage.getItem('rpgDigitalPrototypeV063')||localStorage.getItem('rpgDigitalPrototypeV062')||localStorage.getItem('rpgDigitalPrototypeV060')||localStorage.getItem('rpgDigitalPrototypeV0522')||localStorage.getItem('rpgDigitalPrototypeV0521')||localStorage.getItem('rpgDigitalPrototypeV0520')||localStorage.getItem('rpgDigitalPrototypeV0519')||localStorage.getItem('rpgDigitalPrototypeV0518')||localStorage.getItem('rpgDigitalPrototypeV0517')||localStorage.getItem('rpgDigitalPrototypeV0516')||localStorage.getItem('rpgDigitalPrototypeV0515')||localStorage.getItem('rpgDigitalPrototypeV0514')||localStorage.getItem('rpgDigitalPrototypeV0513')||localStorage.getItem('rpgDigitalPrototypeV0512')||localStorage.getItem('rpgDigitalPrototypeV0511')||localStorage.getItem('rpgDigitalPrototypeV0510')||localStorage.getItem('rpgDigitalPrototypeV059')||localStorage.getItem('rpgDigitalPrototypeV058')||localStorage.getItem('rpgDigitalPrototypeV057')||localStorage.getItem('rpgDigitalPrototypeV056')||localStorage.getItem('rpgDigitalPrototypeV055')||localStorage.getItem('rpgDigitalPrototypeV054')||localStorage.getItem('rpgDigitalPrototypeV053')||localStorage.getItem('rpgDigitalPrototypeV052')||localStorage.getItem('rpgDigitalPrototypeV051')||localStorage.getItem('rpgDigitalPrototypeV050')||localStorage.getItem('rpgDigitalPrototypeV045')||localStorage.getItem('rpgDigitalPrototypeV044')||localStorage.getItem('rpgDigitalPrototypeV043')||localStorage.getItem('rpgDigitalPrototypeV042')||localStorage.getItem('rpgDigitalPrototypeV041')||localStorage.getItem('rpgDigitalPrototypeV040')||localStorage.getItem('rpgDigitalPrototypeV033')||localStorage.getItem('rpgDigitalPrototypeV032');
     if(!raw){alert('Сохранённой партии пока нет.');return}
@@ -3821,7 +3888,7 @@
       const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
-      state.version='0.6.105';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.104.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
+      state.version='0.6.104';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.106.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
     }catch(e){console.error(e);alert('Не удалось загрузить сохранение.')}
   }
   function cloneJson(v){return JSON.parse(JSON.stringify(v))}
@@ -3839,14 +3906,14 @@
     if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
-    state.version='0.6.105';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    state.version='0.6.104';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){
     const localZoom=Number(state.mapZoom||1),localInspect=state.inspectPlayerId??null,localHighlight=state.mapHighlight??null,localJournal=state.combat?.journalOpen??false,mobileSheetWasOpen=isMobileViewport()&&!els.sheetDrawer.hidden;
     normalizeIncomingState(next);state.mapZoom=localZoom;state.inspectPlayerId=localInspect;state.mapHighlight=localHighlight;if(state.combat)state.combat.journalOpen=localJournal;
     const newCombat=syncLocalCombatWindowState();document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;
-    if(isMobileViewport()&&(newCombat||!mobileSheetWasOpen))els.sheetDrawer.hidden=true;if(!state.tradeDeal&&sideInteraction?.type==='trade')endSideInteraction();if(!state.tradeDeal&&!els.modal.hidden&&els.modalContent.querySelector('.player-trade-shell'))closeModal();updateUI();renderBoard();renderJournal();if(state.combat){if(!combatWindowHidden&&!(state.combat.phase==='victory'&&(els.modal.classList.contains('post-combat-prompt')||els.modal.dataset.lootDraft==='true'||!els.rollOverlay.hidden||['build','loot'].includes(state.combat.victoryUiStep))))renderCombat();else updateCombatRestoreButton();if(state.combat.phase==='victory'&&state.combat.victoryUiStep==='loot'&&!els.modal.dataset.lootDraft&&els.rollOverlay.hidden&&localControlsCombat())openVictoryLootDraft()}else if(!els.modal.hidden&&els.modalContent.querySelector('.combat-shell'))closeModal();maybeShowDungeonEntryNotice();maybeShowTradeDeal();const focus=mapFocusPlayer();const focusKey=focus?`${focus.id}:${focus.hex}`:'';
+    if(isMobileViewport()&&(!mobileSheetWasOpen||newCombat&&localControlsCombat()))els.sheetDrawer.hidden=true;if(!state.tradeDeal&&sideInteraction?.type==='trade')endSideInteraction();if(!state.tradeDeal&&!els.modal.hidden&&els.modalContent.querySelector('.player-trade-shell'))closeModal();updateUI();renderBoard();renderJournal();if(state.combat){if(!combatWindowHidden&&!(state.combat.phase==='victory'&&(els.modal.classList.contains('post-combat-prompt')||els.modal.dataset.lootDraft==='true'||!els.rollOverlay.hidden||['build','loot'].includes(state.combat.victoryUiStep))))renderCombat();else updateCombatRestoreButton();if(state.combat.phase==='victory'&&state.combat.victoryUiStep==='loot'&&!els.modal.dataset.lootDraft&&els.rollOverlay.hidden&&localControlsCombat())openVictoryLootDraft()}else if(!els.modal.hidden&&els.modalContent.querySelector('.combat-shell'))closeModal();maybeShowDungeonEntryNotice();maybeShowTradeDeal();const focus=mapFocusPlayer();const focusKey=focus?`${focus.id}:${focus.hex}`:'';
     if(focusKey&&applyOnlineState.lastFocusKey!==focusKey){applyOnlineState.lastFocusKey=focusKey;setTimeout(()=>centerMapOnPlayer(mapFocusPlayer(),'auto'),40)}
     if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
   }
@@ -3857,7 +3924,17 @@
   if(els.sheetHeroTab)els.sheetHeroTab.addEventListener('click',()=>{toggleCharacterSheet('overview',sheetView.playerId||currentPlayer()?.id)});
   if(els.sheetInventoryTab)els.sheetInventoryTab.addEventListener('click',()=>{toggleCharacterSheet('inventory',sheetView.playerId||currentPlayer()?.id)});
   if(els.rollPopupClose)els.rollPopupClose.addEventListener('click',()=>{clearLevelUpNotice();els.rollOverlay.hidden=true;document.body.classList.remove('arcana-info-presenting');infoDiceToken++;const after=rollPopupAfterClose;rollPopupAfterClose=null;els.rollPopupClose.textContent='Продолжить';if(after)after();if(els.rollOverlay.hidden)showNextRollPopup();if(sideInteraction?.type==='territory'&&els.rollOverlay.hidden&&!rollPopupQueue.length)endSideInteraction()});
-  if(els.journalBtn)els.journalBtn.addEventListener('click',()=>{renderJournal();els.journalOverlay.hidden=false});
+  const settingsOverlay=document.getElementById('settingsOverlay');
+  document.getElementById('settingsClose')?.addEventListener('click',()=>{settingsOverlay.hidden=true});
+  settingsOverlay?.addEventListener('click',e=>{if(e.target===settingsOverlay)settingsOverlay.hidden=true});
+  document.getElementById('settingsDiceBtn')?.addEventListener('click',()=>document.getElementById('journalDiceBtn')?.click());
+  for(const [button,target] of [['settingsSaveBtn','saveBtn'],['settingsLoadBtn','loadBtn'],['settingsResetBtn','resetBtn']]){
+    document.getElementById(button)?.addEventListener('click',()=>{
+      if(button!=='settingsSaveBtn')settingsOverlay.hidden=true;
+      document.getElementById(target)?.click();
+    });
+  }
+  if(els.journalBtn)els.journalBtn.addEventListener('click',showJournalOverlay);
   if(els.journalMine)els.journalMine.addEventListener('click',()=>{journalFilterMode='mine';renderJournal()});
   if(els.journalAll)els.journalAll.addEventListener('click',()=>{journalFilterMode='all';renderJournal()});
   if(els.journalClose)els.journalClose.addEventListener('click',()=>{els.journalOverlay.hidden=true});
@@ -3869,7 +3946,7 @@
   document.getElementById('desktopInventoryBtn')?.addEventListener('click',()=>toggleCharacterSheet('inventory'));
   if(els.mobileHeroBtn)els.mobileHeroBtn.addEventListener('click',()=>toggleCharacterSheet('overview'));
   if(els.mobileInventoryBtn)els.mobileInventoryBtn.addEventListener('click',()=>toggleCharacterSheet('inventory'));
-  if(els.mobileJournalBtn)els.mobileJournalBtn.addEventListener('click',()=>{renderJournal();els.journalOverlay.hidden=false});
+  if(els.mobileJournalBtn)els.mobileJournalBtn.addEventListener('click',showJournalOverlay);
   let resizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{applyMapZoom(false);if(state.started&&isMobileViewport()&&els.sheetDrawer.hidden)centerMapOnPlayer(mapFocusPlayer(),'auto')},120)});
   let pinchStartDist=0,pinchStartZoom=1;const touchDistance=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);if(els.boardWrap){els.boardWrap.addEventListener('touchstart',e=>{if(e.touches.length===2){pinchStartDist=touchDistance(e.touches);pinchStartZoom=Number(state.mapZoom||1)}},{passive:true});els.boardWrap.addEventListener('touchmove',e=>{if(e.touches.length===2&&pinchStartDist>0){e.preventDefault();const ratio=touchDistance(e.touches)/pinchStartDist;state.mapZoom=Math.round(clamp(pinchStartZoom*ratio,.6,2)*20)/20;applyMapZoom(false)}},{passive:false});els.boardWrap.addEventListener('touchend',e=>{if(e.touches.length<2)pinchStartDist=0},{passive:true})}
   if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
@@ -3879,6 +3956,7 @@
     const playerName=String(window.__RPG_HERO_PLAYER_NAMES__?.[id]||'').trim();
     return {id,name:playerName&&playerName!==hero.name?`${hero.name} — ${playerName}`:hero.name};
   });
+  window.addEventListener('rpg-atlas-updated',()=>{updateUI();if(state.combat&&!combatWindowHidden)renderCombat()});
   window.__RPG_DEBUG__={mercenaryEligible,normalizeTavernMercenaries,mercenaryResists,maybeUseTrackerBeforeExplore,performTrapCheck,backpackCapacity,setSlotId,passiveHeroDamageReduction,combatEnemyAttackModifier,combatEscapeBefore,combatEscapeDuring,recoverHealthForRound,buildTerritory,buildTerritoryFor,canBuildAt,finalizeArea,areaCandidatesAt,openTrade,payDungeonExit,beginSideInteraction,endSideInteraction,heroAbilityAttackProfile,resolveHeroAbilityAttack,combatAbilityAttackHits,resolveSecondaryDamage,commitEnemyDamage,resolveHeroAbilityDamage,resolveHeroEffectCheck,advanceHeroEffectSequence,tickOutsideStatuses,rollMove,combatTickHeroStatuses,finishCombatStun,combatDecisionOptions,cancelCombatAuto,PERIODIC_STATUS_RULES,markExplorationSuccess,refreshHeartCleansing,heartCleansingRemaining,currentHexNeedsResolution,canExploreHere,showVictoryResults,performVictorySearch,victorySessionCombat,initialDecks,drawCard,discardCard,returnCardToDeckRandom,separateMercenaryDecks,takeMercenaryFromDeck,startGame,endTurn,advanceTurnState,resolvePaladinCounter,combatContinueAfterDamage,combatAttackStatProfile,canEquipCard,enemyDicePreferences,openHeroProgression,heroCombatInfo,addStatus,combatApplyHeroStatus,combatApplyEnemyStatus,combatClassAbilityAvailable,combatEffectiveDefense,combatAttackBonus,chooseCombatCleanseStatus,recordEnemyVictory,getState:()=>state,setState:v=>{state=v},freshState,HEROES,CARD_BY_ID,combatStart,combatFight,combatHeroAttack,finalizeHeroAttackRoll,combatRollHeroDamage,combatDamageFormula,inventoryCardBackHtml,applyHeroDamageNow,combatEnemyTurn,finalizeEnemyAttackRoll,acceptEnemyDamage,combatContinueAfterEnemyMiss,renderCombat,currentPlayer,getPlayer,ensurePlayerModel,supportedCombatEffect,applyCombatItemEffect,useHeroCombatAbility,combatReactionList,fullSetEquipped,completeSetNames,itemColorClass,mandatoryLootCount,setBonusActionInfo,useSetBonus,showRollPopup,heroImmuneStatus,combatPassiveDamageBonus,combatHeroDeath,combatVictory,movementFor,combatCanChangeEquipment,combatTickEnemyStatuses,equipTransaction,merchantSaleMultiplier,visitShrine,visitMerchant,showMerchantShop,renderTavernVisit,visitLocation,decorateNegativeEffects,generatePermanentLocations,locationVisibleToPlayer,revealLocationToPlayer,ensureTavernMercenary,restockTavernIfVacant,visitTavern,attemptDungeonExit,beginBonusExplorationTurnAfterDungeon,gameOverStats,showGameOverPopup,renderBoard,updateUI,openCharacterSheet,closeCharacterSheet,toggleCharacterSheet,renderTurnOrderBanner};
   window.__RPG_ONLINE__={startWithHeroes:startOnlineGame,exportState:exportOnlineState,applyState:applyOnlineState,currentPlayerId:()=>currentPlayer()?.id||null,isStarted:()=>!!state.started,sideInteractionOwnerId,sideInteractionActiveFor,acknowledgeVictorySide,exportSideState:sideInteractionPayload,endSideInteraction,refreshUI:()=>{renderJournal();updateUI();renderBoard()},setLocalHeroId:id=>{onlineLocalHeroId=id||null;if(onlineLocalHeroId){sheetView.playerId=onlineLocalHeroId;if(!els.sheetDrawer.hidden)renderCharacterSheet(sheetView.mode,sheetView.bonusKey)}renderJournal();updateUI();renderBoard()},canOffturnSharedAction:id=>!!id&&(state.tributeConsentPending?.ownerId===id||state.dungeonEntryNotice?.heroId===id),canOffturnModalActionFor,combatWindowIsHidden:()=>combatWindowHidden,showCombatWindow,hideCombatWindow};
   decorateNegativeEffects(document.body);negativeEffectObserver.observe(document.body,{childList:true,subtree:true});

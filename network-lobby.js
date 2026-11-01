@@ -278,9 +278,9 @@
     const eng=engine(),sideMine=!!eng?.sideInteractionActiveFor?.(mine),sharedDecision=!!eng?.canOffturnSharedAction?.(mine),modalAllowed=!!eng?.canOffturnModalActionFor?.(mine);
     if(sharedDecision&&t.closest('#actionPanel'))return;
     if(modalAllowed&&t.closest('#modal'))return;
-    if(t.closest('#combatHide,#combatJournalToggle,#combatRestoreButton'))return;
+    if(t.closest('#combatHide,#combatJournalToggle,#combatRestoreButton,#turnOrderBanner,#settingsOverlay,.dice-settings'))return;
     if(sideMine&&t.closest('#modal,#sheetDrawer,#rollOverlay,#mobileHeroBtn,#mobileInventoryBtn'))return;
-    if(t.closest('#mobileHeroBtn,#mobileInventoryBtn,#mobileJournalBtn,#inventoryBtn,#journalBtn,#sheetDrawer,#journalOverlay,.skill-tree-dialog,.skill-detail-dialog,.map-zoom-controls'))return;
+    if(t.closest('#mobileHeroBtn,#mobileInventoryBtn,#mobileJournalBtn,#inventoryBtn,#journalBtn,#sheetDrawer,#journalOverlay,#settingsOverlay,.skill-tree-dialog,.skill-detail-dialog,.map-zoom-controls'))return;
     if(t.closest('#gameSection,#overlay,#modal,#rollOverlay')){e.preventDefault();e.stopImmediatePropagation();updateTurnGuard()}
   },true);
 

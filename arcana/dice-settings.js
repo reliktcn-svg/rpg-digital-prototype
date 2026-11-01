@@ -79,7 +79,7 @@
     const hero=context();if(!heroIds.has(hero?.id)){button.title='Начните партию и выберите героя';return;}
     editingHero=hero.id;draft=get(editingHero);part=null;refresh();
     dialog.querySelector('#diceSettingsOwner').textContent=hero.name||hero.id;
-    status.textContent='Личные настройки героя';dialog.showModal();
+    status.textContent='Личные настройки героя';dialog.show();
     preview?.destroy();preview=FantasyDice.create({container:dialog.querySelector('#diceSettingsPreview'),duration:2400,controls:false});play();
   });
   skin.addEventListener('change',()=>{if(skin.value.startsWith('pack:'))draft.pack=skin.value.slice(5);else{draft.skin=skin.value;draft.pack=null;}save();});

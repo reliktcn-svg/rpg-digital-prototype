@@ -13,22 +13,23 @@
   <link rel="preload" as="image" href="assets/heroes/mage.webp" />
   <link rel="preload" as="image" href="assets/heroes/archer.webp" />
   <link rel="preload" as="image" href="assets/heroes/rogue.webp" />
-  <title>RPG Digital Prototype v0.6.105 · Режим Карта</title>
-  <link rel="stylesheet" href="styles.css?v=06105offline1" />
-  <link rel="stylesheet" href="location-ui.css?v=06105offline1" />
-  <link rel="stylesheet" href="battle-result-ui.css?v=06105offline1" />
-  <link rel="stylesheet" href="tabletop-enhancements.css?v=06105offline1" />
-  <link rel="stylesheet" href="ui-fixes-v078.css?v=06105offline1" />
-  <link rel="stylesheet" href="ui-fixes-v079.css?v=06105offline1" />
-  <link rel="stylesheet" href="battle-tabletop-v080.css?v=06105offline1" />
-  <link rel="stylesheet" href="battle-tabletop-v081.css?v=06105offline1" />
-  <link rel="stylesheet" href="battle-tabletop-v082.css?v=06105offline1" />
-  <link rel="stylesheet" href="battle-tabletop-v083.css?v=06105offline1" />
-  <link rel="stylesheet" href="battle-tabletop-v084.css?v=06105offline1" />
-  <link rel="stylesheet" href="battle-tabletop-v085.css?v=06105offline1" />
-  <link rel="stylesheet" href="battle-tabletop-v086.css?v=06105offline1" />
-  <link rel="stylesheet" href="arcana/dice-settings.css?v=06105offline1">
-  <link rel="stylesheet" href="hero-progression.css?v=06105offline1">
+  <title>RPG Digital Prototype v0.6.106 · Закреплённый интерфейс</title>
+  <link rel="stylesheet" href="styles.css?v=06106fixedui1" />
+  <link rel="stylesheet" href="location-ui.css?v=06106fixedui1" />
+  <link rel="stylesheet" href="battle-result-ui.css?v=06106fixedui1" />
+  <link rel="stylesheet" href="tabletop-enhancements.css?v=06106fixedui1" />
+  <link rel="stylesheet" href="ui-fixes-v078.css?v=06106fixedui1" />
+  <link rel="stylesheet" href="ui-fixes-v079.css?v=06106fixedui1" />
+  <link rel="stylesheet" href="battle-tabletop-v080.css?v=06106fixedui1" />
+  <link rel="stylesheet" href="battle-tabletop-v081.css?v=06106fixedui1" />
+  <link rel="stylesheet" href="battle-tabletop-v082.css?v=06106fixedui1" />
+  <link rel="stylesheet" href="battle-tabletop-v083.css?v=06106fixedui1" />
+  <link rel="stylesheet" href="battle-tabletop-v084.css?v=06106fixedui1" />
+  <link rel="stylesheet" href="battle-tabletop-v085.css?v=06106fixedui1" />
+  <link rel="stylesheet" href="battle-tabletop-v086.css?v=06106fixedui1" />
+  <link rel="stylesheet" href="arcana/dice-settings.css?v=06106fixedui1">
+  <link rel="stylesheet" href="hero-progression.css?v=06106fixedui1">
+  <link rel="stylesheet" href="ui-v06106.css?v=06106fixedui1">
 </head>
 <body class="tabletop-upgrade">
   
@@ -69,7 +70,7 @@
   <header class="topbar">
     <div>
       <div class="eyebrow">RPG DIGITAL PROTOTYPE</div>
-      <h1>Прототип v0.6.105 · Настольный интерфейс</h1>
+      <h1>Прототип v0.6.106 · Настольный интерфейс</h1>
       <div class="header-tools">
         <button id="journalBtn" class="journal-top" type="button">Журнал</button>
       </div>
@@ -157,7 +158,7 @@
         <button id="journalMine" class="journal-filter active" type="button">Мои действия</button>
         <button id="journalAll" class="journal-filter" type="button">Все игроки</button>
       </div>
-    <div class="journal-utility-tools" aria-label="Управление сохранением партии">
+    <div class="journal-utility-tools" aria-label="Управление сохранением партии" hidden>
       <button type="button" id="journalDiceBtn" class="ghost">Кубик</button>
       <button type="button" id="sheetSaveBtn" class="ghost">Сохранить</button>
       <button type="button" id="sheetLoadBtn" class="ghost">Загрузить</button>
@@ -166,6 +167,20 @@
       <div id="log" class="log journal-log"></div>
     </div>
   </div>
+
+
+  <div id="settingsOverlay" class="journal-overlay settings-overlay" hidden>
+    <div class="settings-card" role="dialog" aria-label="Настройки игры">
+      <div class="journal-head"><b>Настройки</b><button id="settingsClose" class="sheet-close" type="button" aria-label="Закрыть настройки">×</button></div>
+      <div class="settings-actions journal-utility-tools" aria-label="Настройки партии">
+        <button type="button" id="settingsDiceBtn" class="ghost">🎲 Кубик</button>
+        <button type="button" id="settingsSaveBtn" class="ghost">Сохранить</button>
+        <button type="button" id="settingsLoadBtn" class="ghost">Загрузить</button>
+        <button type="button" id="settingsResetBtn" class="danger">Сбросить</button>
+      </div>
+    </div>
+  </div>
+  <div id="otherCombatNotice" class="other-combat-notice" hidden role="status" aria-live="polite"></div>
 
   <div id="modal" class="modal" hidden>
     <div class="modal-card">
@@ -188,20 +203,21 @@
     </div>
   </div>
 
-  <script src="map-data.js?v=06105offline1"></script>
-  <script src="cards-data.js?v=06105offline1"></script>
-  <script src="location-placement.js?v=06105offline1"></script>
-  <script src="arcana/dice-motion.js?v=06105offline1"></script>
-  <script src="arcana/dice-skins.js?v=06105offline1"></script>
-  <script src="arcana/dice-renderer.js?v=06105offline1"></script>
-  <script src="arcana/dice-animator.js?v=06105offline1"></script>
-  <script src="arcana/dice-packs.js?v=06105offline1"></script>
-  <script src="arcana/dice-settings.js?v=06105offline1"></script>
-  <script src="tabletop-enhancements.js?v=06105offline1"></script>
-  <script src="hero-abilities.js?v=06105offline1"></script>
-  <script src="hero-progression.js?v=06105offline1"></script>
-  <script src="hero-progression-ui.js?v=06105offline1"></script>
-  <script src="app.js?v=06105offline1"></script>
-  <script src="network-lobby.js?v=06105offline1"></script>
+  <script src="map-data.js?v=06106fixedui1"></script>
+  <script src="cards-data.js?v=06106fixedui1"></script>
+  <script src="location-placement.js?v=06106fixedui1"></script>
+  <script src="arcana/dice-motion.js?v=06106fixedui1"></script>
+  <script src="arcana/dice-skins.js?v=06106fixedui1"></script>
+  <script src="arcana/dice-renderer.js?v=06106fixedui1"></script>
+  <script src="arcana/dice-animator.js?v=06106fixedui1"></script>
+  <script src="arcana/dice-packs.js?v=06106fixedui1"></script>
+  <script src="arcana/dice-settings.js?v=06106fixedui1"></script>
+  <script src="tabletop-enhancements.js?v=06106fixedui1"></script>
+  <script src="hero-atlas-data.js?v=06106fixedui1"></script>
+  <script src="hero-progression.js?v=06106fixedui1"></script>
+  <script src="hero-atlas-loader.js?v=06106fixedui1"></script>
+  <script src="hero-progression-ui.js?v=06106fixedui1"></script>
+  <script src="app.js?v=06106fixedui1"></script>
+  <script src="network-lobby.js?v=06106fixedui1"></script>
 </body>
 </html>

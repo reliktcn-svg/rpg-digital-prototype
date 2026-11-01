@@ -1,0 +1,75 @@
+/* v0.6.106: permanent, responsive turn bar and non-destructive overlays. */
+:root{--rpg-turnbar-height:82px}
+body.tabletop-upgrade.game-running .turn-order-banner{
+  position:fixed!important;inset:0 0 auto 0!important;top:0!important;left:0!important;right:0!important;
+  height:var(--rpg-turnbar-height)!important;min-height:var(--rpg-turnbar-height)!important;
+  transform:none!important;display:flex!important;align-items:center!important;gap:7px!important;
+  z-index:30000!important;padding:8px 12px!important;overflow:visible!important;
+  box-shadow:0 5px 24px #000b!important;
+}
+body.tabletop-upgrade.game-running .turn-order-banner[hidden]{display:none!important}
+body.tabletop-upgrade.game-running .topbar{margin-top:var(--rpg-turnbar-height);position:sticky;top:var(--rpg-turnbar-height);z-index:1050}
+body.tabletop-upgrade.game-running .header-tools,body.tabletop-upgrade.game-running .top-actions>#saveBtn,body.tabletop-upgrade.game-running .top-actions>#loadBtn,body.tabletop-upgrade.game-running .top-actions>#resetBtn{display:none!important}
+body.tabletop-upgrade.game-running .table-top-tools{display:flex;gap:5px;align-items:center;flex:0 0 auto;z-index:3}
+body.tabletop-upgrade.game-running .table-icon-button{width:43px;min-width:43px;height:43px;min-height:43px;padding:8px;display:grid;place-items:center;border:1px solid #80694b;border-radius:10px;background:#2b261d;color:#f4dfb2}
+.table-icon-button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.table-icon-button .eye-closed{opacity:.72}
+.table-icon-button .eye-closed:after{content:''}
+body.tabletop-upgrade.game-running .table-icon-button[data-table-combat]:not(.is-watching):not(:disabled){color:#d6b386}
+body.tabletop-upgrade.game-running .table-icon-button[data-table-combat]:not(.is-watching) svg{background:linear-gradient(143deg,transparent 46%,#ef6f65 47%,#ef6f65 53%,transparent 54%)}
+body.tabletop-upgrade.game-running .table-icon-button:disabled{opacity:.35}
+body.tabletop-upgrade.game-running .table-icon-button.is-watching{border-color:#dbb85d;color:#ffe19c;background:#43341a}
+body.tabletop-upgrade.game-running .turn-order-banner .table-turns{min-width:0;flex:1 1 0}
+body.tabletop-upgrade.game-running .journal-overlay,
+body.tabletop-upgrade.game-running .settings-overlay{z-index:24000!important;top:var(--rpg-turnbar-height)!important;left:0!important;right:0!important;bottom:0!important;padding:12px!important;display:grid;place-items:center}
+body.tabletop-upgrade.game-running .journal-overlay[hidden],body.tabletop-upgrade.game-running .settings-overlay[hidden]{display:none!important}
+body.tabletop-upgrade.game-running .journal-overlay:not([hidden]){background:rgba(0,0,0,.65)}
+body.tabletop-upgrade.game-running .settings-overlay{background:rgba(0,0,0,.55)}
+.settings-card{width:min(450px,95vw);max-height:calc(100dvh - var(--rpg-turnbar-height) - 25px);overflow:auto;background:#1b2026;border:1px solid #89734e;border-radius:16px;box-shadow:0 20px 55px #000b}
+.settings-card .journal-head{padding:12px 16px}.settings-card .journal-head b{font-size:20px;color:#f1d59b}
+.settings-card .settings-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:12px;padding:20px!important}
+.settings-card .settings-actions button{min-height:55px}
+body.tabletop-upgrade.game-running .journal-card{width:min(760px,96vw);max-height:calc(100dvh - var(--rpg-turnbar-height) - 30px)}
+body.tabletop-upgrade.game-running #journalOverlay>.journal-card>.journal-utility-tools[hidden],
+#journalOverlay .journal-utility-tools[hidden]{display:none!important}
+body.tabletop-upgrade.game-running .other-combat-notice:not([hidden]){position:fixed;top:calc(var(--rpg-turnbar-height) + 12px);left:50%;transform:translateX(-50%);z-index:13000;max-width:min(430px,calc(100vw - 24px));width:max-content;min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px 16px;background:#2a2518;color:#ffe4a4;border:1px solid #bd975a;border-radius:12px;box-shadow:0 10px 35px #000b;font-size:13px;font-weight:800;pointer-events:none}
+body.tabletop-upgrade.game-running .combat-restore-button{display:none!important}
+/* Keep the personal dice settings above battle/rolls but below the always-active top controls. */
+.dice-settings[open]{position:fixed!important;inset:calc(var(--rpg-turnbar-height) + 10px) 0 auto 0!important;margin:auto!important;z-index:26000!important}
+@media(max-width:900px),(pointer:coarse){
+ :root{--rpg-turnbar-height:calc(80px + env(safe-area-inset-top,0px))}
+ body.tabletop-upgrade.game-running .topbar{display:none!important}
+ body.tabletop-upgrade.game-running .turn-order-banner{height:var(--rpg-turnbar-height)!important;min-height:var(--rpg-turnbar-height)!important;padding:calc(7px + env(safe-area-inset-top,0px)) 6px 5px!important;grid-template-columns:none!important}
+ body.tabletop-upgrade.game-running .turn-order-banner .table-round,body.tabletop-upgrade.game-running .turn-order-banner .turn-order-code{display:none!important}
+ body.tabletop-upgrade.game-running .table-top-tools{gap:3px}
+ body.tabletop-upgrade.game-running .table-icon-button{width:36px;min-width:36px;height:40px;min-height:40px;padding:7px;border-radius:8px}
+ .table-icon-button svg{width:21px;height:21px}
+ body.tabletop-upgrade.game-running .turn-order-banner .table-turns{gap:3px}
+ /* Full-screen, movable map behind both immovable toolbars. */
+ body.tabletop-upgrade.game-running .layout{display:block!important;height:100dvh!important;min-height:0!important;padding:0!important;margin:0!important;overflow:hidden!important}
+ body.tabletop-upgrade.game-running .board-panel{position:fixed!important;inset:0!important;left:0!important;right:0!important;top:0!important;bottom:0!important;order:0!important;display:flex!important;width:100vw!important;height:100dvh!important;min-height:0!important;max-height:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;z-index:10!important;background:#0f1317}
+ body.tabletop-upgrade.game-running .board-wrap{width:100%!important;height:100%!important;flex:1 1 auto!important;overflow:auto!important;overscroll-behavior:contain;touch-action:pan-x pan-y pinch-zoom}
+ body.tabletop-upgrade.game-running .board-footer{display:none!important}
+ body.tabletop-upgrade.game-running .map-zoom-controls{position:fixed!important;right:9px!important;top:calc(var(--rpg-turnbar-height) + 8px)!important;left:auto!important;z-index:180!important;display:flex!important;flex-direction:column;gap:6px}
+ body.tabletop-upgrade.game-running .map-zoom-controls button{width:42px!important;height:42px!important;min-height:42px!important}
+ /* Controls grow only as new actionable options are added, and remain anchored at bottom. */
+ body.tabletop-upgrade.game-running .side-panel{position:fixed!important;order:1!important;bottom:0!important;left:0!important;right:0!important;top:auto!important;width:100vw!important;height:auto!important;min-height:0!important;max-height:min(44dvh,375px)!important;overflow-y:auto!important;overflow-x:hidden!important;z-index:900!important;margin:0!important;border-radius:15px 15px 0 0!important;padding:8px 10px calc(7px + env(safe-area-inset-bottom,0px))!important}
+ body.tabletop-upgrade.game-running .side-panel #gameSection{height:auto!important;max-height:none!important;overflow:visible!important}
+ body.tabletop-upgrade.game-running .side-panel .mobile-quick-actions{position:sticky!important;top:-8px!important}
+ body.tabletop-upgrade.game-running .journal-card{width:100%!important;height:100%!important;max-height:none!important}
+ body.tabletop-upgrade.game-running .journal-overlay:not([hidden]){padding:6px!important}
+ body.tabletop-upgrade.game-running .settings-overlay:not([hidden]){padding:8px!important}
+ body.tabletop-upgrade.game-running .settings-actions{gap:9px!important;padding:15px!important}
+ body.tabletop-upgrade.game-running .other-combat-notice:not([hidden]){top:calc(var(--rpg-turnbar-height) + 6px)}
+}
+@media (orientation:landscape) and (max-height:520px) and (pointer:coarse){
+ body.tabletop-upgrade.game-running .board-panel{inset:0!important;width:100vw!important;height:100dvh!important}
+ body.tabletop-upgrade.game-running .side-panel{width:min(39vw,340px)!important;left:auto!important;right:0!important;max-height:calc(100dvh - var(--rpg-turnbar-height))!important;border-radius:14px 0 0 0!important}
+}
+/* Use ID selectors to defeat legacy full-viewport journal/mobile inset rules. */
+body.tabletop-upgrade.game-running #journalOverlay,
+body.tabletop-upgrade.game-running #settingsOverlay{inset:var(--rpg-turnbar-height) 0 0 0!important;top:var(--rpg-turnbar-height)!important;bottom:0!important;max-height:calc(100dvh - var(--rpg-turnbar-height))!important}
+/* The desktop header keeps its original flow position under the fixed initiative bar. */
+@media(min-width:901px) and (pointer:fine){
+ body.tabletop-upgrade.game-running .topbar{position:relative!important;top:0!important;left:auto!important;right:auto!important;margin-top:var(--rpg-turnbar-height)!important}
+}
