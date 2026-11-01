@@ -3963,7 +3963,17 @@
   if(els.mobileHeroBtn)els.mobileHeroBtn.addEventListener('click',()=>toggleCharacterSheet('overview'));
   if(els.mobileInventoryBtn)els.mobileInventoryBtn.addEventListener('click',()=>toggleCharacterSheet('inventory'));
   if(els.mobileJournalBtn)els.mobileJournalBtn.addEventListener('click',showJournalOverlay);
-  // Fixed action strip: never resize the map based on changing action choices.
+  // Bottom toolbar v0.6.107: track its natural height so the 0.6.110 map
+  // continues to occupy the space between the two menus.
+  if(typeof ResizeObserver!=='undefined'){
+    const bottomToolbar=document.querySelector('.side-panel');
+    if(bottomToolbar){
+      const ro=new ResizeObserver(entries=>{
+        const px=Math.ceil(entries[0]?.borderBoxSize?.[0]?.blockSize||bottomToolbar.getBoundingClientRect().height||0);
+        if(px>0)document.documentElement.style.setProperty('--rpg-bottom-toolbar-height',`${px}px`);
+      });ro.observe(bottomToolbar);
+    }
+  }
   let resizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{applyMapZoom(false);if(state.started&&isMobileViewport()&&els.sheetDrawer.hidden)centerMapOnPlayer(mapFocusPlayer(),'auto')},120)});
   let pinchStartDist=0,pinchStartZoom=1;const touchDistance=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);if(els.boardWrap){els.boardWrap.addEventListener('touchstart',e=>{if(e.touches.length===2){pinchStartDist=touchDistance(e.touches);pinchStartZoom=Number(state.mapZoom||1)}},{passive:true});els.boardWrap.addEventListener('touchmove',e=>{if(e.touches.length===2&&pinchStartDist>0){e.preventDefault();const ratio=touchDistance(e.touches)/pinchStartDist;state.mapZoom=Math.round(clamp(pinchStartZoom*ratio,.6,2)*20)/20;applyMapZoom(false)}},{passive:false});els.boardWrap.addEventListener('touchend',e=>{if(e.touches.length<2)pinchStartDist=0},{passive:true})}
   if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
