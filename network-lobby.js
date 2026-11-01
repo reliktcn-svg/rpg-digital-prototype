@@ -286,7 +286,6 @@
 
   window.addEventListener('rpg-side-interaction-change',e=>{if(!session.gameEntered)return;if(e.detail?.active){session.lastSideSnapshot=''}else{session.lastSideSnapshot='';setTimeout(()=>syncGame(),80)}});
 
-  window.RPGNetworkReturnHome=()=>{clearInterval(session.timer);clearInterval(session.gameTimer);session.gameEntered=false;window.__RPG_NET_CONNECTED__=false;overlay.hidden=false;document.body.classList.add('net-lobby-open');showHome();};
   $('netMapJoin').onclick=()=>{
     const code=$('netCodeInput').value.replace(/\D/g,'').slice(0,6);
     if(code.length!==6){showError('Введите 6-значный код комнаты для карты.');return}
