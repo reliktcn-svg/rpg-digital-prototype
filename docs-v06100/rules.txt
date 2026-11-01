@@ -1,2 +1,0 @@
-585 progression assertions passed
-Shared atlas, immunity and fixed reduction checks passed

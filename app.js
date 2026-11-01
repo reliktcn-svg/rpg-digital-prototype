@@ -3827,7 +3827,6 @@
       els.turnOrderBanner.dataset.scrollKey=String(active?.id);els.turnOrderBanner.querySelector('.table-turns')?.scrollTo({left:0,behavior:'instant'});
     }
   }
-
   function updateUI(){
     refreshHeartCleansing();
     if(state.combat)for(const [key,status] of [['enemyPoison','Яд'],['enemyBleed','Кровотечение'],['enemyBurn','Горение']])if(state.combat[key]>PERIODIC_STATUS_RULES[status].turns)state.combat[key]=PERIODIC_STATUS_RULES[status].turns;
@@ -3964,17 +3963,7 @@
   if(els.mobileHeroBtn)els.mobileHeroBtn.addEventListener('click',()=>toggleCharacterSheet('overview'));
   if(els.mobileInventoryBtn)els.mobileInventoryBtn.addEventListener('click',()=>toggleCharacterSheet('inventory'));
   if(els.mobileJournalBtn)els.mobileJournalBtn.addEventListener('click',showJournalOverlay);
-  // Observe the dynamic height of the fixed mobile action toolbar. This keeps
-  // the 16:10 map framed entirely in the space BETWEEN the two fixed menus.
-  if(typeof ResizeObserver!=='undefined'){
-    const bottomToolbar=document.querySelector('.side-panel');
-    if(bottomToolbar){
-      const ro=new ResizeObserver(entries=>{
-        const px=Math.ceil(entries[0]?.borderBoxSize?.[0]?.blockSize||bottomToolbar.getBoundingClientRect().height||0);
-        if(px>0)document.documentElement.style.setProperty('--rpg-bottom-toolbar-height',`${px}px`);
-      });ro.observe(bottomToolbar);
-    }
-  }
+  // Fixed action strip: never resize the map based on changing action choices.
   let resizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{applyMapZoom(false);if(state.started&&isMobileViewport()&&els.sheetDrawer.hidden)centerMapOnPlayer(mapFocusPlayer(),'auto')},120)});
   let pinchStartDist=0,pinchStartZoom=1;const touchDistance=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);if(els.boardWrap){els.boardWrap.addEventListener('touchstart',e=>{if(e.touches.length===2){pinchStartDist=touchDistance(e.touches);pinchStartZoom=Number(state.mapZoom||1)}},{passive:true});els.boardWrap.addEventListener('touchmove',e=>{if(e.touches.length===2&&pinchStartDist>0){e.preventDefault();const ratio=touchDistance(e.touches)/pinchStartDist;state.mapZoom=Math.round(clamp(pinchStartZoom*ratio,.6,2)*20)/20;applyMapZoom(false)}},{passive:false});els.boardWrap.addEventListener('touchend',e=>{if(e.touches.length<2)pinchStartDist=0},{passive:true})}
   if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
