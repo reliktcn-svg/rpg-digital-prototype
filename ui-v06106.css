@@ -45,10 +45,10 @@ body.tabletop-upgrade.game-running .combat-restore-button{display:none!important
  body.tabletop-upgrade.game-running .table-icon-button{width:36px;min-width:36px;height:40px;min-height:40px;padding:7px;border-radius:8px}
  .table-icon-button svg{width:21px;height:21px}
  body.tabletop-upgrade.game-running .turn-order-banner .table-turns{gap:3px}
- /* Full-screen, movable map behind both immovable toolbars. */
+ /* Framed 16:10 map in the free space between both immovable menus. */
  body.tabletop-upgrade.game-running .layout{display:block!important;height:100dvh!important;min-height:0!important;padding:0!important;margin:0!important;overflow:hidden!important}
- body.tabletop-upgrade.game-running .board-panel{position:fixed!important;inset:0!important;left:0!important;right:0!important;top:0!important;bottom:0!important;order:0!important;display:flex!important;width:100vw!important;height:100dvh!important;min-height:0!important;max-height:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;z-index:10!important;background:#0f1317}
- body.tabletop-upgrade.game-running .board-wrap{width:100%!important;height:100%!important;flex:1 1 auto!important;overflow:auto!important;overscroll-behavior:contain;touch-action:pan-x pan-y pinch-zoom}
+ body.tabletop-upgrade.game-running .board-panel{position:fixed!important;inset:var(--rpg-turnbar-height) 0 var(--rpg-bottom-toolbar-height,220px) 0!important;left:0!important;right:0!important;top:var(--rpg-turnbar-height)!important;bottom:var(--rpg-bottom-toolbar-height,220px)!important;order:0!important;display:flex!important;align-items:center!important;justify-content:center!important;width:100vw!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;padding:6px!important;border:0!important;border-radius:0!important;z-index:10!important;background:#0f1317}
+ body.tabletop-upgrade.game-running .board-wrap{width:min(100%, calc((100dvh - var(--rpg-turnbar-height) - var(--rpg-bottom-toolbar-height,220px) - 16px) * 1.6))!important;height:auto!important;aspect-ratio:16 / 10!important;max-height:100%!important;flex:0 1 auto!important;overflow:auto!important;overscroll-behavior:contain;touch-action:pan-x pan-y pinch-zoom;border:3px solid #ae8a5a!important;border-radius:12px!important;box-shadow:0 6px 22px #0009!important;background:#0f1317}
  body.tabletop-upgrade.game-running .board-footer{display:none!important}
  body.tabletop-upgrade.game-running .map-zoom-controls{position:fixed!important;right:9px!important;top:calc(var(--rpg-turnbar-height) + 8px)!important;left:auto!important;z-index:180!important;display:flex!important;flex-direction:column;gap:6px}
  body.tabletop-upgrade.game-running .map-zoom-controls button{width:42px!important;height:42px!important;min-height:42px!important}
@@ -63,8 +63,8 @@ body.tabletop-upgrade.game-running .combat-restore-button{display:none!important
  body.tabletop-upgrade.game-running .other-combat-notice:not([hidden]){top:calc(var(--rpg-turnbar-height) + 6px)}
 }
 @media (orientation:landscape) and (max-height:520px) and (pointer:coarse){
- body.tabletop-upgrade.game-running .board-panel{inset:0!important;width:100vw!important;height:100dvh!important}
- body.tabletop-upgrade.game-running .side-panel{width:min(39vw,340px)!important;left:auto!important;right:0!important;max-height:calc(100dvh - var(--rpg-turnbar-height))!important;border-radius:14px 0 0 0!important}
+ body.tabletop-upgrade.game-running .board-panel{inset:var(--rpg-turnbar-height) 0 var(--rpg-bottom-toolbar-height,180px) 0!important;width:100vw!important;height:auto!important}
+ body.tabletop-upgrade.game-running .side-panel{width:100vw!important;left:0!important;right:0!important;max-height:min(44dvh,220px)!important;border-radius:12px 12px 0 0!important}
 }
 /* Use ID selectors to defeat legacy full-viewport journal/mobile inset rules. */
 body.tabletop-upgrade.game-running #journalOverlay,
@@ -72,4 +72,32 @@ body.tabletop-upgrade.game-running #settingsOverlay{inset:var(--rpg-turnbar-heig
 /* The desktop header keeps its original flow position under the fixed initiative bar. */
 @media(min-width:901px) and (pointer:fine){
  body.tabletop-upgrade.game-running .topbar{position:relative!important;top:0!important;left:auto!important;right:auto!important;margin-top:var(--rpg-turnbar-height)!important}
+}
+
+/* v0.6.107: the eye is a NON-DESTRUCTIVE visibility toggle. Game state,
+   combat callbacks, roll animation timers and original modal DOM remain alive. */
+body.game-running.combat-window-hidden #modal:has(.combat-shell),
+body.game-running.combat-window-hidden .arcana-battle-layer:not([hidden]),
+body.game-running.combat-window-hidden #rollOverlay:not([hidden]){
+  opacity:0!important;visibility:hidden!important;pointer-events:none!important;
+}
+/* Keep a closed eye visibly crossed out without changing its click target. */
+body.tabletop-upgrade.game-running .table-icon-button[data-table-combat] svg.eye-closed{
+  background:linear-gradient(143deg,transparent 46%,#ef6f65 47%,#ef6f65 53%,transparent 54%)!important;
+}
+@media(max-width:900px),(pointer:coarse){
+ :root{--rpg-bottom-toolbar-height:220px}
+ /* Overlay windows cover bottom controls; initiative/menu stays ABOVE them. */
+ body.tabletop-upgrade.game-running #modal:not([hidden]){z-index:4400!important}
+ body.tabletop-upgrade.game-running #rollOverlay:not([hidden]){z-index:4500!important}
+ body.tabletop-upgrade.game-running .arcana-battle-layer:not([hidden]){z-index:4550!important}
+ body.tabletop-upgrade.game-running #sheetDrawer:not([hidden]){z-index:4700!important}
+ body.tabletop-upgrade.game-running .skill-tree-dialog,
+ body.tabletop-upgrade.game-running .skill-detail-dialog{z-index:4800!important}
+ body.tabletop-upgrade.game-running .board-wrap{box-sizing:border-box!important}
+}
+
+@media (orientation:landscape) and (max-height:520px) and (pointer:coarse){
+ body.tabletop-upgrade.game-running .map-zoom-controls{gap:3px!important}
+ body.tabletop-upgrade.game-running .map-zoom-controls button{width:31px!important;height:31px!important;min-height:31px!important;font-size:20px!important}
 }

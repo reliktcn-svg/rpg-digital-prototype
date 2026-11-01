@@ -201,7 +201,7 @@
     return o;
   }
   function freshState(){return {
-    version:'0.6.104', mercenaryRevision:1, started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
+    version:'0.6.107', mercenaryRevision:1, started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
     decks:initialDecks(), cleaned:{}, cleanedUntil:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, tradeDeal:null, dungeonEntryNotice:null, territoryBuiltNotice:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:3, sharedDifficulty:null, journal:[]
   };}
   let state=freshState();
@@ -277,17 +277,22 @@
   }
   function hideCombatWindow(){
     if(!state.combat)return;
-    if(arcanaBattleLayer&&!arcanaBattleLayer.hidden)stopArcanaBattlePresentation();
+    // The eye changes visibility ONLY. Do not close the combat modal, cancel a
+    // running dice animation, discard a pending roll, or mutate combat state.
     combatWindowHidden=true;
-    if(!els.modal.hidden&&els.modalContent.querySelector('.combat-shell')){
-      if(!restoreModalAfterObservedCombat())closeModal();
+    if(!localControlsCombat()&&savedObserverModal){
+      // The spectator's original merchant/trap remains interactive after we
+      // return from viewing the remote combat. Combat itself lives in state.
+      restoreModalAfterObservedCombat();
     }
-    updateCombatRestoreButton();updateUI();renderBoard();
+    updateCombatRestoreButton();
   }
   function showCombatWindow(){
     if(!state.combat)return;
     if(!localControlsCombat())parkModalForObservedCombat();
-    combatWindowHidden=false;updateCombatRestoreButton();renderCombat(true);
+    combatWindowHidden=false;
+    updateCombatRestoreButton();
+    if(!els.modalContent.querySelector('.combat-shell')||els.modal.hidden||!localControlsCombat())renderCombat();
   }
   function canOffturnModalActionFor(heroId){return !!heroId&&modalOffturnOwnerId===heroId}
   function beginSideInteraction(p,type,participantIds=[p?.id].filter(Boolean)){
@@ -357,13 +362,25 @@
   function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
   function localViewHeroId(){return onlineLocalHeroId||null}
   function journalOwnerId(){return localViewHeroId()||currentPlayer()?.id||null}
+  function syncTopToolButtons(){
+    const banner=els.turnOrderBanner;if(!banner)return;
+    for(const [selector,open] of [['[data-table-journal]',!els.journalOverlay.hidden],['[data-table-settings]',!document.getElementById('settingsOverlay')?.hidden]]){
+      const button=banner.querySelector(selector);if(!button)continue;
+      button.classList.toggle('is-watching',!!open);
+      button.setAttribute('aria-pressed',String(!!open));
+    }
+  }
+  function closeJournalOverlay(){els.journalOverlay.hidden=true;syncTopToolButtons()}
+  function closeSettingsOverlay(){const el=document.getElementById('settingsOverlay');if(el)el.hidden=true;syncTopToolButtons()}
   function showJournalOverlay(){
+    if(!els.journalOverlay.hidden){closeJournalOverlay();return}
     const settings=document.getElementById('settingsOverlay');if(settings)settings.hidden=true;
-    renderJournal();els.journalOverlay.hidden=false;
+    renderJournal();els.journalOverlay.hidden=false;syncTopToolButtons();
   }
   function showSettingsOverlay(){
-    els.journalOverlay.hidden=true;
-    const settings=document.getElementById('settingsOverlay');if(settings)settings.hidden=false;
+    const settings=document.getElementById('settingsOverlay');if(!settings)return;
+    if(!settings.hidden){closeSettingsOverlay();return}
+    els.journalOverlay.hidden=true;settings.hidden=false;syncTopToolButtons();
   }
   function renderJournal(){
     const roomCode=String(window.__RPG_ROOM_CODE__||'').trim();
@@ -642,7 +659,7 @@
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,progressionVersion:2,masteryPoints:0,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,potions:[null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:sharedHard,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats(),territoryBuildSeq:{kingdom:0,cursed:0}}});
     generatePermanentLocations({preserve:false});
     state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;els.sheetDrawer.hidden=true;setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
-    log(`<b>Партия v0.6.106 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
+    log(`<b>Партия v0.6.107 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
     state.order.forEach(id=>{const p=getPlayer(id);log(`Инициатива ${p.name}: D20 = <b>${p.initiative}</b>.`,p.id)});updateUI();renderBoard();
   }
 
@@ -3612,11 +3629,11 @@
     return rows.length?`<div class="combat-enemy-effects"><b>Активные эффекты:</b> ${rows.join(' · ')}</div>`:'';
   }
   function renderCombat(force=false){
-    if(state.combat&&!localControlsCombat()&&combatWindowHidden&&!force){updateCombatRestoreButton();return;}
+    if(state.combat&&!localControlsCombat()&&combatWindowHidden){updateCombatRestoreButton();return;}
     // A previous winner may still be choosing loot while the next hero fights.
     // Do not overwrite that winner's local result/loot window with the remote battle.
     if(postVictorySession&&onlineLocalHeroId===postVictorySession.heroId)return;
-    const c=state.combat,p=currentPlayer(),e=combatEnemy();if(!c||!e){syncCombatStunNotice(null);return}if(c.phase==='hero_turn'&&c.heroStunned>0&&localControlsCombat()&&els.rollOverlay.hidden){startCombatStun('hero');return}syncCombatStunNotice(c);if(c.phase==='victory'&&c.victoryUiStep==='loot'&&els.modal.dataset.lootDraft==='true')return;syncLocalCombatWindowState();if(combatWindowHidden&&!force){updateCombatRestoreButton();scheduleCombatAuto();return}if(force)combatWindowHidden=false;updateCombatRestoreButton();
+    const c=state.combat,p=currentPlayer(),e=combatEnemy();if(!c||!e){syncCombatStunNotice(null);return}if(c.phase==='hero_turn'&&c.heroStunned>0&&localControlsCombat()&&els.rollOverlay.hidden){startCombatStun('hero');return}syncCombatStunNotice(c);if(c.phase==='victory'&&c.victoryUiStep==='loot'&&els.modal.dataset.lootDraft==='true')return;syncLocalCombatWindowState();if(combatWindowHidden&&!localControlsCombat()){updateCombatRestoreButton();scheduleCombatAuto();return}updateCombatRestoreButton();
     document.body.classList.add('combat-active');els.modalClose.style.display='none';const localCombatant=localControlsCombat(),reactions=localCombatant&&c.phase==='hero_turn'?combatReactionList():[];let phaseHtml='',actions='';
     const decisions=localCombatant?combatDecisionOptions(c.phase):[];
     if(localCombatant){
@@ -3804,7 +3821,7 @@
     els.turnOrderBanner.querySelector('[data-table-journal]')?.addEventListener('click',showJournalOverlay);
     els.turnOrderBanner.querySelector('[data-table-settings]')?.addEventListener('click',showSettingsOverlay);
     els.turnOrderBanner.querySelector('[data-table-combat]')?.addEventListener('click',()=>{if(!state.combat)return;combatWindowHidden?showCombatWindow():hideCombatWindow()});
-    updateCombatRestoreButton();
+    updateCombatRestoreButton();syncTopToolButtons();
     // Preserve horizontal scroll on mobile as the turn order refreshes.
     if(els.turnOrderBanner.dataset.scrollKey!==String(active?.id)){
       els.turnOrderBanner.dataset.scrollKey=String(active?.id);els.turnOrderBanner.querySelector('.table-turns')?.scrollTo({left:0,behavior:'instant'});
@@ -3875,7 +3892,7 @@
     const groups={};state.players.forEach(p=>(groups[p.hex]??=[]).push(p));const tokenPositions={};Object.entries(groups).forEach(([hex,ps])=>{const h=MAP.hexes[hex];if(!h)return;const n=ps.length;ps.forEach((p,i)=>{const a=n===1?0:Math.PI*2*i/n,rad=n===1?0:18,x=h.x+Math.cos(a)*rad,y=h.y+Math.sin(a)*rad;tokenPositions[p.id]={x,y};RPGTabletop.token(els.overlay,p,x,y,p.id===currentPlayer().id,svgEl)})});RPGTabletop.rememberTokens(tokenPositions);applyMapZoom(false)
   }
 
-  function saveGame(){if(!state.started)return;localStorage.setItem('rpgDigitalPrototypeV0648',JSON.stringify(state));log('Партия v0.6.106 сохранена в браузере.')}
+  function saveGame(){if(!state.started)return;localStorage.setItem('rpgDigitalPrototypeV0648',JSON.stringify(state));log('Партия v0.6.107 сохранена в браузере.')}
   function loadGame(){
     const raw=localStorage.getItem('rpgDigitalPrototypeV0654')||localStorage.getItem('rpgDigitalPrototypeV0653')||localStorage.getItem('rpgDigitalPrototypeV0652')||localStorage.getItem('rpgDigitalPrototypeV0651')||localStorage.getItem('rpgDigitalPrototypeV0648')||localStorage.getItem('rpgDigitalPrototypeV0647')||localStorage.getItem('rpgDigitalPrototypeV0646')||localStorage.getItem('rpgDigitalPrototypeV0645')||localStorage.getItem('rpgDigitalPrototypeV0639')||localStorage.getItem('rpgDigitalPrototypeV0638')||localStorage.getItem('rpgDigitalPrototypeV0637')||localStorage.getItem('rpgDigitalPrototypeV0636')||localStorage.getItem('rpgDigitalPrototypeV0635')||localStorage.getItem('rpgDigitalPrototypeV0634')||localStorage.getItem('rpgDigitalPrototypeV0633')||localStorage.getItem('rpgDigitalPrototypeV0632')||localStorage.getItem('rpgDigitalPrototypeV0631')||localStorage.getItem('rpgDigitalPrototypeV063')||localStorage.getItem('rpgDigitalPrototypeV062')||localStorage.getItem('rpgDigitalPrototypeV060')||localStorage.getItem('rpgDigitalPrototypeV0522')||localStorage.getItem('rpgDigitalPrototypeV0521')||localStorage.getItem('rpgDigitalPrototypeV0520')||localStorage.getItem('rpgDigitalPrototypeV0519')||localStorage.getItem('rpgDigitalPrototypeV0518')||localStorage.getItem('rpgDigitalPrototypeV0517')||localStorage.getItem('rpgDigitalPrototypeV0516')||localStorage.getItem('rpgDigitalPrototypeV0515')||localStorage.getItem('rpgDigitalPrototypeV0514')||localStorage.getItem('rpgDigitalPrototypeV0513')||localStorage.getItem('rpgDigitalPrototypeV0512')||localStorage.getItem('rpgDigitalPrototypeV0511')||localStorage.getItem('rpgDigitalPrototypeV0510')||localStorage.getItem('rpgDigitalPrototypeV059')||localStorage.getItem('rpgDigitalPrototypeV058')||localStorage.getItem('rpgDigitalPrototypeV057')||localStorage.getItem('rpgDigitalPrototypeV056')||localStorage.getItem('rpgDigitalPrototypeV055')||localStorage.getItem('rpgDigitalPrototypeV054')||localStorage.getItem('rpgDigitalPrototypeV053')||localStorage.getItem('rpgDigitalPrototypeV052')||localStorage.getItem('rpgDigitalPrototypeV051')||localStorage.getItem('rpgDigitalPrototypeV050')||localStorage.getItem('rpgDigitalPrototypeV045')||localStorage.getItem('rpgDigitalPrototypeV044')||localStorage.getItem('rpgDigitalPrototypeV043')||localStorage.getItem('rpgDigitalPrototypeV042')||localStorage.getItem('rpgDigitalPrototypeV041')||localStorage.getItem('rpgDigitalPrototypeV040')||localStorage.getItem('rpgDigitalPrototypeV033')||localStorage.getItem('rpgDigitalPrototypeV032');
     if(!raw){alert('Сохранённой партии пока нет.');return}
@@ -3888,7 +3905,7 @@
       const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
-      state.version='0.6.104';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.106.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
+      state.version='0.6.107';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.107.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
     }catch(e){console.error(e);alert('Не удалось загрузить сохранение.')}
   }
   function cloneJson(v){return JSON.parse(JSON.stringify(v))}
@@ -3906,14 +3923,14 @@
     if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
-    state.version='0.6.104';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    state.version='0.6.107';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){
     const localZoom=Number(state.mapZoom||1),localInspect=state.inspectPlayerId??null,localHighlight=state.mapHighlight??null,localJournal=state.combat?.journalOpen??false,mobileSheetWasOpen=isMobileViewport()&&!els.sheetDrawer.hidden;
     normalizeIncomingState(next);state.mapZoom=localZoom;state.inspectPlayerId=localInspect;state.mapHighlight=localHighlight;if(state.combat)state.combat.journalOpen=localJournal;
     const newCombat=syncLocalCombatWindowState();document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;
-    if(isMobileViewport()&&(!mobileSheetWasOpen||newCombat&&localControlsCombat()))els.sheetDrawer.hidden=true;if(!state.tradeDeal&&sideInteraction?.type==='trade')endSideInteraction();if(!state.tradeDeal&&!els.modal.hidden&&els.modalContent.querySelector('.player-trade-shell'))closeModal();updateUI();renderBoard();renderJournal();if(state.combat){if(!combatWindowHidden&&!(state.combat.phase==='victory'&&(els.modal.classList.contains('post-combat-prompt')||els.modal.dataset.lootDraft==='true'||!els.rollOverlay.hidden||['build','loot'].includes(state.combat.victoryUiStep))))renderCombat();else updateCombatRestoreButton();if(state.combat.phase==='victory'&&state.combat.victoryUiStep==='loot'&&!els.modal.dataset.lootDraft&&els.rollOverlay.hidden&&localControlsCombat())openVictoryLootDraft()}else if(!els.modal.hidden&&els.modalContent.querySelector('.combat-shell'))closeModal();maybeShowDungeonEntryNotice();maybeShowTradeDeal();const focus=mapFocusPlayer();const focusKey=focus?`${focus.id}:${focus.hex}`:'';
+    if(isMobileViewport()&&(!mobileSheetWasOpen||newCombat&&localControlsCombat()))els.sheetDrawer.hidden=true;if(!state.tradeDeal&&sideInteraction?.type==='trade')endSideInteraction();if(!state.tradeDeal&&!els.modal.hidden&&els.modalContent.querySelector('.player-trade-shell'))closeModal();updateUI();renderBoard();renderJournal();if(state.combat){if((!combatWindowHidden||localControlsCombat())&&!(state.combat.phase==='victory'&&(els.modal.classList.contains('post-combat-prompt')||els.modal.dataset.lootDraft==='true'||!els.rollOverlay.hidden||['build','loot'].includes(state.combat.victoryUiStep))))renderCombat();else updateCombatRestoreButton();if(state.combat.phase==='victory'&&state.combat.victoryUiStep==='loot'&&!els.modal.dataset.lootDraft&&els.rollOverlay.hidden&&localControlsCombat())openVictoryLootDraft()}else if(!els.modal.hidden&&els.modalContent.querySelector('.combat-shell'))closeModal();maybeShowDungeonEntryNotice();maybeShowTradeDeal();const focus=mapFocusPlayer();const focusKey=focus?`${focus.id}:${focus.hex}`:'';
     if(focusKey&&applyOnlineState.lastFocusKey!==focusKey){applyOnlineState.lastFocusKey=focusKey;setTimeout(()=>centerMapOnPlayer(mapFocusPlayer(),'auto'),40)}
     if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
   }
@@ -3925,20 +3942,20 @@
   if(els.sheetInventoryTab)els.sheetInventoryTab.addEventListener('click',()=>{toggleCharacterSheet('inventory',sheetView.playerId||currentPlayer()?.id)});
   if(els.rollPopupClose)els.rollPopupClose.addEventListener('click',()=>{clearLevelUpNotice();els.rollOverlay.hidden=true;document.body.classList.remove('arcana-info-presenting');infoDiceToken++;const after=rollPopupAfterClose;rollPopupAfterClose=null;els.rollPopupClose.textContent='Продолжить';if(after)after();if(els.rollOverlay.hidden)showNextRollPopup();if(sideInteraction?.type==='territory'&&els.rollOverlay.hidden&&!rollPopupQueue.length)endSideInteraction()});
   const settingsOverlay=document.getElementById('settingsOverlay');
-  document.getElementById('settingsClose')?.addEventListener('click',()=>{settingsOverlay.hidden=true});
-  settingsOverlay?.addEventListener('click',e=>{if(e.target===settingsOverlay)settingsOverlay.hidden=true});
+  document.getElementById('settingsClose')?.addEventListener('click',closeSettingsOverlay);
+  settingsOverlay?.addEventListener('click',e=>{if(e.target===settingsOverlay)closeSettingsOverlay()});
   document.getElementById('settingsDiceBtn')?.addEventListener('click',()=>document.getElementById('journalDiceBtn')?.click());
   for(const [button,target] of [['settingsSaveBtn','saveBtn'],['settingsLoadBtn','loadBtn'],['settingsResetBtn','resetBtn']]){
     document.getElementById(button)?.addEventListener('click',()=>{
-      if(button!=='settingsSaveBtn')settingsOverlay.hidden=true;
+      if(button!=='settingsSaveBtn')closeSettingsOverlay();
       document.getElementById(target)?.click();
     });
   }
   if(els.journalBtn)els.journalBtn.addEventListener('click',showJournalOverlay);
   if(els.journalMine)els.journalMine.addEventListener('click',()=>{journalFilterMode='mine';renderJournal()});
   if(els.journalAll)els.journalAll.addEventListener('click',()=>{journalFilterMode='all';renderJournal()});
-  if(els.journalClose)els.journalClose.addEventListener('click',()=>{els.journalOverlay.hidden=true});
-  if(els.journalOverlay)els.journalOverlay.addEventListener('click',e=>{if(e.target===els.journalOverlay)els.journalOverlay.hidden=true});
+  if(els.journalClose)els.journalClose.addEventListener('click',closeJournalOverlay);
+  if(els.journalOverlay)els.journalOverlay.addEventListener('click',e=>{if(e.target===els.journalOverlay)closeJournalOverlay()});
   if(els.mapZoomIn)els.mapZoomIn.addEventListener('click',()=>changeMapZoom(.1));
   if(els.mapZoomOut)els.mapZoomOut.addEventListener('click',()=>changeMapZoom(-.1));
   document.getElementById('tableCenter')?.addEventListener('click',()=>centerMapOnPlayer(mapFocusPlayer()));
@@ -3947,6 +3964,17 @@
   if(els.mobileHeroBtn)els.mobileHeroBtn.addEventListener('click',()=>toggleCharacterSheet('overview'));
   if(els.mobileInventoryBtn)els.mobileInventoryBtn.addEventListener('click',()=>toggleCharacterSheet('inventory'));
   if(els.mobileJournalBtn)els.mobileJournalBtn.addEventListener('click',showJournalOverlay);
+  // Observe the dynamic height of the fixed mobile action toolbar. This keeps
+  // the 16:10 map framed entirely in the space BETWEEN the two fixed menus.
+  if(typeof ResizeObserver!=='undefined'){
+    const bottomToolbar=document.querySelector('.side-panel');
+    if(bottomToolbar){
+      const ro=new ResizeObserver(entries=>{
+        const px=Math.ceil(entries[0]?.borderBoxSize?.[0]?.blockSize||bottomToolbar.getBoundingClientRect().height||0);
+        if(px>0)document.documentElement.style.setProperty('--rpg-bottom-toolbar-height',`${px}px`);
+      });ro.observe(bottomToolbar);
+    }
+  }
   let resizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{applyMapZoom(false);if(state.started&&isMobileViewport()&&els.sheetDrawer.hidden)centerMapOnPlayer(mapFocusPlayer(),'auto')},120)});
   let pinchStartDist=0,pinchStartZoom=1;const touchDistance=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);if(els.boardWrap){els.boardWrap.addEventListener('touchstart',e=>{if(e.touches.length===2){pinchStartDist=touchDistance(e.touches);pinchStartZoom=Number(state.mapZoom||1)}},{passive:true});els.boardWrap.addEventListener('touchmove',e=>{if(e.touches.length===2&&pinchStartDist>0){e.preventDefault();const ratio=touchDistance(e.touches)/pinchStartDist;state.mapZoom=Math.round(clamp(pinchStartZoom*ratio,.6,2)*20)/20;applyMapZoom(false)}},{passive:false});els.boardWrap.addEventListener('touchend',e=>{if(e.touches.length<2)pinchStartDist=0},{passive:true})}
   if('serviceWorker' in navigator&&location.protocol!=='file:')window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
