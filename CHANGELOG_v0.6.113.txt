@@ -1,0 +1,10 @@
+RPG Digital Prototype v0.6.113 — Mobile location dialog height and scrolling
+Base: v0.6.112 Eye Toggle Fix.
+
+- Tavern, shrine and merchant dialogs on mobile adapt their height to their contents.
+- When taller than the available screen, scroll the entire dialog, including its bottom buttons.
+- Dialog appears below the permanent top turn bar; the bottom uses safe-area spacing.
+- No game logic, eye, lower menu, battle UI, map or desktop layout changed.
+- ui-v06108.css modified; index.html/sw.js cache keys updated.
+- Merchant scroll restoration now tracks the mobile window scroll container.
+- app.js cache-busting version updated.

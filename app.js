@@ -1863,7 +1863,9 @@
       <button type="button" class="loc-sell-nav" data-loc-jump="locSellSection">Продажа</button>
       <button id="merchantDone" class="loc-done" ${blocked?'disabled':''}>Готово</button>`;
     els.modalContent.innerHTML=locationWindow('merchant',p,content,footer,{cursed:regionCursed});
-    const scroll=els.modalContent.querySelector('.loc-scroll');
+    // v0.6.113: on mobile the entire location card scrolls, not .loc-scroll.
+    // Keep the merchant's position when buying, selling, or the server refreshes.
+    const scroll=isMobileViewport()?els.modalContent.closest('.modal-card'):els.modalContent.querySelector('.loc-scroll');
     if(scroll){scroll.scrollTop=shop.scrollTop||0;scroll.onscroll=()=>{shop.scrollTop=scroll.scrollTop};}
     els.modalContent.querySelectorAll('[data-loc-jump]').forEach(btn=>{btn.onclick=()=>{
       const target=els.modalContent.querySelector('#'+btn.dataset.locJump);
@@ -3818,9 +3820,8 @@
       const oldCode=els.turnOrderBanner.querySelector('.turn-order-code'),newCode=incoming.querySelector('.turn-order-code');if(oldCode&&newCode&&oldCode.textContent!==newCode.textContent)oldCode.textContent=newCode.textContent;
     }else els.turnOrderBanner.innerHTML=bannerHtml;
     if(!changedActive&&previousScroll)els.turnOrderBanner.querySelector('.table-turns').scrollLeft=previousScroll;
-    els.turnOrderBanner.querySelector('[data-table-journal]')?.addEventListener('click',showJournalOverlay);
-    els.turnOrderBanner.querySelector('[data-table-settings]')?.addEventListener('click',showSettingsOverlay);
-    els.turnOrderBanner.querySelector('[data-table-combat]')?.addEventListener('click',()=>{if(!state.combat)return;combatWindowHidden?showCombatWindow():hideCombatWindow()});
+    // Top menu clicks are delegated once from the permanent banner element.
+    // Re-rendering hero stats must never accumulate extra listeners on these buttons.
     updateCombatRestoreButton();syncTopToolButtons();
     // Preserve horizontal scroll on mobile as the turn order refreshes.
     if(els.turnOrderBanner.dataset.scrollKey!==String(active?.id)){
@@ -3950,6 +3951,18 @@
       document.getElementById(target)?.click();
     });
   }
+  // Register top-menu actions once on the stable banner container. The child
+  // buttons can be updated or replaced by renderTurnOrderBanner() safely.
+  els.turnOrderBanner?.addEventListener('click',event=>{
+    const button=event.target.closest('button');
+    if(!button||!els.turnOrderBanner.contains(button)||button.disabled)return;
+    if(button.matches('[data-table-journal]'))showJournalOverlay();
+    else if(button.matches('[data-table-settings]'))showSettingsOverlay();
+    else if(button.matches('[data-table-combat]')){
+      if(!state.combat)return;
+      combatWindowHidden?showCombatWindow():hideCombatWindow();
+    }
+  });
   if(els.journalBtn)els.journalBtn.addEventListener('click',showJournalOverlay);
   if(els.journalMine)els.journalMine.addEventListener('click',()=>{journalFilterMode='mine';renderJournal()});
   if(els.journalAll)els.journalAll.addEventListener('click',()=>{journalFilterMode='all';renderJournal()});
