@@ -1,0 +1,8 @@
+v0.6.118 — Mobile Android inventory scroll fix
+Base: RPG Digital Prototype v0.6.117 Popup Bounds Deck Reshuffle.
+Fix: one bounded vertical scroll container in the hero/inventory sheet.
+Cause: competing display:block and display:flex styles, with nested overflow-y:auto and overscroll containment.
+Preserve inventory scroll position when auto-refreshed by network/game updates.
+Touch scrolling enabled explicitly for other modal scroll areas, including journals, settings, location and combat results.
+Horizontal scrolling for backpack/unresolved loot retained.
+Map gestures, item data and combat/network mechanics untouched.

@@ -1,0 +1,68 @@
+/* v0.6.118 — Android / iOS / desktop safe scrolling.
+   Root cause: ui-v06108.css forced mobile #sheetDrawer to display:block,
+   while sheetContent remained an unconstrained nested scroll container.
+   Chrome Android could consume the swipe in that non-scrolling inner box.
+   Keep one bounded vertical scroll surface, without changing game logic. */
+
+@media (max-width:900px), (pointer:coarse) {
+  body.tabletop-upgrade.game-running #sheetDrawer:not([hidden]) {
+    position:fixed!important;
+    top:var(--rpg-turnbar-height,80px)!important;
+    right:0!important;bottom:0!important;left:0!important;
+    width:100vw!important;max-width:100vw!important;
+    height:calc(100vh - var(--rpg-turnbar-height,80px))!important;
+    height:calc(100dvh - var(--rpg-turnbar-height,80px))!important;
+    max-height:calc(100vh - var(--rpg-turnbar-height,80px))!important;
+    max-height:calc(100dvh - var(--rpg-turnbar-height,80px))!important;
+    min-height:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:hidden!important;
+    padding:0!important;
+    overscroll-behavior:contain;
+  }
+  body.tabletop-upgrade.game-running #sheetDrawer:not([hidden]) > .sheet-drawer-head {
+    position:relative!important;
+    flex:0 0 auto!important;
+    min-height:0!important;
+    z-index:3!important;
+  }
+  body.tabletop-upgrade.game-running #sheetDrawer:not([hidden]) > #sheetContent {
+    display:block!important;
+    flex:1 1 0%!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    overscroll-behavior-y:contain!important;
+    touch-action:pan-y!important;
+    -webkit-overflow-scrolling:touch!important;
+    scrollbar-width:thin;
+    padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))!important;
+  }
+  /* Backpack and unexamined loot have independent HORIZONTAL scroll.
+     Allow vertical swipe from inside their cards to reach #sheetContent. */
+  body.tabletop-upgrade.game-running #sheetDrawer:not([hidden]) .inventory-two-row-grid,
+  body.tabletop-upgrade.game-running #sheetDrawer:not([hidden]) .backpack-picture-grid,
+  body.tabletop-upgrade.game-running #sheetDrawer:not([hidden]) .pending-picture-grid {
+    touch-action:pan-x pan-y!important;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  /* Explicit native touch scrolling for independent panels; no interception
+     of events in JavaScript, and do not change map pan/pinch gestures. */
+  body.tabletop-upgrade.game-running .side-panel,
+  body.tabletop-upgrade.game-running .journal-log,
+  body.tabletop-upgrade.game-running .settings-card,
+  body.tabletop-upgrade.game-running #modal:not([hidden]) > .modal-card,
+  body.tabletop-upgrade.game-running #rollOverlay:not([hidden]) > .roll-popup-card,
+  body.tabletop-upgrade.game-running .loc-scroll,
+  body.tabletop-upgrade.game-running .story-card-scroller,
+  body.tabletop-upgrade.game-running .skill-content,
+  body.tabletop-upgrade.game-running .skill-detail-content,
+  body.tabletop-upgrade.game-running .visual-card-back-wrap {
+    -webkit-overflow-scrolling:touch!important;
+    touch-action:pan-y!important;
+  }
+  body.tabletop-upgrade.game-running .journal-log { min-height:0!important; }
+}
