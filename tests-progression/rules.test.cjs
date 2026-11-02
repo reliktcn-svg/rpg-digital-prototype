@@ -11,7 +11,7 @@ for(const id of ['warrior','dwarf','archer','rogue','mage','paladin']){
  const nat=h.branches.find(b=>b.kind==='natural');eq(P.learn(p,nat.nodes[1].id).ok,true);eq(P.learn(p,nat.nodes[2].id).ok,false);
  const known=P.unlocked(p);for(const n of nat.nodes.filter(n=>n.level===3&&n.parent===nat.nodes[2].id))eq(P.canLearn(p,n.id).ok,false);
 }
-const p=player('warrior');const c={};eq(P.award(p,{fields:{'Ранг':'Слабый'}},c).amount,100);eq(P.award(p,{fields:{'Ранг':'Слабый'}},c).amount,0);eq(p.masteryPoints,100);
+const p=player('warrior');const c={};eq(P.award(p,{fields:{'Ранг':'Слабый'}},c).amount,150);eq(P.award(p,{fields:{'Ранг':'Слабый'}},c).amount,0);eq(p.masteryPoints,150);
 for(const [rank,reward] of [['Слабый',100],['Обычный',150],['Сильный',250],['Элитный',400],['Мини-босс',600]])eq(P.reward({fields:{'Ранг':rank}}),reward);
 const arch=P.hero('archer').branches[0].nodes;eq(P.rules(arch[2]).dice,'D10');eq(P.rules(arch[2]).effect,'Яд');eq(P.rules(arch[2]).chance,{sides:6,success:[5,6]});eq(P.rules(arch[3]).chance,{sides:4,success:[3,4]});eq(P.rules(arch[4]).chance.sides,0);
 const nat=P.hero('mage').branches[1].nodes;eq(P.rules(nat[2]).dice,null);eq(P.rules(nat[2]).effect,'Оглушение');eq(P.rules(nat[3]).dice,'D6');eq(P.rules(nat[6]).enemyDisadvantage,2);
@@ -35,7 +35,7 @@ for(const id of ['warrior','dwarf','archer','rogue','mage','paladin']){
  for(const n of [...main.nodes.slice(1,4),nat.nodes[1],nat.nodes.find(n=>n.level===3&&n.parent===nat.nodes[1].id),...res.nodes])eq(P.learn(p,n.id).ok,true);
  eq([P.info(p).spent,P.info(p).points],[12,0]);eq(P.canLearn(p,main.nodes[4].id).ok,false);
 }
-const replay=player('paladin');for(const [rank,count] of [['Слабый',5],['Обычный',6],['Сильный',8],['Элитный',6]])for(let i=0;i<count;i++)P.award(replay,{fields:{'Ранг':rank}},{});eq(P.info(replay).xp,5800);eq(P.info(replay).level,12);P.award(replay,{id:281,fields:{}},{isBoss:true});eq(P.info(replay).xp,6600);eq(P.info(replay).level,13);eq(P.info(replay).points,12);
+const replay=player('paladin');for(const [rank,count] of [['Слабый',5],['Обычный',6],['Сильный',8],['Элитный',6]])for(let i=0;i<count;i++)P.award(replay,{fields:{'Ранг':rank}},{});eq(P.info(replay).xp,8700);eq(P.info(replay).level,15);P.award(replay,{id:281,fields:{}},{isBoss:true});eq(P.info(replay).xp,9900);eq(P.info(replay).level,16);eq(P.info(replay).points,15);
 const old={id:'paladin',masteryPoints:128,learnedAbilities:['n6_C10'],stats:{enemies:{boss:1}}};eq(P.info(old).xp,6600);eq(P.info(old).level,13);eq(P.info(old).spent,1);eq(P.info(old).xp,6600);eq(old.progressionVersion,2);
 const poor=player('warrior');poor.masteryPoints=550;P.learn(poor,'n1_C10');eq(P.info(poor).points,1);eq(P.canLearn(poor,'n1_C12').ok,false);eq(P.learn(poor,'n1_C12').ok,false);eq(poor.learnedAbilities.length,1);
 console.log('Variable costs, exact 26-win replay, minimum XP and legacy migration passed');

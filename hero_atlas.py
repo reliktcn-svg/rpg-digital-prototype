@@ -1,15 +1,10 @@
-"""The editable HTML atlas is the source of descriptions and skill paths."""
+"""Embedded progression data is the source of descriptions and skill paths."""
 import json, math, re
 from pathlib import Path
 NAMES={'warrior':'Воин','dwarf':'Дворф','archer':'Лучник','rogue':'Разбойник','mage':'Маг','paladin':'Паладин'}
 def read_atlas(root):
-    html=(Path(root)/'Атлас героев.html').read_text(encoding='utf-8')
-    data=None
-    for tag in ('initial','seed'):
-        m=re.search(r'<script\b[^>]*\bid=["\']'+tag+r'["\'][^>]*>(.*?)</script>',html,re.S)
-        if m:
-            data=json.loads(m[1])
-            if data:break
+    source=(Path(root)/'hero-atlas-data.js').read_text(encoding='utf-8')
+    data=json.JSONDecoder().raw_decode(source[source.index('=')+1:].lstrip())[0]
     if not isinstance(data,dict) or data.get('version')!=1 or not isinstance(data.get('characters'),list):raise ValueError('Неверный формат атласа')
     return data
 
