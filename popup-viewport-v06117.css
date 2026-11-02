@@ -1,0 +1,65 @@
+/* v0.6.117 — universal viewport boundary for game popups.
+   All overlays remain below the fixed turn order bar. A long popup scrolls
+   within its own card, including bottom actions; short popups stay content-sized.
+   Applies to desktop, tablet and mobile, including low-height landscape views.
+   Existing combat, location and story inner layouts are left intact. */
+body.tabletop-upgrade.game-running #modal:not([hidden]),
+body.tabletop-upgrade.game-running #rollOverlay:not([hidden]) {
+  box-sizing:border-box!important;
+  min-width:0!important;
+  min-height:0!important;
+  height:auto!important;
+  max-height:none!important;
+  overflow:hidden!important;
+  padding-top:8px!important;
+  padding-bottom:calc(9px + env(safe-area-inset-bottom, 0px))!important;
+}
+body.tabletop-upgrade.game-running #modal:not([hidden]) > .modal-card,
+body.tabletop-upgrade.game-running #rollOverlay:not([hidden]) > .roll-popup-card {
+  box-sizing:border-box!important;
+  min-width:0!important;
+  min-height:0!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior-y:contain!important;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+}
+/* Desktop legacy top/bottom and 88vh rules used incompatible height bases.
+   Keep every ordinary dialog inside the modal overlay regardless of content. */
+@media (min-width:901px) and (pointer:fine) {
+  body.tabletop-upgrade.game-running #modal:not([hidden]):not(:has(.combat-shell)),
+  body.tabletop-upgrade.game-running #rollOverlay:not([hidden]) {
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+  }
+}
+/* Long ordinary cards such as the Pathfinder top-card preview must use ONE
+   scroll surface down to the choice buttons, rather than clipping the footer. */
+body.tabletop-upgrade.game-running #modal:not([hidden]):not(:has(.combat-shell)) > .modal-card:has(.recon-preview) {
+  height:auto!important;
+  max-height:100%!important;
+  overflow-y:auto!important;
+}
+body.tabletop-upgrade.game-running #modal .recon-preview {
+  max-width:100%;
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+/* Other non-modal overlays have independent scrolling surfaces. */
+body.tabletop-upgrade.game-running #journalOverlay:not([hidden]) > .journal-card,
+body.tabletop-upgrade.game-running #settingsOverlay:not([hidden]) > .settings-card {
+  box-sizing:border-box!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  min-height:0!important;
+}
+body.tabletop-upgrade.game-running .skill-tree-dialog[open],
+body.tabletop-upgrade.game-running .skill-detail-dialog[open] {
+  box-sizing:border-box!important;
+  max-width:calc(100vw - 16px)!important;
+  max-height:calc(100dvh - 16px)!important;
+}

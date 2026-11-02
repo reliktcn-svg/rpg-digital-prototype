@@ -1187,7 +1187,7 @@
       const next=peekExploreTop(deckKey);if(!next){drawNextExplore();return}
       showCard(tracker,`Просмотр верхней карты · осталось ${left}.<div class="recon-preview"><b>№${next.id} · ${next.name}</b><div class="card-fields">${itemFieldsHtml(next)}</div></div>`,[
         {label:'Разыграть',className:'success',fn:()=>{closeModal();drawNextExplore()}},
-        {label:'Замешать обратно',className:'secondary',fn:()=>{state.decks[deckKey].draw=shuffled(state.decks[deckKey].draw);left--;closeModal();if(left>0)preview();else drawNextExplore()}}
+        {label:'Замешать обратно',className:'secondary',fn:()=>{const d=state.decks[deckKey];if(!d||d.draw[d.draw.length-1]!==next.id)return;d.draw.pop();returnCardToDeckRandom(deckKey,next);log(`${p.name}: Следопыт замешал карту №${next.id} «${next.name}» обратно в основную колоду «${DECK_NAMES[deckKey]}» (сброс не тронут).`);left--;closeModal();if(left>0)preview();else drawNextExplore()}}
       ]);
     };preview();return true;
   }
