@@ -382,7 +382,20 @@ class Handler(SimpleHTTPRequestHandler):
                 current_players={q.get('id'):q for q in game.get('players',[]) if isinstance(q,dict)}
                 owner_cur=current_players.get(owner)
                 if not owner_cur: return self._json(409, {'error':'Герой не найден в партии'})
-                mutable={'gold','maxHp','currentHp','statuses','statusTimers','statusTickedTurn','backpack','pendingItems','equipment','temporaryEffects','combatEffects','itemUsage','lockedItems','locationVisits','discoveredLocations','reexploreRiskHex','notes','stats','areaHealingCooldown','scoutBootsUsedTurn'}
+                # Reject conflicting/remote purchases before changing gold or HP.
+                for hex_id, entry in (side.get('territories') or {}).items():
+                    if not isinstance(entry,dict) or entry.get('owner')!=owner:continue
+                    prior=(game.get('territories') or {}).get(hex_id)
+                    if prior and prior.get('owner')!=owner:
+                        return self._json(409, {'error':'Территория уже принадлежит другому герою'})
+                    if prior:continue
+                    combat=game.get('combat') or {}
+                    if (hex_id!=owner_cur.get('hex') or not (game.get('cleaned') or {}).get(hex_id)
+                        or (game.get('locations') or {}).get(hex_id) or owner_cur.get('inDungeon')
+                        or combat.get('heroId')==owner
+                        or (owner_cur.get('purchaseBlockedHex')==hex_id and owner_cur.get('purchaseBlockedTurn')==owner_cur.get('personalTurn'))):
+                        return self._json(409, {'error':'Покупка этой территории сейчас недоступна'})
+                mutable={'gold','maxHp','currentHp','statuses','statusTimers','statusTickedTurn','backpack','pendingItems','equipment','temporaryEffects','combatEffects','itemUsage','lockedItems','locationVisits','discoveredLocations','reexploreRiskHex','notes','stats','areaHealingCooldown','scoutBootsUsedTurn','territoryBuildSeq'}
                 changed_by_hero={}
                 for incoming in side.get('players') or []:
                     if not isinstance(incoming,dict): continue
@@ -397,7 +410,7 @@ class Handler(SimpleHTTPRequestHandler):
                 # Victory rewards/building are handled after the turn moves on.
                 # Merge only territories and areas created by the off-turn winner;
                 # never overwrite another hero's active-turn edits.
-                if side.get('type')=='victory':
+                if isinstance(side.get('territories'),dict):
                     current_territories=game.setdefault('territories',{})
                     incoming_territories=side.get('territories') or {}
                     new_territories={}

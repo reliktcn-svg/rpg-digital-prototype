@@ -68,14 +68,14 @@
     'Оглушение':'В начале своего следующего хода в бою персонаж пропускает ход. Уведомление закрывается через 2 секунды, затем ход переходит противнику.'
   };
   const NEGATIVE_EFFECT_FORMS={
-    'Страх':['Страх','Страха','Страху','Страхом','Страхе'],
-    'Проклятие':['Проклятие','Проклятия','Проклятию','Проклятием','Проклятии'],
-    'Слабость':['Слабость','Слабости','Слабостью'],
-    'Усталость':['Усталость','Усталости','Усталостью'],
-    'Яд':['Яд','Яда','Яду','Ядом','Яде'],
-    'Горение':['Горение','Горения','Горению','Горением','Горении'],
-    'Кровотечение':['Кровотечение','Кровотечения','Кровотечению','Кровотечением','Кровотечении'],
-    'Оглушение':['Оглушение','Оглушения','Оглушению','Оглушением','Оглушении']
+    'Страх':['Страх','Страха','Страху','Страхом','Страхе','Страхи','Страхов','Страхам','Страхами','Страхах'],
+    'Проклятие':['Проклятие','Проклятия','Проклятию','Проклятием','Проклятии','Проклятий','Проклятиям','Проклятиями','Проклятиях'],
+    'Слабость':['Слабость','Слабости','Слабостью','Слабостей','Слабостям','Слабостями','Слабостях'],
+    'Усталость':['Усталость','Усталости','Усталостью','Усталостей','Усталостям','Усталостями','Усталостях'],
+    'Яд':['Яд','Яда','Яду','Ядом','Яде','Отравление','Отравления','Отравлению','Отравлением','Отравлении','Отравлен','Отравлена','Отравлено','Отравлены'],
+    'Горение':['Горение','Горения','Горению','Горением','Горении','Горений','Горениям','Горениями','Горениях'],
+    'Кровотечение':['Кровотечение','Кровотечения','Кровотечению','Кровотечением','Кровотечении','Кровотечений','Кровотечениям','Кровотечениями','Кровотечениях'],
+    'Оглушение':['Оглушение','Оглушения','Оглушению','Оглушением','Оглушении','Оглушён','Оглушена','Оглушено','Оглушены','Оглушен']
   };
   const NEGATIVE_EFFECT_CANONICAL={};
   for(const [canonical,forms] of Object.entries(NEGATIVE_EFFECT_FORMS))for(const form of forms)NEGATIVE_EFFECT_CANONICAL[form.toLowerCase()]=canonical;
@@ -146,7 +146,7 @@
     for(const {id,part} of all){const card=itemCard(id);const key=card?.deck==='Тайники Сердца тьмы'?'lootHeart':'lootOuter';state.decks[key][part].push(id);owned.add(Number(id))}
     for(const card of CARDS)if(card.id>=387&&card.id<=452&&!owned.has(card.id))state.decks[card.deck==='Тайники Сердца тьмы'?'lootHeart':'lootOuter'].draw.push(card.id);
     // Migration is deterministic across clients; draws already choose by shuffled physical order.
-    state.equipmentRevision=1;state.version='0.6.116';
+    state.equipmentRevision=1;state.version='0.6.120';
   }
   function normalizeTavernMercenaries(){
     if(state.mercenaryRevision===1)return;
@@ -214,7 +214,7 @@
     return o;
   }
   function freshState(){return {
-    version:'0.6.116', equipmentRevision:1, mercenaryRevision:1, started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
+    version:'0.6.120', equipmentRevision:1, mercenaryRevision:1, started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
     decks:initialDecks(), cleaned:{}, cleanedUntil:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, tradeDeal:null, dungeonEntryNotice:null, territoryBuiltNotice:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:3, sharedDifficulty:null, journal:[]
   };}
   let state=freshState();
@@ -328,11 +328,11 @@
     }
     if(sideInteractionActiveFor(heroId)){
       const ids=new Set(sideInteraction.participantIds||[heroId]);
-      return{type:sideInteraction.type,ownerId:heroId,players:state.players.filter(q=>ids.has(q.id)).map(cloneJson),decks:cloneJson(state.decks),locations:cloneJson(state.locations),...(sideInteraction.type==='victory'?{territories:cloneJson(state.territories),areas:cloneJson(state.areas),nextAreaId:state.nextAreaId}:{}),journal:cloneJson(state.journal||[])};
+      return{type:sideInteraction.type,ownerId:heroId,players:state.players.filter(q=>ids.has(q.id)).map(cloneJson),decks:cloneJson(state.decks),locations:cloneJson(state.locations),territories:cloneJson(state.territories),areas:cloneJson(state.areas),nextAreaId:state.nextAreaId,journal:cloneJson(state.journal||[])};
     }
     if(onlineLocalHeroId&&heroId===onlineLocalHeroId&&currentPlayer()?.id!==heroId){
       const mine=getPlayer(heroId);if(!mine)return null;
-      return{type:'offturnInventory',ownerId:heroId,players:[cloneJson(mine)],decks:cloneJson(state.decks),locations:cloneJson(state.locations),journal:cloneJson(state.journal||[])};
+      return{type:'offturnInventory',ownerId:heroId,players:[cloneJson(mine)],territories:cloneJson(state.territories),areas:cloneJson(state.areas),nextAreaId:state.nextAreaId,decks:cloneJson(state.decks),locations:cloneJson(state.locations),journal:cloneJson(state.journal||[])};
     }
     return null;
   }
@@ -417,19 +417,45 @@
     if(!root||root.nodeType!==1)return;
     const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(node){const v=node.nodeValue||'',parent=node.parentElement;if(!parent||!v.trim()||parent.closest('script,style,textarea,.negative-effect-term,.negative-effect-tooltip'))return NodeFilter.FILTER_REJECT;NEGATIVE_EFFECT_RE.lastIndex=0;return NEGATIVE_EFFECT_RE.test(v)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT}}),nodes=[];
     while(walker.nextNode())nodes.push(walker.currentNode);
-    for(const node of nodes){const value=node.nodeValue||'';NEGATIVE_EFFECT_RE.lastIndex=0;let last=0,m,changed=false;const frag=document.createDocumentFragment();while((m=NEGATIVE_EFFECT_RE.exec(value))){const canonical=canonicalNegativeEffectForm(m[0]);if(!canonical)continue;changed=true;if(m.index>last)frag.appendChild(document.createTextNode(value.slice(last,m.index)));const span=document.createElement('span');span.className='negative-effect-term';span.textContent=m[0];span.dataset.effect=canonical;frag.appendChild(span);last=m.index+m[0].length}if(changed){if(last<value.length)frag.appendChild(document.createTextNode(value.slice(last)));node.parentNode.replaceChild(frag,node)}}
+    for(const node of nodes){const value=node.nodeValue||'';NEGATIVE_EFFECT_RE.lastIndex=0;let last=0,m,changed=false;const frag=document.createDocumentFragment();while((m=NEGATIVE_EFFECT_RE.exec(value))){const canonical=canonicalNegativeEffectForm(m[0]);if(!canonical)continue;changed=true;if(m.index>last)frag.appendChild(document.createTextNode(value.slice(last,m.index)));const span=document.createElement('span');span.className='negative-effect-term';span.textContent=m[0];span.dataset.effect=canonical;span.tabIndex=0;span.setAttribute('role','button');span.setAttribute('aria-label','Описание: '+canonical);frag.appendChild(span);last=m.index+m[0].length}if(changed){if(last<value.length)frag.appendChild(document.createTextNode(value.slice(last)));node.parentNode.replaceChild(frag,node)}}
   }
   const negativeEffectObserver=new MutationObserver(muts=>{for(const m of muts)for(const n of m.addedNodes){if(n.nodeType===1)decorateNegativeEffects(n);else if(n.nodeType===3&&n.parentElement)decorateNegativeEffects(n.parentElement)}});
   const negativeEffectTooltip=document.createElement('div');negativeEffectTooltip.className='negative-effect-tooltip';negativeEffectTooltip.hidden=true;negativeEffectTooltip.setAttribute('role','dialog');negativeEffectTooltip.setAttribute('aria-label','Описание негативного эффекта');document.body.appendChild(negativeEffectTooltip);
   let negativeEffectTooltipAnchor=null;
-  function hideNegativeEffectTooltip(){negativeEffectTooltip.hidden=true;negativeEffectTooltipAnchor=null}
-  function positionNegativeEffectTooltip(target){if(!target?.isConnected){hideNegativeEffectTooltip();return}const r=target.getBoundingClientRect(),pad=10,w=Math.min(360,Math.max(220,window.innerWidth-20));negativeEffectTooltip.style.maxWidth=`${w}px`;negativeEffectTooltip.style.left=`${Math.max(pad,Math.min(window.innerWidth-w-pad,r.left))}px`;negativeEffectTooltip.style.top=`${Math.max(pad,Math.min(window.innerHeight-negativeEffectTooltip.offsetHeight-pad,r.bottom+8))}px`}
-  function showNegativeEffectTooltip(target){if(!target?.isConnected)return;const key=target.dataset.effect||canonicalNegativeEffectForm(target.textContent)||target.textContent;negativeEffectTooltipAnchor=target;negativeEffectTooltip.innerHTML=`<button type="button" class="negative-effect-tooltip-close" aria-label="Закрыть описание" title="Закрыть">×</button><b>${key}</b><span>${NEGATIVE_EFFECT_INFO[key]||''}</span>`;negativeEffectTooltip.hidden=false;positionNegativeEffectTooltip(target)}
+  function hideNegativeEffectTooltip(){if(negativeEffectTooltip.matches(':popover-open'))negativeEffectTooltip.hidePopover();negativeEffectTooltip.hidden=true;negativeEffectTooltipAnchor=null}
+  function positionNegativeEffectTooltip(target){
+    if(!target?.isConnected){hideNegativeEffectTooltip();return}
+    const r=target.getBoundingClientRect(),v=window.visualViewport,pad=10,left=v?.offsetLeft||0,top=v?.offsetTop||0,vw=v?.width||innerWidth,vh=v?.height||innerHeight;
+    negativeEffectTooltip.style.width=`${Math.min(360,vw-pad*2)}px`;
+    negativeEffectTooltip.style.maxHeight=`${Math.max(40,vh-pad*2)}px`;
+    negativeEffectTooltip.style.left=`${Math.max(left+pad,Math.min(left+vw-negativeEffectTooltip.offsetWidth-pad,r.left))}px`;
+    negativeEffectTooltip.style.top=`${Math.max(top+pad,Math.min(top+vh-negativeEffectTooltip.offsetHeight-pad,r.bottom+8))}px`;
+  }
+  function showNegativeEffectTooltip(target){
+    if(!target?.isConnected)return;
+    const key=target.dataset.effect||canonicalNegativeEffectForm(target.textContent)||target.dataset.effectLabel||target.textContent;
+    const detail=target.dataset.effectDetail||'',description=NEGATIVE_EFFECT_INFO[key]||detail;
+    hideNegativeEffectTooltip();
+    // Native modal dialogs make the body inert: place the help inside its owner,
+    // then use a manual popover so it also escapes clipping and stacking contexts.
+    (target.closest('dialog[open]')||document.body).appendChild(negativeEffectTooltip);
+    negativeEffectTooltipAnchor=target;
+    negativeEffectTooltip.innerHTML=`<button type="button" class="negative-effect-tooltip-close" aria-label="Закрыть описание">×</button><b>${escapeCombatText(key)}</b><span>${escapeCombatText(description)}</span>${detail&&detail!==description?`<small>${escapeCombatText(detail)}</small>`:''}`;
+    negativeEffectTooltip.hidden=false;
+    if(typeof negativeEffectTooltip.showPopover==='function'){negativeEffectTooltip.setAttribute('popover','manual');negativeEffectTooltip.showPopover()}
+    positionNegativeEffectTooltip(target);
+  }
+  const effectHelpTarget=e=>e.target.closest?.('.negative-effect-term,.tabletop-effect-icon');
   negativeEffectTooltip.addEventListener('click',e=>{if(e.target.closest('.negative-effect-tooltip-close')){e.preventDefault();e.stopPropagation();hideNegativeEffectTooltip()}});
-  document.addEventListener('mouseover',e=>{const t=e.target.closest?.('.negative-effect-term');if(t&&window.matchMedia('(hover:hover)').matches)showNegativeEffectTooltip(t)});
-  // Keep the panel open while the pointer travels from the word to its close button.
-  document.addEventListener('click',e=>{if(e.target.closest?.('.negative-effect-tooltip-close'))return;const t=e.target.closest?.('.negative-effect-term');if(t){showNegativeEffectTooltip(t);return}if(!e.target.closest?.('.negative-effect-tooltip'))hideNegativeEffectTooltip()},true);
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')hideNegativeEffectTooltip()});
+  function toggleNegativeEffectTooltip(target){
+    if(negativeEffectTooltipAnchor===target&&!negativeEffectTooltip.hidden)hideNegativeEffectTooltip();
+    else showNegativeEffectTooltip(target);
+  }
+  document.addEventListener('click',e=>{if(e.target.closest?.('.negative-effect-tooltip'))return;const t=effectHelpTarget(e);if(t){e.preventDefault();e.stopPropagation();toggleNegativeEffectTooltip(t);return}hideNegativeEffectTooltip()},true);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!negativeEffectTooltip.hidden){e.preventDefault();e.stopPropagation();hideNegativeEffectTooltip();return}const t=effectHelpTarget(e);if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.stopPropagation();toggleNegativeEffectTooltip(t)}},true);
+  window.addEventListener('resize',()=>{if(negativeEffectTooltipAnchor)positionNegativeEffectTooltip(negativeEffectTooltipAnchor)});
+  document.addEventListener('scroll',()=>{if(negativeEffectTooltipAnchor)positionNegativeEffectTooltip(negativeEffectTooltipAnchor)},true);
+  document.addEventListener('close',e=>{if(e.target.contains?.(negativeEffectTooltip))hideNegativeEffectTooltip()},true);
   document.addEventListener('visibilitychange',()=>{if(document.hidden)hideNegativeEffectTooltip()});
   // Подсказка не должна переживать закрытие модальных окон на мобильных устройствах.
   const negativeEffectWindowObserver=new MutationObserver(mutations=>{if(mutations.some(m=>m.attributeName==='hidden'&&m.target.hidden))hideNegativeEffectTooltip()});
@@ -809,6 +835,7 @@
   function rollMove(){
     if(state.gameOver)return;const p=currentPlayer(); if(p.inDungeon||state.turnLocked||state.rolled||state.combat||p.pendingItems?.length)return;
     recoverHealthForRound(p);if(tickOutsideStatuses(p))return;
+    p.purchaseBlockedHex=p.hex;p.purchaseBlockedTurn=p.personalTurn;
     state.die=rand(6);state.movePoints=movementFor(p.hex,state.die);state.rolled=true;state.turnMoved=false;state.movePending=false;state.moveOriginHex=p.hex;state.moveTransit=null;state.pendingMoveAction=null;state.chosenPath=[p.hex];state.chosenMovePlan=null;
     refreshManualMoveReachable(p);
     log(`${p.name}, личный ход ${p.personalTurn}: D6 = <b>${state.die}</b>, движение 1–${state.movePoints}. Маршрут выбирает игрок по одному гексу.`);updateUI();renderBoard();
@@ -1015,12 +1042,13 @@
     return card;
   }
   function discardCard(deckKey,card){if(!card)return;const key=itemType(card)==='наёмник'?mercenaryDeckKey(card):deckKey==='lootOuter'&&heartOnlyLoot(card)?'lootHeart':deckKey;if(state.decks[key])state.decks[key].discard.push(card.id)}
+  function shuffleRemainingDeck(key){const d=state.decks[key];if(d)d.draw=shuffled(d.draw)}
   function returnCardToDeckRandom(deckKey,card){
     if(!card)return;
     const key=itemType(card)==='наёмник'?mercenaryDeckKey(card):deckKey==='lootOuter'&&heartOnlyLoot(card)?'lootHeart':deckKey;
     if(!state.decks[key])return;
     state.decks[key].draw.push(card.id);
-    state.decks[key].draw=shuffled(state.decks[key].draw);
+    shuffleRemainingDeck(key);
   }
   function deckKeyForCard(card){if(itemType(card)==='наёмник')return mercenaryDeckKey(card);if(card?.id===281||card?.category==='Босс')return'boss';if(card.deck==='Исследования внешних регионов')return'exploreOuter';if(card.deck==='Исследования Сердца тьмы')return'exploreHeart';if(card.deck==='Тайники внешних регионов')return'lootOuter';return'lootHeart'}
   function cleanCardFieldValue(v){return String(v??'').split(/\n={5,}/)[0].trim()}
@@ -1187,7 +1215,7 @@
       const next=peekExploreTop(deckKey);if(!next){drawNextExplore();return}
       showCard(tracker,`Просмотр верхней карты · осталось ${left}.<div class="recon-preview"><b>№${next.id} · ${next.name}</b><div class="card-fields">${itemFieldsHtml(next)}</div></div>`,[
         {label:'Разыграть',className:'success',fn:()=>{closeModal();drawNextExplore()}},
-        {label:'Замешать обратно',className:'secondary',fn:()=>{const d=state.decks[deckKey];if(!d||d.draw[d.draw.length-1]!==next.id)return;d.draw.pop();returnCardToDeckRandom(deckKey,next);log(`${p.name}: Следопыт замешал карту №${next.id} «${next.name}» обратно в основную колоду «${DECK_NAMES[deckKey]}» (сброс не тронут).`);left--;closeModal();if(left>0)preview();else drawNextExplore()}}
+        {label:'Замешать обратно',className:'secondary',fn:()=>{shuffleRemainingDeck(deckKey);left--;closeModal();if(left>0)preview();else drawNextExplore()}}
       ]);
     };preview();return true;
   }
@@ -1355,7 +1383,7 @@
   function resolveAncientHeroTracks(card){
     const p=currentPlayer(),key='lootHeart',a=drawCard(key),b=drawCard(key),cards=[a,b].filter(Boolean);
     if(!cards.length){showCard(card,'Колода Тайников Сердца тьмы пуста.',[{label:'Продолжить',fn:()=>continueExplore(card,state.exploration.deckKey)}]);return}
-    showCard(card,'Посмотрите открытые Тайники Сердца тьмы. Выберите один; второй будет замешан обратно.',cards.map((c,i)=>({label:`Взять №${c.id} · ${c.name}`,className:'success',fn:()=>{receiveTreasure(p,c);const other=cards[1-i];if(other)state.decks[key].draw.push(other.id),state.decks[key].draw=shuffled(state.decks[key].draw);log(`${p.name}: «${card.name}» — выбран тайник №${c.id} «${c.name}».`);pauseExploreForPendingLoot(card,state.exploration.deckKey)}})));
+    showCard(card,'Посмотрите открытые Тайники Сердца тьмы. Выберите один; второй будет замешан обратно.',cards.map((c,i)=>({label:`Взять №${c.id} · ${c.name}`,className:'success',fn:()=>{receiveTreasure(p,c);const other=cards[1-i];if(other)state.decks[key].draw.push(other.id),shuffleRemainingDeck(key);log(`${p.name}: «${card.name}» — выбран тайник №${c.id} «${c.name}».`);pauseExploreForPendingLoot(card,state.exploration.deckKey)}})));
   }
   function resolveCheckedEvent(card){
     const p=currentPlayer(),check=card.fields['Проверка']||'',key=statKeyFromText(check),dc=Number((check.match(/(\d+)\+/)||[])[1]||13);
@@ -1984,7 +2012,7 @@
   }
   function buildTerritoryFor(p,hex,cost){
     if(!p||!hex)return false;
-    ensurePlayerModel(p);recoverHealthForRound(p);const r=MAP.hexes[hex]?.region,seq=territoryBuildSequence(p,r)+1;
+    ensurePlayerModel(p);if(currentPlayer()?.id===p.id)recoverHealthForRound(p);const r=MAP.hexes[hex]?.region,seq=territoryBuildSequence(p,r)+1;
     p.gold-=cost;p.maxHp+=2;state.territories[hex]={owner:p.id,areaId:null};
     if(r==='kingdom'||r==='cursed')p.territoryBuildSeq[r]=Math.max(Number(p.territoryBuildSeq[r]||0),seq);
     state.territoryBuiltNotice=null;
@@ -1996,11 +2024,30 @@
   function showTerritoryBuiltNotice(){state.territoryBuiltNotice=null}
   function releaseTerritoryBuiltNotice(){state.territoryBuiltNotice=null}
   function maybeShowTerritoryBuiltNotice(){if(state.territoryBuiltNotice)state.territoryBuiltNotice=null}
-  function buildTerritory(){
-    if(state.movePending){commitPendingMove({type:'build'});return}
-    const p=currentPlayer(),chk=canBuildAt(p);if(!chk.ok)return;
-    if(buildTerritoryFor(p,p.hex,chk.cost))promptAreaMergeAfterBuild(p,p.hex,()=>advanceTurnState(p,'строительство территории'));
+  function canPurchaseTerritory(p){
+    if(!p||state.gameOver||p.inDungeon||p.currentHp<=0)return {ok:false,why:'Покупка сейчас недоступна.'};
+    const active=currentPlayer()?.id===p.id;
+    if(state.combat?.heroId===p.id||(active&&state.turnLocked))return {ok:false,why:'Сначала завершите текущее действие.'};
+    if(p.purchaseBlockedHex===p.hex&&p.purchaseBlockedTurn===p.personalTurn)return {ok:false,why:'После броска движения эту территорию можно купить только в другой ход.'};
+    return canBuildAt(p);
   }
+  function buildTerritory(playerId=null){
+    const p=getPlayer(playerId)||currentPlayer(),active=currentPlayer()?.id===p?.id;
+    if(onlineLocalHeroId&&p?.id!==onlineLocalHeroId)return false;
+    if(active&&state.movePending){commitPendingMove({type:'build'});return}
+    const chk=canPurchaseTerritory(p);if(!chk.ok)return false;
+    const endsTurn=active&&state.rolled&&state.turnMoved;
+    if(!buildTerritoryFor(p,p.hex,chk.cost))return false;
+    window.dispatchEvent(new Event('rpg-local-mutation'));
+    if(endsTurn)promptAreaMergeAfterBuild(p,p.hex,()=>advanceTurnState(p,'покупка территории'));
+    else {updateUI();renderBoard();if(!els.sheetDrawer.hidden)renderCharacterSheet(sheetView.mode,sheetView.bonusKey)}
+    return true;
+  }
+  function territoryPurchaseHtml(p){
+    const chk=canPurchaseTerritory(p);
+    return chk.ok?'<button class="success" data-buy-territory="'+p.id+'">Купить территорию · '+chk.cost+' зол.</button>':'';
+  }
+  function bindTerritoryPurchase(root){root.querySelectorAll('[data-buy-territory]').forEach(b=>b.onclick=()=>buildTerritory(b.dataset.buyTerritory))}
   function postCombatBuildBlockedText(why=''){const t=String(why||'Строительство на этом гексе недоступно.').replace(/\.$/,'');return t}
   function victorySessionCombat(){return postVictorySession?.combat||state.combat}
   function victorySessionPlayer(){return postVictorySession?getPlayer(postVictorySession.heroId):currentPlayer()}
@@ -2013,18 +2060,7 @@
     advanceTurnWithSideInteraction(p,'victory','победа над врагом',[p.id]);
     modalOffturnOwnerId=p.id;
   }
-  function showPostCombatTerritoryPrompt(){
-    const c=victorySessionCombat(),p=victorySessionPlayer();if(!c||c.phase!=='victory'||c.isBoss||!p){finishCombatVictory();return}
-    const chk=canBuildAt(p,p.hex);if(c)c.victoryUiStep='build';closeModal();els.modalClose.style.display='none';els.modal.classList.add('post-combat-prompt');
-    if(!chk.ok){
-      els.modalContent.innerHTML=`<div class="card-kicker">ПОСЛЕ БОЯ</div><div class="card-title">ПОСТРОЙКА ТЕРРИТОРИИ НЕВОЗМОЖНА</div><div class="card-field"><b>Причина:</b> ${postCombatBuildBlockedText(chk.why)}.</div><div class="modal-actions"><button id="postCombatBuildContinue" class="success">Продолжить</button></div>`;
-      els.modal.hidden=false;if(postVictorySession)modalOffturnOwnerId=postVictorySession.heroId;document.getElementById('postCombatBuildContinue').onclick=()=>{closeModal();finishCombatVictory()};return;
-    }
-    els.modalContent.innerHTML=`<div class="card-kicker">ПОСЛЕ БОЯ</div><div class="card-title">Строить территорию за ${chk.cost} ЗОЛ?</div><div class="card-field">Гекс: <b>${p.hex}</b> · Золото героя: <b>${p.gold}</b>.<br>После выбора ход героя завершится.</div><div class="modal-actions"><button id="postCombatBuildYes" class="success">Да</button><button id="postCombatBuildNo" class="secondary">Нет</button></div>`;
-    els.modal.hidden=false;if(postVictorySession)modalOffturnOwnerId=postVictorySession.heroId;
-    document.getElementById('postCombatBuildYes').onclick=()=>{const live=getPlayer(p.id)||p;const fresh=canBuildAt(live,live.hex);if(fresh.ok){buildTerritoryFor(live,live.hex,fresh.cost);closeModal();promptAreaMergeAfterBuild(live,live.hex,()=>finishCombatVictory());return}closeModal();finishCombatVictory()};
-    document.getElementById('postCombatBuildNo').onclick=()=>{closeModal();finishCombatVictory()};
-  }
+  function showPostCombatTerritoryPrompt(){finishCombatVictory()}
 
   function connectedTriple(hexes){const set=new Set(hexes),seen=new Set([hexes[0]]),q=[hexes[0]];while(q.length){const h=q.shift();for(const n of MAP.hexes[h].neighbors)if(set.has(n)&&!seen.has(n)){seen.add(n);q.push(n)}}return seen.size===3}
   function areaMergeCost(hexes){return MAP.hexes[hexes?.[0]]?.region==='cursed'?40:20}
@@ -2033,20 +2069,20 @@
   function affordableAreaCandidatesAt(p,hex=p.hex){return areaCandidatesAt(p,hex).filter(a=>p.gold>=areaMergeCost(a))}
   function finalizeArea(p,hexes,bonus,cost=areaMergeCost(hexes),onDone=null){if(!p||p.gold<cost)return false;recoverHealthForRound(p);p.gold-=cost;const id=state.nextAreaId++,ownerAreaNumber=Math.max(0,...state.areas.filter(a=>a.owner===p.id).map(a=>a.ownerAreaNumber||0))+1;hexes.forEach(h=>state.territories[h].areaId=id);state.areas.push({id,owner:p.id,ownerAreaNumber,hexes:[...hexes],bonus});const text=bonus.type==='defense'?`+${bonus.amount} ЗЩ`:`+${bonus.amount} ${statName(bonus.stat)}`;log(`<b>${p.name} создаёт область №${ownerAreaNumber}</b>: ${hexes.join(' + ')} за ${cost} золота. Бонус: <b>${text}</b>.`);updateUI();renderBoard();if(!els.sheetDrawer.hidden)renderCharacterSheet('overview');if(onDone)onDone();return true}
   function createArea(hexes,{player=currentPlayer(),onDone=null,onCancel=null}={}){const p=player,cost=areaMergeCost(hexes);if(!p||p.gold<cost){if(onCancel)onCancel();return false}const n=Math.max(0,...state.areas.filter(a=>a.owner===p.id).map(a=>a.ownerAreaNumber||0))+1;if(n%2===0)return finalizeArea(p,hexes,{type:'defense',amount:1},cost,onDone);const fake={id:'—',name:`Область №${n}`,category:'Бонус области',deck:'Поле',fields:{'Бонус':'+1 к характеристике на выбор'}};showCard(fake,`Объединение стоит <b>${cost} золота</b>.<br>Выберите постоянный бонус для области из ${hexes.join(' + ')}.`,['str','dex','wis','cha'].map(k=>({label:`+1 ${statName(k)}`,className:'success',fn:()=>{closeModal();finalizeArea(p,hexes,{type:'stat',stat:k,amount:1},cost,onDone)}})));if(onCancel)modalCloseAction=()=>{closeModal();onCancel()};return true}
+  let areaMergePreview=null;
+  function areaChoiceActions(p,candidates,onDone){
+    return candidates.map((hexes,i)=>({label:areaMergePreview?.selected===i?'Подтвердить':('Объединение №'+(i+1)+' · '+areaMergeCost(hexes)+' зол.'),className:'success',disabled:p.gold<areaMergeCost(hexes),fn:()=>{
+      if(areaMergePreview?.heroId===p.id&&areaMergePreview.selected===i){
+        const live=getPlayer(p.id),valid=areaCandidatesAt(live).some(a=>a.slice().sort().join('|')===hexes.slice().sort().join('|'));
+        areaMergePreview=null;renderBoard();
+        if(!valid||live.gold<areaMergeCost(hexes)){updateUI();return}
+        createArea(hexes,{player:live,onDone:()=>{closeModal();onDone()},onCancel:()=>{closeModal();onDone()}});
+      }else{areaMergePreview={heroId:p.id,candidates,selected:i,hexes,onDone};updateUI();renderBoard()}
+    }}));
+  }
   function promptAreaMergeAfterBuild(p,hex,onDone){
-    p=getPlayer(p?.id)||p;const candidates=areaCandidatesAt(p,hex);
-    if(!candidates.length){onDone();return}
-    modalOffturnOwnerId=p.id;els.modalClose.style.display='none';els.modal.classList.add('post-combat-prompt');
-    els.modalContent.innerHTML=`<div class="card-kicker">ПОСТРОЙКА ОБЛАСТИ</div><div class="card-title">Объединить территории в область?</div><div class="card-field">Построенная территория образует подходящую тройку. Золото героя: <b>${p.gold}</b>.<br>Если сейчас золота недостаточно, объединение можно выполнить позже, остановившись на одной из этих территорий.</div><div class="modal-actions" id="areaMergeAfterBuildActions"></div>`;
-    const box=els.modalContent.querySelector('#areaMergeAfterBuildActions');
-    for(const a of candidates){
-      const cost=areaMergeCost(a),enough=p.gold>=cost,b=document.createElement('button');
-      b.className='success';b.textContent=`Объединить ${a.join(' + ')} за ${cost} ЗОЛ`;b.disabled=!enough;
-      if(!enough)b.title=`Не хватает ${cost-p.gold} золота`;
-      b.onclick=()=>{const live=getPlayer(p.id)||p;if(live.gold<cost)return;createArea(a,{player:live,onDone:()=>{closeModal();onDone()},onCancel:()=>{closeModal();onDone()}})};
-      box.appendChild(b);
-    }
-    const close=document.createElement('button');close.className='secondary';close.textContent='ЗАКРЫТЬ';close.onclick=()=>{closeModal();onDone()};box.appendChild(close);els.modal.hidden=false;
+    const candidates=areaCandidatesAt(p,hex);if(!candidates.length){onDone();return}
+    areaMergePreview={heroId:p.id,candidates,selected:null,hexes:[],onDone};closeModal();updateUI();renderBoard();
   }
 
   function resolveDungeonEntryNotice(p){
@@ -2122,7 +2158,7 @@
   function resetItemUsage(p,place){ensurePlayerModel(p);for(const [id,u] of Object.entries(p.itemUsage||{})){const reset=Array.isArray(u?.reset)?u.reset:[u?.reset];if(reset.includes(place))delete p.itemUsage[id]}}
   function useMark(p,id,reset){ensurePlayerModel(p);p.itemUsage[id]={reset:Array.isArray(reset)?reset:[reset]}}
   function useBlocked(p,id){return !!p.itemUsage?.[id]}
-  function consumeHeldItem(p,id,ctx){const card=itemCard(id);p=getPlayer(p?.id)||p;if(!card||!sourceRemove(p,id,ctx))return false;if(itemType(card)==='зелье'){const key=deckKeyForCard(card);returnCardToDeckRandom(key,card);log(`Использованное зелье «${card.name}» возвращается в колоду «${DECK_NAMES[key]}» и снова может быть найдено.`)}else discardHeldCard(card);return true}
+  function consumeHeldItem(p,id,ctx){const card=itemCard(id);p=getPlayer(p?.id)||p;if(!card||!sourceRemove(p,id,ctx))return false;if(itemType(card)==='зелье'){const key=deckKeyForCard(card);discardCard(key,card);log(`Использованное зелье «${card.name}» отправлено в сброс «${DECK_NAMES[key]}» до исчерпания основной колоды.`)}else discardHeldCard(card);return true}
   function supportedOutsideEffect(p,card,ctx){
     if(heroIsActiveCombatant(p))return supportedCombatEffect(p,card,ctx);
     if(!card||ctx?.where==='pending')return{supported:false,enabled:false,why:''};
@@ -2239,7 +2275,8 @@
     const territoryCount=Object.values(state.territories).filter(t=>t.owner===p.id).length,areaCount=state.areas.filter(a=>a.owner===p.id).length,region=MAP.hexes[p.hex]?regionName(MAP.hexes[p.hex].region):'—';
     const heroMeta=`<div class="sheet-game-meta"><div class="meta-cell">Личный ход: <b>${p.personalTurn}</b></div><div class="meta-cell">Раунд: <b>${state.round}</b></div><div class="meta-cell">Позиция: <b>${p.hex}</b></div><div class="meta-cell">Регион: <b>${region}</b></div><button class="meta-cell" data-sheet-map-highlight="territories">Территории: <b>${territoryCount}</b></button><button class="meta-cell" data-sheet-map-highlight="areas">Области: <b>${areaCount}</b></button></div>`;
     const sharedLocked=!!state.sharedDifficulty;const difficultyControl=`<div class="hero-difficulty-row"><button id="playerHardModeBtn" class="hero-difficulty-btn ${p.hardMode?'active':''}" ${(readOnly||sharedLocked)?'disabled':''}>${sharedLocked?'Режим партии':'Сложный режим'}: ${p.hardMode?'СЛОЖНЫЙ':'ОБЫЧНЫЙ'}</button><span>${sharedLocked?'Режим выбран хозяином комнаты и заблокирован до конца партии. ':''}${p.hardMode?'Реакции и обучающие подсказки скрыты. Рюкзак: 5 базовых мест.':'Обычный режим. Рюкзак: 10 базовых мест.'}</span></div>`;
-    els.sheetContent.innerHTML=`${readOnlyBanner}${difficultyControl}<div class="sheet-hero hero-only-head"><div><div class="eyebrow">ЛИСТ ГЕРОЯ</div><h2 style="color:${p.color}">${p.name}</h2></div><div class="sheet-hp"><span class="${p.currentHp<p.maxHp/2?'low-health':''}">ЗД <b>${p.currentHp}/${p.maxHp}</b></span><span>Урон <b>${currentHeroDamage(p)}</b></span></div></div>${heroProgressionSummary(p)}${heroMeta}<div class="sheet-stats">${stats}</div>${bonusKey?bonusBreakdownHtml(p,bonusKey):''}<div class="hero-abilities"><div class="hero-ability-card"><small>СПОСОБНОСТЬ ГЕРОЯ</small><b>${escapeCombatText(hc?.ability||'—')}</b><span>${escapeCombatText(hc?.effect||'—')}</span></div><div class="hero-ability-card nat20"><small>НАТУРАЛЬНАЯ 20</small><b>${escapeCombatText(hc?.natural20?.split(' — ')[0]||'Эффект героя')}</b><span>${escapeCombatText(hc?.natural20?.includes(' — ')?hc.natural20.split(' — ').slice(1).join(' — '):(hc?.natural20||'—'))}</span></div></div><h3 class="sheet-section-title">Активные эффекты</h3><div class="hero-effects compact-effects">${effectsHtml}</div>`;
+    els.sheetContent.innerHTML=`${readOnlyBanner}${difficultyControl}<div class="sheet-hero hero-only-head"><div><div class="eyebrow">ЛИСТ ГЕРОЯ</div><h2 style="color:${p.color}">${p.name}</h2></div><div class="sheet-hp"><span class="${p.currentHp<p.maxHp/2?'low-health':''}">ЗД <b>${p.currentHp}/${p.maxHp}</b></span><span>Урон <b>${currentHeroDamage(p)}</b></span></div></div>${!readOnly?territoryPurchaseHtml(p):''}${heroProgressionSummary(p)}${heroMeta}<div class="sheet-stats">${stats}</div>${bonusKey?bonusBreakdownHtml(p,bonusKey):''}<div class="hero-abilities"><div class="hero-ability-card"><small>СПОСОБНОСТЬ ГЕРОЯ</small><b>${escapeCombatText(hc?.ability||'—')}</b><span>${escapeCombatText(hc?.effect||'—')}</span></div><div class="hero-ability-card nat20"><small>НАТУРАЛЬНАЯ 20</small><b>${escapeCombatText(hc?.natural20?.split(' — ')[0]||'Эффект героя')}</b><span>${escapeCombatText(hc?.natural20?.includes(' — ')?hc.natural20.split(' — ').slice(1).join(' — '):(hc?.natural20||'—'))}</span></div></div><h3 class="sheet-section-title">Активные эффекты</h3><div class="hero-effects compact-effects">${effectsHtml}</div>`;
+    bindTerritoryPurchase(els.sheetContent);
     document.getElementById('heroSkillTree').onclick=()=>openHeroProgression(p.id);
     const difficultyBtn=document.getElementById('playerHardModeBtn');if(difficultyBtn&&!readOnly&&!state.sharedDifficulty)difficultyBtn.onclick=()=>togglePlayerHardMode(p);
     els.sheetContent.querySelectorAll('[data-sheet-bonus]').forEach(b=>b.onclick=()=>renderCharacterSheet('overview',b.dataset.sheetBonus));
@@ -2247,7 +2284,8 @@
   }
   function renderInventory(p){
     ensurePlayerModel(p);updateSheetTabs('inventory');const merc=itemCard(getSlotId(p,'mercenary'));const readOnly=sheetReadOnly(),readOnlyBanner=readOnly?`<div class="read-only-banner">Просмотр инвентаря героя <b>${p.name}</b>. Действия с предметами недоступны.</div>`:'';
-    els.sheetContent.innerHTML=`${readOnlyBanner}<div class="inventory-head"><div><div class="eyebrow">ИНВЕНТАРЬ</div><h2 style="color:${p.color}">${p.name}</h2></div><div class="inventory-gold"><small>ЗОЛОТО</small><b>${p.gold}</b></div></div><h3 class="sheet-section-title">Экипировка</h3><div class="gear-grid inventory-gear">${slotTile(p,'weapon')}${slotTile(p,'armor')}${slotTile(p,'amulet')}${slotTile(p,'ring0')}${slotTile(p,'ring1')}${slotTile(p,'artifact')}${slotTile(p,'potion0')}${slotTile(p,'potion1')}<button type="button" class="picture-item-tile backpack-slot" id="backpackTile"><span class="picture-item-caption">Рюкзак</span><b class="picture-item-name">${p.backpack.length}/${backpackCapacity(p)}</b><span class="picture-item-placeholder" aria-hidden="true">▤</span></button></div><h3 class="sheet-section-title">Наёмник</h3><div class="merc-picture-grid">${inventoryPictureTile(merc,'Наёмник',merc?.name||'Отсутствует',`merc-picture-tile ${merc?itemColorClass(p,merc):''} ${merc&&itemEffectSpent(p,merc.id)?'item-ability-spent':''}`,`id="mercTile" ${merc?'':'disabled'}`)}</div><div class="sheet-section-row inventory-actions"><button class="secondary" id="openBackpack">Рюкзак (${p.backpack.length}/${backpackCapacity(p)})</button><button class="${p.pendingItems.length?'primary':'ghost'}" id="openPending">Неразобранные тайники (${p.pendingItems.length})</button></div>${p.pendingItems.length?'<div class="notice compact-notice"><b>Требуется разбор.</b> Движение и завершение хода заблокированы.</div>':''}`;
+    els.sheetContent.innerHTML=`${readOnlyBanner}<div class="inventory-head"><div><div class="eyebrow">ИНВЕНТАРЬ</div><h2 style="color:${p.color}">${p.name}</h2></div><div class="inventory-gold"><small>ЗОЛОТО</small><b>${p.gold}</b></div></div>${!readOnly?territoryPurchaseHtml(p):''}<h3 class="sheet-section-title">Экипировка</h3><div class="gear-grid inventory-gear">${slotTile(p,'weapon')}${slotTile(p,'armor')}${slotTile(p,'amulet')}${slotTile(p,'ring0')}${slotTile(p,'ring1')}${slotTile(p,'artifact')}${slotTile(p,'potion0')}${slotTile(p,'potion1')}<button type="button" class="picture-item-tile backpack-slot" id="backpackTile"><span class="picture-item-caption">Рюкзак</span><b class="picture-item-name">${p.backpack.length}/${backpackCapacity(p)}</b><span class="picture-item-placeholder" aria-hidden="true">▤</span></button></div><h3 class="sheet-section-title">Наёмник</h3><div class="merc-picture-grid">${inventoryPictureTile(merc,'Наёмник',merc?.name||'Отсутствует',`merc-picture-tile ${merc?itemColorClass(p,merc):''} ${merc&&itemEffectSpent(p,merc.id)?'item-ability-spent':''}`,`id="mercTile" ${merc?'':'disabled'}`)}</div><div class="sheet-section-row inventory-actions"><button class="secondary" id="openBackpack">Рюкзак (${p.backpack.length}/${backpackCapacity(p)})</button><button class="${p.pendingItems.length?'primary':'ghost'}" id="openPending">Неразобранные тайники (${p.pendingItems.length})</button></div>${p.pendingItems.length?'<div class="notice compact-notice"><b>Требуется разбор.</b> Движение и завершение хода заблокированы.</div>':''}`;
+    bindTerritoryPurchase(els.sheetContent);
     els.sheetContent.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>{const slot=b.dataset.slot,id=getSlotId(p,slot);if(id)showItemInSheet(id,{where:'equipment',slot})});
     document.getElementById('backpackTile').onclick=()=>renderCharacterSheet('backpack');document.getElementById('openBackpack').onclick=()=>renderCharacterSheet('backpack');document.getElementById('openPending').onclick=()=>renderCharacterSheet('pending');
     if(merc)document.getElementById('mercTile').onclick=()=>showItemInSheet(merc.id,{where:'equipment',slot:'mercenary'});
@@ -2654,12 +2692,26 @@
     warrior:{ability:'Железная стойкость',effect:'1 раз за бой уменьши полученный урон на D4.',natural20:'Боевой напор — преимущество на 2 следующие атаки в этом бою.'},
     dwarf:{ability:'Каменная кровь',effect:'1 раз за бой уменьши полученный урон на D6.',natural20:'Оглушающий удар — враг оглушён и пропускает следующую атаку.'},
     mage:{ability:'Живительная искра',effect:'1 раз за бой восстанови D6 ЗД.',natural20:'Стихийный разряд — выбери Молнию (+D4 и Оглушение) или Огонь (+D4 и Горение).'},
-    archer:{ability:'Меткий выстрел',effect:'1 раз за бой сделай следующую атаку с преимуществом.',natural20:'Двойная стрела — урон этой успешной атаки ×2.'},
-    rogue:{ability:'Теневой обман',effect:'1 раз за бой следующая атака врага выполняется с помехой.',natural20:'Кровоточащий удар — урон ×2 и Кровотечение.'},
-    paladin:{ability:'Исцеляющий контрудар',effect:'После полученного нелетального урона: ответный D4 и лечение на фактически нанесённый урон. Один раз за бой.',natural20:'Следующая атака врага с помехой.'}
+    archer:{ability:'Отравленная стрела',effect:'D6 + Яд (проверка D6: успех 5, 6). Атака способности: D20 + ЛОВ + ХАР против ЗЩ врага.',natural20:'Двойная стрела — урон этой успешной атаки ×2.'},
+    rogue:{ability:'Арбалетный выстрел',effect:'D6 + Кровотечение (проверка D6: успех 5, 6). Атака способности: D20 + ЛОВ + ХАР против ЗЩ врага.',natural20:'Кровоточащий удар — урон ×2 и Кровотечение.'},
+    paladin:{ability:'Исцеляющий контрудар',effect:'После полученного нелетального урона: ответный урон D6. Лечение равно половине нанесённого врагу урона с округлением вниз. Атака способности: D20 + МУД + ХАР против ЗЩ врага.',natural20:'Следующая атака врага с помехой.'}
   };
   function inCombat(){return !!state.combat}
-  function combatEnemy(){return state.combat?itemCard(state.combat.cardId):null}
+  const ENEMY_DAMAGE_STEPS=['D4','D6','D8','D10','D12','2D8','3D6','2D10','2D12','3D10','4D8','3D12','4D10','4D12'];
+  function scaledEnemy(card,level){
+    level=Math.max(1,Math.floor(Number(level)||1));
+    const fields={...card.fields},damage=String(fields['Урон']||'D4').replace(/\s/g,'').toUpperCase();
+    const parts=damage.match(/^(\d*D\d+)([+-]\d+)?$/),step=ENEMY_DAMAGE_STEPS.indexOf(parts?.[1]),boost=Math.floor(level/15);
+    fields['ЗД']=Number(fields['ЗД']||1)+level-1;
+    fields['ЗЩ']=Number(fields['ЗЩ']||0)+Math.floor(level/5);
+    fields['АТК']=signed(Number(fields['АТК']||0)+Math.floor(level/10));
+    if(step>=0)fields['Урон']=ENEMY_DAMAGE_STEPS[Math.min(ENEMY_DAMAGE_STEPS.length-1,step+boost)]+(parts[2]||'');
+    return {...card,fields};
+  }
+  function combatEnemy(){
+    const c=state.combat,base=c?itemCard(c.cardId):null;
+    return base&&c.enemyFields?{...base,fields:{...base.fields,...c.enemyFields}}:base;
+  }
   function combatEnemyType(){return String(combatEnemy()?.fields?.['Тип']||'').toLowerCase()}
   let combatJournalInstance=null,combatJournalVisible=false;
   function combatPush(text){const c=state.combat;if(!c)return;c.history=c.history||[];c.history.unshift(text);}
@@ -2748,7 +2800,8 @@
   function enemyDicePreferences(enemy=combatEnemy(),combat=state.combat){
     const rank=String(enemy?.fields?.['Ранг']||'').toLowerCase(),boss=combat?.isBoss||enemy?.id===281||/босс/.test(rank);
     const face=boss?'#D62828':combat?.elite||/элит|эпич/.test(rank)?'#8B45BD':/силь/.test(rank)?'#2454C6':/обыч/.test(rank)?'#388E3C':'#60646C';
-    return {skin:'custom',pack:null,speed:2,motion:'bounce',colors:{rim:'#C0C0C0',face,number:'#FFFFFF'}};
+    const speed=window.RPGDiceSettings?.get(combat?.heroId||currentPlayer()?.id)?.speed||2;
+    return {skin:'custom',pack:null,speed,motion:'bounce',colors:{rim:'#C0C0C0',face,number:'#FFFFFF'}};
   }
   function combatSetEnemyRoll(...args){while(args.length<6)args.push(undefined);args[6]=null;return combatSetRoll(...args)}
   function combatSetRoll(title,main,math='',detail='',natural=null,dice=null,diceHeroId=undefined,options={}){
@@ -2887,6 +2940,8 @@
     if(!els.rollOverlay.hidden&&/^Движение\s*·/.test(els.rollPopupTitle.textContent||'')){els.rollOverlay.hidden=true;rollPopupAfterClose=null;++rollPopupDisplaySeq;}
 
     const p=currentPlayer(),elite=!!state.exploration?.elitePending;
+    const enemyLevel=RPGProgression.info(p).level;
+    card=scaledEnemy(card,enemyLevel);
     // Совместимость со старыми сохранениями: сначала переносим текстовые заметки в структурированные эффекты,
     // и только после этого формируем набор эффектов для начинающегося боя.
     const keptNotes=[];for(const n of p.notes||[]){if(/следующем бою.*\+2 к атаке/i.test(n))p.combatEffects.push({type:'nextBattleAttack',amount:2,attacksRemaining:2,label:'Благословение путника'});else if(/следующем бою.*первые 2 атаки.*преимуществ/i.test(n))p.combatEffects.push({type:'nextBattleAdvantage',attacksRemaining:2,label:'Следы врага'});else if(/в следующем бою все атаки героя — с преимуществом/i.test(n))p.combatEffects.push({type:'nextBattleAllAdvantage',label:'Молитва истинного удара'});else if(/в следующем бою герой получает \+3 ЗЩ/i.test(n))p.combatEffects.push({type:'nextBattleDefense',amount:3,label:'Покров Стража'});else if(/в следующем бою урон от атак героя ×2/i.test(n))p.combatEffects.push({type:'nextBattleHeroDamageMultiplier',amount:2,label:'Печать возмездия'});else if(/в следующем бою первый урон.*×2/i.test(n))p.combatEffects.push({type:'nextBattleFirstDamageMultiplier',amount:2,label:'Чёрная игла'});else if(/в следующем бою получаемый героем урон уменьшается вдвое/i.test(n))p.combatEffects.push({type:'nextBattleIncomingHalf',label:'Железная молитва'});else if(/в следующем бою все атаки врага — с помехой/i.test(n))p.combatEffects.push({type:'nextBattleEnemyDisadvantageAll',label:'Морок Сердца'});else keptNotes.push(n)}p.notes=keptNotes;
@@ -2898,7 +2953,7 @@
     const pendingStartEffects=preEffects,freeEscapeEffect=pendingStartEffects.find(e=>e.type==='nextBattleFreeEscape'),freeEscape=!!freeEscapeEffect;
     if(freeEscape)p.combatEffects=(p.combatEffects||[]).filter(e=>e.type!=='nextBattleFreeEscape');
     const abilityLockEffect=pendingStartEffects.find(e=>e.type==='nextBattleAbilityLocked'),enemyHitEffect=pendingStartEffects.find(e=>e.type==='nextEnemyHitBonus');
-    state.combat={heroId:p.id,instanceId:`c-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`,startedAt:Date.now(),cardId:card.id,deckKey:card.id===281?'boss':(state.exploration?.deckKey||deckKeyForCard(card)),isBoss:card.id===281,elite,enemyHp:Number(card.fields?.['ЗД']||1),enemyMaxHp:Number(card.fields?.['ЗД']||1),round:1,phase:'pre',used:{},history:[],journalOpen:false,lastRoll:null,heroAdvantage:0,heroDisadvantage:0,enemyAdvantage:0,enemyDisadvantage:0,enemyStunned:0,heroStunned:p.statuses.includes('Оглушение')?1:0,enemyBleed:0,enemyBurn:0,heroStatusTimers:{Кровотечение:p.statusTimers?.['Кровотечение']||0,Горение:p.statusTimers?.['Горение']||0},heroAttackCount:0,heroSuccessfulHits:0,enemyAttackCount:0,enemyHitCount:0,enemySuccessfulHits:0,enemyWasFirst:enemyFirst,heroWasFirst:!enemyFirst,firstEnemyDamageTaken:false,firstEnemyDamageDealt:false,buffs:[],pendingStartEffects,battleEffectsActivated:false,potionUnlockRound:{},pendingHeroDamage:null,pendingEnemyDamage:null,attackRoll:null,mirrorQueued:false,afterEnemyMiss:false,pendingEscape:null,pendingCleanse:null,freeEscape,freeEscapeLabel:freeEscapeEffect?.label||null,heroAbilityLocked:!!abilityLockEffect,heroAbilityLockedLabel:abilityLockEffect?.label||null,heroAllAdvantage:false,heroAllAdvantageLabel:null,enemyAllDisadvantage:false,enemyAllDisadvantageLabel:null,battleDefenseBonus:0,battleDefenseLabel:null,heroDamageMultiplier:1,heroDamageMultiplierLabel:null,firstHeroDamageMultiplier:1,firstHeroDamageMultiplierLabel:null,heroIncomingHalf:false,heroIncomingHalfLabel:null,nextEnemyHitBonus:(enemyHitEffect?.amount||0),nextEnemyHitBonusLabel:enemyHitEffect?.label||null,heroDisadvantageLabel:null,fateRiftReady:false,fateRiftTriggered:false};
+    state.combat={heroId:p.id,instanceId:`c-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`,startedAt:Date.now(),cardId:card.id,deckKey:card.id===281?'boss':(state.exploration?.deckKey||deckKeyForCard(card)),isBoss:card.id===281,elite,enemyLevel,enemyFields:{...card.fields},enemyHp:Number(card.fields?.['ЗД']||1),enemyMaxHp:Number(card.fields?.['ЗД']||1),round:1,phase:'pre',used:{},history:[],journalOpen:false,lastRoll:null,heroAdvantage:0,heroDisadvantage:0,enemyAdvantage:0,enemyDisadvantage:0,enemyStunned:0,heroStunned:p.statuses.includes('Оглушение')?1:0,enemyBleed:0,enemyBurn:0,heroStatusTimers:{Кровотечение:p.statusTimers?.['Кровотечение']||0,Горение:p.statusTimers?.['Горение']||0},heroAttackCount:0,heroSuccessfulHits:0,enemyAttackCount:0,enemyHitCount:0,enemySuccessfulHits:0,enemyWasFirst:enemyFirst,heroWasFirst:!enemyFirst,firstEnemyDamageTaken:false,firstEnemyDamageDealt:false,buffs:[],pendingStartEffects,battleEffectsActivated:false,potionUnlockRound:{},pendingHeroDamage:null,pendingEnemyDamage:null,attackRoll:null,mirrorQueued:false,afterEnemyMiss:false,pendingEscape:null,pendingCleanse:null,freeEscape,freeEscapeLabel:freeEscapeEffect?.label||null,heroAbilityLocked:!!abilityLockEffect,heroAbilityLockedLabel:abilityLockEffect?.label||null,heroAllAdvantage:false,heroAllAdvantageLabel:null,enemyAllDisadvantage:false,enemyAllDisadvantageLabel:null,battleDefenseBonus:0,battleDefenseLabel:null,heroDamageMultiplier:1,heroDamageMultiplierLabel:null,firstHeroDamageMultiplier:1,firstHeroDamageMultiplierLabel:null,heroIncomingHalf:false,heroIncomingHalfLabel:null,nextEnemyHitBonus:(enemyHitEffect?.amount||0),nextEnemyHitBonusLabel:enemyHitEffect?.label||null,heroDisadvantageLabel:null,fateRiftReady:false,fateRiftTriggered:false};
     state.turnLocked=true;combatPush(`Открыт враг №${card.id} «${card.name}».`);if(enemyFirstEffects.length)combatPush(`${enemyFirstEffects.map(x=>x.label||'Ловушка').join(', ')}: этот враг атакует первым. Эффект израсходован.`);log(`<b>БОЙ:</b> ${p.name} против «${card.name}» — ЗД ${card.fields?.['ЗД']}, ЗЩ ${card.fields?.['ЗЩ']}, АТК ${card.fields?.['АТК']}, урон ${card.fields?.['Урон']}.`);
     combatStartChecks();renderCombat();updateUI();
   }
@@ -3001,7 +3056,7 @@
     else if(kind==='ability'){progressionEnemyEffect(hit.rule);beginHeroEffectSequence(hit.returnPhase)}
     else if(kind==='paladin'){
       const ratio=hit.healingRatio??RPGProgression.rules(RPGProgression.selected(p,'ability')).healingRatio,before=p.currentHp;
-      heal(p,actual>0?Math.max(1,Math.floor(actual*ratio)):0);const restored=p.currentHp-before;
+      heal(p,Math.floor(actual*ratio));const restored=p.currentHp-before;
       if(c.enemyHp>0)combatEnemyHealFromHeroHealing(restored);
       combatPush(`${escapeCombatText(hit.label)}: восстановлено ${restored} ЗД · ${p.currentHp}/${p.maxHp}.`);
       beginHeroEffectSequence('paladin');
@@ -3569,6 +3624,7 @@
     const extra=combatEnemyEffectsHtml(c);
     const rank=String(e.fields?.['Ранг']||(e.id===281?'Босс':'—'));const type=String(e.fields?.['Тип']||'—');
     return `<div class="visual-card-back-wrap enemy-back battle-v080-back"><h4>Характеристики врага</h4><div class="battle-enemy-taxonomy">${escapeCombatText(rank)} · ${escapeCombatText(type)}</div>
+      ${c.enemyLevel?battleBackRow('Уровень',String(c.enemyLevel),'По уровню героя в начале боя'):''}
       ${battleBackRow('Здоровье',`${Math.max(0,c.enemyHp)}/${c.enemyMaxHp}`)}
       ${battleBackRow('ЗЩ',String(e.fields?.['ЗЩ']||'—'))}
       ${battleBackRow('АТК',String(e.fields?.['АТК']||'—'))}
@@ -3604,7 +3660,7 @@
     return `<span class="tabletop-effect-overlay" aria-label="Активные эффекты">${rows.map(({label,detail,tone})=>{
       const path=BATTLE_V086_EFFECT_PATHS[battleV086EffectIcon(label,detail)]||BATTLE_V086_EFFECT_PATHS.star;
       const description=escapeCombatText(`${label}${detail?' — '+detail:''}`);
-      return `<span class="tabletop-effect-icon ${tone==='negative'?'negative':'positive'}" title="${description}" aria-label="${description}"><svg viewBox="0 0 24 24" width="100%" height="100%" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${path}"/></svg></span>`;
+      return `<span class="tabletop-effect-icon ${tone==='negative'?'negative':'positive'}" role="button" tabindex="0" data-effect-label="${escapeCombatText(label)}" data-effect="${escapeCombatText(canonicalNegativeEffectForm(label)||'')}" data-effect-detail="${escapeCombatText(detail)}" aria-label="${description}"><svg viewBox="0 0 24 24" width="100%" height="100%" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${path}"/></svg></span>`;
     }).join('')}</span>`;
   }
   function battleV086HeroEffects(p,c){
@@ -3724,6 +3780,19 @@
   function updateActionPanel(){
     if(!state.started){renderTurnOrderBanner();return}const p=currentPlayer();renderTurnOrderBanner();els.actionPanel.innerHTML='';
     if(state.gameOver){const winner=getPlayer(state.gameOver.winnerId)||p;addActionBox('Партия завершена',`<b>${winner.name}</b> победил Владыку Сердца Тьмы. Дальнейшие ходы заблокированы.`,[{label:'Показать итог партии',className:'success',fn:()=>showGameOverPopup(winner,{force:true})}]);return}
+    if(areaMergePreview&&areaMergePreview.heroId!==currentPlayer()?.id)areaMergePreview=null;
+    if(areaMergePreview){
+      const choice=areaMergePreview,owner=getPlayer(choice.heroId);
+      addActionBox('Объединение территорий','Выберите вариант: его территории подсветятся на карте. Затем нажмите «Подтвердить».',[
+        ...areaChoiceActions(owner,choice.candidates,choice.onDone),
+        {label:'Отмена',className:'secondary',fn:()=>{areaMergePreview=null;renderBoard();choice.onDone();updateUI()}}
+      ]);return;
+    }
+    if(onlineLocalHeroId&&onlineLocalHeroId!==p.id){
+      const mine=getPlayer(onlineLocalHeroId),html=territoryPurchaseHtml(mine);
+      if(html){addActionBox('Ваша территория',html,[]);bindTerritoryPurchase(els.actionPanel)}
+      return;
+    }
     if(state.combat){return}
     if(state.portalPending){addActionBox('Древний портал',`Выберите выход прямо на карте. Доступные порталы подсвечены <b>фиолетовой границей</b>: ${state.portalPending.destinations.join(', ')}.`,[]);return}
     if(state.tributeConsentPending){const req=state.tributeConsentPending,owner=getPlayer(req.ownerId),visitor=getPlayer(req.visitorId),mine=!onlineLocalHeroId||onlineLocalHeroId===req.ownerId;if(mine)addActionBox('Запрос на бесплатный проход',`<b>${visitor?.name||'Игрок'}</b> просит пройти бесплатно по территории <b>${req.hex}</b>. Решение принимает ${owner?.name||'владелец'}.`,[{label:'Разрешить проход',className:'success',fn:()=>resolvePassagePermission(true)},{label:'Отказать',className:'danger',fn:()=>resolvePassagePermission(false)}]);else addActionBox('Ожидание владельца территории',`Запрос отправлен игроку <b>${owner?.name||'владелец'}</b>. Пока он не ответит, движение приостановлено.`,[]);return}
@@ -3786,10 +3855,10 @@
     }
     const sameHexHeroes=state.players.filter(q=>q.id!==p.id&&q.hex===p.hex);if(sameHexHeroes.length&&!state.foreignTerritoryPending)addActionBox('Торговля между игроками',`На гексе вместе с ${p.name} находится: <b>${sameHexHeroes.map(q=>q.name).join(', ')}</b>. Пока герои остаются на одном гексе, торговля доступна в ход любого из них.`,[{label:'Начать торговлю',className:'primary',fn:()=>openTrade(p,true)}]);
     if(foreign&&foreign.heroId===p.id&&foreign.hex===p.hex)return;
-    const build=canBuildAt(p);
-    if(build.ok&&!state.turnLocked){addActionBox('Строительство',`Очищенный гекс ${p.hex}. Стоимость: ${build.cost} золота.`,[{label:`Построить за ${build.cost}`,className:'success',fn:buildTerritory}])}
+    const build=canPurchaseTerritory(p);
+    if(build.ok&&!state.turnLocked){addActionBox('Строительство',`Очищенный гекс ${p.hex}. Стоимость: ${build.cost} золота.`,[{label:`Купить территорию · ${build.cost} зол.`,className:'success',fn:()=>buildTerritory()}])}
     else if(!state.turnLocked&&state.cleaned[p.hex]&&!state.territories[p.hex]&&MAP.hexes[p.hex]&&['kingdom','cursed'].includes(MAP.hexes[p.hex].region)){addActionBox('Строительство недоступно',build.why,[])}
-    const candidates=affordableAreaCandidatesAt(p,p.hex);if(candidates.length&&!state.turnLocked){addActionBox('Область',`Можно объединить 3 граничащие территории в область.`,candidates.slice(0,8).map(c=>({label:`Объединить за ${areaMergeCost(c)} ЗОЛ · ${c.join(' + ')}`,className:'secondary',fn:()=>createArea(c,{player:p,onDone:()=>advanceTurnState(p,'создание области'),onCancel:()=>{updateUI();renderBoard()}})})))}
+    const candidates=affordableAreaCandidatesAt(p,p.hex);if(candidates.length&&!state.turnLocked){addActionBox('Область',`Можно объединить 3 граничащие территории в область.`,areaChoiceActions(p,candidates,()=>{advanceTurnState(p,'создание области');updateUI();renderBoard()}))}
     if(canExploreHere(p)){addActionBox(state.cleaned[p.hex]?'Повторное исследование':'Исследование',`${state.cleaned[p.hex]?cleanedHexDescription(p.hex):'Гекс '+p.hex+'. Выбери колоду исследования.'}`,exploreActions(p).map(a=>({label:a.label,className:'primary',fn:()=>beginExplore(a.key)})))}
     if(state.locations[p.hex]&&state.turnMoved&&!state.movePending){
       const loc=state.locations[p.hex];
@@ -3884,7 +3953,7 @@
     if(state.gameOver)els.moveHint.textContent='Партия завершена: Владыка Сердца Тьмы побеждён.';else if(state.foreignTerritoryPending?.heroId===p.id)els.moveHint.textContent=state.foreignTerritoryPending.transitKey?'Маршрут проходит через чужую территорию. Выберите: дань, избегание, захват или просьбу пройти бесплатно — после решения движение продолжится.':'Вы на чужой территории. Выберите: дань, избегание, захват или просьбу пройти бесплатно.';else if(p.pendingItems.length)els.moveHint.textContent=`Сначала разберите все неразобранные тайники (${p.pendingItems.length}). Движение и завершение хода заблокированы.`;else if(p.inDungeon&&!dungeonExitAvailable(p))els.moveHint.textContent='Герой только что попал в Темницу. Закройте окно попадания в Темницу — ход завершится автоматически.';else if(p.inDungeon)els.moveHint.textContent='Обычное движение недоступно. Выбери характеристику для попытки выхода — это займёт весь ход.';else if(state.movePending){const plan=manualMovePlan(p),route=plan.path.join(' → '),left=Math.max(0,state.movePoints-plan.cost);els.moveHint.textContent=`Маршрут: ${route}. Использовано ${plan.cost}/${state.movePoints}, осталось ${left}. Нажимайте следующий зелёный гекс, чтобы продолжить путь; нажмите уже выбранный гекс, чтобы сократить маршрут. Когда конечная точка выбрана — нажмите «Исследовать» или действие гекса.`;}else if(unresolvedHex)els.moveHint.textContent=`Гекс ${p.hex} ещё не исследован. Завершить ход нельзя — сначала проведите исследование.`;else if(!state.rolled)els.moveHint.textContent='Сначала брось кубик движения. На очищенном гексе можно построить территорию до броска.';else if(state.turnMoved)els.moveHint.textContent=`Перемещение завершено на ${p.hex}. Теперь можно активировать гекс или завершить ход.`;else els.moveHint.textContent=`Постройте путь вручную: нажимайте соседние зелёные гексы по одному. Можно использовать от 1 до ${state.movePoints} единиц движения. Игра не выбирает маршрут автоматически.`;
     els.initiativeList.innerHTML='';updateActionPanel();if(!els.sheetDrawer.hidden&&['overview','inventory'].includes(sheetView.mode)){
       const viewed=sheetPlayer();const signature=JSON.stringify([sheetView.playerId,sheetView.mode,sheetView.bonusKey,viewed,state.currentIndex,state.round,state.sharedDifficulty,state.territories,state.areas,state.combat?.phase,state.combat?.round,state.combat?.used]);
-      if(els.sheetContent.dataset.autoRenderSignature!==signature){const scrollY=els.sheetContent.scrollTop;renderCharacterSheet(sheetView.mode,sheetView.bonusKey);els.sheetContent.dataset.autoRenderSignature=signature;els.sheetContent.scrollTop=scrollY}
+      if(els.sheetContent.dataset.autoRenderSignature!==signature){renderCharacterSheet(sheetView.mode,sheetView.bonusKey);els.sheetContent.dataset.autoRenderSignature=signature}
     }maybeShowDungeonEntryNotice();maybeShowTradeDeal();
   }
 
@@ -3909,7 +3978,7 @@
     const mapRenderKey=JSON.stringify([
       state.started,state.currentIndex,state.order,state.players?.map(p=>[p.id,p.hex,p.inDungeon,p.hardMode,p.discoveredLocations]),
       state.reachable,state.chosenPath,state.chosenMovePlan,state.movePending,state.cleaned,state.cleanedUntil,state.round,state.currentIndex,state.territories,
-      state.areas,state.locations,state.portalPending?.destinations,state.mapHighlight,onlineLocalHeroId
+      state.areas,state.locations,state.portalPending?.destinations,state.mapHighlight,onlineLocalHeroId,areaMergePreview?.hexes
     ]);
     if(els.overlay.dataset.mapRenderKey===mapRenderKey){applyMapZoom(false);return}
     els.overlay.dataset.mapRenderKey=mapRenderKey;
@@ -3925,6 +3994,7 @@
       c.addEventListener('mouseenter',()=>{const bits=[`Гекс: ${id}`,regionName(h.region)];if(state.locations[id]&&locationVisibleToPlayer(currentPlayer(),id))bits.push(state.locations[id].name);if(state.territories[id])bits.push(`территория ${getPlayer(state.territories[id].owner)?.name||''}`);if(portalChoice)bits.push('выход из портала');els.hoverInfo.textContent=bits.join(' · ')});c.addEventListener('mouseleave',()=>els.hoverInfo.textContent='Гекс: —');els.overlay.appendChild(c)
     });
     Object.entries(state.territories).forEach(([id,t])=>{const h=MAP.hexes[id],colors=getHeroMapColors(getPlayer(t.owner));els.overlay.appendChild(svgEl('polygon',{points:hexPolygonPoints(h,23).map(x=>x.join(',')).join(' '),class:'territory-marker',fill:colors.fill,stroke:colors.stroke}))});state.areas.forEach(drawAreaOutline);
+    if(areaMergePreview){const colors=getHeroMapColors(getPlayer(areaMergePreview.heroId));for(const id of areaMergePreview.hexes){const h=MAP.hexes[id];if(h)els.overlay.appendChild(svgEl('polygon',{points:hexPolygonPoints(h,49).map(x=>x.join(',')).join(' '),class:'area-merge-preview',fill:colors.fill,stroke:colors.stroke,'stroke-width':5,'fill-opacity':0.4,style:'filter:drop-shadow(0 0 7px '+colors.stroke+');pointer-events:none'}))}}
     if(state.mapHighlight?.type==='territories'){for(const [id,t] of Object.entries(state.territories))if(t.owner===state.mapHighlight.playerId)drawPurpleHexOutline(id,'map-purple-outline',51.3)}
     if(state.mapHighlight?.type==='areas'){for(const a of state.areas)if(a.owner===state.mapHighlight.playerId)drawPurpleAreaOutline(a)}
     const visibilityPlayer=onlineLocalHeroId?getPlayer(onlineLocalHeroId):currentPlayer();Object.entries(state.locations).forEach(([id,l])=>{if(!locationVisibleToPlayer(visibilityPlayer,id))return;const h=MAP.hexes[id],colors=getLocationMapColors(l.name);els.overlay.appendChild(svgEl('polygon',{points:hexPolygonPoints(h,23).map(x=>x.join(',')).join(' '),class:'location-marker',fill:colors.fill,stroke:colors.stroke}));const t=svgEl('text',{x:h.x,y:h.y+1,class:'location-text'});t.textContent=LOCATION_SYMBOL[l.name]||'●';els.overlay.appendChild(t)});
@@ -3950,7 +4020,7 @@
       const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
-      state.version='0.6.116';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.107.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
+      state.version='0.6.120';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.107.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
     }catch(e){console.error(e);alert('Не удалось загрузить сохранение.')}
   }
   function cloneJson(v){return JSON.parse(JSON.stringify(v))}
@@ -3968,7 +4038,7 @@
     if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
-    state.version='0.6.116';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    state.version='0.6.120';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){
@@ -3989,7 +4059,7 @@
   const settingsOverlay=document.getElementById('settingsOverlay');
   document.getElementById('settingsClose')?.addEventListener('click',closeSettingsOverlay);
   settingsOverlay?.addEventListener('click',e=>{if(e.target===settingsOverlay)closeSettingsOverlay()});
-  document.getElementById('settingsDiceBtn')?.addEventListener('click',()=>document.getElementById('journalDiceBtn')?.click());
+  document.getElementById('settingsDiceBtn')?.addEventListener('click',()=>{closeSettingsOverlay();document.getElementById('journalDiceBtn')?.click()});
   for(const [button,target] of [['settingsSaveBtn','saveBtn'],['settingsLoadBtn','loadBtn'],['settingsResetBtn','resetBtn']]){
     document.getElementById(button)?.addEventListener('click',()=>{
       if(button!=='settingsSaveBtn')closeSettingsOverlay();
@@ -4042,7 +4112,7 @@
     return {id,name:playerName&&playerName!==hero.name?`${hero.name} — ${playerName}`:hero.name};
   });
   window.addEventListener('rpg-atlas-updated',()=>{updateUI();if(state.combat&&!combatWindowHidden)renderCombat()});
-  window.__RPG_DEBUG__={normalizeEquipmentDecks,equipmentRuleTotal,genericEquipmentAction,equipmentMaxHp,mercenaryEligible,normalizeTavernMercenaries,mercenaryResists,maybeUseTrackerBeforeExplore,performTrapCheck,backpackCapacity,setSlotId,passiveHeroDamageReduction,combatEnemyAttackModifier,combatEscapeBefore,combatEscapeDuring,recoverHealthForRound,buildTerritory,buildTerritoryFor,canBuildAt,finalizeArea,areaCandidatesAt,openTrade,payDungeonExit,beginSideInteraction,endSideInteraction,heroAbilityAttackProfile,resolveHeroAbilityAttack,combatAbilityAttackHits,resolveSecondaryDamage,commitEnemyDamage,resolveHeroAbilityDamage,resolveHeroEffectCheck,advanceHeroEffectSequence,tickOutsideStatuses,rollMove,combatTickHeroStatuses,finishCombatStun,combatDecisionOptions,cancelCombatAuto,PERIODIC_STATUS_RULES,markExplorationSuccess,refreshHeartCleansing,heartCleansingRemaining,currentHexNeedsResolution,canExploreHere,showVictoryResults,performVictorySearch,victorySessionCombat,initialDecks,drawCard,discardCard,returnCardToDeckRandom,separateMercenaryDecks,takeMercenaryFromDeck,startGame,endTurn,advanceTurnState,resolvePaladinCounter,combatContinueAfterDamage,combatAttackStatProfile,canEquipCard,enemyDicePreferences,openHeroProgression,heroCombatInfo,addStatus,combatApplyHeroStatus,combatApplyEnemyStatus,combatClassAbilityAvailable,combatEffectiveDefense,combatAttackBonus,chooseCombatCleanseStatus,recordEnemyVictory,getState:()=>state,setState:v=>{state=v},freshState,HEROES,CARD_BY_ID,combatStart,combatFight,combatHeroAttack,finalizeHeroAttackRoll,combatRollHeroDamage,combatDamageFormula,inventoryCardBackHtml,applyHeroDamageNow,combatEnemyTurn,finalizeEnemyAttackRoll,acceptEnemyDamage,combatContinueAfterEnemyMiss,renderCombat,currentPlayer,getPlayer,ensurePlayerModel,supportedCombatEffect,applyCombatItemEffect,useHeroCombatAbility,combatReactionList,fullSetEquipped,completeSetNames,itemColorClass,mandatoryLootCount,setBonusActionInfo,useSetBonus,showRollPopup,heroImmuneStatus,combatPassiveDamageBonus,combatHeroDeath,combatVictory,movementFor,combatCanChangeEquipment,combatTickEnemyStatuses,equipTransaction,merchantSaleMultiplier,visitShrine,visitMerchant,showMerchantShop,renderTavernVisit,visitLocation,decorateNegativeEffects,generatePermanentLocations,locationVisibleToPlayer,revealLocationToPlayer,ensureTavernMercenary,restockTavernIfVacant,visitTavern,attemptDungeonExit,beginBonusExplorationTurnAfterDungeon,gameOverStats,showGameOverPopup,renderBoard,updateUI,openCharacterSheet,closeCharacterSheet,toggleCharacterSheet,renderTurnOrderBanner};
+  window.__RPG_DEBUG__={updateActionPanel,closeSettingsOverlay,showPostCombatTerritoryPrompt,canPurchaseTerritory,areaChoiceActions,promptAreaMergeAfterBuild,getAreaPreview:()=>areaMergePreview,scaledEnemy,combatEnemy,combatEnemyHitDamage,ENEMY_DAMAGE_STEPS,showCard,shuffleRemainingDeck,peekExploreTop,consumeHeldItem,normalizeEquipmentDecks,equipmentRuleTotal,genericEquipmentAction,equipmentMaxHp,mercenaryEligible,normalizeTavernMercenaries,mercenaryResists,maybeUseTrackerBeforeExplore,performTrapCheck,backpackCapacity,setSlotId,passiveHeroDamageReduction,combatEnemyAttackModifier,combatEscapeBefore,combatEscapeDuring,recoverHealthForRound,buildTerritory,buildTerritoryFor,canBuildAt,finalizeArea,areaCandidatesAt,openTrade,payDungeonExit,beginSideInteraction,endSideInteraction,heroAbilityAttackProfile,resolveHeroAbilityAttack,combatAbilityAttackHits,resolveSecondaryDamage,commitEnemyDamage,resolveHeroAbilityDamage,resolveHeroEffectCheck,advanceHeroEffectSequence,tickOutsideStatuses,rollMove,combatTickHeroStatuses,finishCombatStun,combatDecisionOptions,cancelCombatAuto,PERIODIC_STATUS_RULES,markExplorationSuccess,refreshHeartCleansing,heartCleansingRemaining,currentHexNeedsResolution,canExploreHere,showVictoryResults,performVictorySearch,victorySessionCombat,initialDecks,drawCard,discardCard,returnCardToDeckRandom,separateMercenaryDecks,takeMercenaryFromDeck,startGame,endTurn,advanceTurnState,resolvePaladinCounter,combatContinueAfterDamage,combatAttackStatProfile,canEquipCard,enemyDicePreferences,openHeroProgression,heroCombatInfo,addStatus,combatApplyHeroStatus,combatApplyEnemyStatus,combatClassAbilityAvailable,combatEffectiveDefense,combatAttackBonus,chooseCombatCleanseStatus,recordEnemyVictory,getState:()=>state,setState:v=>{state=v},freshState,HEROES,CARD_BY_ID,combatStart,combatFight,combatHeroAttack,finalizeHeroAttackRoll,combatRollHeroDamage,combatDamageFormula,inventoryCardBackHtml,applyHeroDamageNow,combatEnemyTurn,finalizeEnemyAttackRoll,acceptEnemyDamage,combatContinueAfterEnemyMiss,renderCombat,currentPlayer,getPlayer,ensurePlayerModel,supportedCombatEffect,applyCombatItemEffect,useHeroCombatAbility,combatReactionList,fullSetEquipped,completeSetNames,itemColorClass,mandatoryLootCount,setBonusActionInfo,useSetBonus,showRollPopup,heroImmuneStatus,combatPassiveDamageBonus,combatHeroDeath,combatVictory,movementFor,combatCanChangeEquipment,combatTickEnemyStatuses,equipTransaction,merchantSaleMultiplier,visitShrine,visitMerchant,showMerchantShop,renderTavernVisit,visitLocation,decorateNegativeEffects,generatePermanentLocations,locationVisibleToPlayer,revealLocationToPlayer,ensureTavernMercenary,restockTavernIfVacant,visitTavern,attemptDungeonExit,beginBonusExplorationTurnAfterDungeon,gameOverStats,showGameOverPopup,renderBoard,updateUI,openCharacterSheet,closeCharacterSheet,toggleCharacterSheet,renderTurnOrderBanner};
   window.__RPG_ONLINE__={startWithHeroes:startOnlineGame,exportState:exportOnlineState,applyState:applyOnlineState,currentPlayerId:()=>currentPlayer()?.id||null,isStarted:()=>!!state.started,sideInteractionOwnerId,sideInteractionActiveFor,acknowledgeVictorySide,exportSideState:sideInteractionPayload,endSideInteraction,refreshUI:()=>{renderJournal();updateUI();renderBoard()},setLocalHeroId:id=>{onlineLocalHeroId=id||null;if(onlineLocalHeroId){sheetView.playerId=onlineLocalHeroId;if(!els.sheetDrawer.hidden)renderCharacterSheet(sheetView.mode,sheetView.bonusKey)}renderJournal();updateUI();renderBoard()},canOffturnSharedAction:id=>!!id&&(state.tributeConsentPending?.ownerId===id||state.dungeonEntryNotice?.heroId===id),canOffturnModalActionFor,combatWindowIsHidden:()=>combatWindowHidden,showCombatWindow,hideCombatWindow};
   decorateNegativeEffects(document.body);negativeEffectObserver.observe(document.body,{childList:true,subtree:true});
   renderJournal();renderBoard();

@@ -47,7 +47,7 @@
     if(!source)return null;
     const baseline=session.lastServerState||{};
     const original=new Map((baseline.players||[]).map(p=>[p.id,p]));
-    const allowed=new Set(['gold','maxHp','currentHp','statuses','statusTimers','statusTickedTurn','backpack','pendingItems','equipment','temporaryEffects','combatEffects','itemUsage','lockedItems','locationVisits','discoveredLocations','reexploreRiskHex','notes','stats','areaHealingCooldown','scoutBootsUsedTurn']);
+    const allowed=new Set(['gold','maxHp','currentHp','statuses','statusTimers','statusTickedTurn','backpack','pendingItems','equipment','temporaryEffects','combatEffects','itemUsage','lockedItems','locationVisits','discoveredLocations','reexploreRiskHex','notes','stats','areaHealingCooldown','scoutBootsUsedTurn','territoryBuildSeq']);
     const out={type:source.type,ownerId:source.ownerId,players:[]};
     for(const item of source.players||[]){
       const was=original.get(item.id)||{};const patch={id:item.id};
@@ -276,6 +276,7 @@
     const mine=myHeroId(),active=session.lastServerActiveHero||engine()?.currentPlayerId();if(!mine||mine===active)return;
     const t=e.target;if(!(t instanceof Element))return;
     const eng=engine(),sideMine=!!eng?.sideInteractionActiveFor?.(mine),sharedDecision=!!eng?.canOffturnSharedAction?.(mine),modalAllowed=!!eng?.canOffturnModalActionFor?.(mine);
+    if(t.closest('[data-buy-territory]')?.dataset.buyTerritory===mine)return;
     if(sharedDecision&&t.closest('#actionPanel'))return;
     if(modalAllowed&&t.closest('#modal'))return;
     if(t.closest('#combatHide,#combatJournalToggle,#combatRestoreButton,#turnOrderBanner,#settingsOverlay,.dice-settings'))return;
