@@ -232,6 +232,15 @@
     await waitIdle();await syncGame();await waitIdle();session.syncBusy=true;
     try{const result=await api(`/api/rooms/${session.code}/game/ability`,{method:'POST',body:JSON.stringify({...auth(),nodeId})});return result}finally{session.syncBusy=false}
   }};
+  window.__RPG_NETWORK_PROGRESSION__.reset=async(heroId,cardId)=>{
+    if(heroId!==myHeroId())throw Error('Можно перераспределить способности только своего героя');
+    const start=Date.now();const idle=async()=>{while(session.syncBusy){if(Date.now()-start>15000)throw Error('Сервер занят');await new Promise(r=>setTimeout(r,40))}};
+    await idle();await syncGame();await idle();session.syncBusy=true;
+    try{
+      const result=await api(`/api/rooms/${session.code}/game/respec`,{method:'POST',body:JSON.stringify({...auth(),cardId})});
+      acknowledgeSideVersions(result);return result;
+    }finally{session.syncBusy=false}
+  };
   window.__RPG_NET_FLUSH_MERCHANT__=flushMerchant;
   let localMutationTimer=null;
   window.addEventListener('rpg-local-mutation',()=>{if(!session.gameEntered)return;clearTimeout(localMutationTimer);localMutationTimer=setTimeout(syncGame,30)});

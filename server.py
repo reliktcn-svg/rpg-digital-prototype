@@ -350,6 +350,35 @@ class Handler(SimpleHTTPRequestHandler):
                     for hero in game.get('players',[]):ensure_progression(hero)
                     room['gameState']=game; room['gameRevision']=1; room['gameUpdatedAt']=int(time.time())
                 return self._json(200, {'revision':room['gameRevision'],'state':room['gameState']})
+        if p.endswith('/game/respec') and p.startswith('/api/rooms/'):
+            code=p.split('/')[-3]
+            with LOCK:
+                room=ROOMS.get(code)
+                if not room:return self._json(404,{'error':'Комната не найдена'})
+                account=authorized_player(room,body.get('playerId'),body.get('playerSecret'))
+                if not account:return self._json(403,{'error':'Нет доступа'})
+                game=room.get('gameState') or {}
+                player=next((q for q in game.get('players',[]) if q.get('id')==account.get('heroId')),None)
+                if not player or (game.get('combat') or {}).get('heroId')==player['id']:
+                    return self._json(409,{'error':'Перераспределение недоступно в бою'})
+                if not player.get('learnedAbilities'):return self._json(409,{'error':'Нет изученных улучшений'})
+                card_id=body.get('cardId')
+                if card_id not in [485,486,487,488]:return self._json(409,{'error':'Нужно зелье перераспределения'})
+                backpack=player.get('backpack') or []
+                potions=(player.get('equipment') or {}).get('potions') or []
+                if card_id in backpack:backpack.remove(card_id)
+                elif card_id in potions:potions[potions.index(card_id)]=None
+                else:return self._json(409,{'error':'Зелья нет у героя'})
+                player['learnedAbilities']=[]
+                deck=game.setdefault('decks',{}).setdefault('lootOuter' if card_id<=486 else 'lootHeart',{'draw':[],'discard':[]})
+                if card_id not in deck['discard']:deck['discard'].append(card_id)
+                room['sideMutationCounter']=int(room.get('sideMutationCounter') or 0)+1
+                entry=room.setdefault('sidePlayerOverrides',{}).setdefault(player['id'],{'fields':{},'dealRev':0})
+                for field in ('learnedAbilities','backpack','equipment'):entry['fields'][field]=json.loads(json.dumps(player.get(field)))
+                entry['seq']=room['sideMutationCounter']
+                room.setdefault('respecDiscardOverrides',[]).append({'id':card_id,'key':'lootOuter' if card_id<=486 else 'lootHeart','heroId':player['id'],'seq':entry['seq']})
+                touch_room(room)
+                return self._json(200,{'player':player,'decks':game['decks'],'sideVersions':{hid:int(e.get('seq') or 0) for hid,e in room['sidePlayerOverrides'].items()}})
         if p.endswith('/game/ability') and p.startswith('/api/rooms/'):
             code=p.split('/')[-3]
             with LOCK:
@@ -533,6 +562,16 @@ class Handler(SimpleHTTPRequestHandler):
                     if caught_up:
                         overlays.pop(hid,None);continue
                     for key,value in (entry.get('fields') or {}).items(): inc[key]=value
+                pending_respec=[]
+                for spent in room.get('respecDiscardOverrides',[]):
+                    if int(side_acks.get(spent['heroId']) or 0)<spent['seq']:
+                        decks=game.setdefault('decks',{})
+                        for deck_state in decks.values():
+                            for part in ('draw','discard'):
+                                deck_state[part]=[x for x in deck_state.get(part,[]) if x!=spent['id']]
+                        decks.setdefault(spent['key'],{'draw':[],'discard':[]})['discard'].append(spent['id'])
+                        pending_respec.append(spent)
+                room['respecDiscardOverrides']=pending_respec
                 if overlays: room['sidePlayerOverrides']=overlays
                 else: room.pop('sidePlayerOverrides',None)
                 # Do not let a stale full-state from the newly active hero erase
