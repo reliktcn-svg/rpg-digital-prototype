@@ -21,6 +21,7 @@
     }
   };
   CARD_BY_ID[BOSS_CARD.id]=BOSS_CARD;
+  for(const clue of RPGBoss.clueCards())CARD_BY_ID[clue.id]=clue;
 
   const HEROES = [
     {id:'warrior', name:'Воин', color:'#3f7bd9', initial:'В', hp:12, defense:13, str:3, dex:1, wis:1, cha:1, baseDamage:'D6', baseAttack:'str'},
@@ -146,7 +147,7 @@
     for(const {id,part} of all){const card=itemCard(id);const key=card?.deck==='Тайники Сердца тьмы'?'lootHeart':'lootOuter';state.decks[key][part].push(id);owned.add(Number(id))}
     for(const card of CARDS)if(card.id>=387&&card.id<=452&&!owned.has(card.id))state.decks[card.deck==='Тайники Сердца тьмы'?'lootHeart':'lootOuter'].draw.push(card.id);
     // Migration is deterministic across clients; draws already choose by shuffled physical order.
-    state.equipmentRevision=2;state.version='0.6.121';
+    state.equipmentRevision=2;state.version='0.6.122';
   }
   function normalizeTavernMercenaries(){
     if(state.mercenaryRevision===1)return;
@@ -213,8 +214,49 @@
     separateMercenaryDecks(o);
     return o;
   }
+  function ensureBossState(){
+    if(state.boss)return state.boss;
+    const f=BOSS_CARD.fields;
+    state.boss={schema:1,legacy:true,key:'legacy',types:[f['Тип']],hp:Number(f['ЗД']),defense:Number(f['ЗЩ']),attack:Number(f['АТК']),damage:f['Урон'],effectKeys:['dark'],effectText:f['Эффект'],immunities:[],found:[0,1,2,3,4,5],injected:[],heartUnlocked:true};
+    return state.boss;
+  }
+  function heartAccessAllowed(){return !state.boss||state.boss.legacy||state.boss.found.length>=4}
+  function canEnterBossRegion(hex){return MAP.hexes[hex]?.region!=='heart_of_darkness'||heartAccessAllowed()}
+  function syncBossClues(){
+    if(!state.started||!state.boss||state.boss.legacy)return;
+    const level=Math.max(1,...state.players.map(p=>RPGProgression.info(p).level));
+    if(RPGBoss.inject(state,level,shuffled))log('В колоды исследований подмешаны новые сведения о Владыке. Подсказка общая для всех героев.',null);
+  }
+  function resolveBossClue(card){
+    const index=card.bossClueIndex;
+    if(!RPGBoss.reveal(state,index)){closeModal();drawNextExplore();return}
+    const b=state.boss,value=RPGBoss.values(b)[index];
+    log(`<b>Подсказка о Владыке: ${RPGBoss.clues[index][0]}</b> — ${escapeCombatText(value)}. Найдено ${b.found.length}/6.${b.found.length===4?' Проход в Сердце тьмы открыт!':''}`,null);
+    syncBossClues();updateUI();renderBoard();
+    showCard(card,`<b>${escapeCombatText(value)}</b><p>Подсказки: ${b.found.length} / 6. ${heartAccessAllowed()?'Проход в Сердце тьмы открыт.':'Для прохода нужно найти 4 подсказки.'}</p>`,[{label:'Продолжить исследование',className:'success',fn:()=>{closeModal();drawNextExplore()}}]);
+  }
+  let bossInfoBack=false;
+  function closeBossInfo(){const el=document.getElementById('bossInfoOverlay');if(el)el.hidden=true}
+  function toggleBossInfo(){
+    if(!state.started)return;ensureBossState();let el=document.getElementById('bossInfoOverlay');
+    if(el&&!el.hidden){closeBossInfo();return}
+    if(!el){el=document.createElement('div');el.id='bossInfoOverlay';el.className='boss-info-overlay';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','Информация по боссу');document.body.appendChild(el);
+      el.addEventListener('click',e=>{if(e.target===el||e.target.closest('[data-boss-close]'))closeBossInfo();else if(e.target.closest('[data-boss-flip]')){bossInfoBack=!bossInfoBack;renderBossInfo()}});
+      el.addEventListener('keydown',e=>{if(e.key==='Escape')closeBossInfo();if(e.key==='Tab'){const list=[...el.querySelectorAll('button')];const i=list.indexOf(document.activeElement);if((!e.shiftKey&&i===list.length-1)||(e.shiftKey&&i===0)){e.preventDefault();list[e.shiftKey?list.length-1:0]?.focus()}}});
+    }
+    el.hidden=false;bossInfoBack=false;renderBossInfo();el.querySelector('[data-boss-close]')?.focus();
+  }
+  function renderBossInfo(){
+    const el=document.getElementById('bossInfoOverlay');if(!el||el.hidden||!state.boss)return;
+    const signature=JSON.stringify([bossInfoBack,state.boss]);if(el.dataset.viewSignature===signature)return;el.dataset.viewSignature=signature;
+    const b=state.boss,v=RPGBoss.view(b),known=b.legacy||b.found.includes(0),art=known?(b.legacy?'assets/enemies/enemy-281.webp':`assets/bosses/boss_${b.key}.png`):'';
+    const front=`<div class="boss-info-art">${art?`<img src="${art}" alt="${escapeCombatText(v[0])}" onerror="this.hidden=true">`:'<span class="boss-unknown" aria-label="Тип Владыки пока неизвестен">?</span>'}</div><div class="boss-info-circles">${[1,2,3,4].map(i=>`<div class="boss-info-stat"><small>${RPGBoss.clues[i][0]}</small><b>${escapeCombatText(v[i])}</b></div>`).join('')}</div><p>${known?escapeCombatText(v[0]):'Облик скрыт'}</p>`;
+    const back=`<dl class="boss-info-rows">${RPGBoss.clues.map(([label],i)=>`<div><dt>${label}</dt><dd>${escapeCombatText(v[i])}</dd></div>`).join('')}</dl>`;
+    el.innerHTML=`<section class="boss-info-panel"><header><div><small>СЕРДЦЕ ТЬМЫ</small><h2>Владыка</h2></div><button data-boss-close aria-label="Закрыть">×</button></header><p class="boss-info-progress">Подсказки: ${b.found.length} / 6</p><div class="boss-info-card ${bossInfoBack?'back':''}">${bossInfoBack?back:front}</div><p>${heartAccessAllowed()?'Проход в Сердце тьмы открыт':`Проход закрыт · нужно ещё ${4-b.found.length} подсказки`}</p>${!b.legacy&&b.found.length<6?`<small>Следующая подсказка: ${RPGBoss.clues[b.found.length][0]} · уровень героя ${RPGBoss.clues[b.found.length][1]}+. Поиск в исследованиях, порядок общий для партии.</small>`:''}<footer><button data-boss-flip>${bossInfoBack?'Лицевая сторона':'Обратная сторона'}</button><button data-boss-close>Закрыть</button></footer></section>`;
+  }
+
   function freshState(){return {
-    version:'0.6.121', equipmentRevision:2, mercenaryRevision:1, started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
+    version:'0.6.122', boss:null, equipmentRevision:2, mercenaryRevision:1, started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
     decks:initialDecks(), cleaned:{}, cleanedUntil:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, tradeDeal:null, dungeonEntryNotice:null, territoryBuiltNotice:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:3, sharedDifficulty:null, journal:[]
   };}
   let state=freshState();
@@ -542,7 +584,7 @@
   let sheetView={mode:'overview',bonusKey:null,itemId:null,context:null,playerId:null};
 
   function signed(v){return `${v>=0?'+':''}${v}`}
-  function itemCard(id){return CARD_BY_ID[Number(id)]||null}
+  function itemCard(id){return Number(id)===281&&state.boss?RPGBoss.card(state.boss):CARD_BY_ID[Number(id)]||null}
   function itemType(card){return String(card?.fields?.['Тип']||'').toLowerCase()}
   function freshPlayerStats(){return{goldEarned:0,defeats:0,enemies:{weak:0,normal:0,strong:0,elite:0,boss:0},damageDealt:0,damageTaken:0,natural20:0,natural1:0,lootFound:0,distanceTravelled:0,locationVisitsTotal:0,playerTrades:0,bossAttempts:0,legacyIncomplete:false,extendedLegacyIncomplete:false}}
   function ensurePlayerStats(p){
@@ -559,7 +601,7 @@
   function recordLocationVisit(p,hex){if(!p||!state.locations?.[hex])return;ensurePlayerStats(p);p.stats.locationVisitsTotal++}
   function gainGold(p,amount){const v=Math.max(0,Number(amount)||0);if(!v)return 0;ensurePlayerStats(p);p.gold+=v;p.stats.goldEarned+=v;return v}
   function enemyRankStatKey(enemy,c=state.combat){if(c?.isBoss||enemy?.id===281)return'boss';if(c?.elite)return'elite';const r=String(enemy?.fields?.['Ранг']||'').toLowerCase();if(r.includes('элит'))return'elite';if(r.includes('силь'))return'strong';if(r.includes('обыч'))return'normal';return'weak'}
-  function recordEnemyVictory(p,enemy,c=state.combat){if(c?.masteryAwarded)return;ensurePlayerStats(p);const k=enemyRankStatKey(enemy,c);p.stats.enemies[k]=(p.stats.enemies[k]||0)+1;const gain=RPGProgression.award(p,enemy,c);if(c&&gain.levels)c.levelUp={level:gain.level,levels:gain.levels};const text=`${p.name}: +${gain.amount} ОМ · опыт ${gain.xp}/${gain.next}${gain.levels?` · уровень ${gain.level}, очков способностей +${gain.levels}`:''}.`;log(text);combatPush(text)}
+  function recordEnemyVictory(p,enemy,c=state.combat){if(c?.masteryAwarded)return;ensurePlayerStats(p);const k=enemyRankStatKey(enemy,c);p.stats.enemies[k]=(p.stats.enemies[k]||0)+1;const gain=RPGProgression.award(p,enemy,c);syncBossClues();if(c&&gain.levels)c.levelUp={level:gain.level,levels:gain.levels};const text=`${p.name}: +${gain.amount} ОМ · опыт ${gain.xp}/${gain.next}${gain.levels?` · уровень ${gain.level}, очков способностей +${gain.levels}`:''}.`;log(text);combatPush(text)}
   function ensurePlayerModel(p){
     RPGProgression.ensure(p);
     if(!p.backpack)p.backpack=[];if(!p.pendingItems)p.pendingItems=[];
@@ -751,7 +793,7 @@
   function startGame(forcedIds=null,options={}){
     const ids=Array.isArray(forcedIds)?[...forcedIds]:[...els.heroPicker.querySelectorAll('input:checked')].map(x=>x.value);
     if(Array.isArray(forcedIds)?ids.length<1||ids.length>6:ids.length!==1){els.setupError.textContent='В соло-режиме выберите одного героя.';return}
-    state=freshState();dismissedGameOverKey=null;visibleGameOverKey=null;state.started=true;state.mode=Array.isArray(forcedIds)?'network':'solo';const sharedHard=options?.sharedDifficulty==='hard'||options?.hardMode===true;state.sharedDifficulty=Array.isArray(forcedIds)?(sharedHard?'hard':'normal'):null;
+    state=freshState();state.boss=RPGBoss.generate();dismissedGameOverKey=null;visibleGameOverKey=null;state.started=true;state.mode=Array.isArray(forcedIds)?'network':'solo';const sharedHard=options?.sharedDifficulty==='hard'||options?.hardMode===true;state.sharedDifficulty=Array.isArray(forcedIds)?(sharedHard?'hard':'normal'):null;
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,progressionVersion:2,masteryPoints:0,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,potions:[null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:sharedHard,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats(),territoryBuildSeq:{kingdom:0,cursed:0}}});
     generatePermanentLocations({preserve:false});
     state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;els.sheetDrawer.hidden=true;setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
@@ -774,6 +816,7 @@
       bestState.set(key,cur);
       if(cur.stopped||cur.cost>=maxDist)continue;
       for(const n of MAP.hexes[cur.hex].neighbors){
+        if(!canEnterBossRegion(n))continue;
         const cost=cur.cost+1;if(cost>maxDist)continue;
         const boundary=isRegionBoundary(cur.hex,n);
         queue.push({hex:n,cost,jumpUsed:cur.jumpUsed,path:[...cur.path,n],segments:[...cur.segments,{from:cur.hex,to:n,cost:1,jump:false,boundary}],stopped:boundary});
@@ -783,7 +826,7 @@
           // Сапоги перепрыгивают именно один гекс, но не используются для пересечения границы региона.
           if(isRegionBoundary(cur.hex,over))continue;
           for(const dest of MAP.hexes[over].neighbors){
-            if(dest===cur.hex||isRegionBoundary(over,dest))continue;
+            if(dest===cur.hex||isRegionBoundary(over,dest)||!canEnterBossRegion(dest))continue;
             queue.push({hex:dest,cost:cur.cost+2,jumpUsed:true,path:[...cur.path,dest],segments:[...cur.segments,{from:cur.hex,to:dest,cost:2,jump:true,over,boundary:false}],stopped:false});
           }
         }
@@ -825,6 +868,7 @@
     if(remaining<1||plan.stopped)return out;
     const tip=plan.hex,neighbors=MAP.hexes[tip]?.neighbors||[];
     for(const n of neighbors){
+      if(!canEnterBossRegion(n))continue;
       const boundary=isRegionBoundary(tip,n);
       out[n]={from:tip,to:n,cost:1,jump:false,boundary};
     }
@@ -834,7 +878,7 @@
       for(const over of neighbors){
         if(isRegionBoundary(tip,over))continue;
         for(const dest of MAP.hexes[over]?.neighbors||[]){
-          if(dest===tip||isRegionBoundary(over,dest)||neighbors.includes(dest))continue;
+          if(dest===tip||isRegionBoundary(over,dest)||neighbors.includes(dest)||!canEnterBossRegion(dest))continue;
           if(!out[dest])out[dest]={from:tip,to:dest,cost:2,jump:true,over,boundary:false};
         }
       }
@@ -936,7 +980,7 @@
 
 
   function startBossBattle(p=currentPlayer()){
-    if(!p||p.hex!==MAP.bossHex||state.combat)return false;
+    if(!p||p.hex!==MAP.bossHex||state.combat||!heartAccessAllowed())return false;
     ensurePlayerStats(p);p.stats.bossAttempts++;
     state.foreignTerritoryPending=null;
     state.tributeConsentPending=null;
@@ -946,7 +990,7 @@
     state.exploration={hero:p.id,hex:p.hex,deckKey:'boss',elitePending:false,failedTrap:false,wasCleaned:!!state.cleaned[p.hex],resumeAfterLoot:false,boss:true};
     p.reexploreRiskHex=null;
     log(`<b>${p.name} достигает ${MAP.bossHex}.</b> Другие карты Сердца тьмы не разыгрываются — начинается финальный бой с Владыкой Сердца Тьмы.`);
-    combatStart(BOSS_CARD);
+    combatStart(itemCard(281));
     return true;
   }
 
@@ -1019,6 +1063,7 @@
   }
 
   function completePortalTeleport(p,entryHex,dest,remaining){
+    if(!canEnterBossRegion(dest))return;
     p.hex=dest;state.mapLastMove={heroId:p.id,path:[entryHex,dest],at:Date.now(),teleport:true};revealLocationToPlayer(p,dest);recordLocationVisit(p,dest);state.portalPending=null;state.turnLocked=false;state.movePoints=remaining;setForeignTerritoryPending(p,dest);setTradeOpportunityForArrival(p,dest);
     log(`${p.name}: портал <b>${entryHex} → ${dest}</b>. Телепортация не расходует движение.${remaining>0?` Осталось движения: ${remaining}.`:''}`);
     if(remaining>0){state.turnMoved=false;state.movePending=false;state.moveOriginHex=dest;state.chosenPath=[dest];state.chosenMovePlan=null;refreshManualMoveReachable(p)}else{state.turnMoved=true;state.movePending=false;state.moveOriginHex=null;state.reachable=[];state.chosenPath=null;state.chosenMovePlan=null}
@@ -1064,6 +1109,7 @@
     const d=state.decks[deckKey];if(!d)return null;
     if(!d.draw.length&&!recycleDiscardIntoDraw(deckKey))return null;
     const id=d.draw.pop(),card=CARD_BY_ID[id]||null;
+    if(RPGBoss.clueIndex(id)>=0&&state.boss?.found.includes(RPGBoss.clueIndex(id)))return drawCard(deckKey);
     // Защита и на выдаче: карточка из неправильной колоды не попадёт герою.
     if(deckKey==='lootOuter'&&heartOnlyLoot(card)){
       returnCardToDeckRandom('lootHeart',card);
@@ -1071,10 +1117,11 @@
     }
     return card;
   }
-  function discardCard(deckKey,card){if(!card)return;const key=itemType(card)==='наёмник'?mercenaryDeckKey(card):deckKey==='lootOuter'&&heartOnlyLoot(card)?'lootHeart':deckKey;if(state.decks[key])state.decks[key].discard.push(card.id)}
+  function discardCard(deckKey,card){if(!card||RPGBoss.clueIndex(card.id)>=0)return;const key=itemType(card)==='наёмник'?mercenaryDeckKey(card):deckKey==='lootOuter'&&heartOnlyLoot(card)?'lootHeart':deckKey;if(state.decks[key])state.decks[key].discard.push(card.id)}
   function shuffleRemainingDeck(key){const d=state.decks[key];if(d)d.draw=shuffled(d.draw)}
   function returnCardToDeckRandom(deckKey,card){
     if(!card)return;
+    const ci=RPGBoss.clueIndex(card.id);if(ci>=0&&state.boss?.found.includes(ci))return;
     const key=itemType(card)==='наёмник'?mercenaryDeckKey(card):deckKey==='lootOuter'&&heartOnlyLoot(card)?'lootHeart':deckKey;
     if(!state.decks[key])return;
     state.decks[key].draw.push(card.id);
@@ -1232,6 +1279,7 @@
   function beginExplore(deckKey){
     if(state.movePending){commitPendingMove({type:'explore',deckKey});return}
     const p=currentPlayer();
+    syncBossClues();
     if(p.hex===MAP.bossHex){startBossBattle(p);return}
     state.turnLocked=true;state.exploration={hero:p.id,hex:p.hex,deckKey,elitePending:false,failedTrap:false,wasCleaned:!!state.cleaned[p.hex],resumeAfterLoot:false};p.reexploreRiskHex=state.cleaned[p.hex]?p.hex:null;
     log(`${p.name} начинает исследование <b>${p.hex}</b>: ${DECK_NAMES[deckKey]}.`);
@@ -1269,6 +1317,7 @@
 
   function resolveExploreCard(card){
     const ex=state.exploration,p=currentPlayer(),deckKey=ex.deckKey;
+    if(card.category==='Подсказка Владыки'){resolveBossClue(card);return}
     if(card.category==='Враг'){resolveEnemy(card);return}
     if(card.category==='Ловушка'){resolveTrap(card);return}
     if(card.category==='Событие'){resolveEvent(card);return}
@@ -2761,6 +2810,7 @@
   function inCombat(){return !!state.combat}
   const ENEMY_DAMAGE_STEPS=['D4','D6','D8','D10','D12','2D8','3D6','2D10','2D12','3D10','4D8','3D12','4D10','4D12'];
   function scaledEnemy(card,level){
+    if(card.generatedBoss)return {...card,fields:{...card.fields}};
     level=Math.max(1,Math.floor(Number(level)||1));
     const fields={...card.fields},damage=String(fields['Урон']||'D4').replace(/\s/g,'').toUpperCase();
     const parts=damage.match(/^(\d*D\d+)([+-]\d+)?$/),step=ENEMY_DAMAGE_STEPS.indexOf(parts?.[1]),boost=Math.floor(level/15);
@@ -3002,8 +3052,9 @@
     for(let i=rollPopupQueue.length-1;i>=0;i--)if(/^Движение\s*·/.test(rollPopupQueue[i].title))rollPopupQueue.splice(i,1);
     if(!els.rollOverlay.hidden&&/^Движение\s*·/.test(els.rollPopupTitle.textContent||'')){els.rollOverlay.hidden=true;rollPopupAfterClose=null;++rollPopupDisplaySeq;}
 
-    const p=currentPlayer(),elite=!!state.exploration?.elitePending;
-    const enemyLevel=RPGProgression.info(p).level;
+    if(card.id===281){ensureBossState();card=itemCard(281)}
+    const p=currentPlayer(),elite=card.id===281?false:!!state.exploration?.elitePending;
+    const enemyLevel=card.generatedBoss?null:RPGProgression.info(p).level;
     card=scaledEnemy(card,enemyLevel);
     // Совместимость со старыми сохранениями: сначала переносим текстовые заметки в структурированные эффекты,
     // и только после этого формируем набор эффектов для начинающегося боя.
@@ -3187,7 +3238,7 @@
     const natural=direct?null:c.enemyAttackRoll?.natural,kept=direct?null:c.enemyAttackRoll?.chosen,eff=String(e.fields?.['Эффект']||''),repeatCurse=!direct&&natural===20&&e.id===54&&p.statuses.includes('Проклятие');
     if(!direct&&natural===20){c.heroDisadvantage++;combatPush('<b>Натуральная 20 врага:</b> попадание; герой получает помеху на следующий D20.');if(e.id===17){const r=rollExprDetailed('D4');amount+=r.total;detail.push(`нат.20 +D4=${r.total}`);c.wanderingBonusD4=r.total}if(repeatCurse){const r=rollExprDetailed('D6');amount+=r.total;detail.push(`повторное Проклятие +D6=${r.total}`)}if(e.id===51)combatLoseRandomEquippedItem(p)}
     if(!direct)combatApplyEnemyTriggeredStatus(kept,natural,eff,p,repeatCurse);
-    if(e.id===10&&kept>=18){amount+=1;detail.push('18–20 +1 урон')}if(e.id===41&&c.enemyAttackCount%3===0){const r=rollExprDetailed('D4');amount+=r.total;detail.push(`каждая 3-я атака +D4=${r.total}`)}if(e.id===281&&(c.enemyHitCount||0)%3===0){const r=rollExprDetailed('D4');amount+=r.total;detail.push(`Тёмный удар +D4=${r.total}`);combatPush(`Тёмный удар Владыки: каждая 3-я успешная атака получает +D4 (${r.total}) урона.`)}
+    if(e.id===10&&kept>=18){amount+=1;detail.push('18–20 +1 урон')}if(e.id===41&&c.enemyAttackCount%3===0){const r=rollExprDetailed('D4');amount+=r.total;detail.push(`каждая 3-я атака +D4=${r.total}`)}if(e.id===281&&(!state.boss||state.boss.legacy||state.boss.effectKeys.includes('dark'))&&(c.enemyHitCount||0)>0&&(c.enemyHitCount||0)%3===0){const r=rollExprDetailed('D4');amount+=r.total;detail.push(`Тёмный удар +D4=${r.total}`);combatPush(`Тёмный удар Владыки: каждая 3-я успешная атака получает +D4 (${r.total}) урона.`)}
     if(!direct&&c.nextEnemyHitBonus>0){const bonus=Number(c.nextEnemyHitBonus)||0;amount+=bonus;detail.push(`Зеркальный шип +${bonus}`);combatPush(`Зеркальный шип: следующая успешная атака врага получает +${bonus} урона.`);c.nextEnemyHitBonus=0;c.nextEnemyHitBonusLabel=null}
     amount*=multiplier;c.pendingEnemyDamage={amount,original:amount,detail,direct,label,enemyRollTotal:c.enemyAttackRoll?.total||null,enemyDefense:combatEffectiveDefense(p)};c.phase='enemy_damage';combatSetEnemyRoll(`${label} · урон`,dr.total,`${e.fields?.['Урон']} = ${dr.total}${multiplier>1?` · ×${multiplier}`:''}`,`Текущий входящий урон: ${amount}${detail.length>1?' · '+detail.slice(1).join(' · '):''}`,null,dr.parts.filter(x=>x.kind==='dice'&&x.sign>0).flatMap(x=>x.rolls.map(value=>({sides:Number(x.expr.split('D')[1]),value}))));combatPush(`Урон врага: ${dr.text}; текущий входящий урон ${amount}.`);if(c.wanderingBonusD4){c.wanderingBonusAnimation={value:c.wanderingBonusD4,rollSeq:c.lastRoll.seq};delete c.wanderingBonusD4}renderCombat();
   }
@@ -3635,6 +3686,7 @@
   }
   function combatPortraitUrl(kind,id){
     if(kind==='hero'&&['warrior','dwarf','mage','archer','rogue','paladin'].includes(id))return `assets/heroes/${id}.webp`;
+    if(kind==='enemy'&&Number(id)===281&&state.boss&&!state.boss.legacy)return `assets/bosses/boss_${state.boss.key}.png`;
     if(kind==='enemy'&&Number.isInteger(Number(id))&&Number(id)>0)return `assets/enemies/enemy-${String(id).padStart(3,'0')}.webp`;
     return '';
   }
@@ -4017,6 +4069,7 @@
     }
   }
   function updateUI(){
+    if(document.getElementById('bossInfoOverlay')&&!document.getElementById('bossInfoOverlay').hidden)renderBossInfo();
     refreshHeartCleansing();
     if(state.combat)for(const [key,status] of [['enemyPoison','Яд'],['enemyBleed','Кровотечение'],['enemyBurn','Горение']])if(state.combat[key]>PERIODIC_STATUS_RULES[status].turns)state.combat[key]=PERIODIC_STATUS_RULES[status].turns;
     RPGSkillTree.refresh();syncLocalCombatWindowState();document.body.classList.toggle('combat-active',!!state.combat);
@@ -4086,7 +4139,7 @@
     const raw=localStorage.getItem('rpgDigitalPrototypeV0654')||localStorage.getItem('rpgDigitalPrototypeV0653')||localStorage.getItem('rpgDigitalPrototypeV0652')||localStorage.getItem('rpgDigitalPrototypeV0651')||localStorage.getItem('rpgDigitalPrototypeV0648')||localStorage.getItem('rpgDigitalPrototypeV0647')||localStorage.getItem('rpgDigitalPrototypeV0646')||localStorage.getItem('rpgDigitalPrototypeV0645')||localStorage.getItem('rpgDigitalPrototypeV0639')||localStorage.getItem('rpgDigitalPrototypeV0638')||localStorage.getItem('rpgDigitalPrototypeV0637')||localStorage.getItem('rpgDigitalPrototypeV0636')||localStorage.getItem('rpgDigitalPrototypeV0635')||localStorage.getItem('rpgDigitalPrototypeV0634')||localStorage.getItem('rpgDigitalPrototypeV0633')||localStorage.getItem('rpgDigitalPrototypeV0632')||localStorage.getItem('rpgDigitalPrototypeV0631')||localStorage.getItem('rpgDigitalPrototypeV063')||localStorage.getItem('rpgDigitalPrototypeV062')||localStorage.getItem('rpgDigitalPrototypeV060')||localStorage.getItem('rpgDigitalPrototypeV0522')||localStorage.getItem('rpgDigitalPrototypeV0521')||localStorage.getItem('rpgDigitalPrototypeV0520')||localStorage.getItem('rpgDigitalPrototypeV0519')||localStorage.getItem('rpgDigitalPrototypeV0518')||localStorage.getItem('rpgDigitalPrototypeV0517')||localStorage.getItem('rpgDigitalPrototypeV0516')||localStorage.getItem('rpgDigitalPrototypeV0515')||localStorage.getItem('rpgDigitalPrototypeV0514')||localStorage.getItem('rpgDigitalPrototypeV0513')||localStorage.getItem('rpgDigitalPrototypeV0512')||localStorage.getItem('rpgDigitalPrototypeV0511')||localStorage.getItem('rpgDigitalPrototypeV0510')||localStorage.getItem('rpgDigitalPrototypeV059')||localStorage.getItem('rpgDigitalPrototypeV058')||localStorage.getItem('rpgDigitalPrototypeV057')||localStorage.getItem('rpgDigitalPrototypeV056')||localStorage.getItem('rpgDigitalPrototypeV055')||localStorage.getItem('rpgDigitalPrototypeV054')||localStorage.getItem('rpgDigitalPrototypeV053')||localStorage.getItem('rpgDigitalPrototypeV052')||localStorage.getItem('rpgDigitalPrototypeV051')||localStorage.getItem('rpgDigitalPrototypeV050')||localStorage.getItem('rpgDigitalPrototypeV045')||localStorage.getItem('rpgDigitalPrototypeV044')||localStorage.getItem('rpgDigitalPrototypeV043')||localStorage.getItem('rpgDigitalPrototypeV042')||localStorage.getItem('rpgDigitalPrototypeV041')||localStorage.getItem('rpgDigitalPrototypeV040')||localStorage.getItem('rpgDigitalPrototypeV033')||localStorage.getItem('rpgDigitalPrototypeV032');
     if(!raw){alert('Сохранённой партии пока нет.');return}
     try{
-      state=JSON.parse(raw);if(!state.locations)state.locations={};if(!state.territories)state.territories={};if(!state.areas)state.areas=[];stripPermanentLocationCardsFromDecks(state.decks);normalizeLegendaryHeartLoot(state.decks);separateMercenaryDecks(state.decks);normalizeTavernMercenaries();normalizeEquipmentDecks();
+      state=JSON.parse(raw);ensureBossState();if(!state.locations)state.locations={};if(!state.territories)state.territories={};if(!state.areas)state.areas=[];stripPermanentLocationCardsFromDecks(state.decks);normalizeLegendaryHeartLoot(state.decks);separateMercenaryDecks(state.decks);normalizeTavernMercenaries();normalizeEquipmentDecks();
       if(state.locationUsedThisTurn==null)state.locationUsedThisTurn=false;if(state.locationActivationHex===undefined)state.locationActivationHex=null;if(state.portalPending==null)state.portalPending=null;if(state.clearedThisTurnHex===undefined)state.clearedThisTurnHex=null;if(state.foreignTerritoryPending===undefined)state.foreignTerritoryPending=null;if(state.tradeOpportunity===undefined)state.tradeOpportunity=null;if(state.tradeDeal===undefined)state.tradeDeal=null;if(state.tributeConsentPending===undefined)state.tributeConsentPending=null;if(state.dungeonEntryNotice===undefined)state.dungeonEntryNotice=null;
       if(state.dungeonEntryNotice){const dh=state.players?.find(q=>q.id===state.dungeonEntryNotice.heroId);if(!dh?.inDungeon||(dh.dungeonEnteredTurn!=null&&dh.personalTurn>dh.dungeonEnteredTurn))state.dungeonEntryNotice=null;}
       state.territoryBuiltNotice=null;if(state.movePending===undefined)state.movePending=false;if(state.moveOriginHex===undefined)state.moveOriginHex=null;if(state.moveTransit===undefined)state.moveTransit=null;if(state.pendingMoveAction===undefined)state.pendingMoveAction=null;if(state.chosenMovePlan===undefined)state.chosenMovePlan=null;if(state.inspectPlayerId===undefined)state.inspectPlayerId=null;if(state.mapHighlight===undefined)state.mapHighlight=null;if(state.mapZoom===undefined)state.mapZoom=1;if(state.gameOver===undefined)state.gameOver=false;if(state.sharedDifficulty===undefined)state.sharedDifficulty=null;if(!Array.isArray(state.journal))state.journal=[];
@@ -4094,7 +4147,7 @@
       const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
-      state.version='0.6.121';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.107.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
+      state.version='0.6.122';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.107.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
     }catch(e){console.error(e);alert('Не удалось загрузить сохранение.')}
   }
   function cloneJson(v){return JSON.parse(JSON.stringify(v))}
@@ -4105,14 +4158,14 @@
     return out;
   }
   function normalizeIncomingState(next){
-    state=cloneJson(next||freshState());if(!state.locations)state.locations={};if(!state.territories)state.territories={};if(!state.areas)state.areas=[];stripPermanentLocationCardsFromDecks(state.decks);normalizeLegendaryHeartLoot(state.decks);separateMercenaryDecks(state.decks);normalizeTavernMercenaries();normalizeEquipmentDecks();
+    state=cloneJson(next||freshState());ensureBossState();if(!state.locations)state.locations={};if(!state.territories)state.territories={};if(!state.areas)state.areas=[];stripPermanentLocationCardsFromDecks(state.decks);normalizeLegendaryHeartLoot(state.decks);separateMercenaryDecks(state.decks);normalizeTavernMercenaries();normalizeEquipmentDecks();
     if(state.locationUsedThisTurn==null)state.locationUsedThisTurn=false;if(state.locationActivationHex===undefined)state.locationActivationHex=null;if(state.portalPending==null)state.portalPending=null;if(state.clearedThisTurnHex===undefined)state.clearedThisTurnHex=null;if(state.foreignTerritoryPending===undefined)state.foreignTerritoryPending=null;if(state.tradeOpportunity===undefined)state.tradeOpportunity=null;if(state.tradeDeal===undefined)state.tradeDeal=null;if(state.tributeConsentPending===undefined)state.tributeConsentPending=null;if(state.dungeonEntryNotice===undefined)state.dungeonEntryNotice=null;
       if(state.dungeonEntryNotice){const dh=state.players?.find(q=>q.id===state.dungeonEntryNotice.heroId);if(!dh?.inDungeon||(dh.dungeonEnteredTurn!=null&&dh.personalTurn>dh.dungeonEnteredTurn))state.dungeonEntryNotice=null;}
       state.territoryBuiltNotice=null;if(state.movePending===undefined)state.movePending=false;if(state.moveOriginHex===undefined)state.moveOriginHex=null;if(state.moveTransit===undefined)state.moveTransit=null;if(state.pendingMoveAction===undefined)state.pendingMoveAction=null;if(state.chosenMovePlan===undefined)state.chosenMovePlan=null;if(state.inspectPlayerId===undefined)state.inspectPlayerId=null;if(state.mapHighlight===undefined)state.mapHighlight=null;if(state.mapZoom===undefined)state.mapZoom=1;if(state.gameOver===undefined)state.gameOver=false;if(state.sharedDifficulty===undefined)state.sharedDifficulty=null;if(!Array.isArray(state.journal))state.journal=[];
     if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
-    state.version='0.6.121';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    state.version='0.6.122';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){
@@ -4145,7 +4198,8 @@
   els.turnOrderBanner?.addEventListener('click',event=>{
     const button=event.target.closest('button');
     if(!button||!els.turnOrderBanner.contains(button)||button.disabled)return;
-    if(button.matches('[data-table-journal]'))showJournalOverlay();
+    if(button.matches('[data-table-boss]'))toggleBossInfo();
+    else if(button.matches('[data-table-journal]'))showJournalOverlay();
     else if(button.matches('[data-table-settings]'))showSettingsOverlay();
     else if(button.matches('[data-table-combat]')){
       if(!state.combat)return;
@@ -4186,7 +4240,7 @@
     return {id,name:playerName&&playerName!==hero.name?`${hero.name} — ${playerName}`:hero.name};
   });
   window.addEventListener('rpg-atlas-updated',()=>{updateUI();if(state.combat&&!combatWindowHidden)renderCombat()});
-  window.__RPG_DEBUG__={enemyImmunities,enemyImmuneStatus,combatApplyEnemyTriggeredStatus,equipmentStatusCheck,useCleansingAmulet,resetItemUsage,potionActionInfo,useNewPotion,combatHeroMode,combatEnemyMode,consumeEnemyMode,combatTickBuffsAtHeroAttack,supportedOutsideEffect,updateActionPanel,closeSettingsOverlay,showPostCombatTerritoryPrompt,canPurchaseTerritory,areaChoiceActions,promptAreaMergeAfterBuild,getAreaPreview:()=>areaMergePreview,scaledEnemy,combatEnemy,combatEnemyHitDamage,ENEMY_DAMAGE_STEPS,showCard,shuffleRemainingDeck,peekExploreTop,consumeHeldItem,normalizeEquipmentDecks,equipmentRuleTotal,genericEquipmentAction,equipmentMaxHp,mercenaryEligible,normalizeTavernMercenaries,mercenaryResists,maybeUseTrackerBeforeExplore,performTrapCheck,backpackCapacity,setSlotId,passiveHeroDamageReduction,combatEnemyAttackModifier,combatEscapeBefore,combatEscapeDuring,recoverHealthForRound,buildTerritory,buildTerritoryFor,canBuildAt,finalizeArea,areaCandidatesAt,openTrade,payDungeonExit,beginSideInteraction,endSideInteraction,heroAbilityAttackProfile,resolveHeroAbilityAttack,combatAbilityAttackHits,resolveSecondaryDamage,commitEnemyDamage,resolveHeroAbilityDamage,resolveHeroEffectCheck,advanceHeroEffectSequence,tickOutsideStatuses,rollMove,combatTickHeroStatuses,finishCombatStun,combatDecisionOptions,cancelCombatAuto,PERIODIC_STATUS_RULES,markExplorationSuccess,refreshHeartCleansing,heartCleansingRemaining,currentHexNeedsResolution,canExploreHere,showVictoryResults,performVictorySearch,victorySessionCombat,initialDecks,drawCard,discardCard,returnCardToDeckRandom,separateMercenaryDecks,takeMercenaryFromDeck,startGame,endTurn,advanceTurnState,resolvePaladinCounter,combatContinueAfterDamage,combatAttackStatProfile,canEquipCard,enemyDicePreferences,openHeroProgression,heroCombatInfo,addStatus,combatApplyHeroStatus,combatApplyEnemyStatus,combatClassAbilityAvailable,combatEffectiveDefense,combatAttackBonus,chooseCombatCleanseStatus,recordEnemyVictory,getState:()=>state,setState:v=>{state=v},freshState,HEROES,CARD_BY_ID,combatStart,combatFight,combatHeroAttack,finalizeHeroAttackRoll,combatRollHeroDamage,combatDamageFormula,inventoryCardBackHtml,applyHeroDamageNow,combatEnemyTurn,finalizeEnemyAttackRoll,acceptEnemyDamage,combatContinueAfterEnemyMiss,renderCombat,currentPlayer,getPlayer,ensurePlayerModel,supportedCombatEffect,applyCombatItemEffect,useHeroCombatAbility,combatReactionList,fullSetEquipped,completeSetNames,itemColorClass,mandatoryLootCount,setBonusActionInfo,useSetBonus,showRollPopup,heroImmuneStatus,combatPassiveDamageBonus,combatHeroDeath,combatVictory,movementFor,combatCanChangeEquipment,combatTickEnemyStatuses,equipTransaction,merchantSaleMultiplier,visitShrine,visitMerchant,showMerchantShop,renderTavernVisit,visitLocation,decorateNegativeEffects,generatePermanentLocations,locationVisibleToPlayer,revealLocationToPlayer,ensureTavernMercenary,restockTavernIfVacant,visitTavern,attemptDungeonExit,beginBonusExplorationTurnAfterDungeon,gameOverStats,showGameOverPopup,renderBoard,updateUI,openCharacterSheet,closeCharacterSheet,toggleCharacterSheet,renderTurnOrderBanner};
+  window.__RPG_DEBUG__={finishCombatVictory,ensureBossState,syncBossClues,resolveBossClue,heartAccessAllowed,canEnterBossRegion,toggleBossInfo,renderBossInfo,startBossBattle,manualMoveStepOptions,movementPlans,beginExplore,resolveExploreCard,normalizeIncomingState,exportOnlineState,enemyImmunities,enemyImmuneStatus,combatApplyEnemyTriggeredStatus,equipmentStatusCheck,useCleansingAmulet,resetItemUsage,potionActionInfo,useNewPotion,combatHeroMode,combatEnemyMode,consumeEnemyMode,combatTickBuffsAtHeroAttack,supportedOutsideEffect,updateActionPanel,closeSettingsOverlay,showPostCombatTerritoryPrompt,canPurchaseTerritory,areaChoiceActions,promptAreaMergeAfterBuild,getAreaPreview:()=>areaMergePreview,scaledEnemy,combatEnemy,combatEnemyHitDamage,ENEMY_DAMAGE_STEPS,showCard,shuffleRemainingDeck,peekExploreTop,consumeHeldItem,normalizeEquipmentDecks,equipmentRuleTotal,genericEquipmentAction,equipmentMaxHp,mercenaryEligible,normalizeTavernMercenaries,mercenaryResists,maybeUseTrackerBeforeExplore,performTrapCheck,backpackCapacity,setSlotId,passiveHeroDamageReduction,combatEnemyAttackModifier,combatEscapeBefore,combatEscapeDuring,recoverHealthForRound,buildTerritory,buildTerritoryFor,canBuildAt,finalizeArea,areaCandidatesAt,openTrade,payDungeonExit,beginSideInteraction,endSideInteraction,heroAbilityAttackProfile,resolveHeroAbilityAttack,combatAbilityAttackHits,resolveSecondaryDamage,commitEnemyDamage,resolveHeroAbilityDamage,resolveHeroEffectCheck,advanceHeroEffectSequence,tickOutsideStatuses,rollMove,combatTickHeroStatuses,finishCombatStun,combatDecisionOptions,cancelCombatAuto,PERIODIC_STATUS_RULES,markExplorationSuccess,refreshHeartCleansing,heartCleansingRemaining,currentHexNeedsResolution,canExploreHere,showVictoryResults,performVictorySearch,victorySessionCombat,initialDecks,drawCard,discardCard,returnCardToDeckRandom,separateMercenaryDecks,takeMercenaryFromDeck,startGame,endTurn,advanceTurnState,resolvePaladinCounter,combatContinueAfterDamage,combatAttackStatProfile,canEquipCard,enemyDicePreferences,openHeroProgression,heroCombatInfo,addStatus,combatApplyHeroStatus,combatApplyEnemyStatus,combatClassAbilityAvailable,combatEffectiveDefense,combatAttackBonus,chooseCombatCleanseStatus,recordEnemyVictory,getState:()=>state,setState:v=>{state=v},freshState,HEROES,CARD_BY_ID,combatStart,combatFight,combatHeroAttack,finalizeHeroAttackRoll,combatRollHeroDamage,combatDamageFormula,inventoryCardBackHtml,applyHeroDamageNow,combatEnemyTurn,finalizeEnemyAttackRoll,acceptEnemyDamage,combatContinueAfterEnemyMiss,renderCombat,currentPlayer,getPlayer,ensurePlayerModel,supportedCombatEffect,applyCombatItemEffect,useHeroCombatAbility,combatReactionList,fullSetEquipped,completeSetNames,itemColorClass,mandatoryLootCount,setBonusActionInfo,useSetBonus,showRollPopup,heroImmuneStatus,combatPassiveDamageBonus,combatHeroDeath,combatVictory,movementFor,combatCanChangeEquipment,combatTickEnemyStatuses,equipTransaction,merchantSaleMultiplier,visitShrine,visitMerchant,showMerchantShop,renderTavernVisit,visitLocation,decorateNegativeEffects,generatePermanentLocations,locationVisibleToPlayer,revealLocationToPlayer,ensureTavernMercenary,restockTavernIfVacant,visitTavern,attemptDungeonExit,beginBonusExplorationTurnAfterDungeon,gameOverStats,showGameOverPopup,renderBoard,updateUI,openCharacterSheet,closeCharacterSheet,toggleCharacterSheet,renderTurnOrderBanner};
   window.__RPG_ONLINE__={startWithHeroes:startOnlineGame,exportState:exportOnlineState,applyState:applyOnlineState,currentPlayerId:()=>currentPlayer()?.id||null,isStarted:()=>!!state.started,sideInteractionOwnerId,sideInteractionActiveFor,acknowledgeVictorySide,exportSideState:sideInteractionPayload,endSideInteraction,refreshUI:()=>{renderJournal();updateUI();renderBoard()},setLocalHeroId:id=>{onlineLocalHeroId=id||null;if(onlineLocalHeroId){sheetView.playerId=onlineLocalHeroId;if(!els.sheetDrawer.hidden)renderCharacterSheet(sheetView.mode,sheetView.bonusKey)}renderJournal();updateUI();renderBoard()},canOffturnSharedAction:id=>!!id&&(state.tributeConsentPending?.ownerId===id||state.dungeonEntryNotice?.heroId===id),canOffturnModalActionFor,combatWindowIsHidden:()=>combatWindowHidden,showCombatWindow,hideCombatWindow};
   decorateNegativeEffects(document.body);negativeEffectObserver.observe(document.body,{childList:true,subtree:true});
   renderJournal();renderBoard();

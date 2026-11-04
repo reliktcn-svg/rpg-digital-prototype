@@ -117,6 +117,47 @@ def public_map_snapshot(room):
         'mapLastMove':move
     }
 
+
+def preserve_boss_state(existing, incoming):
+    """The boss is immutable; discoveries are a shared monotonic prefix."""
+    old=existing.get('boss')
+    if not isinstance(old,dict):return
+    proposed=incoming.get('boss') or {}
+    boss=json.loads(json.dumps(old))
+    if not old.get('legacy'):
+        old_count=len(old.get('found') or [])
+        proposed_found=proposed.get('found') or []
+        count=len(proposed_found) if proposed_found==list(range(len(proposed_found))) else old_count
+        level=max([1]+[progression_level(p) for p in incoming.get('players',[]) if isinstance(p,dict)])
+        thresholds=[2,4,7,9,12,15]
+        count=max(old_count,min(6,count))
+        while count>old_count and level<thresholds[count-1]:count-=1
+        boss['found']=list(range(count))
+        injected=set(old.get('injected') or [])|set(proposed.get('injected') or [])
+        boss['injected']=sorted(i for i in injected if isinstance(i,int) and 0<=i<6 and (i<count or (i==count and level>=thresholds[i])))
+        boss['heartUnlocked']=count>=4
+    incoming['boss']=boss
+    remove_found_clues(incoming)
+
+def remove_found_clues(game):
+    found=(game.get('boss') or {}).get('found') or []
+    removed={489+2*i+j for i in found for j in (0,1)}
+    for d in (game.get('decks') or {}).values():
+        if not isinstance(d,dict):continue
+        for part in ('draw','discard'):
+            if isinstance(d.get(part),list):d[part]=[i for i in d[part] if i not in removed]
+
+def preserve_side_clue_decks(game,decks):
+    # Off-turn inventory/trading does not change exploration decks. Preserve
+    # order too: moving a pending clue to the top would alter its probability.
+    incoming=json.loads(json.dumps(decks))
+    if not game.get('boss') or game['boss'].get('legacy'):return incoming
+    for key in ('exploreOuter','exploreHeart'):
+        old=(game.get('decks') or {}).get(key)
+        if isinstance(old,dict):incoming[key]=json.loads(json.dumps(old))
+    return incoming
+
+
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=ROOT, **kwargs)
@@ -468,7 +509,9 @@ class Handler(SimpleHTTPRequestHandler):
                         ids={a.get('id') for a in record['areas']}
                         record['areas'].extend(a for a in new_areas if a.get('id') not in ids)
                         record['nextAreaId']=max(record['nextAreaId'],game['nextAreaId'])
-                if isinstance(side.get('decks'),dict): game['decks']=side['decks']
+                if isinstance(side.get('decks'),dict):
+                    game['decks']=preserve_side_clue_decks(game,side['decks'])
+                    remove_found_clues(game)
                 if isinstance(side.get('locations'),dict): game['locations']=side['locations']
                 if isinstance(side.get('journal'),list):
                     incoming={'journal':side.get('journal')}; merge_journal(game,incoming); game['journal']=incoming['journal']
@@ -533,6 +576,7 @@ class Handler(SimpleHTTPRequestHandler):
                 can_offturn=(isinstance(dungeon,dict) and dungeon.get('heroId')==actor) or (isinstance(tribute,dict) and tribute.get('ownerId')==actor)
                 if active and actor!=active and not can_offturn:
                     return self._json(409, {'error':'Ход уже перешёл другому герою. Повторно отправлять его нельзя.','revision':room.get('gameRevision')})
+                preserve_boss_state(existing,game)
                 existing_deal=existing.get('tradeDeal') if isinstance(existing,dict) else None
                 incoming_deal=game.get('tradeDeal') if isinstance(game,dict) else None
                 existing_deal_rev=int(existing_deal.get('rev') or 0) if isinstance(existing_deal,dict) else -1
