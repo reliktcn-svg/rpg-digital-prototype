@@ -48,6 +48,7 @@ def public_room(room, include_recovery=False):
             for p in room['players'].values()
         ],
         'hardMode': bool(room.get('hardMode', False)),
+        'enemyScaling': room.get('enemyScaling', True),
         'gameReady': room.get('gameState') is not None,
         'gameRevision': int(room.get('gameRevision') or 0),
         'roomIdleTtl': ROOM_IDLE_TTL,
@@ -118,23 +119,38 @@ def public_map_snapshot(room):
     }
 
 
+def boss_clue_order(boss):
+    order=boss.get('clueOrder')
+    if isinstance(order,list) and len(order)==6 and all(type(i) is int for i in order) and sorted(order)==list(range(6)):return list(order)
+    prefix=[]
+    for i in (boss.get('found') or [])+(boss.get('injected') or []):
+        if type(i) is int and 0<=i<6 and i not in prefix:prefix.append(i)
+    seed=(boss.get('hp',0)*31+boss.get('defense',0)*17+boss.get('attack',0)*13+sum(ord(c) for c in str(boss.get('key',''))))&0xffffffff
+    rest=[i for i in range(6) if i not in prefix]
+    for i in range(len(rest)-1,0,-1):
+        seed=(seed*1664525+1013904223)&0xffffffff
+        j=int(seed/4294967296*(i+1));rest[i],rest[j]=rest[j],rest[i]
+    return prefix+rest
+
 def preserve_boss_state(existing, incoming):
-    """The boss is immutable; discoveries are a shared monotonic prefix."""
+    """The boss is immutable; discoveries follow the saved shuffled order."""
     old=existing.get('boss')
     if not isinstance(old,dict):return
     proposed=incoming.get('boss') or {}
     boss=json.loads(json.dumps(old))
     if not old.get('legacy'):
+        order=boss_clue_order(old)
+        boss['clueOrder']=order
         old_count=len(old.get('found') or [])
         proposed_found=proposed.get('found') or []
-        count=len(proposed_found) if proposed_found==list(range(len(proposed_found))) else old_count
+        count=len(proposed_found) if proposed_found==order[:len(proposed_found)] else old_count
         level=max([1]+[progression_level(p) for p in incoming.get('players',[]) if isinstance(p,dict)])
         thresholds=[2,4,7,9,12,15]
         count=max(old_count,min(6,count))
         while count>old_count and level<thresholds[count-1]:count-=1
-        boss['found']=list(range(count))
+        boss['found']=order[:count]
         injected=set(old.get('injected') or [])|set(proposed.get('injected') or [])
-        boss['injected']=sorted(i for i in injected if isinstance(i,int) and 0<=i<6 and (i<count or (i==count and level>=thresholds[i])))
+        boss['injected']=[i for i in order if i in injected and (i in order[:count] or (count<6 and i==order[count] and level>=thresholds[count]))]
         boss['heartUnlocked']=count>=4
         boss['fullyRevealed']=bool(old.get('fullyRevealed') or count==6 or (proposed.get('fullyRevealed') and (incoming.get('combat') or {}).get('isBoss')))
         records=boss.setdefault('clueRecords',{})
@@ -290,7 +306,7 @@ class Handler(SimpleHTTPRequestHandler):
                 game=recovery.get('state') if isinstance(recovery.get('state'),dict) else None
                 room={
                     'code':code,'createdAt':int(rr.get('createdAt') or now),'started':bool(rr.get('started')),'hostId':host_id,
-                    'hardMode':bool(rr.get('hardMode')),'players':restored,'gameState':game,
+                    'hardMode':bool(rr.get('hardMode')),'enemyScaling':game.get('enemyScaling',rr.get('enemyScaling',True)),'players':restored,'gameState':game,
                     'gameRevision':max(0,int(recovery.get('revision') or rr.get('gameRevision') or (1 if game else 0))),
                     'gameUpdatedAt':now if game else None,'lastActiveAt':now,'recoveryKey':rkey
                 }
@@ -369,6 +385,7 @@ class Handler(SimpleHTTPRequestHandler):
                 touch_room(room)
                 if room.get('started'): return self._json(409, {'error':'После старта режим партии изменить нельзя'})
                 room['hardMode']=hard
+                room['enemyScaling']=body.get('enemyScaling',room.get('enemyScaling',True)) is not False
                 data=public_room(room, True)
             return self._json(200, {'room':data})
         if p.endswith('/start') and p.startswith('/api/rooms/'):
@@ -399,6 +416,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if room.get('gameState') is None:
                     
                     for hero in game.get('players',[]):ensure_progression(hero)
+                    game['enemyScaling']=room.get('enemyScaling',True)
                     room['gameState']=game; room['gameRevision']=1; room['gameUpdatedAt']=int(time.time())
                 return self._json(200, {'revision':room['gameRevision'],'state':room['gameState']})
         if p.endswith('/game/respec') and p.startswith('/api/rooms/'):
@@ -651,6 +669,7 @@ class Handler(SimpleHTTPRequestHandler):
                 merge_journal(existing, game)
                 
                 for hero in game.get('players',[]):ensure_progression(hero)
+                game['enemyScaling']=existing.get('enemyScaling',room.get('enemyScaling',True))
                 room['gameState']=game; room['gameRevision']=base+1; room['gameUpdatedAt']=int(time.time())
                 return self._json(200, {'revision':room['gameRevision']})
         return self._json(404, {'error':'Неизвестный запрос'})

@@ -13,27 +13,27 @@
   <link rel="preload" as="image" href="assets/heroes/mage.webp" />
   <link rel="preload" as="image" href="assets/heroes/archer.webp" />
   <link rel="preload" as="image" href="assets/heroes/rogue.webp" />
-  <title>RPG Digital Prototype v0.6.124 · Владыка и подсказки</title>
-  <link rel="stylesheet" href="styles.css?v=06124events1" />
-  <link rel="stylesheet" href="location-ui.css?v=06124events1" />
-  <link rel="stylesheet" href="battle-result-ui.css?v=06124events1" />
-  <link rel="stylesheet" href="tabletop-enhancements.css?v=06124events1" />
-  <link rel="stylesheet" href="ui-fixes-v078.css?v=06124events1" />
-  <link rel="stylesheet" href="ui-fixes-v079.css?v=06124events1" />
-  <link rel="stylesheet" href="battle-tabletop-v080.css?v=06124events1" />
-  <link rel="stylesheet" href="battle-tabletop-v081.css?v=06124events1" />
-  <link rel="stylesheet" href="battle-tabletop-v082.css?v=06124events1" />
-  <link rel="stylesheet" href="battle-tabletop-v083.css?v=06124events1" />
-  <link rel="stylesheet" href="battle-tabletop-v084.css?v=06124events1" />
-  <link rel="stylesheet" href="battle-tabletop-v085.css?v=06124events1" />
-  <link rel="stylesheet" href="battle-tabletop-v086.css?v=06124events1" />
-  <link rel="stylesheet" href="arcana/dice-settings.css?v=06124events1">
-  <link rel="stylesheet" href="hero-progression.css?v=06124events1">
-  <link rel="stylesheet" href="ui-v06106.css?v=06124events1">
-  <link rel="stylesheet" href="ui-v06108.css?v=06124events1">
-<link rel="stylesheet" href="equipment-colors.css?v=06124events1">
-<link rel="stylesheet" href="popup-bounds.css?v=06124events1">
-<link rel="stylesheet" href="effect-help.css?v=06124events1">
+  <title>RPG Digital Prototype v0.6.125 · Владыка и подсказки</title>
+  <link rel="stylesheet" href="styles.css?v=06125party2" />
+  <link rel="stylesheet" href="location-ui.css?v=06125party2" />
+  <link rel="stylesheet" href="battle-result-ui.css?v=06125party2" />
+  <link rel="stylesheet" href="tabletop-enhancements.css?v=06125party2" />
+  <link rel="stylesheet" href="ui-fixes-v078.css?v=06125party2" />
+  <link rel="stylesheet" href="ui-fixes-v079.css?v=06125party2" />
+  <link rel="stylesheet" href="battle-tabletop-v080.css?v=06125party2" />
+  <link rel="stylesheet" href="battle-tabletop-v081.css?v=06125party2" />
+  <link rel="stylesheet" href="battle-tabletop-v082.css?v=06125party2" />
+  <link rel="stylesheet" href="battle-tabletop-v083.css?v=06125party2" />
+  <link rel="stylesheet" href="battle-tabletop-v084.css?v=06125party2" />
+  <link rel="stylesheet" href="battle-tabletop-v085.css?v=06125party2" />
+  <link rel="stylesheet" href="battle-tabletop-v086.css?v=06125party2" />
+  <link rel="stylesheet" href="arcana/dice-settings.css?v=06125party2">
+  <link rel="stylesheet" href="hero-progression.css?v=06125party2">
+  <link rel="stylesheet" href="ui-v06106.css?v=06125party2">
+  <link rel="stylesheet" href="ui-v06108.css?v=06125party2">
+<link rel="stylesheet" href="equipment-colors.css?v=06125party2">
+<link rel="stylesheet" href="popup-bounds.css?v=06125party2">
+<link rel="stylesheet" href="effect-help.css?v=06125party2">
 </head>
 <body class="tabletop-upgrade">
   
@@ -61,6 +61,7 @@
           <button id="netModeHard" class="net-mode" type="button">Сложный</button>
         </div>
         <div id="roomModeHint" class="hint net-mode-hint"></div>
+        <label class="net-label">Повышать уровень врагов<select id="netEnemyScaling"><option value="yes">Да</option><option value="no">Нет</option></select></label><p class="hint">Общее правило партии. Не действует на боссов.</p>
         <div id="roomStatus" class="hint"></div>
         <button id="netStart" class="primary wide" type="button">Начать сетевую игру</button>
         <button id="netBack" class="ghost wide" type="button">Назад</button>
@@ -74,7 +75,7 @@
   <header class="topbar">
     <div>
       <div class="eyebrow">RPG DIGITAL PROTOTYPE</div>
-      <h1>Прототип v0.6.124 · Настольный интерфейс</h1>
+      <h1>Прототип v0.6.125 · Настольный интерфейс</h1>
       <div class="header-tools">
         <button id="journalBtn" class="journal-top" type="button">Журнал</button>
       </div>
@@ -95,6 +96,7 @@
         <h2>Выбор героя · соло-режим</h2>
         <p class="muted setup-copy">Выберите одного героя. Все возможности игры доступны в соло-режиме.</p>
         <div id="heroPicker" class="hero-picker"></div>
+        <label class="net-label">Повышать уровень врагов<select id="soloEnemyScaling"><option value="yes">Да</option><option value="no">Нет</option></select></label><p class="hint">Характеристики врагов растут вместе с уровнем героя. Боссы не усиливаются.</p>
         <button id="startBtn" class="primary wide">Начать партию</button>
         <div id="setupError" class="error"></div>
       </section>
@@ -207,24 +209,24 @@
     </div>
   </div>
 
-  <script src="map-data.js?v=06124events1"></script>
-  <script src="cards-data.js?v=06124events1"></script>
-  <script src="location-placement.js?v=06124events1"></script>
-  <script src="arcana/dice-motion.js?v=06124events1"></script>
-  <script src="arcana/dice-skins.js?v=06124events1"></script>
-  <script src="arcana/dice-renderer.js?v=06124events1"></script>
-  <script src="arcana/dice-animator.js?v=06124events1"></script>
-  <script src="arcana/dice-packs.js?v=06124events1"></script>
-  <script src="arcana/dice-settings.js?v=06124events1"></script>
-  <script src="tabletop-enhancements.js?v=06124events1"></script>
-  <script src="hero-atlas-data.js?v=06124events1"></script>
-  <script src="hero-progression.js?v=06124events1"></script>
+  <script src="map-data.js?v=06125party2"></script>
+  <script src="cards-data.js?v=06125party2"></script>
+  <script src="location-placement.js?v=06125party2"></script>
+  <script src="arcana/dice-motion.js?v=06125party2"></script>
+  <script src="arcana/dice-skins.js?v=06125party2"></script>
+  <script src="arcana/dice-renderer.js?v=06125party2"></script>
+  <script src="arcana/dice-animator.js?v=06125party2"></script>
+  <script src="arcana/dice-packs.js?v=06125party2"></script>
+  <script src="arcana/dice-settings.js?v=06125party2"></script>
+  <script src="tabletop-enhancements.js?v=06125party2"></script>
+  <script src="hero-atlas-data.js?v=06125party2"></script>
+  <script src="hero-progression.js?v=06125party2"></script>
   
-  <script src="hero-progression-ui.js?v=06124events1"></script>
+  <script src="hero-progression-ui.js?v=06125party2"></script>
   <script src="boss-lore.js?v=06123"></script>
-<script src="boss-rules.js?v=06124events1"></script>
-<link rel="stylesheet" href="boss-clues.css?v=06124events1">
-<script src="app.js?v=06124events1"></script>
-  <script src="network-lobby.js?v=06124events1"></script>
+<script src="boss-rules.js?v=06125party2"></script>
+<link rel="stylesheet" href="boss-clues.css?v=06125party2">
+<script src="app.js?v=06125party2"></script>
+  <script src="network-lobby.js?v=06125party2"></script>
 </body>
 </html>
