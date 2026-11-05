@@ -14,7 +14,7 @@ function generate(random=Math.random){
  const pick=a=>a[Math.floor(random()*a.length)],v=pick(variants),band=pick([50,60,70]),selected=[];
  for(const type of v.types){const pool=pools[type].filter(k=>!selected.includes(k));selected.push(pick(pool))}
  if(v.types.length===1&&random()<.5)selected.push(pick(pools[v.types[0]].filter(k=>!selected.includes(k))));
- return {schema:1,key:v.key,types:[...v.types],hp:band+Math.floor(random()*11),defense:pick([16,17,18]),attack:pick([6,7,8]),damage:pick(['D10','D12','2D8']),effectKeys:selected,effectText:selected.map(k=>effects[k].text).join(' '),immunities:[],found:[],injected:[],heartUnlocked:false};
+ return {schema:1,key:v.key,types:[...v.types],hpBand:band,hp:band+Math.floor(random()*11),defense:pick([16,17,18]),attack:pick([6,7,8]),damage:pick(['D10','D12','2D8']),effectKeys:selected,effectText:selected.map(k=>effects[k].text).join(' '),immunities:[],found:[],injected:[],heartUnlocked:false};
 }
 const ids=index=>[489+index*2,490+index*2];
 const clueIndex=id=>Number(id)>=489&&Number(id)<=500?Math.floor((Number(id)-489)/2):-1;
@@ -24,9 +24,17 @@ function inject(state,level,shuffle){const b=state.boss;if(!b||b.legacy)return f
  for(const [j,key] of ['exploreOuter','exploreHeart'].entries()){const d=state.decks[key];if(!d)return false}
  b.injected.push(next);for(const [j,key] of ['exploreOuter','exploreHeart'].entries()){state.decks[key].draw.push(ids(next)[j]);state.decks[key].draw=shuffle(state.decks[key].draw)}return true;
 }
-function reveal(state,index){const b=state.boss;if(!b||b.legacy||index!==b.found.length||!b.injected.includes(index))return false;b.found.push(index);b.heartUnlocked=b.found.length>=4;removeClue(state,index);return true}
+function reveal(state,index){const b=state.boss;if(!b||b.legacy||index!==b.found.length||!b.injected.includes(index))return false;b.found.push(index);b.heartUnlocked=b.found.length>=4;removeClue(state,index);b.clueRecords=b.clueRecords||{};b.clueRecords[index]=clueRecord(b,index);return true}
 function values(b){return [b.types.join(' + '),String(b.hp),String(b.defense),'+'+b.attack,b.damage,b.effectText]}
 function view(b){return values(b).map((v,i)=>b.legacy||b.found.includes(i)?v:'—')}
+function clueRecord(b,index){
+ const L=root.RPGBossLore;if(!L)return {index,title:clues[index][0],text:'',value:values(b)[index]};
+ b.hpBand=b.hpBand|| (b.hp<=60?50:b.hp<=70?60:70);
+ const texts=[L.types[variants.findIndex(v=>v.key===b.key)]||'Древняя летопись хранит свидетельство о Владыке.',L.hp[(b.hpBand-50)/10],L.defense[b.defense-16],L.attack[b.attack-6],L.damage[['D10','D12','2D8'].indexOf(b.damage)],(b.effectKeys||[]).map(k=>L.effects[k]).filter(Boolean).join('\n\n')];
+ const assessment=['',['Здоровье — относительно невысокое','Здоровье — среднее','Здоровье — высокое'][(b.hpBand-50)/10],['Защита — относительно низкая','Защита — средняя','Защита — высокая'][b.defense-16],['Точность атаки — относительно невысокая','Точность атаки — высокая','Точность атаки — исключительная'][b.attack-6],['Урон — относительно невысокий','Урон — высокий','Урон — очень высокий'][['D10','D12','2D8'].indexOf(b.damage)],''][index]||'';
+ return {index,title:L.titles[index],text:texts[index]||'',assessment,parameter:clues[index][0],value:values(b)[index],found:true};
+}
+function foundRecords(b){b.clueRecords=b.clueRecords||{};return b.found.map(i=>b.clueRecords[i]||(b.clueRecords[i]=clueRecord(b,i)))}
 function card(b){return {id:281,name:'Владыка Сердца Тьмы',category:'Босс',deck:'Финальный босс',bossKey:b.key,generatedBoss:!b.legacy,effectKeys:b.effectKeys,fields:{'Ранг':'босс','Тип':b.types.join(' + '),'ЗД':String(b.hp),'ЗЩ':String(b.defense),'АТК':'+'+b.attack,'Урон':b.damage,'Эффект':b.effectText,'Иммунитет':(b.immunities||[]).join(', '),'Золото':'0','Тайники':'0; МУД 13+ — +1 тайник.'}}}
-root.RPGBoss={types,variants,clues,effects,pools,generate,ids,clueIndex,clueCards,inject,reveal,removeClue,values,view,card};
+root.RPGBoss={types,variants,clues,effects,pools,generate,ids,clueIndex,clueCards,inject,reveal,removeClue,values,view,card,clueRecord,foundRecords};
 })(typeof window==='undefined'?globalThis:window);

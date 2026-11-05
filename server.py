@@ -136,6 +136,15 @@ def preserve_boss_state(existing, incoming):
         injected=set(old.get('injected') or [])|set(proposed.get('injected') or [])
         boss['injected']=sorted(i for i in injected if isinstance(i,int) and 0<=i<6 and (i<count or (i==count and level>=thresholds[i])))
         boss['heartUnlocked']=count>=4
+        records=boss.setdefault('clueRecords',{})
+        for i in boss['found']:
+            key=str(i)
+            record=(proposed.get('clueRecords') or {}).get(key)
+            if key not in records and isinstance(record,dict) and record.get('index')==i:
+                records[key]=json.loads(json.dumps(record))
+        if 'hpBand' not in boss:
+            hp=boss.get('hp',50)
+            boss['hpBand']=50 if hp<=60 else 60 if hp<=70 else 70
     incoming['boss']=boss
     remove_found_clues(incoming)
 
