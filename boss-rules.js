@@ -26,7 +26,7 @@ function inject(state,level,shuffle){const b=state.boss;if(!b||b.legacy)return f
 }
 function reveal(state,index){const b=state.boss;if(!b||b.legacy||index!==b.found.length||!b.injected.includes(index))return false;b.found.push(index);b.heartUnlocked=b.found.length>=4;removeClue(state,index);b.clueRecords=b.clueRecords||{};b.clueRecords[index]=clueRecord(b,index);return true}
 function values(b){return [b.types.join(' + '),String(b.hp),String(b.defense),'+'+b.attack,b.damage,b.effectText]}
-function view(b){return values(b).map((v,i)=>b.legacy||b.found.includes(i)?v:'—')}
+function view(b){return values(b).map((v,i)=>b.legacy||b.fullyRevealed||b.found.length===6?v:b.found.includes(i)?'Найдена подсказка':'—')}
 function clueRecord(b,index){
  const L=root.RPGBossLore;if(!L)return {index,title:clues[index][0],text:'',value:values(b)[index]};
  b.hpBand=b.hpBand|| (b.hp<=60?50:b.hp<=70?60:70);

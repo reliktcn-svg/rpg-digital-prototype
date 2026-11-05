@@ -4,3 +4,5 @@
 
 /* Keep the header clear and the close action reachable on every viewport. */
 .boss-info-overlay{bottom:auto;padding:8px max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}.boss-info-panel{max-height:100%;display:flex;flex-direction:column;overflow:hidden;padding:12px}.boss-info-scroll{min-height:0;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.boss-info-panel header,.boss-info-panel footer{flex-shrink:0}.boss-info-card{min-height:0}.boss-info-art{width:min(100%,30dvh);cursor:pointer}.boss-info-rows{cursor:pointer}.boss-info-progress{font-size:14px}.boss-found-lore details{padding:10px 0;border-bottom:1px solid #66532f}.boss-found-lore summary{cursor:pointer;color:#e4c36f}.boss-found-lore p{line-height:1.5}.boss-info-panel footer{margin-top:8px}.boss-info-art:focus-visible,.boss-info-rows:focus-visible{outline:2px solid #e4c36f;outline-offset:2px}
+
+.boss-info-art{width:min(100%,48dvh)}
