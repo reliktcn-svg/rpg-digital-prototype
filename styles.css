@@ -1748,3 +1748,9 @@ body.game-running #modal:has(.story-card-shell) .modal-card,
 
 /* Party enemy scaling choice */
 #soloEnemyScaling,#netEnemyScaling{width:100%;min-height:44px;padding:8px 12px;border:1px solid #a68a50;border-radius:10px;background:#292219;color:#f5e7c6;font:inherit;color-scheme:dark;}
+
+/* v0.6.126: desktop lobby must not center oversized content above scroll origin. */
+@media(min-width:901px) and (pointer:fine){
+ .online-lobby{align-items:flex-start;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;}
+ .online-lobby-card{flex-shrink:0;margin-block:auto;}
+}
