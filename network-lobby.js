@@ -28,8 +28,16 @@
   const heroName=id=>(HEROES.find(h=>h[0]===id)||[])[1]||id||'—';
   const engine=()=>window.__RPG_ONLINE__||null;
   async function api(path,opts={}){
-    const r=await fetch(path,{headers:{'Content-Type':'application/json'},cache:'no-store',...opts});
-    const d=await r.json().catch(()=>({})); if(!r.ok) {const err=new Error(d.error||`Ошибка ${r.status}`);err.status=r.status;err.data=d;throw err} return d;
+    const owner=session,controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
+    try{
+      const r=await fetch(path,{...opts,headers:{'Content-Type':'application/json','X-RPG-Protocol':String(window.RPG_CLIENT_BUILD?.protocol||1),...(opts.headers||{})},cache:'no-store',signal:controller.signal});
+      if(owner!==session)throw Object.assign(new Error('Сессия уже закрыта'),{cancelled:true});
+      if(r.status===304)return {notModified:true};
+      const d=await r.json().catch(()=>({}));if(owner!==session)throw Object.assign(new Error('Сессия уже закрыта'),{cancelled:true});
+      if(r.status===426)window.dispatchEvent(new CustomEvent('rpg-incompatible'));
+      if(!r.ok){const err=new Error(d.error||`Ошибка ${r.status}`);err.status=r.status;err.data=d;throw err}
+      const etag=r.headers.get('ETag');if(etag)d._etag=etag;return d;
+    }finally{clearTimeout(timeout)}
   }
   function showError(msg=''){ $('onlineError').textContent=msg; }
   function myPlayer(){return session.room?.players?.find(p=>p.id===session.playerId)||null}
@@ -81,7 +89,7 @@
     b.innerHTML=isMine?`Ваш ход · <b>${esc(heroName(mine))}</b>`:`Сейчас ходит <b>${esc(heroName(active))}</b> · ваш герой: ${esc(heroName(mine))}`;
   }
   function showHome(){
-    clearInterval(session.timer);clearInterval(session.gameTimer);session={mode:null,code:null,playerId:null,playerSecret:null,recoveryKey:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:'',lastServerState:null,sideAcks:{}};
+    clearInterval(session.timer);clearInterval(session.gameTimer);clearTimeout(session.kickTimer);clearTimeout(localMutationTimer);session={mode:null,code:null,playerId:null,playerSecret:null,recoveryKey:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:'',lastServerState:null,sideAcks:{}};
     window.__RPG_HERO_PLAYER_NAMES__={};$('onlineHome').hidden=false;$('onlineRoom').hidden=true;showError('');document.body.classList.remove('online-game','online-not-my-turn');const b=$('onlineTurnBanner');if(b)b.hidden=true;const q=$('turnOrderBanner');if(q)delete q.dataset.roomCode;window.__RPG_ROOM_CODE__='';renderResumeButton();
   }
   function renderRoom(){
@@ -107,16 +115,19 @@
     $('netStart').hidden=!isHost;$('netStart').disabled=!ready||r.started;$('netStart').textContent=r.started?'Комната запущена':'Начать сетевую игру';
     $('roomStatus').textContent=r.started?(r.gameReady?'Общая партия создана. Открываем карту…':'Комната запущена. Хозяин создаёт общую карту…'):ready?`Все готовы. Хозяин может начать · ${hard?'сложный':'обычный'} режим.`:`Игроков: ${r.players.length}/6. Нужно минимум 2 и каждый выбирает героя.`;
   }
-  async function fetchGame(){
-    return api(`/api/rooms/${session.code}/game?playerId=${encodeURIComponent(session.playerId)}&playerSecret=${encodeURIComponent(session.playerSecret)}`);
+  async function fetchGame(conditional=false){
+    const d=await api(`/api/rooms/${session.code}/game?playerId=${encodeURIComponent(session.playerId)}&playerSecret=${encodeURIComponent(session.playerSecret)}`,{headers:conditional&&session.gameETag?{'If-None-Match':session.gameETag}:{}});
+    if(session.room){session.room.lastActiveAt=Math.floor(Date.now()/1000);if(Date.now()-(session.lastRecoveryHeartbeat||0)>60000){session.lastRecoveryHeartbeat=Date.now();saveRecoverySnapshot()}}
+    return d;
   }
-  function enterGame(state,revision){window.__RPG_NET_CONNECTED__=true;
+  function enterGame(state,revision){clearInterval(session.timer);session.timer=null;window.__RPG_NET_CONNECTED__=true;
     const e=engine();if(!e||!state)return;
     if(session.code){const q=$('turnOrderBanner');if(q)q.dataset.roomCode=session.code;window.__RPG_ROOM_CODE__=session.code}if(session.room?.recoveryKey)session.recoveryKey=session.room.recoveryKey;e.applyState(state);e.setLocalHeroId?.(myHeroId());session.gameEntered=true;session.lastRevision=Number(revision||0);session.lastServerState=state;session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(state);session.lastSideSnapshot=sideSnap(e,myHeroId());saveResumeSession();saveRecoverySnapshot(e.exportState());
     overlay.hidden=true;document.body.classList.remove('net-lobby-open');updateTurnGuard();startGameSync();
   }
   async function ensureOnlineGame(){
-    if(!session.room?.started)return;
+    if(!session.room?.started||session.entering)return;
+    const owner=session;session.entering=true;try{
     const e=engine();if(!e)return showError('Игровой модуль ещё загружается.');
     if(session.room.gameReady){
       if(session.gameEntered)return;
@@ -131,18 +142,20 @@
         enterGame(d.state,d.revision);
       }catch(err){showError(err.message)}
     }
+    }finally{owner.entering=false}
   }
   async function refresh(){
-    if(!session.code)return;
+    if(!session.code||session.refreshBusy||session.gameEntered)return;
+    const owner=session;session.refreshBusy=true;
     const qs=session.playerId&&session.playerSecret?`?playerId=${encodeURIComponent(session.playerId)}&playerSecret=${encodeURIComponent(session.playerSecret)}`:'';
-    try{acceptRoom(await api(`/api/rooms/${session.code}${qs}`));if(!session.gameEntered)renderRoom();if(session.room.started)await ensureOnlineGame()}catch(e){if(e.status===404&&session.playerId&&session.playerSecret){try{const saved={code:session.code,playerId:session.playerId,playerSecret:session.playerSecret,recoveryKey:session.recoveryKey};await recoverSession(saved);if(!session.gameEntered)renderRoom();if(session.room.started)await ensureOnlineGame();showError('');return}catch(re){showError(re.message);return}}showError(e.message)}
+    try{acceptRoom(await api(`/api/rooms/${session.code}${qs}`));if(!session.gameEntered)renderRoom();if(session.room.started)await ensureOnlineGame()}catch(e){if(e.status===404&&session.playerId&&session.playerSecret){try{const saved={code:session.code,playerId:session.playerId,playerSecret:session.playerSecret,recoveryKey:session.recoveryKey};await recoverSession(saved);if(!session.gameEntered)renderRoom();if(session.room.started)await ensureOnlineGame();showError('');return}catch(re){showError(re.message);return}}showError(e.message)}finally{owner.refreshBusy=false}
   }
   function poll(){clearInterval(session.timer);session.timer=setInterval(refresh,900)}
   async function pullGame(force=false,discardLocal=false){
     if(!session.gameEntered||session.syncBusy)return;
-    session.syncBusy=true;
+    const owner=session;session.syncBusy=true;
     try{
-      const d=await fetchGame();if(!d.ready)return;const remoteRevision=Number(d.revision||0),remoteSnap=snap(d.state);
+      const d=await fetchGame(!force);if(d.notModified||!d.ready)return;const remoteRevision=Number(d.revision||0),remoteSnap=snap(d.state);
       // Side-sync (инвентарь/торговля) больше не двигает основную ревизию партии,
       // поэтому сравниваем не только revision, но и само серверное состояние.
       // A local sale/equip/loot change has not yet been acknowledged by the server.
@@ -152,25 +165,27 @@
       const dirtySide=sideSnap(engine(),myHeroId())!==session.lastSideSnapshot;
       if(unsent&&!discardLocal&&(session.lastServerActiveHero===myHeroId()||engine()?.canOffturnSharedAction?.(myHeroId())||dirtySide))return;
       if(force||remoteRevision>session.lastRevision||remoteSnap!==session.lastSnapshot){
-        const e=engine();e.applyState(d.state);acknowledgeSideVersions(d);session.lastServerState=d.state;session.lastRevision=remoteRevision;session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(d.state);session.lastSideSnapshot=sideSnap(e,myHeroId());saveRecoverySnapshot(d.state);updateTurnGuard();
+        const e=engine();e.applyState(d.state);session.gameETag=d._etag;acknowledgeSideVersions(d);session.lastServerState=d.state;session.lastRevision=remoteRevision;session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(d.state);session.lastSideSnapshot=sideSnap(e,myHeroId());saveRecoverySnapshot(d.state);updateTurnGuard();
       }
-    }catch(e){if(e.status!==202)console.warn('online pull',e)}finally{session.syncBusy=false}
+      acknowledgeSideVersions(d);session.gameETag=d._etag;
+    }catch(e){if(e.status===404){try{session.gameETag=null;await recoverSession({code:session.code,playerId:session.playerId,playerSecret:session.playerSecret,recoveryKey:session.recoveryKey})}catch(re){console.warn('online recovery',re)}}else if(e.status!==202)console.warn('online pull',e)}finally{owner.syncBusy=false}
   }
   async function syncGame(){
     if(!session.gameEntered||session.syncBusy)return;
+    const syncOwner=session;
     const e=engine(),mine=myHeroId();if(!e||!mine)return;
     const local=e.exportState(),localSnap=snap(local),serverActor=session.lastServerActiveHero;
     const side=e.exportSideState?.(mine)||null;
     if(localSnap!==session.lastSnapshot&&(serverActor===mine||e.canOffturnSharedAction?.(mine))){
-      session.syncBusy=true;
+      session.syncBusy=true;session.gameETag=null;
       try{
         const d=await api(`/api/rooms/${session.code}/game/state`,{method:'POST',body:JSON.stringify({...auth(),baseRevision:session.lastRevision,sideAcks:session.sideAcks,state:local})});
         session.lastRevision=Number(d.revision||session.lastRevision+1);session.lastServerState=local;session.lastSnapshot=localSnap;session.lastServerActiveHero=activeHeroFromState(local);session.lastSideSnapshot=sideSnap(e,mine);saveRecoverySnapshot(local);updateTurnGuard();
-      }catch(e2){console.warn('online push',e2);session.syncBusy=false;
+      }catch(e2){if(e2.cancelled)return;console.warn('online push',e2);session.syncBusy=false;
         // 409 means another main-turn state is already authoritative. Do not
         // retry the obsolete turn forever, and do not replay its spent items.
         await pullGame(true,e2.status===409);return
-      }finally{session.syncBusy=false}
+      }finally{syncOwner.syncBusy=false}
       // User made more sales/moves while the request was in flight.
       // Keep the local state intact and commit it on the next tick.
       if(snap(e.exportState())!==localSnap){queueMicrotask(syncGame);return;}
@@ -179,11 +194,11 @@
     if(sideNow){
       const ss=snap(sideNow);
       if(ss!==session.lastSideSnapshot){
-        session.syncBusy=true;
+        session.syncBusy=true;session.gameETag=null;
         try{
           const d=await api(`/api/rooms/${session.code}/game/side`,{method:'POST',body:JSON.stringify({...auth(),side:sideDelta(sideNow)})});
           session.lastRevision=Number(d.revision??session.lastRevision);acknowledgeSideVersions(d);session.lastSideSnapshot=ss;saveRecoverySnapshot(e.exportState());if(sideNow.type==='victory')e.acknowledgeVictorySide?.();
-        }catch(err){console.warn('online side push',err)}finally{session.syncBusy=false}
+        }catch(err){if(err.cancelled)return;console.warn('online side push',err)}finally{syncOwner.syncBusy=false}
       }
       // После любого фонового изменения сразу забираем объединённое состояние сервера.
       // Это одновременно доставляет торговые подтверждения и не даёт клиенту повторно
@@ -199,12 +214,12 @@
   async function flushMerchant(ownerId){
     if(!session.gameEntered)return true;
     if(!ownerId||ownerId!==myHeroId())throw new Error('Недоступно сохранение для другого героя.');
-    const started=Date.now();
-    while(session.syncBusy){
+    const ownerSession=session,started=Date.now();
+    while(session.syncBusy){if(ownerSession!==session)throw Error('Сессия закрыта');
       if(Date.now()-started>15000)throw new Error('Сервер долго занят. Попробуйте снова.');
       await new Promise(resolve=>setTimeout(resolve,45));
     }
-    session.syncBusy=true;
+    session.syncBusy=true;session.gameETag=null;
     try{
       const e=engine();let retries=0;
       while(retries++<4){
@@ -225,27 +240,36 @@
         if(snap(e.exportSideState?.(ownerId))===snap(before))return true;
       }
       throw new Error('Данные изменились во время сохранения. Повторите попытку.');
-    }finally{session.syncBusy=false}
+    }finally{ownerSession.syncBusy=false}
   }
   window.__RPG_NETWORK_PROGRESSION__={active:()=>session.gameEntered,learn:async(heroId,nodeId)=>{
     if(heroId!==myHeroId())throw Error('Можно развивать только своего героя');
-    const started=Date.now();const waitIdle=async()=>{while(session.syncBusy){if(Date.now()-started>15000)throw Error('Сервер занят. Попробуйте снова.');await new Promise(r=>setTimeout(r,40))}};
-    await waitIdle();await syncGame();await waitIdle();session.syncBusy=true;
-    try{const result=await api(`/api/rooms/${session.code}/game/ability`,{method:'POST',body:JSON.stringify({...auth(),nodeId})});return result}finally{session.syncBusy=false}
+    const ownerSession=session,started=Date.now();const waitIdle=async()=>{while(session.syncBusy){if(ownerSession!==session)throw Error('Сессия закрыта');if(Date.now()-started>15000)throw Error('Сервер занят. Попробуйте снова.');await new Promise(r=>setTimeout(r,40))}};
+    await waitIdle();await syncGame();await waitIdle();session.syncBusy=true;session.gameETag=null;
+    try{const result=await api(`/api/rooms/${session.code}/game/ability`,{method:'POST',body:JSON.stringify({...auth(),nodeId})});return result}finally{ownerSession.syncBusy=false}
   }};
   window.__RPG_NETWORK_PROGRESSION__.reset=async(heroId,cardId)=>{
     if(heroId!==myHeroId())throw Error('Можно перераспределить способности только своего героя');
-    const start=Date.now();const idle=async()=>{while(session.syncBusy){if(Date.now()-start>15000)throw Error('Сервер занят');await new Promise(r=>setTimeout(r,40))}};
-    await idle();await syncGame();await idle();session.syncBusy=true;
+    const ownerSession=session,start=Date.now();const idle=async()=>{while(session.syncBusy){if(ownerSession!==session)throw Error('Сессия закрыта');if(Date.now()-start>15000)throw Error('Сервер занят');await new Promise(r=>setTimeout(r,40))}};
+    await idle();await syncGame();await idle();session.syncBusy=true;session.gameETag=null;
     try{
       const result=await api(`/api/rooms/${session.code}/game/respec`,{method:'POST',body:JSON.stringify({...auth(),cardId})});
       acknowledgeSideVersions(result);return result;
-    }finally{session.syncBusy=false}
+    }finally{ownerSession.syncBusy=false}
+  };
+  window.RPGPrepareUpdateReload=async()=>{
+    if(!session.gameEntered){engine()?.saveLocal?.();return}
+    const owner=session,start=Date.now();const idle=async()=>{while(session.syncBusy){if(Date.now()-start>15000||owner!==session)throw Error('Нет подтверждения сервера');await new Promise(r=>setTimeout(r,40))}};
+    await idle();await syncGame();await idle();
+    if(snap(engine()?.exportState())!==session.lastSnapshot)throw Error('Остались неподтверждённые действия');
+    saveRecoverySnapshot(engine()?.exportState());saveResumeSession();
   };
   window.__RPG_NET_FLUSH_MERCHANT__=flushMerchant;
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(session.gameEntered)syncGame();else refresh()}});
+  window.addEventListener('online',()=>{session.gameETag=null;if(session.gameEntered)syncGame();else refresh()});
   let localMutationTimer=null;
   window.addEventListener('rpg-local-mutation',()=>{if(!session.gameEntered)return;clearTimeout(localMutationTimer);localMutationTimer=setTimeout(syncGame,30)});
-  function startGameSync(){clearInterval(session.gameTimer);session.gameTimer=setInterval(syncGame,400);setTimeout(syncGame,80)}
+  function startGameSync(){clearInterval(session.gameTimer);clearTimeout(session.kickTimer);session.gameTimer=setInterval(syncGame,400);session.kickTimer=setTimeout(syncGame,80)}
   async function createRoom(){
     const name=$('netName').value.trim()||'Хозяин';showError('');
     try{const d=await api('/api/rooms',{method:'POST',body:JSON.stringify({name})});Object.assign(session,{mode:'online',code:d.room.code,playerId:d.playerId,playerSecret:d.playerSecret,recoveryKey:d.room.recoveryKey||null,room:d.room});saveResumeSession();renderRoom();poll()}catch(e){showError(e.message)}
@@ -279,7 +303,7 @@
       Object.assign(session,{mode:'online',code:saved.code,playerId:saved.playerId,playerSecret:saved.playerSecret,recoveryKey:room.recoveryKey||saved.recoveryKey||session.recoveryKey,room});if($('netName'))$('netName').value=me.name||saved.name||'';saveResumeSession();renderRoom();poll();if(room.started)await ensureOnlineGame();showError(d.revived?'Партия восстановлена после перезапуска сервера.':'');
     }catch(err){if(err.status===410||err.status===403)clearResumeSession();showError(`Не удалось продолжить партию: ${err.message}`)}
   }
-  function localGame(){window.__RPG_NET_CONNECTED__=false;clearInterval(session.timer);clearInterval(session.gameTimer);overlay.hidden=true;document.body.classList.remove('net-lobby-open')}
+  function localGame(){showHome();window.__RPG_NET_CONNECTED__=false;overlay.hidden=true;document.body.classList.remove('net-lobby-open')}
 
   document.addEventListener('click',e=>{
     if(!session.gameEntered)return;

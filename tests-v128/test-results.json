@@ -1,0 +1,43 @@
+{
+  "version": "0.6.128",
+  "build": "d839149ba782f743a63286ad2aaaaf3d5308280c7cf5a044fca54289f8435f59",
+  "manifestFiles": 608,
+  "coreBytes": 1709482,
+  "protectedFilesUnchangedFrom126": 572,
+  "browserCache": {
+    "complete": true,
+    "workerReplacement": true,
+    "mobileViewport": [
+      390,
+      844
+    ],
+    "downloaded": [
+      "assets/test-used.svg",
+      "index.html",
+      "map.html",
+      "sw.js",
+      "update-probe.js"
+    ],
+    "unchangedAppDownloaded": false,
+    "unseenImageDownloaded": false,
+    "oldAndNewTabsIsolated": true
+  },
+  "browserNetwork": {
+    "complete": true,
+    "players": 4,
+    "separateMap": true,
+    "conditional304": true,
+    "offlineRecovery": true,
+    "updateDuringParty": true,
+    "automaticReload": false,
+    "statePreserved": true,
+    "reloadHook": true,
+    "resume": true,
+    "20UpdateMeanMs": 261.89,
+    "minMs": 108,
+    "maxMs": 428.7
+  },
+  "serverTests": 30,
+  "physicalDevicesTested": false,
+  "deployedToHosting": false
+}

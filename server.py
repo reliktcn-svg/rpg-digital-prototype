@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 import json, os, random, string, threading, time, urllib.parse
+from http_transport import TransportMixin
+from asset_manifest import build_manifest
+import hashlib
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from dice_pack_catalog import dice_pack_catalog
 from hero_atlas import read_atlas, learn_ability, ensure_progression, progression_level
@@ -184,7 +187,7 @@ def preserve_side_clue_decks(game,decks):
     return incoming
 
 
-class Handler(SimpleHTTPRequestHandler):
+class Handler(TransportMixin, SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=ROOT, **kwargs)
 
@@ -192,12 +195,21 @@ class Handler(SimpleHTTPRequestHandler):
         print('%s - - [%s] %s' % (self.address_string(), self.log_date_time_string(), fmt%args))
 
     def _json(self, status, data):
-        raw=json.dumps(data, ensure_ascii=False).encode('utf-8')
-        self.send_response(status)
-        self.send_header('Content-Type','application/json; charset=utf-8')
-        self.send_header('Content-Length',str(len(raw)))
-        self.send_header('Cache-Control','no-store')
-        self.end_headers(); self.wfile.write(raw)
+        path=urllib.parse.urlparse(self.path).path
+        parts=path.split('/')
+        room=ROOMS.get(parts[3]) if len(parts)>3 and parts[1:3]==['api','rooms'] else None
+        # Every POST response invalidates both projections, including side writes
+        # which intentionally do not increment gameRevision. Cache never lives in gameState.
+        if self.command=='POST' and room is not None:room.pop('_http_cache',None)
+        conditional=self.command=='GET' and path.endswith(('/game','/map')) and status==200
+        cache=room.setdefault('_http_cache',{}) if conditional and room is not None else {}
+        key=parts[-1]
+        if conditional and key in cache:raw,digest=cache[key]
+        else:
+            raw=json.dumps(data, ensure_ascii=False, separators=(',',':')).encode('utf-8')
+            digest=hashlib.sha256(raw).hexdigest()
+            if conditional:cache[key]=(raw,digest)
+        return self.send_bytes(status,raw,'application/json; charset=utf-8',conditional=conditional,private=True,digest=digest)
 
     def _body(self):
         try:
@@ -206,17 +218,24 @@ class Handler(SimpleHTTPRequestHandler):
         except Exception:
             return {}
 
+    def client_compatible(self):
+        try:protocol=int(self.headers.get('X-RPG-Protocol','1'))
+        except ValueError:protocol=0
+        return protocol>=int(os.environ.get('RPG_MIN_CLIENT_PROTOCOL','1'))
+
     def do_GET(self):
+        if self.path.startswith('/api/rooms/') and not self.client_compatible():return self._json(426,{'error':'Обновите игру: версия клиента несовместима с сервером'})
         p=urllib.parse.urlparse(self.path)
+        if p.path=='/asset-manifest.json':build_manifest(ROOT)
         with LOCK: cleanup_rooms()
         if p.path == '/api/dice-packs':
             return self._json(200, dice_pack_catalog(ROOT))
-        if p.path in ('/hero-atlas-data.js','/api/hero-atlas'):
+        if p.path == '/api/hero-atlas':
             try: data=read_atlas(ROOT)
             except (ValueError,OSError) as exc:return self._json(500, {'error':'Ошибка атласа: '+str(exc)})
             if p.path=='/api/hero-atlas':return self._json(200,data)
             payload=('window.RPG_HERO_ATLAS = '+json.dumps(data,ensure_ascii=False).replace('</','<\\/')+';').encode('utf-8')
-            self.send_response(200);self.send_header('Content-Type','application/javascript; charset=utf-8');self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(payload)));self.end_headers();self.wfile.write(payload);return
+            return self.send_bytes(200,payload,'application/javascript; charset=utf-8',conditional=True)
         if p.path == '/api/health':
             return self._json(200, {'ok':True,'rooms':len(ROOMS)})
         # Spectator-only endpoint, completely separate from player game access.
@@ -258,6 +277,7 @@ class Handler(SimpleHTTPRequestHandler):
         return super().do_GET()
 
     def do_POST(self):
+        if self.path.startswith('/api/rooms') and not self.client_compatible():return self._json(426,{'error':'Обновите игру: версия клиента несовместима с сервером'})
         p=urllib.parse.urlparse(self.path).path
         with LOCK: cleanup_rooms()
         body=self._body()
@@ -675,6 +695,7 @@ class Handler(SimpleHTTPRequestHandler):
         return self._json(404, {'error':'Неизвестный запрос'})
 
 if __name__ == '__main__':
+    build_manifest(ROOT)
     port=int(os.environ.get('PORT','8080'))
     os.chdir(ROOT)
     print(f'RPG Online Lobby: http://0.0.0.0:{port}')

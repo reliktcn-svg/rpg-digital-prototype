@@ -13,7 +13,7 @@
   const HERO_PALETTE={warrior:'#3f7bd9',dwarf:'#c84a4a',archer:'#3f9d5f',rogue:'#555b63',mage:'#9452c7',paladin:'#e9ca46'};
   const LOC_COLORS={'Таверна':{fill:'#f3d25c',stroke:'#2f8a39'},'Торговец':{fill:'#f3d25c',stroke:'#2d63b4'},'Святилище':{fill:'#f3d25c',stroke:'#b33a3a'},'Древний портал':{fill:'#f3d25c',stroke:'#7d43ba'}};
   const SYMBOLS={'Таверна':'Т','Торговец':'$','Святилище':'С','Древний портал':'П'};
-  let creds=null,connection=null,timer=null,fetching=false,lastMap=null,lastLayout='',lastMovement='',lastRevision=-1;
+  let creds=null,connection=null,timer=null,fetching=false,lastMap=null,lastLayout='',lastMovement='',lastRevision=-1,mapETag=null,generation=0;
   const tokens=new Map();
   const terrain=$('fieldTerrain'),heroes=$('fieldHeroes');
   const status=$('miniStatus'),statusRoom=$('miniRoom'),login=$('mapLogin'),waiting=$('mapWaiting'),input=$('mapRoomCode');
@@ -152,34 +152,35 @@
   function saveCreds(obj){try{localStorage.setItem(STORAGE,JSON.stringify(obj))}catch{}}
   function readCreds(){try{const x=JSON.parse(localStorage.getItem(STORAGE)||'null');return x?.code&&x.viewerId&&x.viewerSecret?x:null}catch{return null}}
   async function getJson(url,opts={}){
-    const r=await fetch(url,{...opts,cache:'no-store'});let data={};try{data=await r.json()}catch{}
-    if(!r.ok){const e=new Error(data.error||`Ошибка сервера (${r.status})`);e.status=r.status;throw e}
-    return data;
+    const owner=connection,controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);let r;try{r=await fetch(url,{...opts,headers:{'X-RPG-Protocol':String(window.RPG_CLIENT_BUILD?.protocol||1),...(opts.headers||{})},cache:'no-store',signal:controller.signal})}finally{clearTimeout(timeout)}if(owner!==connection)throw Error('Подключение изменилось');if(r.status===304)return {notModified:true};let data={};try{data=await r.json()}catch{}if(owner!==connection)throw Error('Подключение изменилось');
+    if(r.status===426)window.dispatchEvent(new CustomEvent('rpg-incompatible'));if(!r.ok){const e=new Error(data.error||`Ошибка сервера (${r.status})`);e.status=r.status;throw e}
+    data._etag=r.headers.get('ETag');return data;
   }
   function setError(message){$('mapError').textContent=message||''}
   function setConnected(ok){status.classList.toggle('disconnected',!ok);statusRoom.textContent=`Комната ${connection?.code||creds?.code||''}${ok?'':' · нет связи'}`}
-  async function join(code){
+  async function join(code){mapETag=null;
     const r=await getJson(`/api/rooms/${code}/map/join`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
     creds={code,viewerId:r.viewerId,viewerSecret:r.viewerSecret};saveCreds(creds);return creds;
   }
   async function pull(){
     if(!connection||fetching)return;
-    fetching=true;
+    const startedGeneration=generation;fetching=true;
     try{
       const q=new URLSearchParams({viewerId:connection.viewerId,viewerSecret:connection.viewerSecret});
-      const data=await getJson(`/api/rooms/${connection.code}/map?${q}`);
-      setConnected(true);lastMap=data;
+      const data=await getJson(`/api/rooms/${connection.code}/map?${q}`,{headers:mapETag?{'If-None-Match':mapETag}:{}});
+      setConnected(true);if(data.notModified)return;mapETag=data._etag;lastMap=data;
       if(data.ready){waiting.hidden=true;draw(data)}
       else waiting.hidden=false;
     }catch(e){
+      if(startedGeneration!==generation)return;
       if(e.status===403){try{connection=await join(connection.code);return await pullAgain()}catch(err){e=err}}
       setConnected(false);
       if(e.status===404){stop();login.hidden=false;waiting.hidden=true;setError('Комната закрылась или не найдена. Уточните код и подключитесь снова.')} 
-    }finally{fetching=false}
+    }finally{if(startedGeneration===generation)fetching=false}
   }
   async function pullAgain(){const q=new URLSearchParams({viewerId:connection.viewerId,viewerSecret:connection.viewerSecret});const d=await getJson(`/api/rooms/${connection.code}/map?${q}`);setConnected(true);if(d.ready){waiting.hidden=true;draw(d)}else waiting.hidden=false}
-  function stop(){if(timer)clearInterval(timer);timer=null;connection=null}
-  async function connect(code){
+  function stop(){generation++;fetching=false;mapETag=null;if(timer)clearInterval(timer);timer=null;connection=null}
+  async function connect(code){generation++;fetching=false;mapETag=null;
     if(code.length!==6){setError('Введите 6 цифр кода комнаты.');return}
     $('mapConnect').disabled=true;setError('Подключаем карту…');
     try{
@@ -194,6 +195,8 @@
     finally{$('mapConnect').disabled=false}
   }
   function stopTimerOnly(){if(timer)clearInterval(timer);timer=null}
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)pull()});
+  window.addEventListener('online',()=>{mapETag=null;pull()});
   $('mapConnect').onclick=()=>connect(input.value.replace(/\D/g,'').slice(0,6));
   input.addEventListener('input',()=>input.value=input.value.replace(/\D/g,'').slice(0,6));
   input.addEventListener('keydown',e=>{if(e.key==='Enter')$('mapConnect').click()});

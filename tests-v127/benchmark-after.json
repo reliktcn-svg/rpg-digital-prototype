@@ -1,0 +1,28 @@
+{
+  "duration_seconds": 600.6032799168024,
+  "version": "rpg-v06127-network",
+  "players": 4,
+  "map_devices": 1,
+  "fixture_bytes": 60225,
+  "idle": {
+    "game": {
+      "requests": 6000,
+      "body_bytes": 20112,
+      "http_bytes": 1448444,
+      "mean_ms": 3.3648881936290613,
+      "304": 5996
+    },
+    "map": {
+      "requests": 924,
+      "body_bytes": 544,
+      "http_bytes": 220538,
+      "mean_ms": 1.702043375008421,
+      "304": 923
+    }
+  },
+  "active_120_changed_reads": {
+    "body_bytes": 684074,
+    "http_bytes": 722594,
+    "mean_ms": 0.9096499804096917
+  }
+}
