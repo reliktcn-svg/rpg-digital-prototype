@@ -8,7 +8,10 @@ from dice_pack_catalog import dice_pack_catalog
 from hero_atlas import read_atlas, learn_ability, ensure_progression, progression_level
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-ROOMS = {}
+from room_store import RoomStore, LazyRooms
+SAVE_DB=os.environ.get('RPG_SAVE_DB',os.path.join(ROOT,'data','rooms.sqlite3'))
+STORE=RoomStore(SAVE_DB)
+ROOMS=LazyRooms(STORE)
 LOCK = threading.RLock()
 ROOM_IDLE_TTL = max(30, int(os.environ.get('RPG_ROOM_IDLE_TTL', '10800')))  # 3 часа без активности
 
@@ -30,14 +33,16 @@ def room_code():
 def touch_room(room):
     room['lastActiveAt']=int(time.time())
 
+_last_cleanup=0
 def cleanup_rooms(now=None):
-    # Комната хранит серверный снимок партии 3 часа с момента последней активности.
-    # Любой heartbeat/polling от хотя бы одного игрока продлевает срок ещё на 3 часа.
-    # Если все игроки отсутствуют дольше TTL, партия считается закрытой и удаляется.
-    now=int(now or time.time())
-    stale=[code for code,room in ROOMS.items() if now-int(room.get('lastActiveAt') or room.get('createdAt') or now)>ROOM_IDLE_TTL]
-    for code in stale:
-        ROOMS.pop(code,None)
+    global _last_cleanup
+    now=int(time.time() if now is None else now)
+    if now-_last_cleanup<60:return []
+    _last_cleanup=now
+    # Active sessions stay in memory; idle rooms reload from SQLite on demand.
+    stale=[code for code,room in list(ROOMS.items()) if now-int(room.get('lastActiveAt') or room.get('createdAt') or now)>300]
+    for code in stale:ROOMS.pop(code,None)
+    STORE.delete_expired(now)
     return stale
 
 def public_room(room, include_recovery=False):
@@ -54,7 +59,8 @@ def public_room(room, include_recovery=False):
         'enemyScaling': room.get('enemyScaling', True),
         'gameReady': room.get('gameState') is not None,
         'gameRevision': int(room.get('gameRevision') or 0),
-        'roomIdleTtl': ROOM_IDLE_TTL,
+        'roomIdleTtl': 86400,
+        'lastActionAt':room.get('lastActionAt',room['createdAt']),
         'mapViewers': len(room.get('mapViewers') or {}),
     }
     if include_recovery:
@@ -200,7 +206,11 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
         room=ROOMS.get(parts[3]) if len(parts)>3 and parts[1:3]==['api','rooms'] else None
         # Every POST response invalidates both projections, including side writes
         # which intentionally do not increment gameRevision. Cache never lives in gameState.
-        if self.command=='POST' and room is not None:room.pop('_http_cache',None)
+        if self.command=='POST' and room is not None:
+            room.pop('_http_cache',None)
+            if 200<=status<300:
+                action=path.endswith(('/game/init','/game/state','/game/side','/game/ability','/game/respec'))
+                with LOCK:STORE.save(room,action=action)
         conditional=self.command=='GET' and path.endswith(('/game','/map')) and status==200
         cache=room.setdefault('_http_cache',{}) if conditional and room is not None else {}
         key=parts[-1]
@@ -224,6 +234,13 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
         return protocol>=int(os.environ.get('RPG_MIN_CLIENT_PROTOCOL','1'))
 
     def do_GET(self):
+        original=urllib.parse.urlparse(self.path)
+        aliases_file=os.path.join(ROOT,'image-aliases-active.json')
+        if not original.path.startswith('/api/') and original.path.lower().endswith(('.png','.jpg','.jpeg','.webp')) and os.path.isfile(aliases_file):
+            with open(aliases_file,encoding='utf-8') as af:aliases=json.load(af)
+            target=aliases.get(urllib.parse.unquote(original.path).lstrip('/'))
+            if target:self.path='/'+target
+
         if self.path.startswith('/api/rooms/') and not self.client_compatible():return self._json(426,{'error':'Обновите игру: версия клиента несовместима с сервером'})
         p=urllib.parse.urlparse(self.path)
         if p.path=='/asset-manifest.json':build_manifest(ROOT)
@@ -260,11 +277,15 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
             with LOCK:
                 room=ROOMS.get(code)
                 if not room: return self._json(404, {'error':'Комната не найдена'})
-                if not authorized_player(room,pid,secret): return self._json(403, {'error':'Нет доступа'})
+                account=authorized_player(room,pid,secret)
+                if not account:return self._json(403, {'error':'Нет доступа'})
+                account['lastSeenAt']=int(time.time())
+                waiting=[p['name'] for p in room['players'].values() if int(time.time())-int(p.get('lastSeenAt') or 0)>30]
+                if waiting!=room.get('_waiting'):room.pop('_http_cache',None);room['_waiting']=waiting
                 touch_room(room)
                 if not room.get('started'): return self._json(409, {'error':'Партия ещё не началась'})
                 if room.get('gameState') is None: return self._json(202, {'ready':False,'revision':int(room.get('gameRevision') or 0)})
-                return self._json(200, {'ready':True,'revision':int(room.get('gameRevision') or 0),'state':room.get('gameState'),'sideVersions':{hid:int(entry.get('seq') or 0) for hid,entry in (room.get('sidePlayerOverrides') or {}).items()}})
+                return self._json(200, {'ready':True,'waitingForPlayers':waiting,'revision':int(room.get('gameRevision') or 0),'state':room.get('gameState'),'sideVersions':{hid:int(entry.get('seq') or 0) for hid,entry in (room.get('sidePlayerOverrides') or {}).items()}})
         if p.path.startswith('/api/rooms/'):
             code=p.path.split('/')[-1]; q=urllib.parse.parse_qs(p.query)
             pid=(q.get('playerId') or [''])[0]; secret=(q.get('playerSecret') or [''])[0]
@@ -290,7 +311,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                     'players':{pid:{'id':pid,'secret':secret,'name':name,'heroId':None,'host':True}},
                     'gameState':None,'gameRevision':0,'gameUpdatedAt':None,'lastActiveAt':int(time.time()),'recoveryKey':token(32)
                 }
-                data=public_room(ROOMS[code], True)
+                STORE.save(ROOMS[code]); data=public_room(ROOMS[code], True)
             return self._json(201, {'room':data,'playerId':pid,'playerSecret':secret})
         if p.endswith('/resume') and p.startswith('/api/rooms/'):
             code=p.split('/')[-2]; pid=body.get('playerId'); secret=body.get('playerSecret'); rkey=body.get('recoveryKey'); recovery=body.get('recovery') or {}
@@ -304,6 +325,8 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                     if not pl: return self._json(403, {'error':'Нет доступа к сохранённой партии'})
                     touch_room(room)
                     return self._json(200, {'room':public_room(room, True),'revived':False})
+                # A client snapshot alone cannot authenticate an expired server room.
+                return self._json(410, {'error':'Серверное сохранение отсутствует или срок 24 часа истёк'})
                 if not isinstance(recovery,dict) or not rkey or rkey!=recovery.get('recoveryKey'):
                     return self._json(404, {'error':'Комната не найдена'})
                 last=int(recovery.get('lastActiveAt') or 0)
@@ -608,7 +631,11 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
             with LOCK:
                 room=ROOMS.get(code)
                 if not room: return self._json(404, {'error':'Комната не найдена'})
-                if not authorized_player(room,pid,secret): return self._json(403, {'error':'Нет доступа'})
+                account=authorized_player(room,pid,secret)
+                if not account:return self._json(403, {'error':'Нет доступа'})
+                account['lastSeenAt']=int(time.time())
+                waiting=[p['name'] for p in room['players'].values() if int(time.time())-int(p.get('lastSeenAt') or 0)>30]
+                if waiting!=room.get('_waiting'):room.pop('_http_cache',None);room['_waiting']=waiting
                 touch_room(room)
                 if not room.get('started') or room.get('gameState') is None: return self._json(409, {'error':'Сетевая партия ещё не готова'})
                 if base!=int(room.get('gameRevision') or 0):

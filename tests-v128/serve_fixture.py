@@ -17,7 +17,7 @@ class H(server.Handler):
   global bad
   if self.path=='/__test/change':
    (TARGET/'update-probe.js').write_text('window.UPDATE_PROBE="B";\n')
-   p=TARGET/'index.html';p.write_text(p.read_text().replace('v0.6.128','v0.6.129'))
+   p=TARGET/'index.html';p.write_text(p.read_text().replace('v0.6.129','v0.6.130'))
    for name in ['test-used.svg','test-unused.svg']:
     p=TARGET/'assets'/name;p.write_text(p.read_text().replace('red','blue').replace('green','yellow'))
    worker=TARGET/'sw.js';worker.write_text(worker.read_text()+'\n// fixture worker update B\n');bad=True;server.build_manifest(TARGET);return self._json(200,{'changed':True})

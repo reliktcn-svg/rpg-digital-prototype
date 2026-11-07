@@ -1,0 +1,27 @@
+{
+  "version": "0.6.129",
+  "build": "7a333f7f5c69c6cdec2656652c81f06077245d8cdbccd57ee2cec30e733481c2",
+  "graphics": {
+    "originalBytes": 306460584,
+    "optimizedBytes": 232204102,
+    "converted": 181,
+    "examined": 559,
+    "mode": "lossless verified RGBA; original dimensions retained",
+    "savedPercent": 24.23
+  },
+  "passed": [
+    "30 server regression cases",
+    "29 reload/auth regression cases",
+    "24-hour simulated expiry and heartbeat",
+    "two distinct server processes restoring same SQLite state",
+    "solo slots and autosave, no POSTs",
+    "JSON export and import into slot 2",
+    "Chromium touch content scroll, scrollTop 452",
+    "background cache batches and growth 56 to 62",
+    "four network clients and separate map",
+    "partial updates and old/new tab isolation",
+    "worker quota, offline, restart and API bypass"
+  ],
+  "physicalDevicesTested": false,
+  "persistentHostingConfigured": false
+}

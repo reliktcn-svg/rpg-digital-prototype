@@ -86,6 +86,7 @@
     const b=ensureTurnBanner(),mine=myHeroId(),active=session.lastServerActiveHero||engine()?.currentPlayerId(),isMine=!!mine&&active===mine;if(session.code){const q=$('turnOrderBanner');if(q&&q.dataset.roomCode!==session.code){q.dataset.roomCode=session.code;window.__RPG_ROOM_CODE__=session.code;engine()?.refreshUI?.()}else window.__RPG_ROOM_CODE__=session.code}
     document.body.classList.add('online-game');document.body.classList.toggle('online-not-my-turn',!isMine);
     b.hidden=false;b.classList.toggle('mine',isMine);
+    if(session.waiting?.length){b.textContent='Ожидание подключения игроков: '+session.waiting.join(', ');return}
     b.innerHTML=isMine?`Ваш ход · <b>${esc(heroName(mine))}</b>`:`Сейчас ходит <b>${esc(heroName(active))}</b> · ваш герой: ${esc(heroName(mine))}`;
   }
   function showHome(){
@@ -118,6 +119,7 @@
   async function fetchGame(conditional=false){
     const d=await api(`/api/rooms/${session.code}/game?playerId=${encodeURIComponent(session.playerId)}&playerSecret=${encodeURIComponent(session.playerSecret)}`,{headers:conditional&&session.gameETag?{'If-None-Match':session.gameETag}:{}});
     if(session.room){session.room.lastActiveAt=Math.floor(Date.now()/1000);if(Date.now()-(session.lastRecoveryHeartbeat||0)>60000){session.lastRecoveryHeartbeat=Date.now();saveRecoverySnapshot()}}
+    if(!d.notModified){session.waiting=d.waitingForPlayers||[];updateTurnGuard()}
     return d;
   }
   function enterGame(state,revision){clearInterval(session.timer);session.timer=null;window.__RPG_NET_CONNECTED__=true;
@@ -258,7 +260,7 @@
     }finally{ownerSession.syncBusy=false}
   };
   window.RPGPrepareUpdateReload=async()=>{
-    if(!session.gameEntered){engine()?.saveLocal?.();return}
+    if(!session.gameEntered){await engine()?.saveLocal?.();return}
     const owner=session,start=Date.now();const idle=async()=>{while(session.syncBusy){if(Date.now()-start>15000||owner!==session)throw Error('Нет подтверждения сервера');await new Promise(r=>setTimeout(r,40))}};
     await idle();await syncGame();await idle();
     if(snap(engine()?.exportState())!==session.lastSnapshot)throw Error('Остались неподтверждённые действия');

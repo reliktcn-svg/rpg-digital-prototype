@@ -1,0 +1,9 @@
+const {chromium}=require(process.env.RPG_PLAYWRIGHT||'playwright');const assert=require('assert');
+(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});p.on('dialog',d=>d.accept());let posts=[];p.on('request',r=>{if(r.method()==='POST')posts.push(r.url())});await p.goto('http://127.0.0.1:8842');await p.click('#netLocal');await p.click('#startBtn');await p.waitForTimeout(500);
+ const record=async slot=>p.evaluate(slot=>new Promise(resolve=>{let q=indexedDB.open('rpg-solo-saves');q.onsuccess=()=>{let x=q.result.transaction('slots').objectStore('slots').get(slot);x.onsuccess=()=>resolve(x.result)}}),slot);
+ await p.evaluate(()=>RPGSoloSaves.menu('save'));await p.locator('[data-slots] button').nth(0).click();await p.waitForTimeout(300);assert(await record(1));assert(!(await record(2)));
+ await p.evaluate(()=>{__RPG_DEBUG__.getState().players[0].gold=99;__RPG_ONLINE__.refreshUI()});await p.waitForTimeout(1400);assert.equal(JSON.parse((await record(1)).payload).players[0].gold,99);
+ await p.evaluate(()=>{__RPG_ONLINE__.startWithHeroes(['warrior']);}); // A fresh game must detach the active slot.
+ await p.waitForTimeout(900);assert.equal(JSON.parse((await record(1)).payload).players[0].gold,99);
+ await p.reload();await p.click('#netLocal');await p.evaluate(()=>RPGSoloSaves.menu('load'));await p.locator('[data-slots] button').nth(0).click();await p.waitForTimeout(500);assert.equal(await p.evaluate(()=>__RPG_DEBUG__.getState().players[0].gold),99);assert.equal(posts.length,0);
+ await p.waitForTimeout(1500);let diag=await p.evaluate(()=>RPGUpdates.diagnostics());assert(diag.installed);console.log('PASS IndexedDB slot 1, untouched slot 2, autosave, new-game detachment, reload/load, complete gold recovery, no solo POSTs, SW installation');await b.close()})().catch(e=>{console.error(e);process.exitCode=1});

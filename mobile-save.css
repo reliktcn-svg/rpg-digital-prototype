@@ -1,0 +1,8 @@
+#soloSaveWindow{box-sizing:border-box;width:min(560px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;background:#262016;color:#f2e4c4;border:2px solid #b99952;border-radius:16px;padding:20px}#soloSaveWindow::backdrop{background:#0009}#soloSaveWindow button{padding:12px;margin:6px;min-height:44px;color:inherit;background:#51402a;border:1px solid #b99952;border-radius:8px}
+.sheet-drawer,.sheet-content,.modal,.modal-body,.inventory-grid{touch-action:pan-x pan-y!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+body.game-running{touch-action:pan-x pan-y}body.game-running .board-wrap{touch-action:pan-x pan-y!important}
+
+#sheetContent :is(button,img,.inventory-card-front,.item-card-art,.item-row){touch-action:pan-y!important;-webkit-user-drag:none}#sheetContent img{user-select:none}
+/* One scroll owner: the previous outer+inner overflow chain trapped content swipes. */
+body.tabletop-upgrade.game-running #sheetDrawer:not([hidden]){display:flex!important;flex-direction:column!important;overflow:hidden!important;box-sizing:border-box!important}
+body.tabletop-upgrade.game-running #sheetDrawer #sheetContent{flex:1 1 0!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:contain;touch-action:pan-y!important}

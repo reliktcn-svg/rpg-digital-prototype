@@ -1,0 +1,27 @@
+/* Two transactional device-only slots. No fetch or network storage. */
+(()=>{
+ let db,active=null,timer,last='',writing=Promise.resolve(),generation=0;
+ const ready=new Promise((resolve,reject)=>{const q=indexedDB.open('rpg-solo-saves',1);q.onupgradeneeded=()=>q.result.createObjectStore('slots',{keyPath:'slot'});q.onsuccess=()=>{db=q.result;resolve()};q.onerror=()=>reject(q.error)});
+ async function digest(text){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text))),x=>x.toString(16).padStart(2,'0')).join('')}
+ async function read(slot){await ready;return new Promise((resolve,reject)=>{const q=db.transaction('slots').objectStore('slots').get(slot);q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)})}
+ async function write(slot,state){const payload=JSON.stringify(state),hash=await digest(payload);await ready;await new Promise((resolve,reject)=>{const tx=db.transaction('slots','readwrite');tx.objectStore('slots').put({slot,payload,hash,savedAt:Date.now()});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error)});last=payload}
+ ready.catch(()=>{});
+ function engine(){return window.__RPG_ONLINE__}
+ function state(){return window.__RPG_DEBUG__?.getState()}
+ function solo(){return state()?.started&&state()?.mode!=='network'}
+ function blocked(){const s=state();return !solo()||s.combat||s.exploration||s.moveTransit||s.portalPending||s.locationActivationHex||!document.getElementById('modal')?.hidden||!document.getElementById('rollOverlay')?.hidden}
+ function error(e){alert('Не удалось сохранить данные на устройстве: '+(e?.message||e))}
+ function enqueue(slot,s){writing=writing.catch(()=>{}).then(()=>write(slot,s));return writing}
+ async function flush(){if(state()?.moveTransit||!document.getElementById('rollOverlay')?.hidden)throw Error('Сначала завершите текущее действие');clearTimeout(timer);if(active&&solo())await enqueue(active,structuredClone(state()));await writing}
+ function changed(){clearTimeout(timer);timer=setTimeout(()=>{if(!active||!solo()||state().moveTransit||state().locationActivationHex||(state().exploration&&!state().combat)||!document.getElementById('rollOverlay')?.hidden)return;const s=structuredClone(state());if(JSON.stringify(s)!==last)enqueue(active,s).catch(error)},600)}
+ function close(){document.getElementById('soloSaveWindow')?.remove()}
+ async function menu(mode){if(state()?.mode==='network')return;if(mode==='save'&&blocked())return;close();const box=document.createElement('dialog');box.id='soloSaveWindow';box.innerHTML='<h2>'+ (mode==='save'?'Сохранить партию':'Загрузить партию')+'</h2><div data-slots></div><button data-import>Импорт файла</button><button data-close>Закрыть</button>';document.body.append(box);box.querySelector('[data-close]').onclick=close;box.showModal();
+ for(const slot of [1,2]){const rec=await read(slot);let label='Пустой слот';if(rec){try{const s=JSON.parse(rec.payload),p=s.players[0];label=(p.name||p.id)+' — уровень '+(window.RPGProgression?.info(p)?.level||p.level||1)+' · '+new Date(rec.savedAt).toLocaleString()}catch{label='Повреждённое сохранение'}}const row=document.createElement('div'),btn=document.createElement('button');btn.textContent='Слот '+slot+' · '+label;row.append(btn);box.querySelector('[data-slots]').append(row);
+ btn.disabled=mode==='load'&&!rec;btn.onclick=async()=>{try{if(mode==='save'){if(rec&&active!==slot&&!confirm('Перезаписать сохранение?'))return;await enqueue(slot,structuredClone(state()));active=slot;close()}else{if(await digest(rec.payload)!==rec.hash)throw Error('Проверка целостности не пройдена');await writing;window.RPGRestoreSolo(JSON.parse(rec.payload));active=slot;last=rec.payload;close()}}catch(e){error(e)}};
+ if(rec){const exp=document.createElement('button');exp.textContent='Экспорт';row.append(exp);exp.onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({format:'rpg-solo-1',...rec})],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='RPG-slot-'+slot+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}}}
+ if(mode==='load'&&localStorage.getItem('rpgDigitalPrototypeV0648')){const legacy=document.createElement('button');legacy.textContent='Открыть прежнее сохранение';legacy.onclick=()=>{try{const s=JSON.parse(localStorage.getItem('rpgDigitalPrototypeV0648'));if(s.mode==='network'||s.players?.length!==1)throw Error('Это не соло-партия');window.RPGRestoreSolo(s);active=null;close()}catch(e){error(e)}};box.append(legacy)}
+ box.querySelector('[data-import]').onclick=()=>{const input=document.createElement('input');input.type='file';input.accept='.json';input.onchange=async()=>{try{const f=input.files[0];if(!f||f.size>20*1024*1024)throw Error('Неверный размер файла');const rec=JSON.parse(await f.text()),s=JSON.parse(rec.payload);if(rec.format!=='rpg-solo-1'||!s.started||s.mode==='network'||s.players?.length!==1||await digest(rec.payload)!==rec.hash)throw Error('Неверный файл сохранения');const slot=Number(prompt('Выберите слот: 1 или 2','1'));if(![1,2].includes(slot))return;if(await read(slot)&&!confirm('Перезаписать сохранение?'))return;await enqueue(slot,s);await menu('load')}catch(e){error(e)}};input.click()};
+ }
+ new MutationObserver(changed).observe(document.getElementById('rollOverlay'),{attributes:true,attributeFilter:['hidden']});
+ window.RPGSoloSaves={menu:mode=>menu(mode).catch(error),changed,flush,newGame(){generation++;active=null;last='';clearTimeout(timer)},blocked};
+})();

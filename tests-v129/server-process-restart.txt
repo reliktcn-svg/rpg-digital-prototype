@@ -1,0 +1,1 @@
+PASS two separate server processes reopen same SQLite file, authenticate returning player, restore identical four-player round-20 state

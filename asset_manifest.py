@@ -21,6 +21,11 @@ def build_manifest(root):
   files += [root/n for n in ('index.html','map.html','manifest.webmanifest')]
   for folder in ('assets','arcana','icons'):
    files += [p for p in (root/folder).rglob('*') if p.is_file() and p.suffix.lower() in ('.png','.webp','.jpg','.jpeg','.svg','.gif','.mp3','.ogg','.wav','.js','.css','.json','.woff','.woff2')]
+  aliases=json.loads((root/'image-aliases.json').read_text()) if (root/'image-aliases.json').exists() else {}
+  sources=json.loads((root/'image-source-hashes.json').read_text()) if (root/'image-source-hashes.json').exists() else {}
+  aliases={old:new for old,new in aliases.items() if (root/new).is_file() and (root/old).is_file() and sources.get(old)==file_hash(root/old)}
+  write_changed(root/'image-aliases-active.json',json.dumps(aliases,separators=(',',':')).encode())
+  files=[p for p in files if p.relative_to(root).as_posix() not in aliases]
   files=sorted(set(files));htmls=[root/'index.html',root/'map.html']
   normalized={}
   for p in htmls:
@@ -34,13 +39,13 @@ def build_manifest(root):
   version='v'+re.search(r'0\.6\.\d+',normalized[htmls[0]]).group(0)
   protocol=1
   identity=[(str(p.relative_to(root)),sha(normalized[p].encode()) if p in normalized else file_hash(p)) for p in files]
-  build_id=sha(json.dumps({'protocol':protocol,'files':identity},separators=(',',':')).encode())
+  build_id=sha(json.dumps({'protocol':protocol,'files':identity,'aliases':aliases},separators=(',',':')).encode())
   config={'id':build_id,'version':version,'protocol':protocol}
   for p,text in normalized.items():write_changed(p,text.replace('<script id="rpg-build"></script>','<script id="rpg-build">window.RPG_CLIENT_BUILD='+json.dumps(config,separators=(',',':'))+';</script>').encode())
   entries=[]
   for p in files:
    path=p.relative_to(root).as_posix();core=p.suffix in ('.js','.css','.html') or path=='manifest.webmanifest'
-   entries.append({'path':path,'hash':file_hash(p),'size':p.stat().st_size,'core':core})
+   entries.append({'path':path,'hash':file_hash(p),'size':p.stat().st_size,'core':core,'aliases':[old for old,new in aliases.items() if new==path]})
   result={'schema':1,'id':build_id,'version':version,'protocol':protocol,'files':entries}
   write_changed(root/'asset-manifest.json',json.dumps(result,ensure_ascii=False,separators=(',',':')).encode())
   return result

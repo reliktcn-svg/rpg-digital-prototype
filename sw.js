@@ -1,7 +1,7 @@
 /* Smart Cache: immutable verified blobs + atomic manifest pointer, no game API cache. */
-const META='rpg-smart-meta-v1',BLOBS='rpg-smart-blobs-v1',MAX_BYTES=192*1024*1024,MAX_FILES=800;
+const META='rpg-smart-meta-v1',BLOBS='rpg-smart-blobs-v1',MAX_BYTES=320*1024*1024,MAX_FILES=800;
 const base=self.registration.scope,metaURL=k=>new URL('__rpg_meta__/'+k,base).href,blobURL=h=>new URL('__rpg_blob__/'+h,base).href;
-let job=null,memory=new Map(),stats={instance:Date.now()+":"+Math.random(),network:[],cache:[],errors:[],lastCheck:null};
+let warming=null,job=null,memory=new Map(),stats={instance:Date.now()+":"+Math.random(),network:[],cache:[],errors:[],lastCheck:null};
 async function get(k){const c=await caches.open(META),r=await c.match(metaURL(k));return r?await r.json():null}
 async function put(k,v){const c=await caches.open(META);await c.put(metaURL(k),new Response(JSON.stringify(v),{headers:{'Content-Type':'application/json'}}))}
 async function manifest(id){if(!id)return null;if(!memory.has(id))memory.set(id,await get('manifest/'+id));return memory.get(id)}
@@ -60,6 +60,22 @@ self.addEventListener('message',event=>{
    const id=request.id,m=await manifest(id);if(!m||(id!==await get('prepared')&&id!==await get('installed')))throw Error('Обновление не подготовлено');
    for(const f of m.files.filter(f=>f.core))if(!await cachedFile(f))throw Error('Кэш обновления был удалён. Повторите загрузку.');
    await put('installed',id);if(await get('prepared')===id)await put('prepared',null);await put('staging',null);await self.skipWaiting();result={state:'applied',id};
+  }else if(request.type==='WARM'){
+   if(!warming)warming=(async()=>{let result;
+   const id=await get('installed'),m=await manifest(id);let loaded=0,reason='complete';
+   if(job)result={state:'paused'};
+   else {
+    const estimate=await self.navigator.storage?.estimate?.();
+    if(estimate?.quota&&estimate.usage/estimate.quota>.8)result={state:'paused',reason:'storage'};
+    else {const warmCache=await caches.open(BLOBS),warmKeys=await warmCache.keys(),known=new Set(warmKeys.map(k=>k.url.split('/').pop()));let bytes=m.files.reduce((sum,f)=>sum+(known.has(f.hash)?f.size:0),0),count=warmKeys.length;for(const f of (m?.files||[]).filter(x=>/\.(png|webp|jpe?g|svg|gif)$/i.test(x.path))){
+     if(await cachedFile(f))continue;
+     if(bytes+f.size>MAX_BYTES||count>=MAX_FILES){reason='storage';break}
+     try{await ensure(f);loaded++;bytes+=f.size;count++}catch(e){note('errors',e.message);reason='error';break}
+     if(loaded>=6){reason='more';break}
+    }result={state:reason,loaded}}
+   }
+
+return result;})().finally(()=>{warming=null});result=await warming;
   }else if(request.type==='DIAG'){result={...stats,lastResult:await get('lastResult'),installed:await get('installed'),prepared:await get('prepared'),resources:(await (await caches.open(BLOBS)).keys()).length}}
   port?.postMessage(result||{});
  }catch(e){port?.postMessage({state:'error',message:e.message})}})());
@@ -69,7 +85,7 @@ self.addEventListener('fetch',event=>{
  if(!url.href.startsWith(base))return;
  event.respondWith((async()=>{
   const navigation=req.mode==='navigate';const id=navigation?await get('installed'):await pinned(event.clientId);const m=await manifest(id);let path=decodeURIComponent(url.pathname.slice(new URL(base).pathname.length));if(path===''||path.endsWith('/'))path+='index.html';
-  const f=m?.files.find(x=>x.path===path);if(!f)return fetch(req);
+  const f=m?.files.find(x=>x.path===path||x.aliases?.includes(path));if(!f)return fetch(req);
   if(navigation)await pin(event.resultingClientId,id);
   const hit=await cachedFile(f);if(hit)return hit;
   try{const r=await fetchFile(f);if(f.size<=20*1024*1024){try{await (await caches.open(BLOBS)).put(blobURL(f.hash),r.clone());event.waitUntil(prune())}catch(e){note('errors','Кэш: '+e.message)}}return r}

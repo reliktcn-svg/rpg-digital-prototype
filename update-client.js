@@ -5,7 +5,7 @@
  panel.innerHTML='<div class="rpg-update-panel"><h2></h2><p class="rpg-update-text"></p><div class="rpg-update-spinner" aria-label="Загрузка"></div><p class="rpg-update-detail" aria-live="polite"></p><div class="rpg-update-actions"><button class="primary" data-update-main></button><button class="ghost" data-update-later>Позже</button></div></div>';document.body.append(panel);
  const q=s=>panel.querySelector(s),main=q('[data-update-main]');
  function show(state){lastResult=state;if(state.first&&state.state!=='ready')return;if(deferred&&!incompatible)return;
-  panel.hidden=false;q('h2').textContent=state.state==='loading'?'Новая версия игры '+state.version:state.state==='ready'?'Обновление завершено':'Не удалось обновить игру';
+  panel.hidden=false;q('h2').textContent=state.state==='loading'?'Новая версия игры '+state.version+', идет загрузка':state.state==='ready'?'Обновление завершено - перезагрузите игру':'Не удалось обновить игру';
   q('.rpg-update-text').textContent=state.state==='loading'?'Идёт загрузка обновления...':state.state==='ready'?'Перезагрузите игру, чтобы применить новую версию.':state.message||'Проверьте связь и повторите загрузку.';
   q('.rpg-update-spinner').hidden=state.state!=='loading';q('.rpg-update-detail').textContent=state.state==='loading'&&state.total?`Подготовлено файлов: ${state.completed||0} из ${state.total}`:'';
   main.hidden=state.state==='loading';main.textContent=state.state==='ready'?'Перезагрузить игру':'Повторить загрузку';main.onclick=state.state==='ready'?apply:()=>{deferred=false;check()};q('[data-update-later]').hidden=incompatible;
@@ -32,5 +32,10 @@
   if(!worker){await navigator.serviceWorker.ready;worker=registration.active}
   if(!worker)return;
   await send('HELLO');await check();
+  // Optional image warming follows interactive startup, pauses on limited links.
+  navigator.storage?.persist?.().catch(()=>{});
+  const warm=async()=>{const connection=navigator.connection;if(document.hidden||!navigator.onLine||connection?.saveData||/2g/.test(connection?.effectiveType||''))return;
+   try{const r=await send('WARM');if(r.state==='more')setTimeout(warm,5000)}catch{} };
+  setTimeout(warm,8000);window.addEventListener('online',warm);document.addEventListener('visibilitychange',()=>{if(!document.hidden)warm()});
  }catch(e){console.warn('Smart Cache:',e.message)}})();
 })();
