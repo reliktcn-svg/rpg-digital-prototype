@@ -1,27 +1,48 @@
-/* Two transactional device-only slots. No fetch or network storage. */
-(()=>{
- let db,active=null,timer,last='',writing=Promise.resolve(),generation=0;
- const ready=new Promise((resolve,reject)=>{const q=indexedDB.open('rpg-solo-saves',1);q.onupgradeneeded=()=>q.result.createObjectStore('slots',{keyPath:'slot'});q.onsuccess=()=>{db=q.result;resolve()};q.onerror=()=>reject(q.error)});
- async function digest(text){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text))),x=>x.toString(16).padStart(2,'0')).join('')}
- async function read(slot){await ready;return new Promise((resolve,reject)=>{const q=db.transaction('slots').objectStore('slots').get(slot);q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)})}
- async function write(slot,state){const payload=JSON.stringify(state),hash=await digest(payload);await ready;await new Promise((resolve,reject)=>{const tx=db.transaction('slots','readwrite');tx.objectStore('slots').put({slot,payload,hash,savedAt:Date.now()});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error)});last=payload}
- ready.catch(()=>{});
- function engine(){return window.__RPG_ONLINE__}
- function state(){return window.__RPG_DEBUG__?.getState()}
- function solo(){return state()?.started&&state()?.mode!=='network'}
- function blocked(){const s=state();return !solo()||s.combat||s.exploration||s.moveTransit||s.portalPending||s.locationActivationHex||!document.getElementById('modal')?.hidden||!document.getElementById('rollOverlay')?.hidden}
- function error(e){alert('Не удалось сохранить данные на устройстве: '+(e?.message||e))}
- function enqueue(slot,s){writing=writing.catch(()=>{}).then(()=>write(slot,s));return writing}
- async function flush(){if(state()?.moveTransit||!document.getElementById('rollOverlay')?.hidden)throw Error('Сначала завершите текущее действие');clearTimeout(timer);if(active&&solo())await enqueue(active,structuredClone(state()));await writing}
- function changed(){clearTimeout(timer);timer=setTimeout(()=>{if(!active||!solo()||state().moveTransit||state().locationActivationHex||(state().exploration&&!state().combat)||!document.getElementById('rollOverlay')?.hidden)return;const s=structuredClone(state());if(JSON.stringify(s)!==last)enqueue(active,s).catch(error)},600)}
- function close(){document.getElementById('soloSaveWindow')?.remove()}
- async function menu(mode){if(state()?.mode==='network')return;if(mode==='save'&&blocked())return;close();const box=document.createElement('dialog');box.id='soloSaveWindow';box.innerHTML='<h2>'+ (mode==='save'?'Сохранить партию':'Загрузить партию')+'</h2><div data-slots></div><button data-import>Импорт файла</button><button data-close>Закрыть</button>';document.body.append(box);box.querySelector('[data-close]').onclick=close;box.showModal();
- for(const slot of [1,2]){const rec=await read(slot);let label='Пустой слот';if(rec){try{const s=JSON.parse(rec.payload),p=s.players[0];label=(p.name||p.id)+' — уровень '+(window.RPGProgression?.info(p)?.level||p.level||1)+' · '+new Date(rec.savedAt).toLocaleString()}catch{label='Повреждённое сохранение'}}const row=document.createElement('div'),btn=document.createElement('button');btn.textContent='Слот '+slot+' · '+label;row.append(btn);box.querySelector('[data-slots]').append(row);
- btn.disabled=mode==='load'&&!rec;btn.onclick=async()=>{try{if(mode==='save'){if(rec&&active!==slot&&!confirm('Перезаписать сохранение?'))return;await enqueue(slot,structuredClone(state()));active=slot;close()}else{if(await digest(rec.payload)!==rec.hash)throw Error('Проверка целостности не пройдена');await writing;window.RPGRestoreSolo(JSON.parse(rec.payload));active=slot;last=rec.payload;close()}}catch(e){error(e)}};
- if(rec){const exp=document.createElement('button');exp.textContent='Экспорт';row.append(exp);exp.onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({format:'rpg-solo-1',...rec})],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='RPG-slot-'+slot+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}}}
- if(mode==='load'&&localStorage.getItem('rpgDigitalPrototypeV0648')){const legacy=document.createElement('button');legacy.textContent='Открыть прежнее сохранение';legacy.onclick=()=>{try{const s=JSON.parse(localStorage.getItem('rpgDigitalPrototypeV0648'));if(s.mode==='network'||s.players?.length!==1)throw Error('Это не соло-партия');window.RPGRestoreSolo(s);active=null;close()}catch(e){error(e)}};box.append(legacy)}
- box.querySelector('[data-import]').onclick=()=>{const input=document.createElement('input');input.type='file';input.accept='.json';input.onchange=async()=>{try{const f=input.files[0];if(!f||f.size>20*1024*1024)throw Error('Неверный размер файла');const rec=JSON.parse(await f.text()),s=JSON.parse(rec.payload);if(rec.format!=='rpg-solo-1'||!s.started||s.mode==='network'||s.players?.length!==1||await digest(rec.payload)!==rec.hash)throw Error('Неверный файл сохранения');const slot=Number(prompt('Выберите слот: 1 или 2','1'));if(![1,2].includes(slot))return;if(await read(slot)&&!confirm('Перезаписать сохранение?'))return;await enqueue(slot,s);await menu('load')}catch(e){error(e)}};input.click()};
- }
- new MutationObserver(changed).observe(document.getElementById('rollOverlay'),{attributes:true,attributeFilter:['hidden']});
- window.RPGSoloSaves={menu:mode=>menu(mode).catch(error),changed,flush,newGame(){generation++;active=null;last='';clearTimeout(timer)},blocked};
+/* Local-only two-slot solo saves. No network requests or static-cache coupling. */
+(()=>{'use strict';
+ const NAME='rpg-solo-v1',STORE='slots',SLOTS=[1,2];
+ let active=null,queue=Promise.resolve(),dialog=null,busy=false,lastError='';
+ const openDB=()=>new Promise((resolve,reject)=>{
+  if(!('indexedDB' in window))return reject(Error('Браузер не поддерживает IndexedDB'));
+  const req=indexedDB.open(NAME,1);
+  req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(STORE))req.result.createObjectStore(STORE,{keyPath:'slot'})};
+  req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||Error('Не удалось открыть хранилище'));
+ });
+ async function transaction(mode,action){const db=await openDB();return new Promise((resolve,reject)=>{
+  const tx=db.transaction(STORE,mode),store=tx.objectStore(STORE);let result;
+  try{const request=action(store);if(request){request.onsuccess=()=>{result=request.result};request.onerror=()=>{}}}catch(e){db.close();reject(e);return}
+  tx.oncomplete=()=>{db.close();resolve(result)};tx.onerror=()=>{db.close();reject(tx.error||Error('Не удалось сохранить'))};tx.onabort=()=>{db.close();reject(tx.error||Error('Запись отменена'))};
+ })}
+ const get=slot=>transaction('readonly',s=>s.get(slot));
+ const records=async()=>Promise.all(SLOTS.map(get));
+ function validate(state){if(!state||typeof state!=='object'||Array.isArray(state)||state.started!==true||!Array.isArray(state.players)||state.players.length!==1||state.mode==='network'||!state.players[0]?.id)throw Error('Файл не содержит корректного соло-сохранения');}
+ function description(state){const hero=state.players[0],owned=Object.values(state.territories||{}).filter(t=>t&&t.owner===hero.id).length;
+  return {hero:String(hero.name||hero.id).slice(0,80),level:Number(hero.level||hero.progressionLevel||owned+1)||1};}
+ function write(slot,state){validate(state);const info=description(state);const record={slot,schema:1,updatedAt:Date.now(),hero:info.hero,level:info.level,state:JSON.stringify(state)};
+  return transaction('readwrite',s=>s.put(record)).then(()=>record)}
+ function writeActive(state){if(!active)return Promise.resolve(false);const slot=active;queue=queue.catch(()=>{}).then(()=>write(slot,state));return queue.then(()=>true)}
+ function reset(){active=null;lastError=''}
+ function close(){if(dialog){dialog.remove();dialog=null}busy=false}
+ function panel(title){close();dialog=document.createElement('div');dialog.className='solo-save-overlay';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label',title);
+  dialog.innerHTML='<section class="solo-save-panel"><header><h2></h2><button class="ghost" data-close type="button" aria-label="Закрыть">×</button></header><p class="solo-save-hint"></p><div class="solo-save-slots"></div><div class="solo-save-actions"><button class="ghost" type="button" data-import>Импорт файла</button><input type="file" accept=".json,application/json" hidden></div><div class="solo-save-error" role="alert"></div></section>';
+  dialog.querySelector('h2').textContent=title;dialog.querySelector('[data-close]').onclick=close;document.body.appendChild(dialog);return dialog;}
+ function error(e){if(dialog)dialog.querySelector('.solo-save-error').textContent=String(e?.message||e);lastError=String(e?.message||e)}
+ const stamp=ts=>new Date(ts).toLocaleString('ru-RU');
+ function showSlots(recs,mode,click){const box=dialog.querySelector('.solo-save-slots');box.replaceChildren();for(let i=0;i<2;i++){const slot=i+1,rec=recs[i],wrap=document.createElement('div');wrap.className='solo-save-slot';
+  const button=document.createElement('button');button.className='solo-save-select';button.type='button';button.textContent=rec?`Слот ${slot} · ${rec.hero} · уровень ${rec.level} · ${stamp(rec.updatedAt)}${slot===active?' · активный':''}`:`Слот ${slot} · Пустой слот`;button.disabled=mode==='load'&&!rec;button.onclick=()=>click(slot,rec);wrap.append(button);
+  if(rec){const dl=document.createElement('button');dl.className='ghost solo-save-export';dl.textContent='Экспорт';dl.onclick=async()=>{try{await exportRecord(rec)}catch(e){error(e)}};wrap.append(dl)}box.append(wrap)}}
+ async function exportRecord(rec){const obj={format:'rpg-digital-solo-save',schema:1,exportedAt:new Date().toISOString(),state:JSON.parse(rec.state)};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(obj)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`RPG_solo_${rec.hero.replace(/[^a-zA-Zа-яА-ЯёЁ0-9_-]/g,'_')}_slot${rec.slot}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000)}
+ async function promptImport(callback){const input=dialog.querySelector('input[type=file]');input.onchange=async()=>{try{const file=input.files?.[0];if(!file)return;if(file.size>12*1024*1024)throw Error('Файл слишком большой');const data=JSON.parse(await file.text());if(data?.format!=='rpg-digital-solo-save'||data.schema!==1)throw Error('Неизвестный формат файла');validate(data.state);await callback(data.state)}catch(e){error(e)}finally{input.value=''}};dialog.querySelector('[data-import]').onclick=()=>input.click()}
+ async function saveUI(getState){if(busy)return;const root=panel('Сохранить соло-партию');root.querySelector('.solo-save-hint').textContent='Выберите один из двух слотов. После выбора все следующие действия будут сохраняться автоматически.';
+  const refresh=async()=>{try{const recs=await records();if(!dialog||dialog!==root)return;showSlots(recs,'save',async(slot,old)=>{if(busy)return;
+    if(old&&active!==slot&&!confirm('Перезаписать сохранение?'))return;
+    busy=true;try{const state=getState();validate(state);await write(slot,state);active=slot;close()}catch(e){busy=false;error(e)}})}catch(e){error(e)}};
+  await refresh();await promptImport(async state=>{const slot=Number(prompt('В какой слот импортировать сохранение? Введите 1 или 2.'));if(!SLOTS.includes(slot))return;const old=await get(slot);if(old&&!confirm('Перезаписать сохранение?'))return;await write(slot,state);await refresh()});}
+ async function loadUI(onLoad,legacy){if(busy)return;const root=panel('Загрузить соло-партию');root.querySelector('.solo-save-hint').textContent='Выберите сохранение. Локальные слоты не зависят от сервера.';
+  const refresh=async()=>{try{const recs=await records();if(root!==dialog)return;showSlots(recs,'load',async(slot,rec)=>{if(busy||!rec)return;busy=true;try{validate(JSON.parse(rec.state));const loaded=await onLoad(JSON.parse(rec.state));if(loaded===false){busy=false;return}active=slot;close()}catch(e){busy=false;error(e)}});
+   if(legacy?.()&&!root.querySelector('[data-legacy]')){const btn=document.createElement('button');btn.className='ghost';btn.dataset.legacy='1';btn.textContent='Перенести старое сохранение';btn.onclick=async()=>{try{const state=JSON.parse(legacy());validate(state);const slot=Number(prompt('Выберите слот для старого сохранения: 1 или 2'));if(!SLOTS.includes(slot))return;const old=await get(slot);if(old&&!confirm('Перезаписать сохранение?'))return;await write(slot,state);await refresh()}catch(e){error(e)}};root.querySelector('.solo-save-actions').prepend(btn)}
+  }catch(e){error(e)}};
+  await refresh();await promptImport(async state=>{const slot=Number(prompt('В какой слот импортировать сохранение? Введите 1 или 2'));if(!SLOTS.includes(slot))return;const old=await get(slot);if(old&&!confirm('Перезаписать сохранение?'))return;await write(slot,state);await refresh()});}
+ window.RPGSoloSaves={get active(){return active},get lastError(){return lastError},saveUI,loadUI,writeActive,reset,records};
 })();

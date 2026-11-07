@@ -2,18 +2,16 @@
 import json, os, random, string, threading, time, urllib.parse
 from http_transport import TransportMixin
 from asset_manifest import build_manifest
-import hashlib
+from network_storage import save as persist_room, remove as remove_persisted, restore as restore_rooms, TTL as NETWORK_SAVE_TTL, PATH as NETWORK_DB_PATH
+import hashlib, sqlite3
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from dice_pack_catalog import dice_pack_catalog
 from hero_atlas import read_atlas, learn_ability, ensure_progression, progression_level
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-from room_store import RoomStore, LazyRooms
-SAVE_DB=os.environ.get('RPG_SAVE_DB',os.path.join(ROOT,'data','rooms.sqlite3'))
-STORE=RoomStore(SAVE_DB)
-ROOMS=LazyRooms(STORE)
+ROOMS = restore_rooms()
 LOCK = threading.RLock()
-ROOM_IDLE_TTL = max(30, int(os.environ.get('RPG_ROOM_IDLE_TTL', '10800')))  # 3 часа без активности
+ROOM_IDLE_TTL = max(30, int(os.environ.get('RPG_ROOM_IDLE_TTL', '10800')))  # lobby: 3 hours; saved game: 24 hours
 
 HERO_IDS = ['warrior','dwarf','mage','archer','rogue','paladin']
 
@@ -33,16 +31,22 @@ def room_code():
 def touch_room(room):
     room['lastActiveAt']=int(time.time())
 
-_last_cleanup=0
 def cleanup_rooms(now=None):
-    global _last_cleanup
+    # Gameplay updates the 24-hour recovery deadline. Polls do NOT extend it.
+    # An actively connected session is not interrupted when its save expires.
     now=int(time.time() if now is None else now)
-    if now-_last_cleanup<60:return []
-    _last_cleanup=now
-    # Active sessions stay in memory; idle rooms reload from SQLite on demand.
-    stale=[code for code,room in list(ROOMS.items()) if now-int(room.get('lastActiveAt') or room.get('createdAt') or now)>300]
+    stale=[]
+    for code,room in list(ROOMS.items()):
+        if room.get('started'):
+            action_at=int(room.get('gameUpdatedAt') or room.get('createdAt') or now)
+            expired=now-action_at>=NETWORK_SAVE_TTL
+            # Allow currently connected clients to finish safely. GET requests
+            # do not alter gameUpdatedAt and therefore cannot prolong recovery.
+            playing=now-int(room.get('lastActiveAt') or 0)<120
+            if expired and not playing:stale.append(code)
+        elif now-int(room.get('lastActiveAt') or room.get('createdAt') or now)>ROOM_IDLE_TTL:stale.append(code)
     for code in stale:ROOMS.pop(code,None)
-    STORE.delete_expired(now)
+    if stale:remove_persisted(stale)
     return stale
 
 def public_room(room, include_recovery=False):
@@ -59,8 +63,9 @@ def public_room(room, include_recovery=False):
         'enemyScaling': room.get('enemyScaling', True),
         'gameReady': room.get('gameState') is not None,
         'gameRevision': int(room.get('gameRevision') or 0),
-        'roomIdleTtl': 86400,
-        'lastActionAt':room.get('lastActionAt',room['createdAt']),
+        'roomIdleTtl': ROOM_IDLE_TTL,
+        'gameUpdatedAt': int(room.get('gameUpdatedAt') or room.get('createdAt') or 0),
+        'networkRecoveryTtl': NETWORK_SAVE_TTL,
         'mapViewers': len(room.get('mapViewers') or {}),
     }
     if include_recovery:
@@ -206,11 +211,18 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
         room=ROOMS.get(parts[3]) if len(parts)>3 and parts[1:3]==['api','rooms'] else None
         # Every POST response invalidates both projections, including side writes
         # which intentionally do not increment gameRevision. Cache never lives in gameState.
-        if self.command=='POST' and room is not None:
-            room.pop('_http_cache',None)
-            if 200<=status<300:
-                action=path.endswith(('/game/init','/game/state','/game/side','/game/ability','/game/respec'))
-                with LOCK:STORE.save(room,action=action)
+        if self.command=='POST' and 200<=status<300:
+            try:
+                if room is not None:
+                    with LOCK:persist_room(room)
+                elif path=='/api/rooms' and isinstance(data,dict) and data.get('room'):
+                    new_room=ROOMS.get(data['room'].get('code'))
+                    if new_room:
+                        with LOCK:persist_room(new_room)
+            except (OSError,ValueError,sqlite3.Error) as exc:
+                print('RPG network snapshot failed:',exc)
+                status=503;data={'error':'Не удалось записать сетевое сохранение. Проверьте постоянное хранилище.'}
+        if self.command=='POST' and room is not None:room.pop('_http_cache',None)
         conditional=self.command=='GET' and path.endswith(('/game','/map')) and status==200
         cache=room.setdefault('_http_cache',{}) if conditional and room is not None else {}
         key=parts[-1]
@@ -234,13 +246,6 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
         return protocol>=int(os.environ.get('RPG_MIN_CLIENT_PROTOCOL','1'))
 
     def do_GET(self):
-        original=urllib.parse.urlparse(self.path)
-        aliases_file=os.path.join(ROOT,'image-aliases-active.json')
-        if not original.path.startswith('/api/') and original.path.lower().endswith(('.png','.jpg','.jpeg','.webp')) and os.path.isfile(aliases_file):
-            with open(aliases_file,encoding='utf-8') as af:aliases=json.load(af)
-            target=aliases.get(urllib.parse.unquote(original.path).lstrip('/'))
-            if target:self.path='/'+target
-
         if self.path.startswith('/api/rooms/') and not self.client_compatible():return self._json(426,{'error':'Обновите игру: версия клиента несовместима с сервером'})
         p=urllib.parse.urlparse(self.path)
         if p.path=='/asset-manifest.json':build_manifest(ROOT)
@@ -256,6 +261,18 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
         if p.path == '/api/health':
             return self._json(200, {'ok':True,'rooms':len(ROOMS)})
         # Spectator-only endpoint, completely separate from player game access.
+        if p.path.startswith('/api/rooms/') and p.path.endswith('/presence'):
+            parts=[x for x in p.path.split('/') if x];code=parts[2] if len(parts)==4 else ''
+            query=urllib.parse.parse_qs(p.query)
+            pid=(query.get('playerId') or [''])[0];secret=(query.get('playerSecret') or [''])[0]
+            with LOCK:
+                room=ROOMS.get(code)
+                if not room:return self._json(404,{'error':'Комната не найдена'})
+                player=authorized_player(room,pid,secret)
+                if not player:return self._json(403,{'error':'Нет доступа'})
+                now=int(time.time());player['_lastSeenAt']=now;touch_room(room)
+                connected=[k for k,v in room['players'].items() if now-int(v.get('_lastSeenAt') or 0)<=16]
+                return self._json(200,{'online':connected,'total':len(room['players']),'players':[{'id':item['id'],'heroId':item.get('heroId'),'name':item.get('name')} for item in room['players'].values()]})
         if p.path.startswith('/api/rooms/') and p.path.endswith('/map'):
             parts=[x for x in p.path.split('/') if x]
             code=parts[2] if len(parts)==4 else ''
@@ -277,15 +294,11 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
             with LOCK:
                 room=ROOMS.get(code)
                 if not room: return self._json(404, {'error':'Комната не найдена'})
-                account=authorized_player(room,pid,secret)
-                if not account:return self._json(403, {'error':'Нет доступа'})
-                account['lastSeenAt']=int(time.time())
-                waiting=[p['name'] for p in room['players'].values() if int(time.time())-int(p.get('lastSeenAt') or 0)>30]
-                if waiting!=room.get('_waiting'):room.pop('_http_cache',None);room['_waiting']=waiting
+                if not authorized_player(room,pid,secret): return self._json(403, {'error':'Нет доступа'})
                 touch_room(room)
                 if not room.get('started'): return self._json(409, {'error':'Партия ещё не началась'})
                 if room.get('gameState') is None: return self._json(202, {'ready':False,'revision':int(room.get('gameRevision') or 0)})
-                return self._json(200, {'ready':True,'waitingForPlayers':waiting,'revision':int(room.get('gameRevision') or 0),'state':room.get('gameState'),'sideVersions':{hid:int(entry.get('seq') or 0) for hid,entry in (room.get('sidePlayerOverrides') or {}).items()}})
+                return self._json(200, {'ready':True,'revision':int(room.get('gameRevision') or 0),'state':room.get('gameState'),'sideVersions':{hid:int(entry.get('seq') or 0) for hid,entry in (room.get('sidePlayerOverrides') or {}).items()}})
         if p.path.startswith('/api/rooms/'):
             code=p.path.split('/')[-1]; q=urllib.parse.parse_qs(p.query)
             pid=(q.get('playerId') or [''])[0]; secret=(q.get('playerSecret') or [''])[0]
@@ -311,7 +324,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                     'players':{pid:{'id':pid,'secret':secret,'name':name,'heroId':None,'host':True}},
                     'gameState':None,'gameRevision':0,'gameUpdatedAt':None,'lastActiveAt':int(time.time()),'recoveryKey':token(32)
                 }
-                STORE.save(ROOMS[code]); data=public_room(ROOMS[code], True)
+                data=public_room(ROOMS[code], True)
             return self._json(201, {'room':data,'playerId':pid,'playerSecret':secret})
         if p.endswith('/resume') and p.startswith('/api/rooms/'):
             code=p.split('/')[-2]; pid=body.get('playerId'); secret=body.get('playerSecret'); rkey=body.get('recoveryKey'); recovery=body.get('recovery') or {}
@@ -320,41 +333,10 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                 room=ROOMS.get(code)
                 if room:
                     pl=authorized_player(room,pid,secret)
-                    if not pl and rkey and rkey==room.get('recoveryKey') and pid in room.get('players',{}):
-                        pl=room['players'][pid]; pl['secret']=secret
                     if not pl: return self._json(403, {'error':'Нет доступа к сохранённой партии'})
                     touch_room(room)
                     return self._json(200, {'room':public_room(room, True),'revived':False})
-                # A client snapshot alone cannot authenticate an expired server room.
-                return self._json(410, {'error':'Серверное сохранение отсутствует или срок 24 часа истёк'})
-                if not isinstance(recovery,dict) or not rkey or rkey!=recovery.get('recoveryKey'):
-                    return self._json(404, {'error':'Комната не найдена'})
-                last=int(recovery.get('lastActiveAt') or 0)
-                if last<=0 or now-last>ROOM_IDLE_TTL:
-                    return self._json(410, {'error':'Сохранение комнаты старше 3 часов и уже закрыто'})
-                rr=recovery.get('room') or {}; players=rr.get('players') or []
-                if not isinstance(players,list) or not players:
-                    return self._json(400, {'error':'Нет данных игроков для восстановления'})
-                restored={}
-                host_id=None
-                for item in players[:6]:
-                    if not isinstance(item,dict) or not item.get('id'): continue
-                    qid=str(item.get('id')); host=bool(item.get('host'))
-                    restored[qid]={'id':qid,'secret':None,'name':str(item.get('name') or 'Игрок')[:24],'heroId':item.get('heroId'),'host':host}
-                    if host: host_id=qid
-                if pid not in restored:
-                    return self._json(403, {'error':'Сохранённый игрок не найден в этой партии'})
-                restored[pid]['secret']=secret
-                if not host_id: host_id=pid; restored[pid]['host']=True
-                game=recovery.get('state') if isinstance(recovery.get('state'),dict) else None
-                room={
-                    'code':code,'createdAt':int(rr.get('createdAt') or now),'started':bool(rr.get('started')),'hostId':host_id,
-                    'hardMode':bool(rr.get('hardMode')),'enemyScaling':game.get('enemyScaling',rr.get('enemyScaling',True)),'players':restored,'gameState':game,
-                    'gameRevision':max(0,int(recovery.get('revision') or rr.get('gameRevision') or (1 if game else 0))),
-                    'gameUpdatedAt':now if game else None,'lastActiveAt':now,'recoveryKey':rkey
-                }
-                ROOMS[code]=room
-                return self._json(200, {'room':public_room(room, True),'revived':True})
+                return self._json(410, {'error':'Сетевая партия не найдена или срок восстановления истёк. Данные клиента не заменяют серверное сохранение.'})
         # An unlimited-turn, read-only map observer. No hero, no player slot.
         if p.endswith('/map/join') and p.startswith('/api/rooms/'):
             code=p.split('/')[-3]
@@ -484,6 +466,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                 player['learnedAbilities']=[]
                 deck=game.setdefault('decks',{}).setdefault('lootOuter' if card_id<=486 else 'lootHeart',{'draw':[],'discard':[]})
                 if card_id not in deck['discard']:deck['discard'].append(card_id)
+                room['gameUpdatedAt']=int(time.time())
                 room['sideMutationCounter']=int(room.get('sideMutationCounter') or 0)+1
                 entry=room.setdefault('sidePlayerOverrides',{}).setdefault(player['id'],{'fields':{},'dealRev':0})
                 for field in ('learnedAbilities','backpack','equipment'):entry['fields'][field]=json.loads(json.dumps(player.get(field)))
@@ -503,6 +486,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                 if not room.get('started') or not player:return self._json(409,{'error':'Партия ещё не готова'})
                 try:learned=learn_ability(ROOT,player,body.get('nodeId'))
                 except (ValueError,OSError) as exc:return self._json(409,{'error':str(exc)})
+                room['gameUpdatedAt']=int(time.time())
                 room['sideMutationCounter']=int(room.get('sideMutationCounter') or 0)+1
                 entry=room.setdefault('sidePlayerOverrides',{}).setdefault(player['id'],{'fields':{},'dealRev':0})
                 entry['fields']['learnedAbilities']=list(learned);entry['seq']=room['sideMutationCounter']
@@ -631,11 +615,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
             with LOCK:
                 room=ROOMS.get(code)
                 if not room: return self._json(404, {'error':'Комната не найдена'})
-                account=authorized_player(room,pid,secret)
-                if not account:return self._json(403, {'error':'Нет доступа'})
-                account['lastSeenAt']=int(time.time())
-                waiting=[p['name'] for p in room['players'].values() if int(time.time())-int(p.get('lastSeenAt') or 0)>30]
-                if waiting!=room.get('_waiting'):room.pop('_http_cache',None);room['_waiting']=waiting
+                if not authorized_player(room,pid,secret): return self._json(403, {'error':'Нет доступа'})
                 touch_room(room)
                 if not room.get('started') or room.get('gameState') is None: return self._json(409, {'error':'Сетевая партия ещё не готова'})
                 if base!=int(room.get('gameRevision') or 0):
@@ -727,4 +707,5 @@ if __name__ == '__main__':
     os.chdir(ROOT)
     print(f'RPG Online Lobby: http://0.0.0.0:{port}')
     print('Оставьте это окно Терминала открытым.')
+    print('Сетевые сохранения SQLite:',NETWORK_DB_PATH, '(на Render Free без постоянного диска рестарт не гарантирован)')
     ThreadingHTTPServer(('0.0.0.0',port), Handler).serve_forever()

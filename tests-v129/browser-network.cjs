@@ -1,2 +1,0 @@
-const {chromium}=require(process.env.RPG_PLAYWRIGHT||'playwright');const fs=require('fs');
-(async()=>{const b=await chromium.launch();const p=await b.newPage();await p.goto('http://127.0.0.1:8841/tests-v127/browser.html');await p.waitForFunction(()=>document.querySelector('#report').textContent.includes('COMPLETE')||document.querySelector('#report').textContent.includes('FAIL'),{timeout:120000});const r=await p.locator('#report').textContent();fs.writeFileSync('/tmp/network129-result.json',r);console.log(r);await b.close()})().catch(e=>{console.error(e);process.exitCode=1});

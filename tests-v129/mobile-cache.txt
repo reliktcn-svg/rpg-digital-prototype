@@ -1,4 +1,0 @@
-{ height: 695, total: 1294, touch: 'pan-y' }
-PASS mobile emulation content swipe, scrollTop=452
-WARM { state: 'more', loaded: 6 }
-PASS background image cache grows and retains previous entries 56 62

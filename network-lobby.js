@@ -16,7 +16,7 @@
     const rkey=session.recoveryKey||session.room?.recoveryKey;if(!rkey)return;
     session.recoveryKey=rkey;
     const st=stateOverride!==undefined?stateOverride:(session.gameEntered?exported():null);
-    const room={code:session.room.code,started:!!session.room.started,createdAt:session.room.createdAt||Math.floor(Date.now()/1000),lastActiveAt:session.room.lastActiveAt||Math.floor(Date.now()/1000),hardMode:!!session.room.hardMode,enemyScaling:session.room.enemyScaling!==false,gameRevision:Number(session.lastRevision||session.room.gameRevision||0),players:(session.room.players||[]).map(p=>({id:p.id,name:p.name,heroId:p.heroId||null,host:!!p.host}))};
+    const room={code:session.room.code,started:!!session.room.started,createdAt:session.room.createdAt||Math.floor(Date.now()/1000),lastActiveAt:session.room.lastActiveAt||Math.floor(Date.now()/1000),hardMode:!!session.room.hardMode,enemyScaling:session.room.enemyScaling!==false,gameRevision:Number(session.lastRevision||session.room.gameRevision||0),gameUpdatedAt:Number(session.room.gameUpdatedAt||0),players:(session.room.players||[]).map(p=>({id:p.id,name:p.name,heroId:p.heroId||null,host:!!p.host}))};
     localStorage.setItem(RECOVERY_KEY,JSON.stringify({code:session.code,recoveryKey:rkey,playerId:session.playerId,playerSecret:session.playerSecret,lastActiveAt:Number(room.lastActiveAt||0),build:CLIENT_BUILD,savedAt:Date.now(),revision:Number(session.lastRevision||room.gameRevision||0),room,state:st||null}));
   }catch{}}
   function clearResumeSession(){try{localStorage.removeItem(SESSION_KEY);localStorage.removeItem(RECOVERY_KEY);for(const k of LEGACY_RECOVERY_KEYS)localStorage.removeItem(k);for(const k of LEGACY_SESSION_KEYS)localStorage.removeItem(k)}catch{}renderResumeButton()}
@@ -72,7 +72,7 @@
   function auth(){return{playerId:session.playerId,playerSecret:session.playerSecret}}
   function updateHeroPlayerNames(room){window.__RPG_HERO_PLAYER_NAMES__=Object.fromEntries((room?.players||[]).filter(p=>p.heroId&&p.name).map(p=>[p.heroId,p.name]));}
   function acceptRoom(room){session.room=room;updateHeroPlayerNames(room);if(room?.recoveryKey)session.recoveryKey=room.recoveryKey;saveResumeSession();return room}
-  function validRecoveryFor(code){const x=readRecoverySnapshot();if(!x||String(x.code)!==String(code)||!x.recoveryKey||x.build!==CLIENT_BUILD)return null;const last=Number(x.lastActiveAt||0);if(!last||Math.floor(Date.now()/1000)-last>10800)return null;return x}
+  function validRecoveryFor(code){const x=readRecoverySnapshot();if(!x||String(x.code)!==String(code)||!x.recoveryKey||x.build!==CLIENT_BUILD)return null;const last=Number(x.room?.gameUpdatedAt||x.lastActiveAt||0);if(!last||Math.floor(Date.now()/1000)-last>86400)return null;return x}
   async function recoverSession(saved){const recovery=validRecoveryFor(saved?.code);const recoveryKey=saved?.recoveryKey||recovery?.recoveryKey;if(!recoveryKey)throw Object.assign(new Error('Нет актуального снимка партии для восстановления.'),{status:404});
     const d=await api(`/api/rooms/${saved.code}/resume`,{method:'POST',body:JSON.stringify({playerId:saved.playerId,playerSecret:saved.playerSecret,recoveryKey,recovery})});acceptRoom(d.room);return d;
   }
@@ -81,16 +81,36 @@
     let b=$('onlineTurnBanner');if(b)return b;
     b=document.createElement('div');b.id='onlineTurnBanner';b.className='online-turn-banner';b.hidden=true;document.body.appendChild(b);return b;
   }
+  let presenceTimer=null,waitingPanel=null;
+  function setWaiting(waiting,missing=[]){
+    window.__RPG_NETWORK_WAITING__=!!waiting;
+    if(!waitingPanel){waitingPanel=document.createElement('div');waitingPanel.id='rpgNetworkWaiting';waitingPanel.hidden=true;
+      waitingPanel.innerHTML='<div class="rpg-waiting-panel"><h2>Ожидание подключения игроков</h2><p></p></div>';document.body.append(waitingPanel)}
+    waitingPanel.hidden=!waiting;
+    waitingPanel.querySelector('p').textContent=missing.length?`Ожидаем: ${missing.map(heroName).join(', ')}`:'Связь с сервером восстанавливается…';
+  }
+  async function checkPresence(){
+    if(!session.gameEntered||!session.code)return;
+    const own=session;
+    try{const d=await api(`/api/rooms/${session.code}/presence?playerId=${encodeURIComponent(session.playerId)}&playerSecret=${encodeURIComponent(session.playerSecret)}`);
+      if(own!==session)return;
+      const missing=(d.players||session.room?.players||[]).filter(p=>!(d.online||[]).includes(p.id)).map(p=>p.heroId||p.name||p.id);
+      const waiting=missing.length>0;
+      setWaiting(waiting,missing);
+      if(!waiting)syncGame();
+    }catch(err){if(own===session)setWaiting(true)}
+  }
+  function startPresence(){clearInterval(presenceTimer);setWaiting(true);checkPresence();presenceTimer=setInterval(checkPresence,5000)}
+  function stopPresence(){clearInterval(presenceTimer);presenceTimer=null;setWaiting(false)}
   function updateTurnGuard(){
     if(!session.gameEntered)return;
     const b=ensureTurnBanner(),mine=myHeroId(),active=session.lastServerActiveHero||engine()?.currentPlayerId(),isMine=!!mine&&active===mine;if(session.code){const q=$('turnOrderBanner');if(q&&q.dataset.roomCode!==session.code){q.dataset.roomCode=session.code;window.__RPG_ROOM_CODE__=session.code;engine()?.refreshUI?.()}else window.__RPG_ROOM_CODE__=session.code}
     document.body.classList.add('online-game');document.body.classList.toggle('online-not-my-turn',!isMine);
     b.hidden=false;b.classList.toggle('mine',isMine);
-    if(session.waiting?.length){b.textContent='Ожидание подключения игроков: '+session.waiting.join(', ');return}
     b.innerHTML=isMine?`Ваш ход · <b>${esc(heroName(mine))}</b>`:`Сейчас ходит <b>${esc(heroName(active))}</b> · ваш герой: ${esc(heroName(mine))}`;
   }
   function showHome(){
-    clearInterval(session.timer);clearInterval(session.gameTimer);clearTimeout(session.kickTimer);clearTimeout(localMutationTimer);session={mode:null,code:null,playerId:null,playerSecret:null,recoveryKey:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:'',lastServerState:null,sideAcks:{}};
+    stopPresence();clearInterval(session.timer);clearInterval(session.gameTimer);clearTimeout(session.kickTimer);clearTimeout(localMutationTimer);session={mode:null,code:null,playerId:null,playerSecret:null,recoveryKey:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:'',lastServerState:null,sideAcks:{}};
     window.__RPG_HERO_PLAYER_NAMES__={};$('onlineHome').hidden=false;$('onlineRoom').hidden=true;showError('');document.body.classList.remove('online-game','online-not-my-turn');const b=$('onlineTurnBanner');if(b)b.hidden=true;const q=$('turnOrderBanner');if(q)delete q.dataset.roomCode;window.__RPG_ROOM_CODE__='';renderResumeButton();
   }
   function renderRoom(){
@@ -119,13 +139,12 @@
   async function fetchGame(conditional=false){
     const d=await api(`/api/rooms/${session.code}/game?playerId=${encodeURIComponent(session.playerId)}&playerSecret=${encodeURIComponent(session.playerSecret)}`,{headers:conditional&&session.gameETag?{'If-None-Match':session.gameETag}:{}});
     if(session.room){session.room.lastActiveAt=Math.floor(Date.now()/1000);if(Date.now()-(session.lastRecoveryHeartbeat||0)>60000){session.lastRecoveryHeartbeat=Date.now();saveRecoverySnapshot()}}
-    if(!d.notModified){session.waiting=d.waitingForPlayers||[];updateTurnGuard()}
     return d;
   }
   function enterGame(state,revision){clearInterval(session.timer);session.timer=null;window.__RPG_NET_CONNECTED__=true;
     const e=engine();if(!e||!state)return;
     if(session.code){const q=$('turnOrderBanner');if(q)q.dataset.roomCode=session.code;window.__RPG_ROOM_CODE__=session.code}if(session.room?.recoveryKey)session.recoveryKey=session.room.recoveryKey;e.applyState(state);e.setLocalHeroId?.(myHeroId());session.gameEntered=true;session.lastRevision=Number(revision||0);session.lastServerState=state;session.lastSnapshot=snap(e.exportState());session.lastServerActiveHero=activeHeroFromState(state);session.lastSideSnapshot=sideSnap(e,myHeroId());saveResumeSession();saveRecoverySnapshot(e.exportState());
-    overlay.hidden=true;document.body.classList.remove('net-lobby-open');updateTurnGuard();startGameSync();
+    overlay.hidden=true;document.body.classList.remove('net-lobby-open');updateTurnGuard();startGameSync();startPresence();
   }
   async function ensureOnlineGame(){
     if(!session.room?.started||session.entering)return;
@@ -173,7 +192,7 @@
     }catch(e){if(e.status===404){try{session.gameETag=null;await recoverSession({code:session.code,playerId:session.playerId,playerSecret:session.playerSecret,recoveryKey:session.recoveryKey})}catch(re){console.warn('online recovery',re)}}else if(e.status!==202)console.warn('online pull',e)}finally{owner.syncBusy=false}
   }
   async function syncGame(){
-    if(!session.gameEntered||session.syncBusy)return;
+    if(!session.gameEntered||session.syncBusy||window.__RPG_NETWORK_WAITING__)return;
     const syncOwner=session;
     const e=engine(),mine=myHeroId();if(!e||!mine)return;
     const local=e.exportState(),localSnap=snap(local),serverActor=session.lastServerActiveHero;
@@ -323,7 +342,7 @@
 
   window.addEventListener('rpg-side-interaction-change',e=>{if(!session.gameEntered)return;if(e.detail?.active){session.lastSideSnapshot=''}else{session.lastSideSnapshot='';setTimeout(()=>syncGame(),80)}});
 
-  window.RPGNetworkReturnHome=()=>{clearInterval(session.timer);clearInterval(session.gameTimer);session.gameEntered=false;window.__RPG_NET_CONNECTED__=false;overlay.hidden=false;document.body.classList.add('net-lobby-open');showHome();};
+  window.RPGNetworkReturnHome=()=>{stopPresence();clearInterval(session.timer);clearInterval(session.gameTimer);session.gameEntered=false;window.__RPG_NET_CONNECTED__=false;overlay.hidden=false;document.body.classList.add('net-lobby-open');showHome();};
   $('netMapJoin').onclick=()=>{
     const code=$('netCodeInput').value.replace(/\D/g,'').slice(0,6);
     if(code.length!==6){showError('Введите 6-значный код комнаты для карты.');return}

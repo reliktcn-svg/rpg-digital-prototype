@@ -1,1 +1,0 @@
-PASS IndexedDB slot 1, untouched slot 2, autosave, new-game detachment, reload/load, complete gold recovery, no solo POSTs, SW installation

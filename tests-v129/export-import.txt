@@ -1,1 +1,0 @@
-PASS file export, checksum-validated import into slot 2, exact gold restoration

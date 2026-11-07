@@ -262,7 +262,7 @@
     const el=document.getElementById('bossInfoOverlay');if(!el||el.hidden||!state.boss)return;
     fitBossInfo();
     const signature=JSON.stringify([bossInfoBack,state.boss]);if(el.dataset.viewSignature===signature)return;el.dataset.viewSignature=signature;
-    const b=state.boss,v=RPGBoss.view(b),known=b.legacy||b.fullyRevealed||b.found.length===6,art=known?(b.legacy?'assets/enemies/enemy-281.webp':`assets/bosses/boss_${b.key}.png`):'assets/bosses/boss_unknown.webp';
+    const b=state.boss,v=RPGBoss.view(b),known=b.legacy||b.fullyRevealed||b.found.length===6,art=known?(b.legacy?'assets/enemies/enemy-281.webp':`assets/bosses/boss_${b.key}.webp`):'assets/bosses/boss_unknown.webp';
     const front=`<div class="boss-info-art" data-boss-flip role="button" tabindex="0" aria-label="Перевернуть карточку Владыки">${art?`<img src="${art}" alt="${escapeCombatText(v[0])}" onerror="this.hidden=true">`:'<span class="boss-unknown" aria-label="Тип Владыки пока неизвестен">?</span>'}</div>`;
     const back=`<dl class="boss-info-rows" data-boss-flip role="button" tabindex="0" aria-label="Вернуться на лицевую сторону">${RPGBoss.clues.map(([label],i)=>`<div><dt>${label}</dt><dd>${escapeCombatText(v[i])}</dd></div>`).join('')}</dl>`;
     const legends=b.legacy?'':RPGBoss.foundRecords(b).map(x=>`<details><summary>${escapeCombatText(x.title)}</summary><p>${escapeCombatText(x.text)}</p>${state.boss.fullyRevealed||state.boss.found.length===6?`<b>${escapeCombatText(x.parameter)}: ${escapeCombatText(x.value)}</b>`:''}</details>`).join('');
@@ -808,7 +808,7 @@
 
   function rollInitiative(players){const used=new Set();players.forEach(p=>{let r=rand(20),rerolls=[];while(used.has(r)){rerolls.push(r);r=rand(20)}used.add(r);p.initiative=r;p.initiativeRerolls=rerolls});return [...players].sort((a,b)=>b.initiative-a.initiative).map(p=>p.id)}
   function startGame(forcedIds=null,options={}){
-    window.RPGSoloSaves?.newGame();
+    window.RPGSoloSaves?.reset();clearTimeout(soloSaveTimer);soloLastSnapshot='';
     const ids=Array.isArray(forcedIds)?[...forcedIds]:[...els.heroPicker.querySelectorAll('input:checked')].map(x=>x.value);
     if(Array.isArray(forcedIds)?ids.length<1||ids.length>6:ids.length!==1){els.setupError.textContent='В соло-режиме выберите одного героя.';return}
     state=freshState();state.enemyScaling=options.enemyScaling!==undefined?options.enemyScaling!==false:(Array.isArray(forcedIds)||document.getElementById("soloEnemyScaling")?.value!=="no");state.boss=RPGBoss.generate();dismissedGameOverKey=null;visibleGameOverKey=null;state.started=true;state.mode=Array.isArray(forcedIds)?'network':'solo';const sharedHard=options?.sharedDifficulty==='hard'||options?.hardMode===true;state.sharedDifficulty=Array.isArray(forcedIds)?(sharedHard?'hard':'normal'):null;
@@ -2369,7 +2369,7 @@
   }
   // v0.6.74 — Every image is linked by the approved card ID, not by a translated name.
   const INVENTORY_IMAGE_IDS=new Set([457,459,464,466,469,471,473,475,477,479,481,483,453,460,467,485,387,388,389,390,391,392,393,394,395,396,397,398,399,400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434,435,436,437,438,439,440,441,442,443,444,445,446,447,448,449,450,451,452,372,373,374,375,376,377,378,379,380,381,382,383,384,385,386,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347]);
-  function itemImageHtml(card){const id=Number(card?.artSourceId||card?.id);return card&&INVENTORY_IMAGE_IDS.has(id)?`<img class="item-card-art" src="assets/items/${id}.${id>=372?'png':'webp'}" loading="lazy" decoding="async" alt="" onerror="this.hidden=true">`:''}
+  function itemImageHtml(card){const id=Number(card?.artSourceId||card?.id);return card&&INVENTORY_IMAGE_IDS.has(id)?`<img class="item-card-art" src="assets/items/${id}.webp" loading="lazy" decoding="async" alt="" onerror="this.hidden=true">`:''}
 
   function itemEffectSpent(p,id){
     if(!p||!id)return false;
@@ -3718,7 +3718,7 @@
   }
   function combatPortraitUrl(kind,id){
     if(kind==='hero'&&['warrior','dwarf','mage','archer','rogue','paladin'].includes(id))return `assets/heroes/${id}.webp`;
-    if(kind==='enemy'&&Number(id)===281&&state.boss&&!state.boss.legacy)return `assets/bosses/boss_${state.boss.key}.png`;
+    if(kind==='enemy'&&Number(id)===281&&state.boss&&!state.boss.legacy)return `assets/bosses/boss_${state.boss.key}.webp`;
     if(kind==='enemy'&&Number.isInteger(Number(id))&&Number(id)>0)return `assets/enemies/enemy-${String(id).padStart(3,'0')}.webp`;
     return '';
   }
@@ -4103,7 +4103,6 @@
     }
   }
   function updateUI(){
-    window.RPGSoloSaves?.changed();queueMicrotask(()=>{if(window.RPGSoloSaves){els.saveBtn.disabled=state.mode==='network'||!!window.RPGSoloSaves.blocked();els.loadBtn.disabled=state.mode==='network'&&state.started}});
     if(document.getElementById('bossInfoOverlay')&&!document.getElementById('bossInfoOverlay').hidden)renderBossInfo();
     refreshHeartCleansing();
     if(state.combat)for(const [key,status] of [['enemyPoison','Яд'],['enemyBleed','Кровотечение'],['enemyBurn','Горение']])if(state.combat[key]>PERIODIC_STATUS_RULES[status].turns)state.combat[key]=PERIODIC_STATUS_RULES[status].turns;
@@ -4116,7 +4115,7 @@
     els.initiativeList.innerHTML='';updateActionPanel();if(!els.sheetDrawer.hidden&&['overview','inventory'].includes(sheetView.mode)){
       const viewed=sheetPlayer();const signature=JSON.stringify([sheetView.playerId,sheetView.mode,sheetView.bonusKey,viewed,state.currentIndex,state.round,state.sharedDifficulty,state.territories,state.areas,state.combat?.phase,state.combat?.round,state.combat?.used]);
       if(els.sheetContent.dataset.autoRenderSignature!==signature){renderCharacterSheet(sheetView.mode,sheetView.bonusKey);els.sheetContent.dataset.autoRenderSignature=signature}
-    }maybeShowDungeonEntryNotice();maybeShowTradeDeal();
+    }maybeShowDungeonEntryNotice();maybeShowTradeDeal();scheduleSoloSave();
   }
 
   function pCurrentHex(){const p=currentPlayer();return p?.hex||null}
@@ -4169,13 +4168,44 @@
     const groups={};state.players.forEach(p=>(groups[p.hex]??=[]).push(p));const tokenPositions={};Object.entries(groups).forEach(([hex,ps])=>{const h=MAP.hexes[hex];if(!h)return;const n=ps.length;ps.forEach((p,i)=>{const a=n===1?0:Math.PI*2*i/n,rad=n===1?0:18,x=h.x+Math.cos(a)*rad,y=h.y+Math.sin(a)*rad;tokenPositions[p.id]={x,y};RPGTabletop.token(els.overlay,p,x,y,p.id===currentPlayer().id,svgEl)})});RPGTabletop.rememberTokens(tokenPositions);applyMapZoom(false)
   }
 
-  function saveGame(){return window.RPGSoloSaves?.menu('save')}
-  function loadGame(rawOverride){
-    if(!rawOverride&&window.RPGSoloSaves)return window.RPGSoloSaves.menu('load');
-    const raw=rawOverride||localStorage.getItem('rpgDigitalPrototypeV0654')||localStorage.getItem('rpgDigitalPrototypeV0653')||localStorage.getItem('rpgDigitalPrototypeV0652')||localStorage.getItem('rpgDigitalPrototypeV0651')||localStorage.getItem('rpgDigitalPrototypeV0648')||localStorage.getItem('rpgDigitalPrototypeV0647')||localStorage.getItem('rpgDigitalPrototypeV0646')||localStorage.getItem('rpgDigitalPrototypeV0645')||localStorage.getItem('rpgDigitalPrototypeV0639')||localStorage.getItem('rpgDigitalPrototypeV0638')||localStorage.getItem('rpgDigitalPrototypeV0637')||localStorage.getItem('rpgDigitalPrototypeV0636')||localStorage.getItem('rpgDigitalPrototypeV0635')||localStorage.getItem('rpgDigitalPrototypeV0634')||localStorage.getItem('rpgDigitalPrototypeV0633')||localStorage.getItem('rpgDigitalPrototypeV0632')||localStorage.getItem('rpgDigitalPrototypeV0631')||localStorage.getItem('rpgDigitalPrototypeV063')||localStorage.getItem('rpgDigitalPrototypeV062')||localStorage.getItem('rpgDigitalPrototypeV060')||localStorage.getItem('rpgDigitalPrototypeV0522')||localStorage.getItem('rpgDigitalPrototypeV0521')||localStorage.getItem('rpgDigitalPrototypeV0520')||localStorage.getItem('rpgDigitalPrototypeV0519')||localStorage.getItem('rpgDigitalPrototypeV0518')||localStorage.getItem('rpgDigitalPrototypeV0517')||localStorage.getItem('rpgDigitalPrototypeV0516')||localStorage.getItem('rpgDigitalPrototypeV0515')||localStorage.getItem('rpgDigitalPrototypeV0514')||localStorage.getItem('rpgDigitalPrototypeV0513')||localStorage.getItem('rpgDigitalPrototypeV0512')||localStorage.getItem('rpgDigitalPrototypeV0511')||localStorage.getItem('rpgDigitalPrototypeV0510')||localStorage.getItem('rpgDigitalPrototypeV059')||localStorage.getItem('rpgDigitalPrototypeV058')||localStorage.getItem('rpgDigitalPrototypeV057')||localStorage.getItem('rpgDigitalPrototypeV056')||localStorage.getItem('rpgDigitalPrototypeV055')||localStorage.getItem('rpgDigitalPrototypeV054')||localStorage.getItem('rpgDigitalPrototypeV053')||localStorage.getItem('rpgDigitalPrototypeV052')||localStorage.getItem('rpgDigitalPrototypeV051')||localStorage.getItem('rpgDigitalPrototypeV050')||localStorage.getItem('rpgDigitalPrototypeV045')||localStorage.getItem('rpgDigitalPrototypeV044')||localStorage.getItem('rpgDigitalPrototypeV043')||localStorage.getItem('rpgDigitalPrototypeV042')||localStorage.getItem('rpgDigitalPrototypeV041')||localStorage.getItem('rpgDigitalPrototypeV040')||localStorage.getItem('rpgDigitalPrototypeV033')||localStorage.getItem('rpgDigitalPrototypeV032');
+  // The solo slots belong to this device. No solo state is uploaded to the server.
+  const legacySoloSave=()=>localStorage.getItem('rpgDigitalPrototypeV0654')||localStorage.getItem('rpgDigitalPrototypeV0653')||localStorage.getItem('rpgDigitalPrototypeV0652')||localStorage.getItem('rpgDigitalPrototypeV0651')||localStorage.getItem('rpgDigitalPrototypeV0648')||localStorage.getItem('rpgDigitalPrototypeV0647')||localStorage.getItem('rpgDigitalPrototypeV0646')||localStorage.getItem('rpgDigitalPrototypeV0645')||localStorage.getItem('rpgDigitalPrototypeV0639')||localStorage.getItem('rpgDigitalPrototypeV0638')||localStorage.getItem('rpgDigitalPrototypeV0637')||localStorage.getItem('rpgDigitalPrototypeV0636')||localStorage.getItem('rpgDigitalPrototypeV0635')||localStorage.getItem('rpgDigitalPrototypeV0634')||localStorage.getItem('rpgDigitalPrototypeV0633')||localStorage.getItem('rpgDigitalPrototypeV0632')||localStorage.getItem('rpgDigitalPrototypeV0631')||localStorage.getItem('rpgDigitalPrototypeV063')||localStorage.getItem('rpgDigitalPrototypeV062')||localStorage.getItem('rpgDigitalPrototypeV060')||localStorage.getItem('rpgDigitalPrototypeV0522')||localStorage.getItem('rpgDigitalPrototypeV0521')||localStorage.getItem('rpgDigitalPrototypeV0520')||localStorage.getItem('rpgDigitalPrototypeV0519')||localStorage.getItem('rpgDigitalPrototypeV0518')||localStorage.getItem('rpgDigitalPrototypeV0517')||localStorage.getItem('rpgDigitalPrototypeV0516')||localStorage.getItem('rpgDigitalPrototypeV0515')||localStorage.getItem('rpgDigitalPrototypeV0514')||localStorage.getItem('rpgDigitalPrototypeV0513')||localStorage.getItem('rpgDigitalPrototypeV0512')||localStorage.getItem('rpgDigitalPrototypeV0511')||localStorage.getItem('rpgDigitalPrototypeV0510')||localStorage.getItem('rpgDigitalPrototypeV059')||localStorage.getItem('rpgDigitalPrototypeV058')||localStorage.getItem('rpgDigitalPrototypeV057')||localStorage.getItem('rpgDigitalPrototypeV056')||localStorage.getItem('rpgDigitalPrototypeV055')||localStorage.getItem('rpgDigitalPrototypeV054')||localStorage.getItem('rpgDigitalPrototypeV053')||localStorage.getItem('rpgDigitalPrototypeV052')||localStorage.getItem('rpgDigitalPrototypeV051')||localStorage.getItem('rpgDigitalPrototypeV050')||localStorage.getItem('rpgDigitalPrototypeV045')||localStorage.getItem('rpgDigitalPrototypeV044')||localStorage.getItem('rpgDigitalPrototypeV043')||localStorage.getItem('rpgDigitalPrototypeV042')||localStorage.getItem('rpgDigitalPrototypeV041')||localStorage.getItem('rpgDigitalPrototypeV040')||localStorage.getItem('rpgDigitalPrototypeV033')||localStorage.getItem('rpgDigitalPrototypeV032');
+  let soloSaveTimer=null,soloLastSnapshot='',soloSaveErrorShown=false;
+  function soloSnapshot(){
+    const out=JSON.parse(JSON.stringify(state));
+    out.soloViewport={left:els.boardWrap?.scrollLeft||0,top:els.boardWrap?.scrollTop||0};
+    return out;
+  }
+  function soloSaveAllowed(){return !!state.started&&state.mode==='solo'&&!window.__RPG_NET_CONNECTED__}
+  function manualSaveBlocked(){return !soloSaveAllowed()||!!state.combat||!!state.exploration||!!state.tradeDeal||!!state.tradeOpportunity||!!state.tributeConsentPending||!!state.dungeonEntryNotice||!!sideInteraction||!els.rollOverlay.hidden||!els.modal.hidden}
+  function syncSoloSaveButtons(){
+    const blocked=manualSaveBlocked();for(const id of ['saveBtn','sheetSaveBtn','settingsSaveBtn']){
+      const button=document.getElementById(id);if(button){button.disabled=blocked;button.title=blocked&&soloSaveAllowed()?'Сохранение доступно после завершения игрового действия.':'';}
+    }
+    for(const id of ['loadBtn','sheetLoadBtn','settingsLoadBtn']){
+      const button=document.getElementById(id);if(button)button.disabled=!!window.__RPG_NET_CONNECTED__;
+    }
+  }
+  function scheduleSoloSave(){
+    syncSoloSaveButtons();if(!soloSaveAllowed()||!window.RPGSoloSaves?.active)return;
+    clearTimeout(soloSaveTimer);soloSaveTimer=setTimeout(()=>{soloSaveTimer=null;saveSoloNow()},450);
+  }
+  async function saveSoloNow(){
+    if(!soloSaveAllowed()||!window.RPGSoloSaves?.active)return false;
+    try{const snapshot=JSON.stringify(soloSnapshot());if(snapshot===soloLastSnapshot)return true;
+      await window.RPGSoloSaves.writeActive(JSON.parse(snapshot));soloLastSnapshot=snapshot;soloSaveErrorShown=false;return true;
+    }catch(err){console.error('Соло-автосохранение:',err);if(!soloSaveErrorShown){soloSaveErrorShown=true;alert('Не удалось автоматически сохранить соло-партию: '+(err?.message||err))}return false}
+  }
+  async function saveGame(){if(!soloSaveAllowed())return;if(manualSaveBlocked())return;
+    try{await window.RPGSoloSaves.saveUI(soloSnapshot);soloLastSnapshot=''}catch(e){alert('Не удалось открыть сохранения: '+e.message)}
+  }
+  async function loadGame(){if(window.__RPG_NET_CONNECTED__)return;
+    await window.RPGSoloSaves.loadUI(async saved=>{if(state.started&&!confirm('Загрузить сохранение? Несохранённые изменения текущей партии будут потеряны.'))return false;applySoloSavedState(JSON.stringify(saved));return true},legacySoloSave);
+  }
+  function applySoloSavedState(raw){
     if(!raw){alert('Сохранённой партии пока нет.');return}
     try{
-      state=JSON.parse(raw);ensureBossState();if(!state.locations)state.locations={};if(!state.territories)state.territories={};if(!state.areas)state.areas=[];stripPermanentLocationCardsFromDecks(state.decks);normalizeLegendaryHeartLoot(state.decks);separateMercenaryDecks(state.decks);normalizeTavernMercenaries();normalizeEquipmentDecks();
+      state=JSON.parse(raw);state.mode='solo';ensureBossState();if(!state.locations)state.locations={};if(!state.territories)state.territories={};if(!state.areas)state.areas=[];stripPermanentLocationCardsFromDecks(state.decks);normalizeLegendaryHeartLoot(state.decks);separateMercenaryDecks(state.decks);normalizeTavernMercenaries();normalizeEquipmentDecks();
       if(state.locationUsedThisTurn==null)state.locationUsedThisTurn=false;if(state.locationActivationHex===undefined)state.locationActivationHex=null;if(state.portalPending==null)state.portalPending=null;if(state.clearedThisTurnHex===undefined)state.clearedThisTurnHex=null;if(state.foreignTerritoryPending===undefined)state.foreignTerritoryPending=null;if(state.tradeOpportunity===undefined)state.tradeOpportunity=null;if(state.tradeDeal===undefined)state.tradeDeal=null;if(state.tributeConsentPending===undefined)state.tributeConsentPending=null;if(state.dungeonEntryNotice===undefined)state.dungeonEntryNotice=null;
       if(state.dungeonEntryNotice){const dh=state.players?.find(q=>q.id===state.dungeonEntryNotice.heroId);if(!dh?.inDungeon||(dh.dungeonEnteredTurn!=null&&dh.personalTurn>dh.dungeonEnteredTurn))state.dungeonEntryNotice=null;}
       state.territoryBuiltNotice=null;if(state.movePending===undefined)state.movePending=false;if(state.moveOriginHex===undefined)state.moveOriginHex=null;if(state.moveTransit===undefined)state.moveTransit=null;if(state.pendingMoveAction===undefined)state.pendingMoveAction=null;if(state.chosenMovePlan===undefined)state.chosenMovePlan=null;if(state.inspectPlayerId===undefined)state.inspectPlayerId=null;if(state.mapHighlight===undefined)state.mapHighlight=null;if(state.mapZoom===undefined)state.mapZoom=1;if(state.gameOver===undefined)state.gameOver=false;if(state.sharedDifficulty===undefined)state.sharedDifficulty=null;if(!Array.isArray(state.journal))state.journal=[];
@@ -4183,8 +4213,11 @@
       const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
-      state.version='0.6.129';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);log('Сохранённая партия загружена в v0.6.107.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
-    }catch(e){console.error(e);alert('Не удалось загрузить сохранение.')}
+      state.version='0.6.129';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>{
+        if(state.soloViewport){els.boardWrap.scrollLeft=Number(state.soloViewport.left)||0;els.boardWrap.scrollTop=Number(state.soloViewport.top)||0}
+        else centerMapOnPlayer(currentPlayer(),'auto');
+      },120);log('Соло-партия загружена из локального слота.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
+    }catch(e){console.error(e);throw Error('Не удалось загрузить сохранение: '+e.message)}
   }
   function cloneJson(v){return JSON.parse(JSON.stringify(v))}
   function exportOnlineState(){
@@ -4214,7 +4247,7 @@
   }
   function startOnlineGame(heroIds,options={}){startGame(heroIds,{sharedDifficulty:options?.hardMode?'hard':'normal',hardMode:!!options?.hardMode,enemyScaling:options?.enemyScaling!==false});return exportOnlineState()}
 
-  function resetGame(){if(!confirm('Сбросить текущую партию?'))return;clearLevelUpNotice();dismissedGameOverKey=null;visibleGameOverKey=null;endSideInteraction();combatWindowHidden=false;combatWindowInstance=null;modalOffturnOwnerId=null;modalCloseAction=null;state=freshState();document.body.classList.remove('game-running');rollPopupQueue.length=0;rollPopupAfterClose=null;if(els.journalOverlay)els.journalOverlay.hidden=true;if(els.rollOverlay)els.rollOverlay.hidden=true;els.setupSection.hidden=false;els.gameSection.hidden=true;els.saveBtn.disabled=true;els.inventoryBtn.hidden=true;els.log.innerHTML='';journalFilterMode='mine';closeModal();closeCharacterSheet();renderBoard();renderJournal();window.RPGNetworkReturnHome?.()}
+  function resetGame(){if(!confirm('Сбросить текущую партию?'))return;window.RPGSoloSaves?.reset();clearTimeout(soloSaveTimer);soloLastSnapshot='';clearLevelUpNotice();dismissedGameOverKey=null;visibleGameOverKey=null;endSideInteraction();combatWindowHidden=false;combatWindowInstance=null;modalOffturnOwnerId=null;modalCloseAction=null;state=freshState();document.body.classList.remove('game-running');rollPopupQueue.length=0;rollPopupAfterClose=null;if(els.journalOverlay)els.journalOverlay.hidden=true;if(els.rollOverlay)els.rollOverlay.hidden=true;els.setupSection.hidden=false;els.gameSection.hidden=true;els.saveBtn.disabled=true;els.inventoryBtn.hidden=true;els.log.innerHTML='';journalFilterMode='mine';closeModal();closeCharacterSheet();renderBoard();renderJournal();window.RPGNetworkReturnHome?.()}
 
   if(els.sheetHeroTab)els.sheetHeroTab.addEventListener('click',()=>{toggleCharacterSheet('overview',sheetView.playerId||currentPlayer()?.id)});
   if(els.sheetInventoryTab)els.sheetInventoryTab.addEventListener('click',()=>{toggleCharacterSheet('inventory',sheetView.playerId||currentPlayer()?.id)});
@@ -4267,7 +4300,11 @@
     }
   }
   let resizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{applyMapZoom(false);if(state.started&&isMobileViewport()&&els.sheetDrawer.hidden)centerMapOnPlayer(mapFocusPlayer(),'auto')},120)});
-  let pinchStartDist=0,pinchStartZoom=1;const touchDistance=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);if(els.boardWrap){els.boardWrap.addEventListener('touchstart',e=>{if(e.touches.length===2){pinchStartDist=touchDistance(e.touches);pinchStartZoom=Number(state.mapZoom||1)}},{passive:true});els.boardWrap.addEventListener('touchmove',e=>{if(e.touches.length===2&&pinchStartDist>0){e.preventDefault();const ratio=touchDistance(e.touches)/pinchStartDist;state.mapZoom=Math.round(clamp(pinchStartZoom*ratio,.6,2)*20)/20;applyMapZoom(false)}},{passive:false});els.boardWrap.addEventListener('touchend',e=>{if(e.touches.length<2)pinchStartDist=0},{passive:true})}
+  // Disable only multi-touch browser zoom; preserve normal one-finger scrolling.
+  document.addEventListener('gesturestart',e=>{if(e.cancelable)e.preventDefault()},{passive:false});
+  document.addEventListener('gesturechange',e=>{if(e.cancelable)e.preventDefault()},{passive:false});
+  document.addEventListener('touchmove',e=>{if(e.touches.length>1&&e.cancelable)e.preventDefault()},{passive:false});
+
   // Service Worker registration is owned by update-client.js.
   els.startBtn.addEventListener('click',startGame);els.moveRollBtn.addEventListener('click',rollMove);els.endTurnBtn.addEventListener('click',()=>endTurn(false));els.saveBtn.addEventListener('click',saveGame);els.loadBtn.addEventListener('click',loadGame);els.resetBtn.addEventListener('click',resetGame);[['sheetSaveBtn','saveBtn'],['sheetLoadBtn','loadBtn'],['sheetResetBtn','resetBtn']].forEach(([mirror,source])=>{const btn=document.getElementById(mirror);if(btn)btn.addEventListener('click',()=>els[source].click())});els.inventoryBtn.addEventListener('click',()=>toggleCharacterSheet('overview'));els.sheetClose.addEventListener('click',closeCharacterSheet);els.modalClose.addEventListener('click',requestModalClose);
   window.RPGDiceSettings?.setContext(()=>{
@@ -4275,10 +4312,13 @@
     const playerName=String(window.__RPG_HERO_PLAYER_NAMES__?.[id]||'').trim();
     return {id,name:playerName&&playerName!==hero.name?`${hero.name} — ${playerName}`:hero.name};
   });
+  window.addEventListener('rpg-local-mutation',scheduleSoloSave);
+  els.boardWrap?.addEventListener('scroll',scheduleSoloSave,{passive:true});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)saveSoloNow()});
+  window.addEventListener('pagehide',()=>{saveSoloNow()});
   window.addEventListener('rpg-atlas-updated',()=>{updateUI();if(state.combat&&!combatWindowHidden)renderCombat()});
   window.__RPG_DEBUG__={drawExplorationCard,duplicateHeartEvent,addNextBattleEventEffect,prepareEnemyDamage,loseEliteEquipment,resolveEvent,finishCombatVictory,ensureBossState,syncBossClues,resolveBossClue,heartAccessAllowed,canEnterBossRegion,toggleBossInfo,renderBossInfo,startBossBattle,manualMoveStepOptions,movementPlans,beginExplore,resolveExploreCard,normalizeIncomingState,exportOnlineState,enemyImmunities,enemyImmuneStatus,combatApplyEnemyTriggeredStatus,equipmentStatusCheck,useCleansingAmulet,resetItemUsage,potionActionInfo,useNewPotion,combatHeroMode,combatEnemyMode,consumeEnemyMode,combatTickBuffsAtHeroAttack,supportedOutsideEffect,updateActionPanel,closeSettingsOverlay,showPostCombatTerritoryPrompt,canPurchaseTerritory,areaChoiceActions,promptAreaMergeAfterBuild,getAreaPreview:()=>areaMergePreview,scaledEnemy,combatEnemy,combatEnemyHitDamage,ENEMY_DAMAGE_STEPS,showCard,shuffleRemainingDeck,peekExploreTop,consumeHeldItem,normalizeEquipmentDecks,equipmentRuleTotal,genericEquipmentAction,equipmentMaxHp,mercenaryEligible,normalizeTavernMercenaries,mercenaryResists,maybeUseTrackerBeforeExplore,performTrapCheck,backpackCapacity,setSlotId,passiveHeroDamageReduction,combatEnemyAttackModifier,combatEscapeBefore,combatEscapeDuring,recoverHealthForRound,buildTerritory,buildTerritoryFor,canBuildAt,finalizeArea,areaCandidatesAt,openTrade,payDungeonExit,beginSideInteraction,endSideInteraction,heroAbilityAttackProfile,resolveHeroAbilityAttack,combatAbilityAttackHits,resolveSecondaryDamage,commitEnemyDamage,resolveHeroAbilityDamage,resolveHeroEffectCheck,advanceHeroEffectSequence,tickOutsideStatuses,rollMove,combatTickHeroStatuses,finishCombatStun,combatDecisionOptions,cancelCombatAuto,PERIODIC_STATUS_RULES,markExplorationSuccess,refreshHeartCleansing,heartCleansingRemaining,currentHexNeedsResolution,canExploreHere,showVictoryResults,performVictorySearch,victorySessionCombat,initialDecks,drawCard,discardCard,returnCardToDeckRandom,separateMercenaryDecks,takeMercenaryFromDeck,startGame,endTurn,advanceTurnState,resolvePaladinCounter,combatContinueAfterDamage,combatAttackStatProfile,canEquipCard,enemyDicePreferences,openHeroProgression,heroCombatInfo,addStatus,combatApplyHeroStatus,combatApplyEnemyStatus,combatClassAbilityAvailable,combatEffectiveDefense,combatAttackBonus,chooseCombatCleanseStatus,recordEnemyVictory,getState:()=>state,setState:v=>{state=v},freshState,HEROES,CARD_BY_ID,combatStart,combatFight,combatHeroAttack,finalizeHeroAttackRoll,combatRollHeroDamage,combatDamageFormula,inventoryCardBackHtml,applyHeroDamageNow,combatEnemyTurn,finalizeEnemyAttackRoll,acceptEnemyDamage,combatContinueAfterEnemyMiss,renderCombat,currentPlayer,getPlayer,ensurePlayerModel,supportedCombatEffect,applyCombatItemEffect,useHeroCombatAbility,combatReactionList,fullSetEquipped,completeSetNames,itemColorClass,mandatoryLootCount,setBonusActionInfo,useSetBonus,showRollPopup,heroImmuneStatus,combatPassiveDamageBonus,combatHeroDeath,combatVictory,movementFor,combatCanChangeEquipment,combatTickEnemyStatuses,equipTransaction,merchantSaleMultiplier,visitShrine,visitMerchant,showMerchantShop,renderTavernVisit,visitLocation,decorateNegativeEffects,generatePermanentLocations,locationVisibleToPlayer,revealLocationToPlayer,ensureTavernMercenary,restockTavernIfVacant,visitTavern,attemptDungeonExit,beginBonusExplorationTurnAfterDungeon,gameOverStats,showGameOverPopup,renderBoard,updateUI,openCharacterSheet,closeCharacterSheet,toggleCharacterSheet,renderTurnOrderBanner};
-  window.RPGRestoreSolo=s=>{if(s.mode==='network'||s.players?.length!==1)throw Error('Неверная соло-партия');loadGame(JSON.stringify(s));if(state.combat)applyOnlineState(state)};
-  window.__RPG_ONLINE__={saveLocal:()=>window.RPGSoloSaves?.flush(),startWithHeroes:startOnlineGame,exportState:exportOnlineState,applyState:applyOnlineState,currentPlayerId:()=>currentPlayer()?.id||null,isStarted:()=>!!state.started,sideInteractionOwnerId,sideInteractionActiveFor,acknowledgeVictorySide,exportSideState:sideInteractionPayload,endSideInteraction,refreshUI:()=>{renderJournal();updateUI();renderBoard()},setLocalHeroId:id=>{onlineLocalHeroId=id||null;if(onlineLocalHeroId){sheetView.playerId=onlineLocalHeroId;if(!els.sheetDrawer.hidden)renderCharacterSheet(sheetView.mode,sheetView.bonusKey)}renderJournal();updateUI();renderBoard()},canOffturnSharedAction:id=>!!id&&(state.tributeConsentPending?.ownerId===id||state.dungeonEntryNotice?.heroId===id),canOffturnModalActionFor,combatWindowIsHidden:()=>combatWindowHidden,showCombatWindow,hideCombatWindow};
+  window.__RPG_ONLINE__={saveLocal:saveSoloNow,startWithHeroes:startOnlineGame,exportState:exportOnlineState,applyState:applyOnlineState,currentPlayerId:()=>currentPlayer()?.id||null,isStarted:()=>!!state.started,sideInteractionOwnerId,sideInteractionActiveFor,acknowledgeVictorySide,exportSideState:sideInteractionPayload,endSideInteraction,refreshUI:()=>{renderJournal();updateUI();renderBoard()},setLocalHeroId:id=>{onlineLocalHeroId=id||null;if(onlineLocalHeroId){sheetView.playerId=onlineLocalHeroId;if(!els.sheetDrawer.hidden)renderCharacterSheet(sheetView.mode,sheetView.bonusKey)}renderJournal();updateUI();renderBoard()},canOffturnSharedAction:id=>!!id&&(state.tributeConsentPending?.ownerId===id||state.dungeonEntryNotice?.heroId===id),canOffturnModalActionFor,combatWindowIsHidden:()=>combatWindowHidden,showCombatWindow,hideCombatWindow};
   decorateNegativeEffects(document.body);negativeEffectObserver.observe(document.body,{childList:true,subtree:true});
   renderJournal();renderBoard();
 })();
