@@ -1,0 +1,16 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const nodes=new Map(),listeners={},intervals=new Map();let next=1,requests=[],state={order:['warrior'],currentIndex:0,players:[]},applies=0,reply={status:200,data:{ready:true,revision:1,state:structuredClone(state)},tag:'a'},defer;
+function node(id){if(!nodes.has(id))nodes.set(id,{value:'',dataset:{},hidden:false,classList:{add(){},remove(){},toggle(){}},addEventListener(){},querySelectorAll(){return []}});return nodes.get(id)}
+const engine={exportState:()=>structuredClone(state),applyState:s=>{state=structuredClone(s);applies++},exportSideState:()=>null,currentPlayerId:()=> 'warrior'};
+const c={console,AbortController,URLSearchParams,Element:class{},location:{},localStorage:{getItem(){return null},setItem(){},removeItem(){}},document:{hidden:false,getElementById:node,body:{classList:{add(){},remove(){},toggle(){}},appendChild(){}},createElement:()=>node('made'),addEventListener:(n,f)=>listeners[n]=f},setInterval:f=>{const id=next++;intervals.set(id,f);return id},clearInterval:id=>intervals.delete(id),setTimeout:()=>next++,clearTimeout(){},queueMicrotask(){},Date,window:null};c.window=c;c.__RPG_ONLINE__=engine;c.addEventListener=(n,f)=>listeners[n]=f;
+c.fetch=async(path,opts)=>{requests.push({path,opts});if(defer)await defer;return{status:reply.status,ok:reply.status<300,headers:{get:()=>reply.tag},json:async()=>structuredClone(reply.data)}};
+let source=fs.readFileSync(require('path').join(__dirname,'../network-lobby.js'),'utf8');source=source.replace(/\}\)\(\);\s*$/,`window.testNet={get:()=>session,pullGame,syncGame,showHome,poll,startGameSync,enterGame,refresh};})();`);vm.createContext(c);vm.runInContext(source,c);const t=c.testNet;
+function ready(){Object.assign(t.get(),{gameEntered:true,code:'123456',playerId:'p',playerSecret:'s',room:{players:[{id:'p',heroId:'warrior'}]},lastServerActiveHero:'warrior',lastSnapshot:JSON.stringify(state),lastSideSnapshot:'null',lastRevision:1})}
+(async()=>{ready();await t.pullGame();assert.equal(t.get().gameETag,'a');reply.status=304;await t.pullGame();assert.equal(requests.at(-1).opts.headers['If-None-Match'],'a');assert.equal(applies,0);
+reply={status:200,tag:'b',data:{ready:true,revision:1,state:{...state,round:2}}};await t.pullGame();assert.equal(state.round,2);assert.equal(applies,1);
+// A locally changed value during pending GET must not be overwritten or acknowledged.
+let release;defer=new Promise(r=>release=r);const pending=t.pullGame();state.round=3;release();await pending;defer=null;assert.equal(state.round,3);assert.equal(applies,1);
+// Only one in-flight pull; session reset rejects late response.
+defer=new Promise(r=>release=r);let first=t.pullGame();let count=requests.length;await t.pullGame();assert.equal(requests.length,count);t.showHome();release();await first;defer=null;assert.equal(applies,1);
+ready();t.poll();t.poll();assert.equal(intervals.size,1);t.enterGame(state,1);assert.equal(intervals.size,1);t.startGameSync();assert.equal(intervals.size,1);t.showHome();assert.equal(intervals.size,0);
+console.log('PASS conditional reuse, side revision changes, pending local changes, in-flight exclusion, old session response rejection, one timer, teardown');})().catch(e=>{console.error(e);process.exitCode=1});

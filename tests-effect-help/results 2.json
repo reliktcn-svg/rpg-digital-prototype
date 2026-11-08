@@ -1,0 +1,15 @@
+{
+  "browser_checks": 4,
+  "result": "PASS",
+  "contexts": [
+    "card",
+    "skill tree native dialog",
+    "skill detail nested dialog",
+    "combat icon"
+  ],
+  "viewport": [
+    390,
+    844
+  ],
+  "mechanics": "unchanged"
+}

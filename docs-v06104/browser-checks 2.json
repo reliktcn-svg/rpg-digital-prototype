@@ -1,0 +1,994 @@
+[
+  {
+    "name": "ability",
+    "results": [
+      {
+        "name": "archer hit real D20 then ordinary attack remains",
+        "pass": true
+      },
+      {
+        "name": "archer miss real D20 then ordinary attack remains",
+        "pass": true
+      },
+      {
+        "name": "rogue hit real D20 then ordinary attack remains",
+        "pass": true
+      },
+      {
+        "name": "rogue miss real D20 then ordinary attack remains",
+        "pass": true
+      },
+      {
+        "name": "paladin hit real D20 then ordinary attack remains",
+        "pass": true
+      },
+      {
+        "name": "paladin miss real D20 then ordinary attack remains",
+        "pass": true
+      },
+      {
+        "name": "Exact example: axe uses STR for ordinary attack, ability uses D20 10 + DEX 3 + CHA 1 = 14 vs 13",
+        "pass": true
+      },
+      {
+        "name": "archer rank 1 same attack formula, atlas damage preserved",
+        "pass": true
+      },
+      {
+        "name": "archer rank 2 same attack formula, atlas damage preserved",
+        "pass": true
+      },
+      {
+        "name": "archer rank 3 same attack formula, atlas damage preserved",
+        "pass": true
+      },
+      {
+        "name": "archer rank 4 same attack formula, atlas damage preserved",
+        "pass": true
+      },
+      {
+        "name": "archer rank 5 same attack formula, atlas damage preserved",
+        "pass": true
+      },
+      {
+        "name": "rogue rank 1 same attack formula, atlas damage preserved",
+        "pass": true
+      },
+      {
+        "name": "rogue rank 2 same attack formula, atlas damage preserved",
+        "pass": true
+      },
+      {
+        "name": "rogue rank 3 same attack formula, atlas damage preserved",
+        "pass": true
+      },
+      {
+        "name": "rogue rank 4 same attack formula, atlas damage preserved",
+        "pass": true
+      },
+      {
+        "name": "rogue rank 5 same attack formula, atlas damage preserved",
+        "pass": true
+      },
+      {
+        "name": "paladin rank 1 same attack formula, atlas damage preserved",
+        "pass": true
+      },
+      {
+        "name": "paladin rank 2 same attack formula, atlas damage preserved",
+        "pass": true
+      },
+      {
+        "name": "paladin rank 3 same attack formula, atlas damage preserved",
+        "pass": true
+      },
+      {
+        "name": "paladin rank 4 same attack formula, atlas damage preserved",
+        "pass": true
+      },
+      {
+        "name": "paladin rank 5 same attack formula, atlas damage preserved",
+        "pass": true
+      },
+      {
+        "name": "Miss on rank III never rolls or applies bleeding; ordinary action is intact",
+        "pass": true
+      },
+      {
+        "name": "Equal defense is a hit; CHA and class stat are current values, weapon attack bonus excluded",
+        "pass": true
+      },
+      {
+        "name": "Natural 1 misses, natural 20 hits; ability check does not trigger ordinary Natural20 branch",
+        "pass": true
+      },
+      {
+        "name": "Pending ability D20 survives save/load and is resolved exactly once",
+        "pass": true
+      },
+      {
+        "name": "Advantage uses class + charisma and is consumed once; normal attack count stays zero",
+        "pass": true
+      },
+      {
+        "name": "Paladin remains unavailable before enemy damage or after death",
+        "pass": true
+      }
+    ],
+    "status": "PASS 28"
+  },
+  {
+    "name": "recovery",
+    "results": [
+      {
+        "name": "No recovery on first turn; next movement click changes 6/12 to 7/12, double click does not heal again",
+        "pass": true
+      },
+      {
+        "name": "Three players wait for complete round; each hero heals independently",
+        "pass": true
+      },
+      {
+        "name": "Building without movement heals before +2 maximum HP and advances the turn",
+        "pass": true
+      },
+      {
+        "name": "Invalid/unaffordable building does not heal",
+        "pass": true
+      },
+      {
+        "name": "Area merger without movement heals once; building and merging cannot repeat recovery",
+        "pass": true
+      },
+      {
+        "name": "Movement then valid building grants no second recovery in same round",
+        "pass": true
+      },
+      {
+        "name": "Trade that hands over turn heals only the initiator, once",
+        "pass": true
+      },
+      {
+        "name": "Trade without handoff or without another hero does not heal",
+        "pass": true
+      },
+      {
+        "name": "Recovery caps at max and is consumed even at full HP; no stockpiled healing",
+        "pass": true
+      },
+      {
+        "name": "Save/load retains recovery marker and cannot grant another HP",
+        "pass": true
+      },
+      {
+        "name": "Recovery precedes poison/burning; bleeding does not tick outside combat",
+        "pass": true
+      },
+      {
+        "name": "Dungeon exit heals once; bonus exploration turn grants no second recovery",
+        "pass": true
+      },
+      {
+        "name": "Combat, dead heroes and offturn players cannot receive round recovery",
+        "pass": true
+      }
+    ],
+    "status": "PASS 13"
+  },
+  {
+    "name": "progression",
+    "results": [
+      {
+        "name": "Hero menu shows initial level and cumulative 0/250, then 100/250",
+        "pass": true
+      },
+      {
+        "name": "warrior ability 1 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "warrior ability 2 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "warrior ability 3 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "warrior ability 4 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "warrior ability 5 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "dwarf ability 1 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "dwarf ability 2 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "dwarf ability 3 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "dwarf ability 4 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "dwarf ability 5 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "archer ability 1 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "archer ability 2 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "archer ability 3 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "archer ability 4 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "archer ability 5 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "rogue ability 1 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "rogue ability 2 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "rogue ability 3 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "rogue ability 4 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "rogue ability 5 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "mage ability 1 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "mage ability 2 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "mage ability 3 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "mage ability 4 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "mage ability 5 applies atlas dice and only once",
+        "pass": true
+      },
+      {
+        "name": "Ability cannot bypass silence lock",
+        "pass": true
+      },
+      {
+        "name": "Mage IV can cleanse at full HP; selected status removed",
+        "pass": true
+      },
+      {
+        "name": "Resistance Кровотечение success prevents status and timers; failure applies",
+        "pass": true
+      },
+      {
+        "name": "Resistance Яд success prevents status and timers; failure applies",
+        "pass": true
+      },
+      {
+        "name": "Resistance Горение success prevents status and timers; failure applies",
+        "pass": true
+      },
+      {
+        "name": "Resistance Оглушение success prevents status and timers; failure applies",
+        "pass": true
+      },
+      {
+        "name": "Natural20 I gives one enemy disadvantage, not the previous hero effect",
+        "pass": true
+      },
+      {
+        "name": "Natural20 path extra damage and successful D6 stun apply together",
+        "pass": true
+      },
+      {
+        "name": "Enemy poison ticks and appears on combat card",
+        "pass": true
+      },
+      {
+        "name": "Victory XP once and threshold jumps grant points",
+        "pass": true
+      },
+      {
+        "name": "Save/export + reload preserves XP and independent resistance paths",
+        "pass": true
+      },
+      {
+        "name": "Opening tree with no points is allowed; all icons have Roman levels",
+        "pass": true
+      },
+      {
+        "name": "Tree purchase UI spends a point and sibling Natural20 path stays locked",
+        "pass": true
+      },
+      {
+        "name": "Paladin counter 1 uses its die, heals actual damage and preserves normal attack",
+        "pass": true
+      },
+      {
+        "name": "Paladin counter 2 uses its die, heals actual damage and preserves normal attack",
+        "pass": true
+      },
+      {
+        "name": "Paladin counter 3 uses its die, heals actual damage and preserves normal attack",
+        "pass": true
+      },
+      {
+        "name": "Paladin counter 4 uses its die, heals actual damage and preserves normal attack",
+        "pass": true
+      },
+      {
+        "name": "Paladin counter 5 uses its die, heals actual damage and preserves normal attack",
+        "pass": true
+      },
+      {
+        "name": "Paladin cannot counter before damage, after zero damage or when dead",
+        "pass": true
+      },
+      {
+        "name": "Declining counter preserves the ability for a later hit",
+        "pass": true
+      },
+      {
+        "name": "Counter applies armor and caps healing at actual remaining enemy HP",
+        "pass": true
+      },
+      {
+        "name": "Lethal enemy damage does not offer counter or consume it",
+        "pass": true
+      },
+      {
+        "name": "Six heroes start and Paladin uses atlas Natural20 I",
+        "pass": true
+      },
+      {
+        "name": "All rank dice colors and speed x2; personal choice stays individual",
+        "pass": true
+      },
+      {
+        "name": "warrior immunity III Кровотечение",
+        "pass": true
+      },
+      {
+        "name": "warrior immunity III Яд",
+        "pass": true
+      },
+      {
+        "name": "warrior immunity III Горение",
+        "pass": true
+      },
+      {
+        "name": "warrior immunity III Оглушение",
+        "pass": true
+      },
+      {
+        "name": "dwarf immunity III Кровотечение",
+        "pass": true
+      },
+      {
+        "name": "dwarf immunity III Яд",
+        "pass": true
+      },
+      {
+        "name": "dwarf immunity III Горение",
+        "pass": true
+      },
+      {
+        "name": "dwarf immunity III Оглушение",
+        "pass": true
+      },
+      {
+        "name": "mage immunity III Кровотечение",
+        "pass": true
+      },
+      {
+        "name": "mage immunity III Яд",
+        "pass": true
+      },
+      {
+        "name": "mage immunity III Горение",
+        "pass": true
+      },
+      {
+        "name": "mage immunity III Оглушение",
+        "pass": true
+      },
+      {
+        "name": "archer immunity III Кровотечение",
+        "pass": true
+      },
+      {
+        "name": "archer immunity III Яд",
+        "pass": true
+      },
+      {
+        "name": "archer immunity III Горение",
+        "pass": true
+      },
+      {
+        "name": "archer immunity III Оглушение",
+        "pass": true
+      },
+      {
+        "name": "rogue immunity III Кровотечение",
+        "pass": true
+      },
+      {
+        "name": "rogue immunity III Яд",
+        "pass": true
+      },
+      {
+        "name": "rogue immunity III Горение",
+        "pass": true
+      },
+      {
+        "name": "rogue immunity III Оглушение",
+        "pass": true
+      },
+      {
+        "name": "paladin immunity III Кровотечение",
+        "pass": true
+      },
+      {
+        "name": "paladin immunity III Яд",
+        "pass": true
+      },
+      {
+        "name": "paladin immunity III Горение",
+        "pass": true
+      },
+      {
+        "name": "paladin immunity III Оглушение",
+        "pass": true
+      },
+      {
+        "name": "Warrior V fixed protection 12 without dice",
+        "pass": true
+      },
+      {
+        "name": "Paladin confirmation green; decline red; no once-per-battle copy",
+        "pass": true
+      },
+      {
+        "name": "Paladin 5 actual damage heals 2, and once-per-battle survives atlas refresh",
+        "pass": true
+      },
+      {
+        "name": "Paladin damage 0 heals 0",
+        "pass": true
+      },
+      {
+        "name": "Paladin damage 1 heals 1",
+        "pass": true
+      },
+      {
+        "name": "Paladin damage 2 heals 1",
+        "pass": true
+      },
+      {
+        "name": "Paladin damage 3 heals 1",
+        "pass": true
+      },
+      {
+        "name": "Paladin damage 4 heals 2",
+        "pass": true
+      },
+      {
+        "name": "Paladin damage 5 heals 2",
+        "pass": true
+      },
+      {
+        "name": "Paladin damage 6 heals 3",
+        "pass": true
+      },
+      {
+        "name": "Paladin damage 7 heals 3",
+        "pass": true
+      },
+      {
+        "name": "Paladin damage 8 heals 4",
+        "pass": true
+      },
+      {
+        "name": "Paladin damage 9 heals 4",
+        "pass": true
+      },
+      {
+        "name": "Paladin damage 10 heals 5",
+        "pass": true
+      },
+      {
+        "name": "Paladin damage 11 heals 5",
+        "pass": true
+      },
+      {
+        "name": "Paladin damage 12 heals 6",
+        "pass": true
+      },
+      {
+        "name": "Paladin completely absorbed counter grants no healing",
+        "pass": true
+      },
+      {
+        "name": "Paladin minimum healing respects maximum HP",
+        "pass": true
+      },
+      {
+        "name": "Variable skill prices shown and two-point purchase enforced in UI",
+        "pass": true
+      }
+    ],
+    "status": "PASS 93"
+  },
+  {
+    "name": "victory",
+    "results": [
+      {
+        "name": "Victory first, no automatic roll or loot draw; level notice starts at 1s and closes after 3s",
+        "pass": true
+      },
+      {
+        "name": "Search D20=5 opens 1 and keeps 1; repeated click cannot reroll",
+        "pass": true
+      },
+      {
+        "name": "Search D20=15 opens 2 and keeps 1; repeated click cannot reroll",
+        "pass": true
+      },
+      {
+        "name": "Search D20=20 opens 3 and keeps 2; repeated click cannot reroll",
+        "pass": true
+      },
+      {
+        "name": "Natural 1 resolves injury after explicit search and retains base loot",
+        "pass": true
+      },
+      {
+        "name": "Lethal search injury returns undelivered loot and handles death",
+        "pass": true
+      },
+      {
+        "name": "Weak enemy has no search; no level notification without a new level",
+        "pass": true
+      },
+      {
+        "name": "Final boss also opens victory with level up and final completion",
+        "pass": true
+      },
+      {
+        "name": "Pending search survives exported saved combat and can be resumed",
+        "pass": true
+      },
+      {
+        "name": "Search damage survives state refresh and is applied only once",
+        "pass": true
+      },
+      {
+        "name": "Two heroes: search belongs to winner and handoff happens after its result",
+        "pass": true
+      },
+      {
+        "name": "Rolling save resumes existing result without reroll or extra loot draw",
+        "pass": true
+      },
+      {
+        "name": "Post-victory healing does not precede the victory window",
+        "pass": true
+      },
+      {
+        "name": "Real dice animation finishes automatically and returns to victory result",
+        "pass": true
+      },
+      {
+        "name": "Rogue 1 correct damage die ×2 and bleeding",
+        "pass": true
+      },
+      {
+        "name": "Rogue 2 correct damage die ×2 and bleeding",
+        "pass": true
+      },
+      {
+        "name": "Rogue 3 correct damage die ×2 and bleeding",
+        "pass": true
+      },
+      {
+        "name": "Rogue 4 correct damage die ×2 and bleeding",
+        "pass": true
+      },
+      {
+        "name": "Rogue 5 correct damage die ×2 and bleeding",
+        "pass": true
+      }
+    ],
+    "status": "PASS 19"
+  },
+  {
+    "name": "sequence",
+    "results": [
+      {
+        "name": "rogue lethal ability: real window first, HP changes only when it closes, then victory",
+        "pass": true
+      },
+      {
+        "name": "archer lethal ability: real window first, HP changes only when it closes, then victory",
+        "pass": true
+      },
+      {
+        "name": "paladin lethal ability: real window first, HP changes only when it closes, then victory",
+        "pass": true
+      },
+      {
+        "name": "rogue 3 failed separate status check after damage",
+        "pass": true
+      },
+      {
+        "name": "rogue 3 successful separate status check after damage",
+        "pass": true
+      },
+      {
+        "name": "rogue 4 failed separate status check after damage",
+        "pass": true
+      },
+      {
+        "name": "rogue 4 successful separate status check after damage",
+        "pass": true
+      },
+      {
+        "name": "archer 3 failed separate status check after damage",
+        "pass": true
+      },
+      {
+        "name": "archer 3 successful separate status check after damage",
+        "pass": true
+      },
+      {
+        "name": "archer 4 failed separate status check after damage",
+        "pass": true
+      },
+      {
+        "name": "archer 4 successful separate status check after damage",
+        "pass": true
+      },
+      {
+        "name": "Lethal Rogue III also shows separate check before results",
+        "pass": true
+      },
+      {
+        "name": "rogue V guaranteed effect has no invented check roll",
+        "pass": true
+      },
+      {
+        "name": "archer V guaranteed effect has no invented check roll",
+        "pass": true
+      },
+      {
+        "name": "warrior Natural20 damage then independent stun check",
+        "pass": true
+      },
+      {
+        "name": "dwarf Natural20 damage then independent stun check",
+        "pass": true
+      },
+      {
+        "name": "mage Natural20 damage then independent stun check",
+        "pass": true
+      },
+      {
+        "name": "archer Natural20 damage then independent stun check",
+        "pass": true
+      },
+      {
+        "name": "rogue Natural20 damage then independent stun check",
+        "pass": true
+      },
+      {
+        "name": "paladin Natural20 damage then independent stun check",
+        "pass": true
+      },
+      {
+        "name": "warrior every resistance rank and status, combat and map, success/failure windows",
+        "pass": true
+      },
+      {
+        "name": "dwarf every resistance rank and status, combat and map, success/failure windows",
+        "pass": true
+      },
+      {
+        "name": "mage every resistance rank and status, combat and map, success/failure windows",
+        "pass": true
+      },
+      {
+        "name": "archer every resistance rank and status, combat and map, success/failure windows",
+        "pass": true
+      },
+      {
+        "name": "rogue every resistance rank and status, combat and map, success/failure windows",
+        "pass": true
+      },
+      {
+        "name": "paladin every resistance rank and status, combat and map, success/failure windows",
+        "pass": true
+      },
+      {
+        "name": "Ability and effect pending stages round-trip without applying damage twice",
+        "pass": true
+      },
+      {
+        "name": "rogue damage waits for enemy rolled guard, then commits once",
+        "pass": true
+      },
+      {
+        "name": "archer damage waits for enemy rolled guard, then commits once",
+        "pass": true
+      },
+      {
+        "name": "paladin damage waits for enemy rolled guard, then commits once",
+        "pass": true
+      },
+      {
+        "name": "Reflected D8 from book waits for its own window, including victory",
+        "pass": true
+      },
+      {
+        "name": "Mirror retaliation waits for its own D8, including victory",
+        "pass": true
+      },
+      {
+        "name": "Enemy natural one self-damage waits for visible D4 before victory",
+        "pass": true
+      },
+      {
+        "name": "Enemy hit resistance finishes before the next combat damage animation",
+        "pass": true
+      },
+      {
+        "name": "Rogue 1 every face: one die multiplied by two, never two damage dice",
+        "pass": true
+      },
+      {
+        "name": "Rogue 2 every face: one die multiplied by two, never two damage dice",
+        "pass": true
+      },
+      {
+        "name": "Rogue 3 every face: one die multiplied by two, never two damage dice",
+        "pass": true
+      },
+      {
+        "name": "Rogue 4 every face: one die multiplied by two, never two damage dice",
+        "pass": true
+      },
+      {
+        "name": "Rogue 5 every face: one die multiplied by two, never two damage dice",
+        "pass": true
+      },
+      {
+        "name": "Every hero D6 chance/resistance succeeds only on 5 and 6; D4 unchanged",
+        "pass": true
+      }
+    ],
+    "status": "PASS 40"
+  },
+  {
+    "name": "statuses",
+    "results": [
+      {
+        "name": "Heart solo: expires after exactly three turn advances; forces research on reentry",
+        "pass": true
+      },
+      {
+        "name": "Heart three heroes: exact initiative position, not merely start of round",
+        "pass": true
+      },
+      {
+        "name": "Heart repeat victory renews lifetime; outer regions permanent; legacy saves migrate once",
+        "pass": true
+      },
+      {
+        "name": "Hero: poison 6×1, bleeding 2×3, burning 3×2 before enemy roll, never after own hit",
+        "pass": true
+      },
+      {
+        "name": "Enemy status ticks after miss, once per turn, with exact damage and expiry",
+        "pass": true
+      },
+      {
+        "name": "Enemy status ticks immediately after accepted attack before Paladin counter, not again after it",
+        "pass": true
+      },
+      {
+        "name": "Outside: movement click ticks poison/burning; no bleeding and no end-turn tick",
+        "pass": true
+      },
+      {
+        "name": "Dungeon attempt ticks before the roll; duplicate clicks cannot tick or roll again",
+        "pass": true
+      },
+      {
+        "name": "Lethal poison cancels movement and enemy attack",
+        "pass": true
+      },
+      {
+        "name": "Hero stun announces at start of turn, closes at two seconds, then opponent turn",
+        "pass": true
+      },
+      {
+        "name": "Enemy stun announces, skips attack and returns to hero automatically",
+        "pass": true
+      },
+      {
+        "name": "Resistance has separate die, visible verdict, and pauses battle until result closes",
+        "pass": true
+      },
+      {
+        "name": "Equipment 168 explicit resistance check prevents status and displays outcome",
+        "pass": true
+      },
+      {
+        "name": "Equipment 245 explicit resistance check prevents status and displays outcome",
+        "pass": true
+      },
+      {
+        "name": "Card 246 offered after successful attack; heals D4 once, disabled at full HP",
+        "pass": true
+      },
+      {
+        "name": "One-combat armor ignore is optional and consumed, permanent immunity stays permanent",
+        "pass": true
+      },
+      {
+        "name": "Card 246 real combat choice heals before killing blow and respects curse",
+        "pass": true
+      },
+      {
+        "name": "Saved effect timers survive round-trip and old bleeding is capped to two",
+        "pass": true
+      },
+      {
+        "name": "Failed resistance leaves status and explains failure",
+        "pass": true
+      }
+    ],
+    "status": "PASS 19"
+  },
+  {
+    "name": "network",
+    "results": [
+      {
+        "name": "Offturn hero receives authoritative XP from active client",
+        "pass": true
+      },
+      {
+        "name": "Real offturn skill UI purchases and syncs to active player",
+        "pass": true
+      },
+      {
+        "name": "Offturn tree can close without affecting the active turn",
+        "pass": true
+      },
+      {
+        "name": "Another hero tree is read only",
+        "pass": true
+      },
+      {
+        "name": "Heart cleansing deadline is shared exactly and not extended by remote reload",
+        "pass": true
+      },
+      {
+        "name": "Enemy stun appears for observer; only active client advances battle",
+        "pass": true
+      },
+      {
+        "name": "Observer receives separate damage and status dice; only owner commits HP and effect",
+        "pass": true
+      },
+      {
+        "name": "Ability D20 and damage are synchronized to observer before HP changes",
+        "pass": true
+      },
+      {
+        "name": "Round HP recovery and its marker synchronize and survive remote refresh",
+        "pass": true
+      }
+    ],
+    "status": "PASS 9"
+  },
+  {
+    "name": "responsive",
+    "results": [
+      {
+        "hasResult": true,
+        "name": "320×568",
+        "pass": true,
+        "rect": {
+          "bottom": 497.046875,
+          "height": 360.09375,
+          "left": 10,
+          "right": 310,
+          "top": 136.953125,
+          "width": 300,
+          "x": 10,
+          "y": 136.953125
+        }
+      },
+      {
+        "hasResult": true,
+        "name": "390×844",
+        "pass": true,
+        "rect": {
+          "bottom": 635.046875,
+          "height": 360.09375,
+          "left": 10,
+          "right": 380,
+          "top": 274.953125,
+          "width": 370,
+          "x": 10,
+          "y": 274.953125
+        }
+      },
+      {
+        "hasResult": true,
+        "name": "844×390",
+        "pass": true,
+        "rect": {
+          "bottom": 368,
+          "height": 280,
+          "left": 162,
+          "right": 682,
+          "top": 88,
+          "width": 520,
+          "x": 162,
+          "y": 88
+        }
+      },
+      {
+        "hasResult": true,
+        "name": "1366×768",
+        "pass": true,
+        "rect": {
+          "bottom": 597,
+          "height": 370,
+          "left": 420.5,
+          "right": 945.5,
+          "top": 227,
+          "width": 525,
+          "x": 420.5,
+          "y": 227
+        }
+      }
+    ],
+    "status": "PASS 4"
+  }
+]

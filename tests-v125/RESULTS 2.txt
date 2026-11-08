@@ -1,0 +1,9 @@
+PASS: 500 randomized clue orders, all six first types, no repeats, stage level gates, JSON persistence, migration.
+PASS: Paladin actual damage 0–5, half/full healing.
+PASS: enemy scaling at hero level 16 on/off, state persistence.
+PASS: server shared clue order and full reveal.
+PASS: 21 HTTP tests including scaling host authorization, start lock, state enforcement.
+PASS: 22 boss server regression tests.
+PASS: 620 enemy trigger cases and equipment/immunity regression.
+PASS: v124 event, inventory and combat regression.
+PASS: browser UI 390x844 and 1200x850 (12 checks), 320x568 (13 checks incl. scaling control).

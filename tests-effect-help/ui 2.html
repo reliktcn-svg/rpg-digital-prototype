@@ -1,0 +1,23 @@
+<!doctype html><meta charset="utf-8"><h1 id="result">Проверка…</h1><pre id="report"></pre><iframe id="game" width="390" height="844"></iframe><script>
+(async()=>{const params=new URLSearchParams(location.search);game.width=params.get('w')||390;game.height=params.get('h')||844;await new Promise(r=>{game.onload=r;game.src='../index.html?help119=1'});const w=game.contentWindow,d=w.document,D=w.__RPG_DEBUG__,wait=ms=>new Promise(r=>setTimeout(r,ms)),checks=[];async function test(name,fn){try{await fn();checks.push([name,'PASS'])}catch(e){checks.push([name,e.message])}report.textContent=JSON.stringify(checks,null,2)}const check=(x,m)=>{if(!x)throw Error(m||'assertion')};d.querySelector('#netLocal').click();D.startGame(['warrior']);const p=D.currentPlayer();
+function help(target){check(target,'missing target');target.click();const tip=d.querySelector('.negative-effect-tooltip');check(!tip.hidden,'hidden');check(tip.textContent.length>30,'empty');const r=tip.getBoundingClientRect();check(r.top>=0&&r.bottom<=game.height+1,'outside viewport');check(d.elementFromPoint(r.x+15,r.y+15)?.closest('.negative-effect-tooltip'),'covered by modal');return tip}
+await test('Card negative effect, close and keyboard',async()=>{D.showCard(D.CARD_BY_ID[8]);await wait(100);const t=d.querySelector('#modalContent .negative-effect-term');let tip=help(t);tip.querySelector('button').click();check(tip.hidden);t.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));check(!tip.hidden);t.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));check(tip.hidden)});
+await test('Skill tree resistance names inside native dialog',async()=>{D.openHeroProgression(p.id);await wait(100);const t=d.querySelector('.skill-tree-dialog .negative-effect-term');const tip=help(t);check(tip.closest('dialog')?.classList.contains('skill-tree-dialog'));tip.querySelector('button').click()});
+await test('Ability description in second native dialog',async()=>{const node=[...d.querySelectorAll('.skill-tree-dialog [data-skill]')].find(b=>/Кровотечение|Яд|Оглушение|Горение/i.test(b.getAttribute('aria-label')));node.click();await wait(100);const tip=help(d.querySelector('.skill-detail-dialog .negative-effect-term'));check(tip.closest('dialog')?.classList.contains('skill-detail-dialog'));tip.querySelector('button').click();d.querySelector('.skill-detail-dialog [data-close]').click();d.querySelector('.skill-tree-dialog [data-close]').click()});
+await test('Combat icon opens help without flipping card',async()=>{D.addStatus(p,'Яд');D.combatStart(D.CARD_BY_ID[1]);D.cancelCombatAuto();await wait(100);const icon=d.querySelector('.tabletop-effect-icon.negative');const parent=icon.closest('.tabletop-battle-card'),before=parent.className;help(icon);check(parent.className===before,'flipped card')});
+await test('Every effect form: tap opens, second tap closes, cross closes',async()=>{
+ D.showCard(D.CARD_BY_ID[8]);
+ const host=d.querySelector('#modalContent');host.textContent='Страх Страха Страху Страхом Страхе Проклятие Проклятия Проклятию Проклятием Проклятии Слабость Слабости Слабостью Усталость Усталости Усталостью Яд Яда Яду Ядом Яде Отравлен Горение Горения Горению Горением Горении Кровотечение Кровотечения Кровотечению Кровотечением Кровотечении Оглушение Оглушения Оглушению Оглушением Оглушении Оглушён';
+ D.decorateNegativeEffects(host);
+ const terms=[...host.querySelectorAll('.negative-effect-term')];check(terms.length===38,'Forms count: '+terms.length);
+ for(const t of terms){const tip=help(t);t.click();check(tip.hidden,'second tap '+t.textContent);help(t);tip.querySelector('button').click();check(tip.hidden,'cross '+t.textContent)}
+});
+await test('Scaled enemy displayed on both sides of combat card',async()=>{
+ d.querySelector('#modalClose').click();p.masteryPoints=6000;p.progressionVersion=2;
+ D.combatStart(D.CARD_BY_ID[1]);D.cancelCombatAuto();await wait(80);
+ const e=D.combatEnemy(),c=D.getState().combat,card=d.querySelector('.tabletop-battle-card.enemy');
+ check(card.textContent.includes(String(c.enemyMaxHp)),'missing HP');
+ check(card.textContent.includes(e.fields['Урон']),'missing damage');
+ check(card.textContent.includes('По уровню героя в начале боя'),'missing level explanation');
+});
+result.textContent=checks.every(x=>x[1]==='PASS')?'PASS '+checks.length:'FAIL';})();</script>

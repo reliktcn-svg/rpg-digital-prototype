@@ -1,0 +1,1 @@
+Browser layout fixture, six players: PASS 1440x900, 1366x768, 1280x600, 1920x1080, 390x844. Code visible at top; top of card reachable; bottom controls reachable by scrolling. Actual Yandex and Safari applications were not run.

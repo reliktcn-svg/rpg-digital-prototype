@@ -1,0 +1,165 @@
+{
+  "results": [
+    {
+      "name": "rogue lethal ability: real window first, HP changes only when it closes, then victory",
+      "pass": true
+    },
+    {
+      "name": "archer lethal ability: real window first, HP changes only when it closes, then victory",
+      "pass": true
+    },
+    {
+      "name": "paladin lethal ability: real window first, HP changes only when it closes, then victory",
+      "pass": true
+    },
+    {
+      "name": "rogue 3 failed separate status check after damage",
+      "pass": true
+    },
+    {
+      "name": "rogue 3 successful separate status check after damage",
+      "pass": true
+    },
+    {
+      "name": "rogue 4 failed separate status check after damage",
+      "pass": true
+    },
+    {
+      "name": "rogue 4 successful separate status check after damage",
+      "pass": true
+    },
+    {
+      "name": "archer 3 failed separate status check after damage",
+      "pass": true
+    },
+    {
+      "name": "archer 3 successful separate status check after damage",
+      "pass": true
+    },
+    {
+      "name": "archer 4 failed separate status check after damage",
+      "pass": true
+    },
+    {
+      "name": "archer 4 successful separate status check after damage",
+      "pass": true
+    },
+    {
+      "name": "Lethal Rogue III also shows separate check before results",
+      "pass": true
+    },
+    {
+      "name": "rogue V guaranteed effect has no invented check roll",
+      "pass": true
+    },
+    {
+      "name": "archer V guaranteed effect has no invented check roll",
+      "pass": true
+    },
+    {
+      "name": "warrior Natural20 damage then independent stun check",
+      "pass": true
+    },
+    {
+      "name": "dwarf Natural20 damage then independent stun check",
+      "pass": true
+    },
+    {
+      "name": "mage Natural20 damage then independent stun check",
+      "pass": true
+    },
+    {
+      "name": "archer Natural20 damage then independent stun check",
+      "pass": true
+    },
+    {
+      "name": "rogue Natural20 damage then independent stun check",
+      "pass": true
+    },
+    {
+      "name": "paladin Natural20 damage then independent stun check",
+      "pass": true
+    },
+    {
+      "name": "warrior every resistance rank and status, combat and map, success/failure windows",
+      "pass": true
+    },
+    {
+      "name": "dwarf every resistance rank and status, combat and map, success/failure windows",
+      "pass": true
+    },
+    {
+      "name": "mage every resistance rank and status, combat and map, success/failure windows",
+      "pass": true
+    },
+    {
+      "name": "archer every resistance rank and status, combat and map, success/failure windows",
+      "pass": true
+    },
+    {
+      "name": "rogue every resistance rank and status, combat and map, success/failure windows",
+      "pass": true
+    },
+    {
+      "name": "paladin every resistance rank and status, combat and map, success/failure windows",
+      "pass": true
+    },
+    {
+      "name": "Ability and effect pending stages round-trip without applying damage twice",
+      "pass": true
+    },
+    {
+      "name": "rogue damage waits for enemy rolled guard, then commits once",
+      "pass": true
+    },
+    {
+      "name": "archer damage waits for enemy rolled guard, then commits once",
+      "pass": true
+    },
+    {
+      "name": "paladin damage waits for enemy rolled guard, then commits once",
+      "pass": true
+    },
+    {
+      "name": "Reflected D8 from book waits for its own window, including victory",
+      "pass": true
+    },
+    {
+      "name": "Mirror retaliation waits for its own D8, including victory",
+      "pass": true
+    },
+    {
+      "name": "Enemy natural one self-damage waits for visible D4 before victory",
+      "pass": true
+    },
+    {
+      "name": "Enemy hit resistance finishes before the next combat damage animation",
+      "pass": true
+    },
+    {
+      "name": "Rogue 1 every face: one die multiplied by two, never two damage dice",
+      "pass": true
+    },
+    {
+      "name": "Rogue 2 every face: one die multiplied by two, never two damage dice",
+      "pass": true
+    },
+    {
+      "name": "Rogue 3 every face: one die multiplied by two, never two damage dice",
+      "pass": true
+    },
+    {
+      "name": "Rogue 4 every face: one die multiplied by two, never two damage dice",
+      "pass": true
+    },
+    {
+      "name": "Rogue 5 every face: one die multiplied by two, never two damage dice",
+      "pass": true
+    },
+    {
+      "name": "Every hero D6 chance/resistance succeeds only on 5 and 6; D4 unchanged",
+      "pass": true
+    }
+  ],
+  "status": "PASS 40"
+}

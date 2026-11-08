@@ -1,0 +1,35 @@
+{
+  "duration_seconds": 600.60540445894,
+  "version": "rpg-v06126-lobby",
+  "players": 4,
+  "map_devices": 1,
+  "fixture_bytes": 60225,
+  "idle": {
+    "game": {
+      "requests": 6000,
+      "body_bytes": 361716000,
+      "http_bytes": 362856000,
+      "mean_ms": 5.822873964634103,
+      "304": 0
+    },
+    "map": {
+      "requests": 924,
+      "body_bytes": 1896972,
+      "http_bytes": 2071608,
+      "mean_ms": 2.140544514419729,
+      "304": 0
+    },
+    "room": {
+      "requests": 2668,
+      "body_bytes": 1558112,
+      "http_bytes": 2059696,
+      "mean_ms": 3.3310926074268243,
+      "304": 0
+    }
+  },
+  "active_120_changed_reads": {
+    "body_bytes": 7772094,
+    "http_bytes": 7794894,
+    "mean_ms": 0.617222198828434
+  }
+}

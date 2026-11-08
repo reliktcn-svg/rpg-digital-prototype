@@ -1,0 +1,3 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Победа · предпросмотр</title><style>body{margin:0}iframe{width:100vw;height:100dvh;border:0;display:block}</style><iframe id="game"></iframe><script>
+game.onload=async()=>{const w=game.contentWindow,d=w.document,D=w.__RPG_DEBUG__,A=w.__RPG_ONLINE__;await w.RPGAtlas.ready;d.getElementById('netLocal').click();A.startWithHeroes(['rogue']);const p=D.currentPlayer();p.masteryPoints=150;D.combatStart(D.CARD_BY_ID[24]);D.getState().combat.enemyHp=0;D.combatVictory();};game.src='../index.html?victory-preview';
+</script>

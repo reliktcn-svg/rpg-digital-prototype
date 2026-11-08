@@ -1,0 +1,8 @@
+v0.6.104 — 28.10.2026
+225 browser scenarios passed.
+586 progression assertions and shared atlas / balance / multiplier checks passed.
+Viewport simulations: 320×568, 390×844, 844×390, 1366×768.
+Two real local network clients: ability attack, damage, effects and recovery synchronized.
+Visual inspection: desktop ability D20 with class and Charisma modifiers.
+No physical phone was used.
+All service-worker asset paths exist.
