@@ -21,5 +21,5 @@ class AssetsTests(unittest.TestCase):
   m=json.loads((ROOT/'asset-manifest.json').read_text());paths={x['path'] for x in m['files']}
   for p in (ROOT/'assets').rglob('*'):
    if p.is_file():self.assertIn(p.relative_to(ROOT).as_posix(),paths)
-  self.assertEqual(m['version'],'v0.6.129')
+  self.assertEqual(m['version'],'v0.6.131')
 if __name__=='__main__':unittest.main()

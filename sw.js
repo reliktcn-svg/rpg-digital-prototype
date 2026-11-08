@@ -51,7 +51,7 @@ async function prepare(){
 async function prefetchImages(){
  const id=await get('installed'),m=await manifest(id);
  if(!m)return;
- const images=m.files.filter(f=>/^assets\/.+\.(?:png|webp|jpg|jpeg|svg|gif)$/i.test(f.path));
+ const images=m.files.filter(f=>/^(?:assets|icons)\/.+\.(?:png|webp|jpg|jpeg|svg|gif)$/i.test(f.path));
  stats.preload={done:0,total:images.length,state:'running'};
  let cursor=0;
  const worker=async()=>{while(cursor<images.length){

@@ -10,3 +10,7 @@
 
 /* Fourth independent branch, compact desktop and stacked phone layout. */
 @media(min-width:901px){.skill-tree-dialog{width:min(1260px,calc(100vw - 24px));max-width:1260px}.skill-columns{grid-template-columns:minmax(140px,.8fr) minmax(220px,1.3fr) minmax(240px,1.3fr) minmax(140px,.8fr);gap:10px}}
+
+/* v0.6.130 — fifth branch, carrying capacity */
+@media(min-width:901px){.skill-columns{grid-template-columns:minmax(140px,.8fr) minmax(200px,1.2fr) minmax(230px,1.2fr) minmax(140px,.8fr) minmax(145px,.85fr)}.skill-tree-dialog{width:min(1400px,calc(100vw - 16px));max-width:1400px}}
+.skill-carry .skill-graph{max-width:120px;margin:0 auto}.skill-carry .skill-graph:before{content:"";position:absolute;top:25px;bottom:42px;left:50%;border-left:1px solid #576566}

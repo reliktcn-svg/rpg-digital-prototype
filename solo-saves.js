@@ -14,10 +14,10 @@
   tx.oncomplete=()=>{db.close();resolve(result)};tx.onerror=()=>{db.close();reject(tx.error||Error('Не удалось сохранить'))};tx.onabort=()=>{db.close();reject(tx.error||Error('Запись отменена'))};
  })}
  const get=slot=>transaction('readonly',s=>s.get(slot));
- const records=async()=>Promise.all(SLOTS.map(get));
+ const records=async()=>{const items=await Promise.all(SLOTS.map(get));return items.map(rec=>{if(!rec?.state)return rec;try{const current=description(JSON.parse(rec.state));return {...rec,hero:current.hero,level:current.level}}catch{return rec}})};
  function validate(state){if(!state||typeof state!=='object'||Array.isArray(state)||state.started!==true||!Array.isArray(state.players)||state.players.length!==1||state.mode==='network'||!state.players[0]?.id)throw Error('Файл не содержит корректного соло-сохранения');}
  function description(state){const hero=state.players[0],owned=Object.values(state.territories||{}).filter(t=>t&&t.owner===hero.id).length;
-  return {hero:String(hero.name||hero.id).slice(0,80),level:Number(hero.level||hero.progressionLevel||owned+1)||1};}
+  return {hero:String(hero.name||hero.id).slice(0,80),level:Number(hero.progressionVersion===2&&Number.isFinite(Number(hero.masteryPoints)) ? 1+Math.floor((Math.sqrt(81+0.16*Math.max(0,Number(hero.masteryPoints)))-9)/2) : hero.level||hero.progressionLevel||owned+1)||1};}
  function write(slot,state){validate(state);const info=description(state);const record={slot,schema:1,updatedAt:Date.now(),hero:info.hero,level:info.level,state:JSON.stringify(state)};
   return transaction('readwrite',s=>s.put(record)).then(()=>record)}
  function writeActive(state){if(!active)return Promise.resolve(false);const slot=active;queue=queue.catch(()=>{}).then(()=>write(slot,state));return queue.then(()=>true)}
