@@ -1,0 +1,150 @@
+[
+  {
+    "artSourceId": 453,
+    "file": "assets/items/453.png",
+    "cards": [
+      453,
+      454,
+      455,
+      456
+    ],
+    "name": "Малое зелье удачи"
+  },
+  {
+    "artSourceId": 457,
+    "file": "assets/items/457.png",
+    "cards": [
+      457,
+      458
+    ],
+    "name": "Среднее зелье удачи"
+  },
+  {
+    "artSourceId": 459,
+    "file": "assets/items/459.png",
+    "cards": [
+      459
+    ],
+    "name": "Великое зелье удачи"
+  },
+  {
+    "artSourceId": 460,
+    "file": "assets/items/460.png",
+    "cards": [
+      460,
+      461,
+      462,
+      463
+    ],
+    "name": "Малое зелье скрытности"
+  },
+  {
+    "artSourceId": 464,
+    "file": "assets/items/464.png",
+    "cards": [
+      464,
+      465
+    ],
+    "name": "Среднее зелье скрытности"
+  },
+  {
+    "artSourceId": 466,
+    "file": "assets/items/466.png",
+    "cards": [
+      466
+    ],
+    "name": "Великое зелье скрытности"
+  },
+  {
+    "artSourceId": 467,
+    "file": "assets/items/467.png",
+    "cards": [
+      467,
+      468
+    ],
+    "name": "Малое зелье урона"
+  },
+  {
+    "artSourceId": 469,
+    "file": "assets/items/469.png",
+    "cards": [
+      469,
+      470
+    ],
+    "name": "Малое зелье урона — продлённое"
+  },
+  {
+    "artSourceId": 471,
+    "file": "assets/items/471.png",
+    "cards": [
+      471,
+      472
+    ],
+    "name": "Малое зелье урона — длительное"
+  },
+  {
+    "artSourceId": 473,
+    "file": "assets/items/473.png",
+    "cards": [
+      473,
+      474
+    ],
+    "name": "Среднее зелье урона"
+  },
+  {
+    "artSourceId": 475,
+    "file": "assets/items/475.png",
+    "cards": [
+      475,
+      476
+    ],
+    "name": "Среднее зелье урона — продлённое"
+  },
+  {
+    "artSourceId": 477,
+    "file": "assets/items/477.png",
+    "cards": [
+      477,
+      478
+    ],
+    "name": "Среднее зелье урона — длительное"
+  },
+  {
+    "artSourceId": 479,
+    "file": "assets/items/479.png",
+    "cards": [
+      479,
+      480
+    ],
+    "name": "Сильное зелье урона"
+  },
+  {
+    "artSourceId": 481,
+    "file": "assets/items/481.png",
+    "cards": [
+      481,
+      482
+    ],
+    "name": "Сильное зелье урона — продлённое"
+  },
+  {
+    "artSourceId": 483,
+    "file": "assets/items/483.png",
+    "cards": [
+      483,
+      484
+    ],
+    "name": "Сильное зелье урона — длительное"
+  },
+  {
+    "artSourceId": 485,
+    "file": "assets/items/485.png",
+    "cards": [
+      485,
+      486,
+      487,
+      488
+    ],
+    "name": "Эликсир нового пути"
+  }
+]

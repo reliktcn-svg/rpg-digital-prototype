@@ -24,11 +24,46 @@ const ids=index=>[489+index*2,490+index*2];
 const clueIndex=id=>Number(id)>=489&&Number(id)<=500?Math.floor((Number(id)-489)/2):-1;
 function clueCards(){return clues.flatMap(([name],i)=>ids(i).map((id,j)=>({id,name:'Сведения о Владыке · '+name,category:'Подсказка Владыки',deck:j?'Исследования Сердца тьмы':'Исследования внешних регионов',bossClueIndex:i,fields:{'Подсказка':name,'Описание':'Раскрывает сведения для всех героев. Исследование продолжается.'}})))}
 function removeClue(state,index){for(const deck of Object.values(state.decks||{}))for(const part of ['draw','discard'])if(Array.isArray(deck[part]))deck[part]=deck[part].filter(id=>!ids(index).includes(Number(id)))}
-function inject(state,level,shuffle){const b=state.boss;if(!b||b.legacy)return false;const stage=b.found.length,next=ensureOrder(b)[stage];if(stage>=6||level<clues[stage][1]||b.injected.includes(next))return false;
- for(const [j,key] of ['exploreOuter','exploreHeart'].entries()){const d=state.decks[key];if(!d)return false}
- b.injected.push(next);for(const [j,key] of ['exploreOuter','exploreHeart'].entries()){state.decks[key].draw.push(ids(next)[j]);state.decks[key].draw=shuffle(state.decks[key].draw)}return true;
+// Ordinary games retain the original clue cadence (2, 4, 7, 9, 12, 15).
+// In NG+ each *new* pair of hero levels makes another clue available, even
+// if an earlier clue remains somewhere in the exploration decks.
+function inject(state,level,shuffle,ngPlusLevelsGained=0){
+ const b=state.boss;if(!b||b.legacy)return false;
+ if(Number(state.ngPlusCycle)>0){
+  const ready=Math.min(6,Math.floor(Math.max(0,Number(ngPlusLevelsGained)||0)/2));
+  const order=ensureOrder(b);
+  if(!state.decks?.exploreOuter||!state.decks?.exploreHeart)return false;
+  let added=0;
+  for(let stage=0;stage<ready;stage++){
+   const next=order[stage];
+   if(b.found.includes(next)||b.injected.includes(next))continue;
+   b.injected.push(next);
+   for(const [j,key] of ['exploreOuter','exploreHeart'].entries()){
+    const deck=state.decks[key];
+    if(!deck.draw.includes(ids(next)[j])&&!deck.discard?.includes(ids(next)[j])){
+     deck.draw.push(ids(next)[j]);deck.draw=shuffle(deck.draw);
+    }
+   }
+   added++;
+  }
+  return added;
+ }
+ const stage=b.found.length,next=ensureOrder(b)[stage];
+ if(stage>=6||level<clues[stage][1]||b.injected.includes(next))return false;
+ for(const key of ['exploreOuter','exploreHeart'])if(!state.decks?.[key])return false;
+ b.injected.push(next);for(const [j,key] of ['exploreOuter','exploreHeart'].entries()){
+  state.decks[key].draw.push(ids(next)[j]);state.decks[key].draw=shuffle(state.decks[key].draw);
+ }
+ return true;
 }
-function reveal(state,index){const b=state.boss;if(!b||b.legacy||index!==ensureOrder(b)[b.found.length]||!b.injected.includes(index))return false;b.found.push(index);b.heartUnlocked=b.found.length>=4;removeClue(state,index);b.clueRecords=b.clueRecords||{};b.clueRecords[index]=clueRecord(b,index);return true}
+function reveal(state,index){
+ const b=state.boss;if(!b||b.legacy||!b.injected.includes(index)||b.found.includes(index))return false;
+ // NG+ clues are injected at fixed level milestones. They may be drawn in
+ // any order, unlike ordinary games, where only the next clue is injected.
+ if(!(Number(state.ngPlusCycle)>0)&&index!==ensureOrder(b)[b.found.length])return false;
+ b.found.push(index);b.heartUnlocked=b.found.length>=4;removeClue(state,index);
+ b.clueRecords=b.clueRecords||{};b.clueRecords[index]=clueRecord(b,index);return true;
+}
 function values(b){return [b.types.join(' + '),String(b.hp),String(b.defense),'+'+b.attack,b.damage,b.effectText]}
 function view(b){return values(b).map((v,i)=>b.legacy||b.fullyRevealed||b.found.length===6?v:b.found.includes(i)?'Найдена подсказка':'—')}
 function clueRecord(b,index){

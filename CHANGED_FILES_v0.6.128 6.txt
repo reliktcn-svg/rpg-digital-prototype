@@ -1,0 +1,13 @@
+Относительно v0.6.127:
+map.html
+server.py
+index.html
+asset-manifest.json
+network-lobby.js
+update-client.css
+update-client.js
+asset_manifest.py
+app.js
+sw.js
+map-viewer.js
+Также: tests-v128/* и документация v0.6.128.

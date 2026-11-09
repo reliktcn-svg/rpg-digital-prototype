@@ -1,0 +1,10 @@
+RPG Digital Prototype v0.6.114 — Mobile popup button reachability
+Base: v0.6.113_Mobile_Location_Scroll
+
+- Mobile traps/events/special/treasure: removed fixed 86dvh dialog height; entire card scrolls including bottom actions. Square art retained.
+- Mobile generic modals (including construction, trade, and loot): max height equals area between top banner and phone bottom, with vertical scrolling.
+- Mobile defeat and victory: avoid clipping the bottom Continue button by scrolling the whole card.
+- Dice/status overlays: keep the bottom Close button reachable.
+- Tavern, shrine and merchant v0.6.113 scrolling is preserved.
+- No changes to game rules, network logic, battle logic, upper/lower menus or map.
+- Only ui-v06108.css and static cache references in index.html/sw.js modified.

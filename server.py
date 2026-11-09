@@ -166,14 +166,42 @@ def preserve_boss_state(existing, incoming):
         boss['clueOrder']=order
         old_count=len(old.get('found') or [])
         proposed_found=proposed.get('found') or []
-        count=len(proposed_found) if proposed_found==order[:len(proposed_found)] else old_count
-        level=max([1]+[progression_level(p) for p in incoming.get('players',[]) if isinstance(p,dict)])
-        thresholds=[2,4,7,9,12,15]
-        count=max(old_count,min(6,count))
-        while count>old_count and level<thresholds[count-1]:count-=1
-        boss['found']=order[:count]
         injected=set(old.get('injected') or [])|set(proposed.get('injected') or [])
-        boss['injected']=[i for i in order if i in injected and (i in order[:count] or (count<6 and i==order[count] and level>=thresholds[count]))]
+        if old_cycle>0:
+            # For NG+ each two levels earned *in this cycle* unlock one clue.
+            # Unlike the ordinary game, multiple clues can wait in the decks
+            # and players may discover those clues in any order.
+            starts=existing.get('ngPlusStartLevels') or {}
+            gained=[]
+            for player in incoming.get('players',[]):
+                if not isinstance(player,dict):continue
+                current=progression_level(player)
+                baseline=starts.get(player.get('id'),player.get('ngPlusStartLevel',current))
+                try: baseline=max(1,int(baseline))
+                except (TypeError,ValueError):baseline=current
+                gained.append(max(0,current-baseline))
+            due=set(order[:min(6,max(gained or [0])//2)])
+            # Keep already-injected clues from games begun before this patch:
+            # they may be in a player's exploration deck already.
+            prior_injected=set(old.get('injected') or [])
+            allowed=due|prior_injected
+            already=[i for i in old.get('found',[]) if i in order]
+            additions=[i for i in proposed_found if type(i) is int and i in allowed
+                       and i in injected and i not in already]
+            boss['found']=already+list(dict.fromkeys(additions))
+            boss['injected']=[i for i in order if i in allowed and (i in injected or i in boss['found'])]
+            # Do not allow clients to manipulate the start levels after NG+.
+            if starts:incoming['ngPlusStartLevels']=json.loads(json.dumps(starts))
+        else:
+            # The original game still reveals exactly the next shuffled clue.
+            count=len(proposed_found) if proposed_found==order[:len(proposed_found)] else old_count
+            level=max([1]+[progression_level(p) for p in incoming.get('players',[]) if isinstance(p,dict)])
+            thresholds=[2,4,7,9,12,15]
+            count=max(old_count,min(6,count))
+            while count>old_count and level<thresholds[count-1]:count-=1
+            boss['found']=order[:count]
+            boss['injected']=[i for i in order if i in injected and (i in order[:count] or (count<6 and i==order[count] and level>=thresholds[count]))]
+        count=len(boss['found'])
         boss['heartUnlocked']=count>=4
         boss['fullyRevealed']=bool(old.get('fullyRevealed') or count==6 or (proposed.get('fullyRevealed') and (incoming.get('combat') or {}).get('isBoss')))
         records=boss.setdefault('clueRecords',{})
