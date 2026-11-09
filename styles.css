@@ -1764,3 +1764,8 @@ body.game-running #modal:has(.story-card-shell) .modal-card,
 .rune-choice-options b{color:#f0d079;font-size:14px}.rune-choice-options span{font-size:13px;line-height:1.5}
 .rune-choice-buttons{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:17px}.rune-choice-buttons button{min-height:44px;touch-action:manipulation}
 @media(max-width:370px){.rune-choice-dialog{padding:14px 11px}.rune-choice-dialog h2{font-size:21px}}
+
+/* v0.6.137: the rune choice must be above battle (23500) and the turn banner (30000).
+   The old 900 layer hid its buttons behind the combat modal. */
+body .rune-choice-overlay{z-index:31000!important;pointer-events:auto!important;isolation:isolate}
+body .rune-choice-overlay .rune-choice-dialog{position:relative;z-index:1;touch-action:pan-y}

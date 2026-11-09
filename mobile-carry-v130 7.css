@@ -1,0 +1,36 @@
+/* RPG v0.6.130 — RPG themed luggage, potion satchel and inline equipment swaps */
+body.game-running .inventory-special-art{width:70%;height:70%;max-height:104px;object-fit:contain;display:block;margin:3px auto;pointer-events:none}
+body.game-running .potion-bag-tile,body.game-running .backpack-slot{overflow:hidden;position:relative}
+body.game-running .potion-bag-info{font-size:12px;line-height:1.5;color:#e4d2ae;margin:6px 0 12px}
+body.game-running .potion-bag-list{display:flex;flex-direction:column;gap:8px}
+body.game-running .potion-bag-entry{display:flex;align-items:center;gap:12px;text-align:left;background:#1e252c;border:1px solid #695b42;border-radius:10px;min-height:76px;padding:6px 10px;color:#f4ecd8}
+body.game-running .potion-bag-entry img{height:64px;width:64px;object-fit:cover;border-radius:6px;flex:none;pointer-events:none}
+body.game-running .potion-bag-entry span{display:grid;gap:5px;min-width:0}body.game-running .potion-bag-entry small{font-size:11px;color:#aeb7b8}
+body.game-running .potion-bag-empty{padding:12px;border:1px dashed #6c6760;border-radius:8px;color:#b0a899}
+body.game-running .equipped-backpack-options{padding:8px 0 18px;margin-top:10px;min-width:0}
+body.game-running .equipment-backpack-heading{display:flex;gap:10px;align-items:center;text-transform:uppercase;font:700 15px Georgia,serif;letter-spacing:1px;color:#ebca92;margin:10px 0 14px}
+body.game-running .equipment-backpack-heading:before,body.game-running .equipment-backpack-heading:after{content:"";height:1px;background:linear-gradient(90deg,transparent,#bba16c);flex:1}
+body.game-running .equipment-backpack-heading:after{transform:rotate(180deg)}
+body.game-running .equipped-backpack-list{display:flex;flex-direction:column;gap:8px}
+body.game-running .equipped-backpack-row{display:flex;gap:9px;align-items:center;border:1px solid #3d454b;border-radius:9px;background:#1a2428;padding:7px;min-width:0}
+body.game-running .equipped-backpack-row>img{width:58px;height:58px;object-fit:cover;border-radius:6px;flex:none}
+body.game-running .equipped-backpack-summary{display:flex;min-width:0;flex:1;flex-direction:column;gap:4px}
+body.game-running .equipped-backpack-summary>b{font-size:13px;overflow-wrap:anywhere}
+body.game-running .equipped-backpack-summary>small{font-size:10px;color:#b7b7ac;line-height:1.3;max-height:3.9em;overflow:hidden}
+body.game-running .equipped-backpack-row>button{flex:none;min-height:40px;padding:8px;white-space:nowrap}
+/* Inner descriptions must scroll without passing gestures to the base window. */
+body.game-running .item-face-hit .inventory-card-reverse,body.game-running .item-face-hit,
+body.game-running .visual-card-back-wrap,body.game-running .visual-card-back,
+body.game-running .story-card-scroller,body.game-running .loot-draft-art-action .inventory-card-reverse{
+ overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch;touch-action:pan-y!important;
+}
+body.game-running .item-face-hit .inventory-card-reverse{overflow-y:auto!important;max-height:min(55dvh,280px)!important}
+body.game-running .visual-card-back-wrap,body.game-running .visual-card-back{overflow-y:auto!important;min-height:0}
+@media(max-width:700px){body.game-running .equipped-backpack-row>img{width:48px;height:48px}body.game-running .equipped-backpack-row>button{font-size:11px;padding:6px}body.game-running .inventory-special-art{width:68%;height:68%}}
+
+body.game-running .visual-card-stage.is-back{touch-action:pan-y!important;overscroll-behavior:contain!important}
+body.game-running #modal .loot-draft-art-action > .inventory-card-reverse{overscroll-behavior-y:contain!important;touch-action:pan-y!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important}
+body.game-running #modal .loot-draft-art-action{touch-action:pan-y!important;overscroll-behavior:contain!important}
+body.game-running .item-detail-card .item-face-hit .inventory-card-reverse{touch-action:pan-y!important;overscroll-behavior-y:contain!important;-webkit-overflow-scrolling:touch!important}
+body.game-running .visual-combat-head .visual-card-stage.is-back .visual-card-face.visual-card-back{touch-action:pan-y!important;overscroll-behavior-y:contain!important}
+body.game-running .story-card-scroller{overscroll-behavior-y:contain!important}

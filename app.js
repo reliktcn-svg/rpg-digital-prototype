@@ -147,7 +147,7 @@
     for(const {id,part} of all){const card=itemCard(id);const key=card?.deck==='Тайники Сердца тьмы'?'lootHeart':'lootOuter';state.decks[key][part].push(id);owned.add(Number(id))}
     for(const card of CARDS)if(card.id>=387&&card.id<=452&&!owned.has(card.id))state.decks[card.deck==='Тайники Сердца тьмы'?'lootHeart':'lootOuter'].draw.push(card.id);
     // Migration is deterministic across clients; draws already choose by shuffled physical order.
-    state.equipmentRevision=2;state.version='0.6.136';
+    state.equipmentRevision=2;state.version='0.6.137';
   }
   function normalizeTavernMercenaries(){
     if(state.mercenaryRevision===1)return;
@@ -280,7 +280,7 @@
   }
 
   function freshState(){return {
-    version:'0.6.136', ngPlusCycle:0, ngPlusStartLevels:{}, boss:null, equipmentRevision:2, mercenaryRevision:1, started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
+    version:'0.6.137', ngPlusCycle:0, ngPlusStartLevels:{}, boss:null, equipmentRevision:2, mercenaryRevision:1, started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
     decks:initialDecks(), cleaned:{}, cleanedUntil:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, tradeDeal:null, dungeonEntryNotice:null, territoryBuiltNotice:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:3, sharedDifficulty:null, journal:[]
   };}
   let state=freshState();
@@ -628,7 +628,7 @@
   function recordLocationVisit(p,hex){if(!p||!state.locations?.[hex])return;ensurePlayerStats(p);p.stats.locationVisitsTotal++}
   function gainGold(p,amount){const v=Math.max(0,Number(amount)||0);if(!v)return 0;ensurePlayerStats(p);p.gold+=v;p.stats.goldEarned+=v;return v}
   function enemyRankStatKey(enemy,c=state.combat){if(c?.isBoss||enemy?.id===281)return'boss';if(c?.elite)return'elite';const r=String(enemy?.fields?.['Ранг']||'').toLowerCase();if(r.includes('элит'))return'elite';if(r.includes('силь'))return'strong';if(r.includes('обыч'))return'normal';return'weak'}
-  function recordEnemyVictory(p,enemy,c=state.combat){if(c?.masteryAwarded)return;ensurePlayerStats(p);const k=enemyRankStatKey(enemy,c);p.stats.enemies[k]=(p.stats.enemies[k]||0)+1;const gain=RPGProgression.award(p,enemy,c);syncBossClues();if(c&&gain.levels)c.levelUp={level:gain.level,levels:gain.levels};const text=`${p.name}: +${gain.amount} ОМ · опыт ${gain.xp}/${gain.next}${gain.levels?` · уровень ${gain.level}, очков способностей +${gain.levels}`:''}.`;log(text);combatPush(text)}
+  function recordEnemyVictory(p,enemy,c=state.combat){if(c?.masteryAwarded)return;ensurePlayerStats(p);const k=enemyRankStatKey(enemy,c);p.stats.enemies[k]=(p.stats.enemies[k]||0)+1;const gain=RPGProgression.award(p,enemy,c,{ngPlusCycle:state.ngPlusCycle});syncBossClues();if(c&&gain.levels)c.levelUp={level:gain.level,levels:gain.levels};const text=`${p.name}: +${gain.amount} ОМ · опыт ${gain.xp}/${gain.next}${gain.levels?` · уровень ${gain.level}, очков способностей +${gain.levels}`:''}.`;log(text);combatPush(text)}
   function ensurePlayerModel(p){
     RPGProgression.ensure(p);
     if(!p.backpack)p.backpack=[];if(!p.pendingItems)p.pendingItems=[];
@@ -835,7 +835,7 @@
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,progressionVersion:2,masteryPoints:0,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,artifact2:null,potions:[null,null,null,null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:sharedHard,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats(),territoryBuildSeq:{kingdom:0,cursed:0}}});
     generatePermanentLocations({preserve:false});
     state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;els.sheetDrawer.hidden=true;setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
-    log(`<b>Партия v0.6.136 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
+    log(`<b>Партия v0.6.137 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
     state.order.forEach(id=>{const p=getPlayer(id);log(`Инициатива ${p.name}: D20 = <b>${p.initiative}</b>.`,p.id)});updateUI();renderBoard();
   }
 
@@ -937,7 +937,10 @@
   // A completed initiative cycle grants one recovery, not each bonus personal turn.
   // Side actions after victory/trade belong to the previous turn, including in solo.
   function recoverHealthForRound(p){
-    const round=Math.max(1,Number(state.round)||1);
+    const round=Math.max(1,Math.floor(Number(state.round)||1));
+    // Legacy NG+ saves can retain the regeneration timestamp from the old world.
+    // A future round number must never lock regeneration in this world.
+    if(p&&Number(state.ngPlusCycle)>0&&Number(p.lastRecoveryRound||0)>round)p.lastRecoveryRound=0;
     if(!p||!state.started||state.gameOver||state.combat||currentPlayer()?.id!==p.id||sideInteractionActiveFor(p.id)||postVictorySession?.heroId===p.id||p.currentHp<=0||round<2||Number(p.lastRecoveryRound||0)>=round)return 0;
     p.lastRecoveryRound=round; // Full health also consumes this round's recovery.
     const restored=Math.max(0,Math.min(RPGProgression.selected(p,'regeneration')?.level||0,p.maxHp-p.currentHp));p.currentHp+=restored;
@@ -3257,6 +3260,8 @@
     for(const btn of box.querySelectorAll('[data-rune-option]'))btn.onclick=()=>{
       if(state.combat!==c||c.phase!=='pre'){box.remove();return;}
       if(!combatHasEquipped(currentPlayer(),223)){box.remove();return;}
+      // Commit selection to the active combat before closing the topmost dialog.
+      // A single tap must both select the effect and enter combat (no second click).
       c.livingRune=btn.dataset.runeOption;
       combatPush(`Живая руна героя: выбран ${c.livingRune==='attack2'?'эффект 1 · +2 к атаке':'эффект 2 · восстановить D10 ЗД один раз за бой'}.`);
       box.remove();combatFight();
@@ -4414,7 +4419,11 @@
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
       state.ngPlusCycle=Math.max(0,Number(state.ngPlusCycle)||0);state.ngPlusStartLevels=state.ngPlusStartLevels||{};
-      state.version='0.6.136';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>{
+      // Older solo NG+ saves may contain a recovery round from the previous world.
+      if(state.ngPlusCycle>0)for(const hero of state.players||[]){
+        if(Number(hero.lastRecoveryRound||0)>Math.max(1,Number(state.round)||1))hero.lastRecoveryRound=0;
+      }
+      state.version='0.6.137';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>{
         if(state.soloViewport){els.boardWrap.scrollLeft=Number(state.soloViewport.left)||0;els.boardWrap.scrollTop=Number(state.soloViewport.top)||0}
         else centerMapOnPlayer(currentPlayer(),'auto');
       },120);log('Соло-партия загружена из локального слота.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
@@ -4436,7 +4445,11 @@
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
     state.ngPlusCycle=Math.max(0,Number(state.ngPlusCycle)||0);state.ngPlusStartLevels=state.ngPlusStartLevels||{};
-    state.version='0.6.136';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    // Migrate saves created before NG+ round recovery was reset (v0.6.135).
+    if(state.ngPlusCycle>0)for(const p of state.players||[]){
+      if(Number(p.lastRecoveryRound||0)>Math.max(1,Number(state.round)||1))p.lastRecoveryRound=0;
+    }
+    state.version='0.6.137';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){
