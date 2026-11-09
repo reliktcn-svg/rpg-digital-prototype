@@ -147,7 +147,7 @@
     for(const {id,part} of all){const card=itemCard(id);const key=card?.deck==='Тайники Сердца тьмы'?'lootHeart':'lootOuter';state.decks[key][part].push(id);owned.add(Number(id))}
     for(const card of CARDS)if(card.id>=387&&card.id<=452&&!owned.has(card.id))state.decks[card.deck==='Тайники Сердца тьмы'?'lootHeart':'lootOuter'].draw.push(card.id);
     // Migration is deterministic across clients; draws already choose by shuffled physical order.
-    state.equipmentRevision=2;state.version='0.6.133';
+    state.equipmentRevision=2;state.version='0.6.134';
   }
   function normalizeTavernMercenaries(){
     if(state.mercenaryRevision===1)return;
@@ -270,7 +270,7 @@
   }
 
   function freshState(){return {
-    version:'0.6.133', ngPlusCycle:0, ngPlusStartLevels:{}, boss:null, equipmentRevision:2, mercenaryRevision:1, started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
+    version:'0.6.134', ngPlusCycle:0, ngPlusStartLevels:{}, boss:null, equipmentRevision:2, mercenaryRevision:1, started:false, players:[], order:[], currentIndex:0, rolled:false, die:null, movePoints:0, reachable:[], chosenPath:null, chosenMovePlan:null, turnMoved:false, movePending:false, moveOriginHex:null, moveTransit:null, pendingMoveAction:null, round:1,
     decks:initialDecks(), cleaned:{}, cleanedUntil:{}, locations:{}, territories:{}, areas:[], nextAreaId:1, exploration:null, turnLocked:false, locationUsedThisTurn:false, locationActivationHex:null, portalPending:null, clearedThisTurnHex:null, foreignTerritoryPending:null, tributeConsentPending:null, tradeOpportunity:null, tradeDeal:null, dungeonEntryNotice:null, territoryBuiltNotice:null, inspectPlayerId:null, mapHighlight:null, mapZoom:1, combat:null, gameOver:false, locationPlacementVersion:3, sharedDifficulty:null, journal:[]
   };}
   let state=freshState();
@@ -825,7 +825,7 @@
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,progressionVersion:2,masteryPoints:0,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,artifact2:null,potions:[null,null,null,null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:sharedHard,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats(),territoryBuildSeq:{kingdom:0,cursed:0}}});
     generatePermanentLocations({preserve:false});
     state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;els.sheetDrawer.hidden=true;setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
-    log(`<b>Партия v0.6.133 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
+    log(`<b>Партия v0.6.134 началась.</b> Игроков: ${state.players.length}. Колоды перемешаны. Все постоянные локации заранее размещены на карте для этой партии.`,null);
     state.order.forEach(id=>{const p=getPlayer(id);log(`Инициатива ${p.name}: D20 = <b>${p.initiative}</b>.`,p.id)});updateUI();renderBoard();
   }
 
@@ -4202,9 +4202,28 @@
   }
   function advanceTurnWithSideInteraction(p,type,reason,participantIds=[p?.id].filter(Boolean)){beginSideInteraction(p,type,participantIds);advanceTurnState(p,reason)}
 
+  // v0.6.134: stopping on a cleared free hex or in the starting Camp is itself
+  // confirmation of the selected route. The route must still be committed so
+  // travelled distance, foreign-territory checkpoints and location departures
+  // are processed normally; never clear movePending by hand.
+  function canEndTurnAtSelectedSafeHex(p){
+    if(!state.movePending||!state.rolled||!state.chosenMovePlan||!p||p.inDungeon||state.combat||state.portalPending||state.foreignTerritoryPending||state.moveTransit)return false;
+    const hex=p.hex,plan=manualMovePlan(p);
+    if(!plan.path||plan.path.length<2||plan.hex!==hex||plan.cost<=0)return false;
+    if(hex===MAP.bossHex||state.locations[hex]||state.territories[hex])return false;
+    return hex===MAP.startHex||!!state.cleaned[hex];
+  }
   function endTurn(force=false){
     if(!state.started||state.gameOver)return;const p=currentPlayer();if(state.turnLocked&&!force)return;
-    if(!force&&state.rolled&&!state.turnMoved&&!p.inDungeon){alert('После броска кубика движения необходимо выполнить перемещение. Завершить ход можно только после движения.');return;}if(!force&&state.movePending){alert('Сначала подтвердите выбранное перемещение.');return;}
+    if(!force&&state.movePending){
+      if(canEndTurnAtSelectedSafeHex(p)&&!p.pendingItems?.length&&!state.tributeConsentPending){
+        // A foreign territory along the path must still ask for tribute or
+        // permission before the pending end-turn action is allowed to run.
+        commitPendingMove({type:'endTurn'});return;
+      }
+      alert('Сначала подтвердите выбранное перемещение.');return;
+    }
+    if(!force&&state.rolled&&!state.turnMoved&&!p.inDungeon){alert('После броска кубика движения необходимо выполнить перемещение. Завершить ход можно только после движения.');return;}
     if(!force&&p.pendingItems?.length){openCharacterSheet('pending');alert('Сначала разберите все неразобранные тайники.');return}
     if(!force&&state.foreignTerritoryPending?.heroId===p.id){alert('Сначала разрешите взаимодействие с чужой территорией: дань, избегание дани, разрешение на проход или захват.');return}
     if(!force&&currentHexNeedsResolution(p)){alert(`Сначала исследуйте гекс ${p.hex}. На неисследованном гексе завершить ход нельзя.`);return}
@@ -4354,7 +4373,7 @@
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
       state.ngPlusCycle=Math.max(0,Number(state.ngPlusCycle)||0);state.ngPlusStartLevels=state.ngPlusStartLevels||{};
-      state.version='0.6.133';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>{
+      state.version='0.6.134';if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer().hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];refreshManualMoveReachable(currentPlayer())}els.sheetDrawer.hidden=true;updateUI();renderBoard();setTimeout(()=>{
         if(state.soloViewport){els.boardWrap.scrollLeft=Number(state.soloViewport.left)||0;els.boardWrap.scrollTop=Number(state.soloViewport.top)||0}
         else centerMapOnPlayer(currentPlayer(),'auto');
       },120);log('Соло-партия загружена из локального слота.');if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
@@ -4376,7 +4395,7 @@
     const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
     state.ngPlusCycle=Math.max(0,Number(state.ngPlusCycle)||0);state.ngPlusStartLevels=state.ngPlusStartLevels||{};
-    state.version='0.6.133';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
+    state.version='0.6.134';if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
     if(state.rolled&&!state.turnLocked&&!state.moveTransit&&!state.portalPending&&!state.foreignTerritoryPending){if(!Array.isArray(state.chosenPath)||!state.chosenPath.length)state.chosenPath=[state.moveOriginHex||currentPlayer()?.hex];if(state.movePending&&state.chosenMovePlan?.path)state.chosenPath=[...state.chosenMovePlan.path];if(currentPlayer())refreshManualMoveReachable(currentPlayer())}
   }
   function applyOnlineState(next){
