@@ -1,0 +1,4 @@
+v0.6.127 Network Optimization
+Base: v0.6.126. Conditional state/map GET, gzip, HTTP validators, serialized response cache, one game timer, session guards, no eager artwork downloads. Game intervals 400ms / map 650ms unchanged. Assets and balance unchanged.
+See NETWORK_AUDIT_v0.6.127.md and DEPLOYMENT_v0.6.127.md for the full Russian report and deployment instructions.
+Dockerfile added. Server rooms remain in memory; persistent storage is NOT implemented.

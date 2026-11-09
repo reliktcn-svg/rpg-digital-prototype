@@ -151,6 +151,15 @@ def preserve_boss_state(existing, incoming):
     old=existing.get('boss')
     if not isinstance(old,dict):return
     proposed=incoming.get('boss') or {}
+    # Authorised main-turn sync may start a new cycle after defeating the boss.
+    # In that case a fresh boss, with no clues found, is required.
+    old_cycle=int(existing.get('ngPlusCycle') or 0)
+    new_cycle=int(incoming.get('ngPlusCycle') or 0)
+    if (existing.get('gameOver') and new_cycle==old_cycle+1
+            and incoming.get('gameOver') is False and isinstance(proposed,dict)
+            and proposed.get('schema')==1 and not proposed.get('found')
+            and isinstance(incoming.get('ngPlusStartLevels'),dict)):
+        return
     boss=json.loads(json.dumps(old))
     if not old.get('legacy'):
         order=boss_clue_order(old)
@@ -631,6 +640,15 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                 can_offturn=(isinstance(dungeon,dict) and dungeon.get('heroId')==actor) or (isinstance(tribute,dict) and tribute.get('ownerId')==actor)
                 if active and actor!=active and not can_offturn:
                     return self._json(409, {'error':'Ход уже перешёл другому герою. Повторно отправлять его нельзя.','revision':room.get('gameRevision')})
+                # Starting NG+ is a special irreversible transition: only the
+                # boss winner may reset the world, exactly one cycle at a time.
+                old_cycle=int(existing.get('ngPlusCycle') or 0)
+                new_cycle=int(game.get('ngPlusCycle') or 0)
+                if new_cycle!=old_cycle:
+                    old_winner=(existing.get('gameOver') or {}).get('winnerId') if isinstance(existing.get('gameOver'),dict) else None
+                    if (new_cycle!=old_cycle+1 or not old_winner or actor!=old_winner
+                            or game.get('gameOver') is not False):
+                        return self._json(403, {'error':'Новую игру + может начать только победитель босса'})
                 preserve_boss_state(existing,game)
                 existing_deal=existing.get('tradeDeal') if isinstance(existing,dict) else None
                 incoming_deal=game.get('tradeDeal') if isinstance(game,dict) else None

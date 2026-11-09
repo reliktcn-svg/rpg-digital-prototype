@@ -1,0 +1,3 @@
+.negative-effect-tooltip{z-index:2147483647!important;position:fixed!important;inset:auto;margin:0!important;min-width:0!important;max-width:calc(100vw - 20px)!important;box-sizing:border-box!important;overflow:auto!important;pointer-events:auto!important;font-size:14px;line-height:1.45}
+.negative-effect-tooltip b{font-size:15px}.negative-effect-tooltip small{display:block;margin-top:8px}.negative-effect-tooltip-close{width:32px;min-width:32px;height:32px;min-height:32px}
+.negative-effect-term,.tabletop-effect-icon{cursor:help;pointer-events:auto!important}.negative-effect-term:focus-visible,.tabletop-effect-icon:focus-visible{outline:2px solid #efcb78;outline-offset:2px}
