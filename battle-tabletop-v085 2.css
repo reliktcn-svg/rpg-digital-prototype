@@ -1,0 +1,21 @@
+/* v0.6.85: one property per line on the reverse of item cards */
+body.game-running .inventory-card-reverse .reverse-properties,
+body.game-running .loot-draft-art-action .inventory-card-reverse .reverse-properties {
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:5px!important;
+}
+body.game-running .inventory-card-reverse .reverse-properties>div,
+body.game-running .loot-draft-art-action .inventory-card-reverse .reverse-properties>div {
+  display:flex!important;align-items:baseline;gap:7px!important;justify-content:flex-start;
+  padding:5px 8px!important;min-width:0;
+}
+body.game-running .inventory-card-reverse .reverse-properties small {
+  flex:0 0 auto;font-size:10px;letter-spacing:.02em;white-space:nowrap;
+}
+body.game-running .inventory-card-reverse .reverse-properties small:after {content:':';}
+body.game-running .inventory-card-reverse .reverse-properties span {
+  font-size:clamp(10px,1.2vw,12px)!important;line-height:1.25;white-space:normal;overflow-wrap:anywhere;
+}
+body.game-running .loot-draft-art-action .inventory-card-reverse .reverse-properties small {font-size:9px}
+body.game-running .loot-draft-art-action .inventory-card-reverse .reverse-properties span {font-size:9px!important}
+/* Total numbers for secondary roll stages match the attack total type scale. */
+.combat-die-main, .roll-popup-main {font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:850;color:#ffdd87}

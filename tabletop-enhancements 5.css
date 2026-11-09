@@ -1,0 +1,115 @@
+/* v0.6.77 — tabletop visual improvements integrated on top of the v0.6.76 rules.
+   Rules for battle, merchant, tavern, shrine, traps and results retain their original mechanics. */
+body.tabletop-upgrade {
+  --bg:#17130f;--panel:#261f18;--panel2:#31271d;--line:#6c5437;
+  --text:#f3ead6;--muted:#beaf95;--gold:#dcbb7a;
+  --green:#79a481;--red:#bd6e63;--blue:#7496ae;--purple:#a889b9;
+  min-width:320px!important;
+  background:radial-gradient(ellipse at 50% 0%,#62432d77,transparent 68%),
+             repeating-linear-gradient(2deg,#201910 0 4px,#251b12 4px 7px,#1f1810 8px 12px);
+  color:var(--text);
+}
+.tabletop-upgrade button {border-color:#7d6241;background:linear-gradient(#46392a,#2c241b);color:#f3e6cc;box-shadow:inset 0 1px #fff2,0 2px 4px #0003}
+.tabletop-upgrade button:focus-visible{outline:2px solid #f1d18e;outline-offset:2px}
+.tabletop-upgrade .primary,.tabletop-upgrade .success {background:linear-gradient(#9c7943,#71502b);border-color:#ccaa72;color:#fff5df}
+.tabletop-upgrade .secondary {background:linear-gradient(#425248,#29392f);border-color:#638370}
+.tabletop-upgrade .danger{background:linear-gradient(#6e3c31,#452823);border-color:#9d5d52}
+.tabletop-upgrade h1,.tabletop-upgrade h2,.tabletop-upgrade .card-title{font-family:Georgia,'Times New Roman',serif}
+.tabletop-upgrade .topbar{height:66px!important;position:relative!important;z-index:180!important;background:#201910f2;border-bottom:1px solid #8d6b40;padding:8px 20px!important}
+.tabletop-upgrade .topbar h1{font-size:21px;margin-top:4px;color:#e7d4b1}
+.tabletop-upgrade .topbar .eyebrow{font-size:9px;letter-spacing:.22em;color:#cba567}
+.tabletop-upgrade .top-actions{align-items:center}
+.tabletop-upgrade .tabletop-header-actions{display:flex;gap:8px}
+.tabletop-upgrade .tabletop-header-actions button{min-width:100px;height:40px;background:linear-gradient(#4b3b2b,#2a2219);border:1px solid #ac8854;border-radius:7px;font-size:13px}
+.tabletop-upgrade button.active,.tabletop-upgrade button[aria-pressed="true"]{background:linear-gradient(#8d7549,#624929);border-color:#f2d28b;box-shadow:inset 0 0 0 1px #e4c57c88}
+/* A single scrollable turn queue: portrait, HP, gold and who is next. */
+body.tabletop-upgrade .turn-order-banner{position:relative!important;inset:auto!important;transform:none!important;height:82px;min-height:0;padding:9px 18px!important;display:flex!important;align-items:center!important;gap:12px!important;background:linear-gradient(180deg,#1d1a13,#15130ff5);border:0;border-bottom:1px solid #735839;box-shadow:0 6px 12px #0006;z-index:170!important;overflow:hidden}
+body.tabletop-upgrade .turn-order-banner[hidden]{display:none!important}
+.table-round{flex:0 0 46px;display:grid;justify-items:center;gap:0}
+.table-round small{font-size:8px;letter-spacing:.13em;color:#c4ae87;font-weight:750}
+.table-round strong{font:25px/1 Georgia,serif;color:#e0bd78}
+.table-turns{flex:1;min-width:0;display:flex;align-items:center;gap:9px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:#98734e transparent;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:3px 2px}
+.table-turn{display:flex;flex:0 0 auto;min-width:162px;max-width:210px;height:62px;gap:8px;align-items:center;background:linear-gradient(#3a3024,#231e18);border:1px solid #745c41;border-left:3px solid var(--hero-color,#9a8b65);border-radius:7px;padding:5px;scroll-snap-align:start;box-shadow:0 2px 5px #0005}
+.table-turn.is-active{border:2px solid #d8b36b;background:linear-gradient(#4d3a24,#302517);box-shadow:inset 0 0 0 1px #c49b5545}
+.table-turn img{width:38px;height:50px;object-fit:cover;border-radius:4px;border:1px solid #a78a58;flex-shrink:0}
+.table-turn>span{display:flex;min-width:0;flex-direction:column;gap:2px}
+.table-turn small{font-size:7px;letter-spacing:.06em;color:#d5ba7e;font-weight:800;white-space:nowrap}
+.table-turn b{font:16px/1.05 Georgia,serif;color:#f9e5bb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.table-turn em{font-size:10px;color:#e7d4b6;font-style:normal;white-space:nowrap}
+.table-turn em strong{font-weight:900;color:#edc875;font-size:10px}
+body.tabletop-upgrade .turn-order-code{flex:0 0 auto;color:#d2b88b;background:#34281a;border:1px solid #725632;padding:5px 7px;border-radius:6px;font-size:10px;white-space:nowrap}
+.table-journal{flex:0 0 auto;height:40px;min-width:68px;font-size:11px}
+/* Base game keeps its controls and movement grid; only its presentation changes. */
+body.tabletop-upgrade.game-running .layout{display:grid!important;grid-template-columns:232px minmax(0,1fr)!important;gap:14px!important;padding:14px 20px 20px!important;height:calc(100dvh - 148px)!important;min-height:440px;margin:0!important;width:100%!important}
+body.tabletop-upgrade.game-running .side-panel{min-width:0;overflow-y:auto;background:linear-gradient(150deg,#30271e,#201b16);border:1px solid #846843;border-radius:9px;padding:13px!important;box-shadow:0 12px 30px #0004}
+body.tabletop-upgrade.game-running .board-panel{min-width:0!important;position:relative!important;top:0!important;display:flex!important;flex-direction:column!important;border:8px solid #513922!important;outline:1px solid #ad8b57;border-radius:8px;background:#3a2919;box-shadow:inset 0 0 0 2px #916e42,0 14px 35px #0008;overflow:hidden}
+body.tabletop-upgrade.game-running .board-wrap{flex:1;min-height:0;background:#201a13;scrollbar-color:#8f724b #221b13}
+body.tabletop-upgrade.game-running .board-footer{flex:none;background:#2b2118;border-top:1px solid #80613e;height:auto;min-height:30px;padding:6px 10px;font-size:10px;color:#d4c09f}
+body.tabletop-upgrade .map-zoom-controls{right:11px;top:11px;display:flex;gap:5px;flex-direction:column;z-index:50}
+body.tabletop-upgrade .map-zoom-controls button{height:38px;width:38px;font-size:22px;line-height:1;padding:0;background:linear-gradient(#4b3926,#271f17);border:1px solid #ba955d;border-radius:7px;color:#f1dfb5;box-shadow:0 3px 8px #0008}
+body.tabletop-upgrade #tableCenter{font-size:27px;font-family:Georgia,serif}
+body.tabletop-upgrade .mobile-quick-actions{display:none}
+body.tabletop-upgrade .turn-card{display:none}
+body.tabletop-upgrade #gameSection>.separator,body.tabletop-upgrade #gameSection>h3,body.tabletop-upgrade #initiativeList{display:none}
+body.tabletop-upgrade .dice-row{display:flex;align-items:center;gap:8px;margin-top:3px}
+body.tabletop-upgrade #moveRollBtn{min-height:48px;flex:1;font-size:13px;font-weight:850}
+.tabletop-upgrade .dice-points{display:flex;flex-direction:column;align-items:center;gap:3px;flex:none}
+body.tabletop-upgrade .dice{background:linear-gradient(135deg,#f8efd8,#d6b77d);border:2px solid #b28d50;border-radius:8px;color:#423019;box-shadow:inset 1px 2px #fff9,2px 3px 0 #61472a;font:900 25px Georgia,serif;width:48px;height:48px}
+.tabletop-upgrade .dice-points small{font-size:10px;color:#d8bd88}
+body.tabletop-upgrade #moveHint{font-size:11px;color:#d0bd9d}
+body.tabletop-upgrade .action-box{background:linear-gradient(#382e24,#292218);border:1px solid #6b573d;color:#eee0c5}
+body.tabletop-upgrade .action-title{font-family:Georgia,serif;font-size:15px}
+/* Inventory becomes a floating tablet; it no longer permanently reduces board width. */
+body.tabletop-upgrade .sheet-drawer{inset:159px 19px 20px auto!important;right:19px!important;top:159px!important;bottom:20px!important;width:min(510px,calc(100vw - 38px))!important;max-height:none!important;background:linear-gradient(145deg,#332719,#1d1914);border:2px solid #ab8651!important;border-radius:11px!important;box-shadow:0 15px 70px #000c;z-index:370!important;overflow-y:auto!important}
+body.tabletop-upgrade .sheet-drawer[hidden]{display:none!important}
+body.tabletop-upgrade .sheet-drawer-head{background:#2c2116;border-bottom:1px solid #8d6940;padding:10px 13px}
+body.tabletop-upgrade .sheet-tab{border-color:#917047;background:#413325;color:#e6d2ab}
+body.tabletop-upgrade .sheet-tab.active{background:#82623c;color:#fff0cf;border-color:#dfb979}
+body.tabletop-upgrade .sheet-stat,body.tabletop-upgrade .gear-slot,body.tabletop-upgrade .merc-slot{background:#2b251d;border-color:#6c5840}
+body.tabletop-upgrade .sheet-content{color:#f0e2c7}
+body.tabletop-upgrade .sheet-utility-tools{background:#251d16;border-bottom:1px solid #654c34}
+/* In setup retain the original hero picker and network lobby. */
+body.tabletop-upgrade:not(.game-running) .layout{min-height:650px}
+.tabletop-upgrade .online-lobby-card{background:linear-gradient(145deg,#36291c,#191611);border-color:#9e7b48}
+@media(max-width:900px),(pointer:coarse){
+  body.tabletop-upgrade.game-running .topbar{display:none!important}
+  body.tabletop-upgrade.game-running .turn-order-banner{height:80px!important;min-height:80px!important;position:relative!important;top:0!important;left:auto!important;right:auto!important;display:flex!important;gap:7px!important;grid-template-columns:none!important;padding:8px 7px!important;z-index:150!important}
+  .table-round{display:none}
+  .table-turns{gap:5px;overflow-x:auto!important;flex:1!important;scrollbar-width:none}
+  .table-turn{min-width:128px;max-width:160px;height:58px;padding:4px;gap:6px}
+  .table-turn img{height:46px;width:35px}
+  .table-turn b{font-size:14px}
+  .table-turn em{font-size:9px}.table-turn em strong{font-size:9px}
+  .table-journal{height:40px;min-width:60px;padding:6px 8px;font-size:10px}
+  body.tabletop-upgrade .turn-order-code{display:none}
+  body.tabletop-upgrade.game-running .layout{display:flex!important;flex-direction:column!important;gap:9px!important;padding:9px 9px calc(16px + env(safe-area-inset-bottom))!important;height:auto!important;min-height:calc(100dvh - 80px)!important}
+  body.tabletop-upgrade.game-running .board-panel{order:0!important;position:relative!important;top:0!important;min-height:0!important;border-width:5px!important;flex:none!important}
+  body.tabletop-upgrade.game-running .board-wrap{height:clamp(265px,50dvh,620px)!important;flex:none!important}
+  body.tabletop-upgrade.game-running .board-footer{min-height:0;line-height:1.25}
+  body.tabletop-upgrade.game-running .side-panel{order:1!important;position:relative!important;max-height:none!important;padding:12px!important;overflow:visible!important}
+  body.tabletop-upgrade.game-running .mobile-quick-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;position:relative!important;top:auto!important;margin:0 0 12px!important;background:transparent!important;padding:0!important}
+  body.tabletop-upgrade.game-running .mobile-quick-actions button{min-height:44px!important}
+  body.tabletop-upgrade.game-running #mobileJournalBtn{display:none!important}
+  body.tabletop-upgrade.game-running .side-panel #gameSection{display:block}
+  body.tabletop-upgrade.game-running .sheet-drawer{inset:8px 8px calc(8px + env(safe-area-inset-bottom))!important;right:8px!important;top:8px!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;width:auto!important;max-height:none!important;z-index:550!important}
+  body.tabletop-upgrade .topbar .tabletop-header-actions{display:none}
+  body.tabletop-upgrade .map-zoom-controls{top:8px;right:8px}
+  body.tabletop-upgrade .map-zoom-controls button{width:39px;height:39px;font-size:24px}
+  body.tabletop-upgrade .dice-points{flex-direction:row;gap:5px}
+  body.tabletop-upgrade .dice-points small{font-size:9px}
+}
+@media(max-width:370px){.table-turn{min-width:117px}.table-turns{gap:3px}.table-journal{min-width:55px;padding-inline:4px}}
+@media(prefers-reduced-motion:reduce){.table-token{animation:none!important;transition:none!important}}
+/* Portrait map tokens */
+.table-token{pointer-events:none;filter:drop-shadow(0 2px 3px #000c)}
+.table-token.active{filter:drop-shadow(0 1px 5px #edc47acc)}
+.table-token-label{font-size:13px;font-weight:900;fill:#f5eddb;stroke:#1f180f;stroke-width:1;paint-order:stroke;pointer-events:none}
+/* Repeated tapping on the SAME section must close the mobile tablet, so its tabs
+   are never hidden while the tablet is open. */
+@media(max-width:900px),(pointer:coarse){
+ body.tabletop-upgrade.game-running .sheet-drawer-head{position:sticky!important;top:0!important;z-index:10!important;display:flex!important;min-height:58px!important;gap:7px!important;background:#2b2117!important}
+ body.tabletop-upgrade.game-running .sheet-tabs{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important;flex:1;min-width:0;width:auto!important}
+ body.tabletop-upgrade.game-running .sheet-tab{min-height:42px;padding:6px!important;font-size:12px!important}
+ body.tabletop-upgrade.game-running .sheet-mobile-title{display:none!important}
+ body.tabletop-upgrade.game-running .sheet-close{min-width:38px!important;font-size:24px!important}
+}

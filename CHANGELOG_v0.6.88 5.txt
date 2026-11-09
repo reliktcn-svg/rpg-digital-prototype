@@ -1,0 +1,6 @@
+v0.6.88 — Status & Turn Handoff
+- Permanent statuses applied and removed immediately; Prayer Stone removes any existing negative status.
+- On shrine entry turn passes while visitor selects actions in offturn location session.
+- On victory results turn passes while victor finishes loot and building through side session.
+- Defeat results displayed before advance to the next hero.
+- Map-only spectator from v0.6.87 is unchanged.
