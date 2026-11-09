@@ -1,6 +1,0 @@
-PASS: 500 shuffled orders, all six first-clue types, thresholds, no duplicates, save persistence, legacy migration, Paladin damage 0–5 and both healing ratios
-Legacy order: 0,1,2,4,5,3
-PASS: level 16 scaling on/off, HP/defense/attack/damage, saved setting
-PASS 620 trigger cases; combined effects; all enemy immunities; ring/amulet attempts/reset; D4 mantle; 20 deck shuffles
-PASS: 24 potion variants and durations; damage deltas; respec refunds points, keeps XP and initial abilities, consumes potion
-PASS: 160 boss status thresholds; every-third-hit D4 only when selected; simultaneous effects; no inherited fixed-boss bonus
