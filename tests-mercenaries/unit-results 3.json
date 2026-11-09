@@ -1,0 +1,66 @@
+[
+  {
+    "name": "33 mercenaries; prices approved; new cards never enter loot",
+    "pass": true
+  },
+  {
+    "name": "Regeneration has no free rank; gates 3/5/7, costs 1/2/3 for all heroes",
+    "pass": true
+  },
+  {
+    "name": "No recovery without skill; learned skill heals once per round and caps HP",
+    "pass": true
+  },
+  {
+    "name": "Every rank / region / level / area hiring boundary",
+    "pass": true
+  },
+  {
+    "name": "All eligible cards draw once before discard recycle, including epic and legendary",
+    "pass": true
+  },
+  {
+    "name": "Old save migration adds 15 cards exactly once and preserves held mercenaries",
+    "pass": true
+  },
+  {
+    "name": "Porter capacity +2; dismissal safely moves excess into pending items",
+    "pass": true
+  },
+  {
+    "name": "Novice first-hit protection only; mist -1 on all enemy attacks",
+    "pass": true
+  },
+  {
+    "name": "Sergeant +2 only next ordinary attack, not class ability; cannot reuse",
+    "pass": true
+  },
+  {
+    "name": "Herbalist D6 heal and poison resistance on 5,6 remain independent",
+    "pass": true
+  },
+  {
+    "name": "Trap seeker D4, bastion D12, oath guardian 2D8 mitigation",
+    "pass": true
+  },
+  {
+    "name": "Surgeon heals and cleanses bleeding; light healer and oath guardian allow chosen cleanse",
+    "pass": true
+  },
+  {
+    "name": "Life keeper 2D8 + defense until next enemy attack",
+    "pass": true
+  },
+  {
+    "name": "Orc arcanist uses the damage D6 for stun, no second effect roll",
+    "pass": true
+  },
+  {
+    "name": "Chronicler rerolls ordinary and ability attacks with advantage and enemy disadvantage",
+    "pass": true
+  },
+  {
+    "name": "Chronicler can reroll escape D20; advantage has no natural 1/20",
+    "pass": true
+  }
+]

@@ -1,0 +1,26 @@
+/* v0.6.79 — compact interactive cards, status, history, journal, and centered dice */
+body.game-running .item-detail-card .item-face-hit{display:block;position:relative;width:min(235px,50%);max-width:100%;margin:4px auto 10px;padding:0;line-height:normal;text-align:initial;background:transparent!important;border:0!important;border-radius:11px;cursor:pointer;overflow:hidden}
+body.game-running .item-detail-card .item-face-hit .inventory-card-front,
+body.game-running .item-detail-card .item-face-hit .inventory-card-reverse{display:block;width:100%!important;max-width:100%!important;aspect-ratio:1;min-height:0!important}
+body.game-running .item-detail-card .item-face-hit:focus-visible{outline:2px solid #e8ca83;outline-offset:3px}
+body.game-running .item-detail-card .item-face-hit .inventory-card-reverse{overflow:auto;max-height:240px}
+body.game-running #modal:has(.combat-shell):not([hidden]) .combat-history{max-height:162px;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:4px;scrollbar-width:thin}
+body.game-running #modal:has(.combat-shell) .combat-history>div{flex:0 0 auto;min-height:23px;font-size:11px;line-height:1.35;padding:5px 8px}
+body.game-running .journal-utility-tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px 14px;background:#2a221b;border-bottom:1px solid #6e5135}
+body.game-running .journal-utility-tools button{padding:10px 3px;min-height:38px;min-width:0;font-size:12px}
+body.game-running .top-actions>#saveBtn,body.game-running .top-actions>#loadBtn,body.game-running .top-actions>#resetBtn{display:none!important}
+body.game-running .battle-fate-defeat .battle-fate-scroll h2{color:#f5f0e8!important;padding-bottom:9px;margin-bottom:8px;border-bottom:2px solid var(--result-hero-color,#8762a9)}
+body.game-running .battle-fate-defeat .battle-fate-kicker{color:#f87171!important;font-size:15px;margin:9px 0 12px}
+body.game-running .battle-fate-defeat .fate-hero-name{color:var(--result-hero-color,#ad85d8)!important}
+body.game-running #rollOverlay.battle-results-illustrated .roll-popup-card{border-color:var(--result-hero-color,#58b785)!important}
+body.game-running #rollOverlay.battle-results-illustrated .roll-result-art{border-color:var(--result-hero-color,#58b785)!important}
+body.game-running #rollOverlay.battle-results-illustrated .roll-popup-title{border-bottom-color:var(--result-hero-color,#58b785)!important}
+body.game-running #rollOverlay.battle-results-illustrated .roll-popup-math .result-gold{color:#f5c765!important}
+body.game-running .defeat-enemy-rank.rank-weak{color:#b5b5b5!important}
+body.game-running .defeat-enemy-rank.rank-normal{color:#65ca88!important}
+body.game-running .defeat-enemy-rank.rank-strong{color:#70aafb!important}
+body.game-running .defeat-enemy-rank.rank-elite{color:#bc86ee!important}
+body.game-running .defeat-enemy-rank.rank-boss{color:#fa6969!important}
+body.game-running .battle-fate-defeat .battle-fate-gold b{color:#f5c765!important}
+body.game-running #rollOverlay.battle-results-illustrated .battle-victory-label{color:#62d48c!important;font-size:15px;font-weight:950}
+@media(max-width:700px){body.game-running .item-detail-card .item-face-hit{width:min(210px,54%)}body.game-running #modal:has(.combat-shell) .combat-history{max-height:168px}body.game-running .journal-utility-tools{padding:7px;gap:5px}body.game-running .journal-utility-tools button{font-size:11px}}

@@ -1,0 +1,32 @@
+{
+  "browser": "11 checks passed",
+  "viewports": [
+    [
+      1440,
+      900
+    ],
+    [
+      1024,
+      600
+    ],
+    [
+      390,
+      844
+    ],
+    [
+      320,
+      568
+    ],
+    [
+      844,
+      390
+    ]
+  ],
+  "additional_popups": [
+    "trap",
+    "event",
+    "treasure"
+  ],
+  "deck_rules": "passed",
+  "physical_phone_tested": false
+}

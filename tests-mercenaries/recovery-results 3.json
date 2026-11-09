@@ -1,0 +1,50 @@
+[
+  {
+    "name": "No recovery on first turn; next movement click changes 6/12 to 7/12, double click does not heal again",
+    "pass": true
+  },
+  {
+    "name": "Three players wait for complete round; each hero heals independently",
+    "pass": true
+  },
+  {
+    "name": "Building without movement heals before +2 maximum HP and advances the turn",
+    "pass": true
+  },
+  {
+    "name": "Invalid/unaffordable building does not heal",
+    "pass": true
+  },
+  {
+    "name": "Area merger without movement heals once; building and merging cannot repeat recovery",
+    "pass": true
+  },
+  {
+    "name": "Movement then valid building grants no second recovery in same round",
+    "pass": true
+  },
+  {
+    "name": "Trade that hands over turn heals only the initiator, once",
+    "pass": true
+  },
+  {
+    "name": "Trade without handoff or without another hero does not heal",
+    "pass": true
+  },
+  {
+    "name": "Recovery caps at max and is consumed even at full HP; no stockpiled healing",
+    "pass": true
+  },
+  {
+    "name": "Recovery precedes poison/burning; bleeding does not tick outside combat",
+    "pass": true
+  },
+  {
+    "name": "Dungeon exit heals once; bonus exploration turn grants no second recovery",
+    "pass": true
+  },
+  {
+    "name": "Combat, dead heroes and offturn players cannot receive round recovery",
+    "pass": true
+  }
+]

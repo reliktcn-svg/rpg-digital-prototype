@@ -1,0 +1,14 @@
+........................
+----------------------------------------------------------------------
+Ran 24 tests in 1.162s
+
+OK
+online pull Error: Сессия уже закрыта
+    at api (evalmachine.<anonymous>:34:46)
+    at async fetchGame (evalmachine.<anonymous>:119:13)
+    at async Object.pullGame (evalmachine.<anonymous>:158:15)
+    at async /Users/macbook/Documents/Codex/2026-10-18/files-mentioned-by-the-user-rpg/work/rpg-v06128-smart-cache/tests-v127/client.cjs:14:160 {
+  cancelled: true
+}
+PASS conditional reuse, side revision changes, pending local changes, in-flight exclusion, old session response rejection, one timer, teardown
+PASS first/repeat launch, same-number content update, corrupt file, quota error, retry reuse, atomic commit, restart, cache eviction repair, offline retention, API bypass, non-root portable scope

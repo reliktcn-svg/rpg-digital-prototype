@@ -1,0 +1,101 @@
+{
+  "finished": true,
+  "results": [
+    {
+      "name": "D4 keeps result and ends as canvas",
+      "pass": true
+    },
+    {
+      "name": "D6 keeps result and ends as canvas",
+      "pass": true
+    },
+    {
+      "name": "D8 keeps result and ends as canvas",
+      "pass": true
+    },
+    {
+      "name": "D10 keeps result and ends as canvas",
+      "pass": true
+    },
+    {
+      "name": "D12 keeps result and ends as canvas",
+      "pass": true
+    },
+    {
+      "name": "D20 keeps result and ends as canvas",
+      "pass": true
+    },
+    {
+      "name": "Skin switch during animation neither restarts nor mutates roll",
+      "pass": true
+    },
+    {
+      "name": "All palette skins keep final results",
+      "pass": true
+    },
+    {
+      "name": "Real bitmap texture loads and uses same animation",
+      "pass": true
+    },
+    {
+      "name": "Invalid skin leaves active skin intact",
+      "pass": true
+    },
+    {
+      "name": "Skin changes do not alter poses",
+      "pass": true
+    },
+    {
+      "name": "Skip resolves exactly once with supplied result",
+      "pass": true
+    },
+    {
+      "name": "Replacement settles both requests",
+      "pass": true
+    },
+    {
+      "name": "Destroy settles active request and removes host",
+      "pass": true
+    },
+    {
+      "name": "Reduced motion reveals authoritative result immediately",
+      "pass": true
+    },
+    {
+      "name": "Speed and multiple staggered dice keep order",
+      "pass": true
+    },
+    {
+      "name": "All 24 dice supported on small viewport",
+      "pass": true
+    },
+    {
+      "name": "Renderer failure keeps textual result",
+      "pass": true
+    },
+    {
+      "name": "Invalid dice do not interrupt valid animation",
+      "pass": true
+    },
+    {
+      "name": "Game movement popup uses new modules",
+      "pass": true
+    },
+    {
+      "name": "Combat overlay preserves dice and uses rolling renderer",
+      "pass": true
+    },
+    {
+      "name": "Journal dice menu saves preferences without changing game state",
+      "pass": true
+    },
+    {
+      "name": "Game popup takes saved skin, speed and animation",
+      "pass": true
+    },
+    {
+      "name": "Fast ×4 combat roll finishes before game auto-transition",
+      "pass": true
+    }
+  ]
+}

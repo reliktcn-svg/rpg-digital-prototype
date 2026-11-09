@@ -1,0 +1,10 @@
+PASS: 10,000 boss generations, all 33 variants
+PASS: all six clue thresholds, duplicate removal, persistence, legacy migration, movement gate
+PASS: 160 boss status trigger cases; third successful hit D4; combined effects
+PASS: 22 server tests
+PASS: v0.6.121 rules (620 trigger cases) and 24 potion scenarios
+PASS: v0.6.120 ability/territory/dice regression
+PASS: browser 1200x850, 390x844, 320x568, 844x390; six hidden/revealed rows; button toggle; viewport bounds
+PASS: all 33 images loaded
+PASS: boss combat stats/art and final victory/game completion
+NOTE: browser viewport emulation, not testing on physical phones. Long-term balance needs played games.

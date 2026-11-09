@@ -1,0 +1,12 @@
+Modified:
+- app.js — territory confirmation, equipment comparison return, D6 camp display, potion text, version
+- index.html — display version and client build metadata
+- map.html — display version and client build metadata
+- asset-manifest.json — regenerated content hashes and current build
+- tests-v129/test_assets.py — update manifest version assertion
+- tests-v130/test_carrying.py — update manifest version assertion
+New:
+- tests-v131/ui_regression.py — browser regression tests for v0.6.131
+- README_v0.6.131_RU.md — full patch notes and verification
+- CHANGELOG_v0.6.131.txt — changelog
+- CHANGED_FILES_v0.6.131.txt — file summary
