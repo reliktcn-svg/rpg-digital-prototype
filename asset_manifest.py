@@ -22,9 +22,9 @@ def build_manifest(root):
   for folder in ('assets','arcana','icons'):
    files += [p for p in (root/folder).rglob('*') if p.is_file() and p.suffix.lower() in ('.png','.webp','.jpg','.jpeg','.svg','.gif','.mp3','.ogg','.wav','.js','.css','.json','.woff','.woff2')]
   files=sorted(set(files));htmls=[root/'index.html',root/'map.html']
-  normalized={}
+  normalized={};original_html={}
   for p in htmls:
-   text=p.read_text()
+   text=p.read_text();original_html[p]=text
    def versioned(m):
     path=m[2].split('?',1)[0];f=root/path
     return m[1]+path+'?v='+file_hash(f)[:16]+m[3] if f.is_file() else m[0]
@@ -36,6 +36,7 @@ def build_manifest(root):
   identity=[(str(p.relative_to(root)),sha(normalized[p].encode()) if p in normalized else file_hash(p)) for p in files]
   build_id=sha(json.dumps({'protocol':protocol,'files':identity},separators=(',',':')).encode())
   config={'id':build_id,'version':version,'protocol':protocol}
+  if any(p.read_text()!=original_html[p] for p in htmls):return build_manifest(root)
   for p,text in normalized.items():write_changed(p,text.replace('<script id="rpg-build"></script>','<script id="rpg-build">window.RPG_CLIENT_BUILD='+json.dumps(config,separators=(',',':'))+';</script>').encode())
   entries=[]
   for p in files:

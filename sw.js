@@ -31,7 +31,7 @@ async function prune(){
 async function prepare(){
  const current=await get('installed');let target;
  try{
-  const response=await fetch(new URL('asset-manifest.json',base),{cache:'no-cache'});if(!response.ok)throw Error('Не удалось получить список обновления');target=await response.json();if(!valid(target))throw Error('Некорректный список обновления');stats.lastCheck={id:target.id,version:target.version,at:Date.now()};
+  const response=await fetch(new URL('asset-manifest.json',base),{cache:'no-store'});if(!response.ok)throw Error('Не удалось получить список обновления');target=await response.json();if(!valid(target))throw Error('Некорректный список обновления');stats.lastCheck={id:target.id,version:target.version,at:Date.now()};
   await put('manifest/'+target.id,target);memory.set(target.id,target);
   if(current===target.id){const blobs=await caches.open(BLOBS);for(const f of target.files.filter(f=>f.core))if(!await blobs.match(blobURL(f.hash)))await ensure(f);await prune();return {state:'current',id:current,version:target.version}}
   const existingPrepared=await get('prepared');
@@ -44,7 +44,7 @@ async function prepare(){
   // Bounded download concurrency. Partial verified blobs may be reused after retry.
   const results=await Promise.allSettled([worker(),worker()]);const error=results.find(r=>r.status==='rejected');if(error)throw error.reason;
   if(!current){await put('installed',target.id);await put('staging',null);await prune();return {state:'current',id:target.id,version:target.version,first:true}}
-  await put('prepared',target.id);return {state:'ready',id:target.id,version:target.version};
+  await put('prepared',target.id);await put('installed',target.id);await put('staging',null);return {state:'ready',id:target.id,version:target.version};
  }catch(e){note('errors',e.message);return {state:'error',message:e.name==='QuotaExceededError'?'Недостаточно места на устройстве. Освободите место и повторите загрузку.':e.message,version:target?.version,first:!current}}
 }
 // Background cache of ALL optimized artwork. Resumes on the next launch if interrupted.
