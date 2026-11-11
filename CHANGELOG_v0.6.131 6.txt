@@ -1,8 +1,0 @@
-v0.6.131 — Territory, Equipment Navigation & Camp Dice
-
-- Owned territory without area: explicit «Войти на территорию» action confirms the chosen move and permits stopping the turn.
-- Existing foreign-territory action and tribute/permission/check/capture gates preserved.
-- Cancel equipment comparison returns to equipped item's view with matching backpack replacements, if opened from that view.
-- Exploration event #63/#64 «Брошенный лагерь»: healing D6 displays roll, then original card displays result and Continue.
-- Potions are equipped with the label «Надеть на пояс» (including combat).
-- Build version metadata and smart-cache hashes refreshed.

@@ -1,9 +1,0 @@
-.solo-save-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.82);display:grid;place-items:center;padding:16px;box-sizing:border-box}
-.solo-save-panel{width:min(500px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:#181e25;border:1px solid #677380;border-radius:15px;color:#f0f1f3;padding:18px;box-shadow:0 20px 70px #0009;box-sizing:border-box}
-.solo-save-panel header{display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid #39424c;margin-bottom:12px}
-.solo-save-panel h2{font-size:20px;margin:0 0 12px}.solo-save-panel [data-close]{min-width:40px;font-size:25px}
-.solo-save-hint{font-size:13px;color:#adb7c0;line-height:1.5}.solo-save-slots{display:grid;gap:12px;margin:16px 0}
-.solo-save-slot{display:flex;gap:8px;align-items:stretch}.solo-save-select{flex:1;text-align:left;min-height:60px;padding:12px!important;white-space:normal;line-height:1.4;background:#273542;border:1px solid #637a8d;border-radius:10px;color:#fff;font-size:14px}
-.solo-save-select:disabled{opacity:.4}.solo-save-export{flex-shrink:0;min-width:72px}
-.solo-save-actions{display:flex;gap:8px;justify-content:center}.solo-save-error{color:#ffa29b;font-size:13px;min-height:20px;margin-top:10px}
-@media(max-width:550px){.solo-save-panel{padding:13px}.solo-save-slot{flex-direction:column}.solo-save-export{align-self:flex-end}.solo-save-select{font-size:13px}}

@@ -13,7 +13,7 @@
   <link rel="preload" as="image" href="assets/heroes/mage.webp" />
   <link rel="preload" as="image" href="assets/heroes/archer.webp" />
   <link rel="preload" as="image" href="assets/heroes/rogue.webp" />
-  <title>RPG Digital Prototype v0.6.137 - Mobile Optimization &amp; Persistent Saves</title>
+  <title>RPG Digital Prototype v0.6.139 - Mobile Optimization &amp; Persistent Saves</title>
   <link rel="stylesheet" href="styles.css?v=e34cb7d5007c1e70" />
   <link rel="stylesheet" href="location-ui.css?v=75037e5fa6c99286" />
   <link rel="stylesheet" href="battle-result-ui.css?v=72147762ab958765" />
@@ -34,13 +34,15 @@
 <link rel="stylesheet" href="equipment-colors.css?v=6989690d40f07f34">
 <link rel="stylesheet" href="popup-bounds.css?v=cbd63237891e260a">
 <link rel="stylesheet" href="effect-help.css?v=6582b06335a188a5">
-<script id="rpg-build">window.RPG_CLIENT_BUILD={"id":"5e1396ecb3f6c55edfa862fc54ba115a526c8b791e0a3e75daed0cf458f1694f","version":"v0.6.137","protocol":1};</script>
+<script id="rpg-build">window.RPG_CLIENT_BUILD={"id":"230306250e994a6bb93220197641ac53567a7badc1953a8970ffc7acc492ae86","version":"v0.6.139","protocol":1};</script>
 <link rel="stylesheet" href="update-client.css?v=3cc719aaf3dd099e">
 <link rel="stylesheet" href="solo-saves.css?v=ad6b2b53e96c0684" />
 <link rel="stylesheet" href="mobile-input-v129.css?v=1487506075430a1f" />
 <link rel="stylesheet" href="mobile-carry-v130.css?v=f14f1ef56a68a6cc" />
 <link rel="stylesheet" href="mobile-scroll-v132.css?v=0c99ce61cd336e55" />
 <link rel="stylesheet" href="new-game-plus-v133.css?v=e090473d12105097" />
+<link rel="stylesheet" href="rules-guide.css?v=793eae30fb31b8f8">
+<link rel="stylesheet" href="interface-v139.css?v=640ca4c46166986c">
 </head>
 <body class="tabletop-upgrade">
   
@@ -82,7 +84,7 @@
   <header class="topbar">
     <div>
       <div class="eyebrow">RPG DIGITAL PROTOTYPE</div>
-      <h1>Прототип v0.6.137 · Настольный интерфейс</h1>
+      <h1>Прототип v0.6.139 · Настольный интерфейс</h1>
       <div class="header-tools">
         <button id="journalBtn" class="journal-top" type="button">Журнал</button>
       </div>
@@ -92,7 +94,7 @@
       <button id="inventoryBtn" class="inventory-top" hidden aria-hidden="true">Герой / Инвентарь</button>
       <button id="saveBtn" class="ghost" disabled>Сохранить</button>
       <button id="loadBtn" class="ghost">Загрузить</button>
-      <button id="resetBtn" class="danger">Сбросить</button>
+      <button id="resetBtn" class="danger">Выйти</button>
     </div>
   </header>
 
@@ -175,7 +177,7 @@
       <button type="button" id="journalDiceBtn" class="ghost">Кубик</button>
       <button type="button" id="sheetSaveBtn" class="ghost">Сохранить</button>
       <button type="button" id="sheetLoadBtn" class="ghost">Загрузить</button>
-      <button type="button" id="sheetResetBtn" class="danger">Сбросить</button>
+      <button type="button" id="sheetResetBtn" class="danger">Выйти</button>
     </div>
       <div id="log" class="log journal-log"></div>
     </div>
@@ -186,10 +188,10 @@
     <div class="settings-card" role="dialog" aria-label="Настройки игры">
       <div class="journal-head"><b>Настройки</b><button id="settingsClose" class="sheet-close" type="button" aria-label="Закрыть настройки">×</button></div>
       <div class="settings-actions journal-utility-tools" aria-label="Настройки партии">
-        <button type="button" id="settingsDiceBtn" class="ghost">🎲 Кубик</button>
+        <button type="button" id="settingsDiceBtn" class="ghost">Кубик</button>
         <button type="button" id="settingsSaveBtn" class="ghost">Сохранить</button>
         <button type="button" id="settingsLoadBtn" class="ghost">Загрузить</button>
-        <button type="button" id="settingsResetBtn" class="danger">Сбросить</button>
+        <button type="button" id="settingsResetBtn" class="danger">Выйти</button>
       </div>
     </div>
   </div>
@@ -222,9 +224,10 @@
   <script src="arcana/dice-motion.js?v=76c507eb40b2faee"></script>
   <script src="arcana/dice-skins.js?v=870d44cf56381cab"></script>
   <script src="arcana/dice-renderer.js?v=5ba89843a5475085"></script>
-  <script src="arcana/dice-animator.js?v=2bb29b6a81bb29e4"></script>
+  <script src="arcana/dice-sound.js?v=1cbb33563972b0b8"></script>
+  <script src="arcana/dice-animator.js?v=2f33116d7f1a9b78"></script>
   <script src="arcana/dice-packs.js?v=26312b088199644b"></script>
-  <script src="arcana/dice-settings.js?v=89282eb6ebb0f9fa"></script>
+  <script src="arcana/dice-settings.js?v=2a2fc6d8d43108a8"></script>
   <script src="tabletop-enhancements.js?v=96569361f7946f2f"></script>
   <script src="hero-atlas-data.js?v=06a3edc897cc971a"></script>
   <script src="hero-progression.js?v=0dd0b3e5f1fc48d0"></script>
@@ -234,8 +237,9 @@
 <script src="boss-rules.js?v=df0b2a361db83bc8"></script>
 <link rel="stylesheet" href="boss-clues.css?v=a62646d0f138c653">
 <script src="solo-saves.js?v=9c6dd82c9649a17b"></script>
-<script src="app.js?v=2040e66c1e00e029"></script>
+<script src="app.js?v=87a12cf916a3a0d0"></script>
   <script src="network-lobby.js?v=11a9af2767c0b3c8"></script>
 <script src="update-client.js?v=bdf1f63b56ac6042" defer></script>
+<script src="rules-content.js?v=b2ee25878bf16d6a"></script><script src="rules-guide.js?v=8e3a6646ea6b071a"></script>
 </body>
 </html>

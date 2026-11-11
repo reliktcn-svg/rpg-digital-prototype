@@ -209,7 +209,7 @@
     }
     function finish(reason) {
       if (!active) return;
-      const finished = active; active = null;
+      const finished = active; finished.audio?.stop(); active = null;
       if (frame) win.cancelAnimationFrame(frame); frame = 0;
       status = 'settled'; stateLabel.textContent = mode === 'text' ? 'Готово · текст' : 'Результат'; skipButton.disabled = true;
       layout(); showResult();
@@ -222,6 +222,7 @@
       if (!active) return;
       active.elapsed += Math.max(0, now - active.last) * speed; active.last = now;
       if (active.elapsed >= active.totalDuration) { finish('completed'); return; }
+      if(mode==='canvas')active.audio?.frame(active.elapsed,active.baseDuration,staggerMs,roll.dice,motionStyle,skinId);
       draw();
       if (mode === 'text') { finish('completed'); return; }
       frame = win.requestAnimationFrame(tick);
@@ -241,7 +242,7 @@
         result.textContent = 'Идёт бросок…'; live.textContent = ''; empty.hidden = true; empty.style.display = 'none'; skipButton.disabled = false;
         let resolve;
         const promise = new Promise(r => { resolve = r; });
-        const run = { roll: next, baseDuration: ms, totalDuration: ms + (next.dice.length - 1) * staggerMs, elapsed: 0, last: win.performance.now(), resolve };
+        const run = { audio:global.RPGDiceSound?.track(), roll: next, baseDuration: ms, totalDuration: ms + (next.dice.length - 1) * staggerMs, elapsed: 0, last: win.performance.now(), resolve };
         active = run; layout();
         emit('dice:start', Object.freeze({ roll: next }));
         // Event handlers are allowed to skip, replace or destroy this presentation.
