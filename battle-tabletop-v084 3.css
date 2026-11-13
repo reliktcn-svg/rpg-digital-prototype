@@ -1,0 +1,39 @@
+/* v0.6.84 — consistent small type in portrait stat circles, frameless ability text. */
+body.game-running #modal .combat-shell .tabletop-battle-card .battle-overlay-stat .stat-label,
+body.game-running #modal .combat-shell .tabletop-battle-card .battle-overlay-stat strong {
+  font-family:Arial,Helvetica,sans-serif!important;
+  font-size:clamp(8px,.79vw,10px)!important;
+  font-weight:800!important;
+  line-height:1.12!important;
+  letter-spacing:0!important;
+  color:#fff0d2!important;
+  text-shadow:0 1px 2px #0008;
+}
+/* Keep the outer card frame. Remove the redundant INNER outlined ability/effect panel. */
+body.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-note,
+body.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-note.enemy-note {
+  box-sizing:border-box!important;
+  margin:0!important;
+  padding:10px 12px!important;
+  border:0!important;
+  outline:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+/* The card portrait already flips on click; no redundant flip footer is needed. */
+body.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-flip {display:none!important}
+@media(max-width:900px),(pointer:coarse) {
+  body.game-running #modal .combat-shell .tabletop-battle-card .battle-overlay-stat .stat-label,
+  body.game-running #modal .combat-shell .tabletop-battle-card .battle-overlay-stat strong {
+    font-size:clamp(6.6px,1.8vw,8px)!important;
+  }
+  body.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-note,
+  body.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-note.enemy-note {
+    padding:6px 7px!important;
+  }
+}
+@media(max-width:360px) {
+  body.game-running #modal .combat-shell .tabletop-battle-card .battle-overlay-stat .stat-label,
+  body.game-running #modal .combat-shell .tabletop-battle-card .battle-overlay-stat strong {font-size:6.2px!important}
+}

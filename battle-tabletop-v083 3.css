@@ -1,0 +1,87 @@
+/* v0.6.83 — negative states live on the portrait; used abilities are crossed out. */
+body.game-running #modal .combat-shell .tabletop-battle-card .visual-card-front .tabletop-status-overlay{
+  position:absolute;
+  z-index:4;
+  top:7px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  max-width:calc(100% - (2 * var(--battle-stat-size, 48px)) - 24px);
+  pointer-events:none;
+  white-space:nowrap;
+}
+body.game-running #modal .combat-shell .tabletop-battle-card .visual-card-front .tabletop-status-overlay .tabletop-status-dot{
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 27px;
+  width:27px;
+  min-width:0;
+  height:27px;
+  padding:0;
+  margin:0;
+  font-size:15px;
+  font-family:Arial,sans-serif;
+  font-weight:800;
+  line-height:1;
+  color:#ffd1d0;
+  border:1.3px solid #f28d95;
+  border-radius:50%;
+  background:rgba(62,21,30,.84);
+  box-shadow:0 2px 5px #0009;
+  -webkit-backdrop-filter:blur(2px);
+  backdrop-filter:blur(2px);
+}
+/* Remove the old status row; reserve no empty space beneath the portrait. */
+body.game-running #modal .combat-shell .tabletop-battle-card .tabletop-status-row{display:none!important}
+/* One diagonal slash through the used ability, never across the portrait/effects. */
+body.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-note.ability-used,
+body.game-running #modal .combat-shell .tabletop-battle-card .visual-back-block.ability-used{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  opacity:.72;
+}
+body.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-note.ability-used::after,
+body.game-running #modal .combat-shell .tabletop-battle-card .visual-back-block.ability-used::after{
+  content:"";
+  position:absolute;
+  top:50%;
+  left:-8%;
+  width:116%;
+  height:2px;
+  background:rgba(239,168,160,.88);
+  box-shadow:0 1px 2px #080909a8;
+  transform:translateY(-50%) rotate(-12deg);
+  transform-origin:center;
+  pointer-events:none;
+  z-index:3;
+}
+@media (max-width:900px),(pointer:coarse){
+  body.game-running #modal .combat-shell .tabletop-battle-card .visual-card-front .tabletop-status-overlay{
+    top:3px;
+    gap:3px;
+    max-width:calc(100% - (2 * var(--battle-stat-size, 28px)) - 8px);
+  }
+  body.game-running #modal .combat-shell .tabletop-battle-card .visual-card-front .tabletop-status-overlay .tabletop-status-dot{
+    flex-basis:14px;
+    width:14px;
+    height:14px;
+    font-size:9px;
+    border-width:1px;
+  }
+  body.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-note.ability-used::after,
+  body.game-running #modal .combat-shell .tabletop-battle-card .visual-back-block.ability-used::after{
+    height:1.6px;
+    transform:translateY(-50%) rotate(-14deg);
+  }
+}
+@media(max-width:360px){
+  body.game-running #modal .combat-shell .tabletop-battle-card .visual-card-front .tabletop-status-overlay .tabletop-status-dot{
+    flex-basis:12px;width:12px;height:12px;font-size:8px;
+  }
+}

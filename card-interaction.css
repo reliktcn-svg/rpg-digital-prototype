@@ -1,0 +1,58 @@
+/* Reverse faces are the only vertical scrollers inside flip surfaces. */
+body.tabletop-upgrade .flip-surface{box-sizing:border-box;font:inherit;color:inherit}
+body.tabletop-upgrade .flip-surface-back{touch-action:pan-y!important;cursor:grab}
+body.tabletop-upgrade .flip-surface.is-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
+body.tabletop-upgrade .flip-surface .inventory-card-reverse,
+body.tabletop-upgrade .visual-card-stage.is-back .visual-card-back,
+body.tabletop-upgrade .boss-info-rows.flip-surface{
+  overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain!important;
+  touch-action:pan-y!important;-webkit-overflow-scrolling:touch;scroll-behavior:auto!important;
+  pointer-events:auto!important;scrollbar-width:thin;scrollbar-color:#a28e65 #17252a;
+}
+body.tabletop-upgrade.game-running .item-detail-card .item-face-hit{
+  aspect-ratio:1;height:auto!important;overflow:hidden!important;padding:0!important;
+}
+body.tabletop-upgrade.game-running .item-detail-card .item-face-hit > :is(.inventory-card-front,.inventory-card-reverse){
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  max-height:none!important;min-height:0!important;box-sizing:border-box!important;margin:0!important;
+}
+body.tabletop-upgrade.game-running #modal .visual-card-stage.is-back .visual-card-back{
+  inset:0!important;width:100%!important;height:100%!important;max-height:100%!important;
+  box-sizing:border-box!important;padding:2%;
+}
+body.tabletop-upgrade.game-running #modal .visual-card-stage.is-back .visual-card-back-wrap{
+  height:auto!important;min-height:100%!important;max-height:none!important;
+  overflow:visible!important;box-sizing:border-box!important;flex:none!important;
+}
+body.tabletop-upgrade .boss-info-rows.flip-surface{
+  height:min(46dvh,480px);min-height:0;box-sizing:border-box;padding:8px;
+}
+body.tabletop-upgrade .flip-surface:focus-visible{outline:2px solid #ddc28e;outline-offset:-3px}
+/* Every changing value shares one size; dice notation is not a larger heading. */
+body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .visual-card-front .battle-portrait-stats .battle-overlay-stat strong{
+  font-family:var(--rpg-font-title)!important;font-size:14px!important;font-weight:600!important;line-height:1.1!important;
+}
+@media(max-width:900px),(pointer:coarse){
+ body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .visual-card-front .battle-portrait-stats{--battle-stat-size:clamp(29px,19cqw,38px)}
+ body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .visual-card-front .battle-portrait-stats .battle-overlay-stat strong{font-size:12px!important}
+}
+/* Action groups flow without reserved blank rows or space-between stretching. */
+body.tabletop-upgrade.game-running #modal .combat-shell{gap:8px!important}
+body.tabletop-upgrade.game-running #modal .combat-shell :is(.combat-actions,.combat-sheet-actions,.combat-reactions,.combat-journal-control,.combat-summary){margin:0!important}
+body.tabletop-upgrade.game-running #modal .combat-shell :is(.combat-actions,.combat-sheet-actions,.combat-reaction-buttons){
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:8px!important;padding:0!important;align-content:start!important;justify-content:normal!important;
+}
+body.tabletop-upgrade.game-running #modal .combat-shell :is(.combat-actions,.combat-sheet-actions,.combat-reaction-buttons)>button{
+  width:100%!important;min-width:0!important;min-height:46px!important;height:auto!important;margin:0!important;
+  padding:8px 12px!important;line-height:1.3!important;white-space:normal!important;
+}
+body.tabletop-upgrade.game-running #modal .combat-shell :is(.combat-actions,.combat-reaction-buttons)>button:only-child{grid-column:1/-1}
+body.tabletop-upgrade.game-running #modal .combat-shell .combat-actions:empty{display:none!important}
+body.tabletop-upgrade.game-running #modal .combat-shell .combat-decision-title{grid-column:1/-1;margin:0;padding:0!important}
+body.tabletop-upgrade.game-running #modal .combat-shell .combat-reactions h4{margin:0 0 6px!important}
+body.tabletop-upgrade.game-running #modal .combat-shell .combat-journal-control>button{width:100%;min-height:38px;margin:0}
+body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-note{margin-top:8px!important}
+body.tabletop-upgrade.game-running #modal .combat-shell .combat-escape-confirm{grid-column:1/-1;display:grid;gap:8px;margin:0;padding:0}
+body.tabletop-upgrade.game-running #modal .combat-shell .combat-escape-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+body.tabletop-upgrade.game-running #modal .combat-shell .combat-escape-buttons>button{width:100%!important;min-width:0!important;min-height:46px!important;margin:0!important;padding:8px 12px!important;line-height:1.3!important}

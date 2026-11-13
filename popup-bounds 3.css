@@ -1,0 +1,26 @@
+/* Permanent invariant: every popup frame stays inside the viewport.
+   Generic cards scroll as one unit, including their action buttons. */
+body.tabletop-upgrade.game-running #modal:not([hidden]):not(:has(.combat-shell)) {
+ position:fixed!important;inset:min(var(--rpg-turnbar-height,0px),25dvh) 0 0!important;
+ width:100%!important;height:auto!important;max-height:none!important;
+ box-sizing:border-box!important;padding:8px max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;
+}
+body.tabletop-upgrade.game-running #modal:not([hidden]):not(:has(.combat-shell)) > .modal-card {
+ box-sizing:border-box!important;min-width:0!important;min-height:0!important;
+ max-width:100%!important;max-height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;
+ overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;
+}
+body.tabletop-upgrade.game-running #modal:not(:has(.combat-shell)):not(:has(.location-ui)):not(:has(.story-card-shell)):not(:has(.battle-fate)) > .modal-card {
+ height:auto!important;display:block!important;
+}
+body.tabletop-upgrade.game-running #modal:not(:has(.combat-shell)):not(:has(.location-ui)):not(:has(.story-card-shell)):not(:has(.battle-fate)) #modalContent {
+ height:auto!important;max-height:none!important;min-height:0!important;overflow:visible!important;
+}
+body.tabletop-upgrade.game-running #modal .recon-preview {min-width:0;overflow-wrap:anywhere}
+body.tabletop-upgrade.game-running #modal:not(:has(.combat-shell)) .modal-actions {flex-shrink:0;flex-wrap:wrap}
+/* A bounded frame is also required for secondary and native dialogs. */
+body :is(.settings-card,.journal-card,.roll-popup-card,dialog[open]) {
+ box-sizing:border-box;max-width:calc(100vw - 16px)!important;
+ max-height:calc(100dvh - 16px)!important;min-height:0!important;overflow-y:auto;
+}
