@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="36" viewBox="0 0 600 36" preserveAspectRatio="none">
+  <defs><linearGradient id="edge" x2="0" y2="1"><stop stop-color="#b6a98a"/><stop offset=".5" stop-color="#687270"/><stop offset="1" stop-color="#9b8961"/></linearGradient></defs>
+  <path d="M19 9H581L590 18L581 27H19L10 18Z" fill="none" stroke="#0e191c" stroke-width="4"/>
+  <path d="M19 9H581L590 18L581 27H19L10 18Z" fill="none" stroke="url(#edge)" stroke-width="1.2"/>
+  <path d="M2 18L10 11L18 18L10 25ZM582 18L590 11L598 18L590 25Z" fill="#596461" stroke="#ac986e" stroke-width=".8"/>
+</svg>

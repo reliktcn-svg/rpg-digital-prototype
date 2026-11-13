@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   let defaultId='classic';
-  const skins=new Map(),defaults={face:[35,43,49],rim:['#ddc49a','#897451','#b69a6d','#3b342c'],number:'#e5dfd0',numberSelected:'#fff2c9',numberOutline:'#04070a',font:'Georgia, "Times New Roman", serif',inset:.86,grain:.055,wear:0,texture:null,textureOpacity:.75};
+  const skins=new Map(),defaults={face:[35,43,49],rim:['#ddc49a','#897451','#b69a6d','#3b342c'],number:'#e5dfd0',numberSelected:'#fff2c9',numberOutline:'#04070a',font:'"Cormorant Garamond", Georgia, serif',inset:.86,grain:.055,wear:0,texture:null,textureOpacity:.75};
   function register(id,definition){
     if(typeof id!=='string'||!id.trim()||!definition||typeof definition!=='object')throw new TypeError('A skin ID and definition are required');
     const s={...defaults,...definition};
@@ -25,6 +25,8 @@
   register('classic',{});
   register('satin-red',{face:[150,19,28],rim:['#e0e4e6','#8b969e','#c7cdd1','#525c65'],number:'#171b20',numberSelected:'#171b20',numberOutline:'#899299',grain:.025});
   register('worn-crimson',{face:[114,21,33],rim:['#636464','#25292b','#424649','#14191b'],number:'#f2eee5',numberSelected:'#fffaf0',numberOutline:'#381117',grain:.04,wear:.12});
+  register('ivory',{face:[205,188,151],rim:['#e6d8b9','#9a7f50','#bca270','#79613f'],number:'#493123',numberSelected:'#493123',numberOutline:'#d9c8a1',grain:.025,finish:'bone'});
+  register('obsidian',{face:[28,35,43],rim:['#e6e5d9','#7e9696','#b0c1bd','#5c7478'],number:'#c8eddf',numberSelected:'#e9ffe8',numberOutline:'#233c3c',grain:.012,finish:'obsidian'});
   root.FantasyDiceSkins=Object.freeze({register,load,get,list:()=>[...skins.keys()],get defaultId(){return defaultId},setDefault(id){get(id);defaultId=id;}});
   // Change this line to choose the game's skin; animation files stay unchanged.
   root.FantasyDiceSkins.setDefault('classic');

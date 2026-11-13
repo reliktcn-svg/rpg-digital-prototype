@@ -1,16 +1,16 @@
-/* Fantasy Dice Animation 1.0.0 — presentation only. MIT License. */
+/* Fantasy Dice Animation 2.0.0 — presentation only. MIT License. */
 (function (global) {
   'use strict';
   const SIDES = Object.freeze([4, 6, 8, 10, 12, 20]);
   const STYLE = `
-    :host{display:block;color:#f0e9d8;font:14px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-width:0;color-scheme:dark}
+    :host{display:block;color:#f0e9d8;font:14px/1.5 var(--rpg-font-text,Georgia,serif);min-width:0;color-scheme:dark}
     *{box-sizing:border-box}button{font:inherit}button:focus-visible{outline:2px solid #ead095;outline-offset:4px}
-    .shell{border:1px solid #65583e;border-radius:16px;background:#13191c;overflow:hidden;box-shadow:0 18px 60px #0003}
+    .shell{border:1px solid #ad9361;border-radius:5px;background:#142127;overflow:hidden;box-shadow:inset 0 0 0 3px #0e171c,inset 0 0 0 4px #b69c6326,0 18px 60px #0006}
     .bar{display:flex;gap:12px;align-items:center;justify-content:center;text-align:center;padding:12px 18px;border-bottom:1px solid #aa8b4730;flex-wrap:wrap}
-    .title{font-size:16px;font-weight:750;letter-spacing:.02em;margin:0;overflow-wrap:anywhere}
+    .title{font-family:var(--rpg-font-title,Georgia,serif);font-size:24px;font-weight:600;letter-spacing:.02em;margin:0;overflow-wrap:anywhere}
     .state{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:#c9ae79}
-    .stage{position:relative;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 50% 34%,#303c3d70,transparent 65%),repeating-linear-gradient(20deg,#ffffff02 0 1px,transparent 1px 6px),#10191c}
-    .stage:before{content:"";position:absolute;inset:18px;border:1px solid #bba56b16;border-radius:50%;pointer-events:none}
+    .stage{position:relative;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 50% 58%,#59636035,transparent 63%),linear-gradient(175deg,#253238,#132127 78%)}
+    .stage:after{content:"";position:absolute;left:12%;right:12%;bottom:12%;height:1px;background:linear-gradient(90deg,transparent,#b69c6320,transparent);pointer-events:none}
     canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
     .captions{position:absolute;inset:0;pointer-events:none}.caption{position:absolute;text-align:center;transform:translateX(-50%);font-size:11px;letter-spacing:.14em;color:#c2bcae}
     .caption b{display:inline-block;min-width:30px;color:#ffe0a1;font-size:17px;letter-spacing:0;margin-left:6px;font-weight:600}.caption .pending{color:#8e9998;font-size:12px}
@@ -105,7 +105,7 @@
       return e;
     };
     const host = node('div');
-    host.setAttribute('data-fantasy-dice', '1.0.0');
+    host.setAttribute('data-fantasy-dice', '2.0.0');
     // Shadow DOM isolates the renderer from the host game's selectors and IDs.
     const root = host.attachShadow({ mode: 'open' });
     const style = node('style'); style.textContent = STYLE; root.appendChild(style);
@@ -141,16 +141,16 @@
       const preferred = n <= 2 ? n : n <= 6 ? 3 : n <= 12 ? 4 : 6;
       const cols = Math.max(1, Math.min(preferred, Math.floor(width / 140)));
       const rows = Math.ceil(n / cols), cellW = width / cols;
-      const radius = Math.max(20, Math.min(width < 460 ? 64 : 78, (cellW - 20) * 0.23));
-      const cellH = radius * 2 + (width < 460 ? 52 : 70);
-      height = roll ? Math.max(width < 460 ? 205 : 210, rows * cellH + 20) : 240;
+      const radius = Math.max(20, Math.min(width < 460 ? 69 : 90, (cellW - 20) * 0.27));
+      const cellH = radius * 2 + (width < 460 ? 72 : 100);
+      height = roll ? Math.max(width < 460 ? 245 : 300, rows * cellH + 20) : 240;
       stage.style.height = height + 'px';
       const dpr = Math.min(2, win.devicePixelRatio || 1);
       canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr);
       if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       positions = Array.from({ length: n }, (_, i) => {
         const row = Math.floor(i / cols), inRow = Math.min(cols, n - row * cols);
-        return { x: (width - inRow * cellW) / 2 + (i % cols + .5) * cellW, y: row * cellH + radius + 28, size: radius, cellW };
+        return { x: (width - inRow * cellW) / 2 + (i % cols + .5) * cellW, y: row * cellH + radius + (width < 460 ? 46 : 60), size: radius, cellW };
       });
       // With one die the single value is printed in the formula below.
       // Multiple dice keep individual captions to explain e.g. 2D8.
@@ -171,7 +171,7 @@
       const t = active ? Math.min(1, active.elapsed / Math.max(1, active.totalDuration)) : 1;
       const items = roll.dice.map((die, i) => {
         const p = positions[i], local = active ? Math.max(0, Math.min(1, (active.elapsed - i * staggerMs) / Math.max(1, active.baseDuration))) : 1;
-        const pose=global.FantasyDiceMotion.sample(local,p,i,motionStyle);
+        const pose=global.FantasyDiceMotion.sample(local,{...p,sides:die.sides},i,motionStyle);
         return {sides:die.sides,value:die.value,index:i,...pose};
       });
       try { global.FantasyDiceRenderer.render(ctx, width, height, items, { time: t, skin:global.FantasyDiceSkins?.get(skinId), detail: items.length > 8 || width < 600 ? 'low' : 'high' }); }
@@ -290,5 +290,5 @@
     layout();
     return Object.freeze(api);
   }
-  global.FantasyDice = Object.freeze({ version: '1.1.0', supportedSides: SIDES, create, validate: normalize });
+  global.FantasyDice = Object.freeze({ version: '2.0.0', supportedSides: SIDES, create, validate: normalize });
 })(typeof window !== 'undefined' ? window : globalThis);

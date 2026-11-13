@@ -147,6 +147,38 @@
     return mesh;
   }
 
+  // Closed bevel topology: inset faces + shared edge quads + sealed vertex caps.
+  // The old renderer outlined disconnected face polygons; this mesh has no gaps.
+  var BEVEL_CACHE = Object.create(null);
+  function getBeveledGeometry(sides) {
+    if (BEVEL_CACHE[sides]) return BEVEL_CACHE[sides];
+    var core = getGeometry(sides), inset = sides === 20 ? .10 : .075;
+    var vertices = [], polygons = [], cornerIds = [], edges = Object.create(null), caps = core.vertices.map(function(){return [];});
+    function polygon(ids, kind, value) {
+      var center = mean(ids.map(function(i){return vertices[i];}));
+      var normal = unit(cross(sub(vertices[ids[1]], vertices[ids[0]]), sub(vertices[ids[2]], vertices[ids[0]])));
+      if(dot(normal,center)<0){ids=ids.slice().reverse();normal=mul(normal,-1);}
+      polygons.push({indices:ids,kind:kind,value:value||0,center:center,normal:normal});
+    }
+    core.faces.forEach(function(face,f){
+      var fd=core.faceData[f],ids=face.map(function(v){var id=vertices.length;vertices.push(add(mul(core.vertices[v],1-inset),mul(fd.center,inset)));caps[v].push(id);return id;});
+      cornerIds[f]=ids;polygon(ids,'face',f+1);
+      face.forEach(function(a,i){var b=face[(i+1)%face.length],key=Math.min(a,b)+':'+Math.max(a,b);(edges[key]||(edges[key]=[])).push({a:a,b:b,ia:ids[i],ib:ids[(i+1)%face.length]});});
+    });
+    Object.keys(edges).forEach(function(key){var pair=edges[key],a=pair[0],b=pair[1];polygon([a.ia,a.ib,b.a===a.b?b.ia:b.ib,b.a===a.a?b.ia:b.ib],'bevel');});
+    caps.forEach(function(ids,v){var n=unit(core.vertices[v]),center=mean(ids.map(function(i){return vertices[i];})),right=unit(sub(vertices[ids[0]],center)),up=cross(n,right);
+      ids.sort(function(a,b){var aa=sub(vertices[a],center),bb=sub(vertices[b],center);return Math.atan2(dot(aa,up),dot(aa,right))-Math.atan2(dot(bb,up),dot(bb,right));});polygon(ids,'cap');});
+    return BEVEL_CACHE[sides]={sides:sides,vertices:vertices,polygons:polygons,inset:inset};
+  }
+  function projectBeveled(sides,value,rx,ry,rz,rotation) {
+    if(!Number.isInteger(value)||value<1||value>sides)throw new RangeError('Invalid D'+sides+' result');
+    var core=getGeometry(sides),mesh=getBeveledGeometry(sides),transform=orientation(core.faceData[value-1],rx||0,ry||0,rz||0,sides,rotation),vertices=mesh.vertices.map(transform);
+    return {points:vertices.map(perspective),polygons:mesh.polygons.map(function(poly){
+      var center=transform(poly.center),normal=transform(poly.normal),fd=poly.value?core.faceData[poly.value-1]:null;
+      return {kind:poly.kind,value:poly.value,points:poly.indices.map(function(i){return perspective(vertices[i]);}),center:center,normal:normal,depth:center[2],visible:dot(normal,sub([0,0,CAMERA],center))>1e-8,screenCenter:perspective(center),right:fd?transform(fd.right):null,up:fd?transform(fd.up):null,inradius:fd?fd.inradius*(1-mesh.inset):0};
+    })};
+  }
+
   function rotate(v, rx, ry, rz) {
     var cx = Math.cos(rx), sx = Math.sin(rx), cy = Math.cos(ry), sy = Math.sin(ry), cz = Math.cos(rz), sz = Math.sin(rz);
     var x = v[0], y = v[1] * cx - v[2] * sx, z = v[1] * sx + v[2] * cx;
@@ -248,7 +280,7 @@
     var metrics = ctx.measureText(String(face.value));
     var baseline = typeof metrics.actualBoundingBoxAscent === 'number'
       ? (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2 : 35;
-    ctx.lineJoin = 'round'; ctx.lineWidth = 5;
+    ctx.lineJoin = 'round'; ctx.lineWidth = 1.8;
     ctx.strokeStyle = skin.numberOutline;
     ctx.strokeText(String(face.value), 0, baseline);
     ctx.fillStyle = selected ? skin.numberSelected : skin.number;
@@ -284,45 +316,38 @@
     ctx.drawImage(tintedSurface(image,color),left,top,span,span);ctx.restore();
   }
 
-  function drawFace(ctx, face, sides, selected, size, detail, skin) {
+  var COLOR_CACHE=Object.create(null);
+  function parseColor(value,ctx) {
+    if(COLOR_CACHE[value])return COLOR_CACHE[value];
+    var key=value;ctx.save();ctx.fillStyle='#aab3b4';ctx.fillStyle=value;value=ctx.fillStyle;ctx.restore();
+    if(/^#[0-9a-f]{6}$/i.test(value))return COLOR_CACHE[key]=[1,3,5].map(function(i){return parseInt(value.slice(i,i+2),16);});
+    var match=String(value).match(/[\d.]+/g);return COLOR_CACHE[key]=match&&match.length>=3?match.slice(0,3).map(Number):[170,175,180];
+  }
+  function drawFace(ctx,face,sides,selected,size,detail,skin) {
+    var metal=face.kind!=='face',base=metal?parseColor(skin.rim[2],ctx):skin.face;
+    var diffuse=Math.max(0,dot(face.normal,LIGHT)),spec=Math.pow(Math.max(0,dot(face.normal,unit(add(LIGHT,[0,0,1])))),metal?28:38);
+    // A warm ambient floor avoids hard black seams even on the unlit bevels.
+    var exposure=metal?.62+diffuse*.55:.63+diffuse*.64;
+    var color=base.map(function(c){return clamp(c*exposure+spec*(metal?80:36),0,255);});
+    var gradient=ctx.createLinearGradient(-.65,-.9,.8,1);
+    gradient.addColorStop(0,rgb(color[0]+(metal?24:10),color[1]+(metal?24:10),color[2]+(metal?24:10)));
+    gradient.addColorStop(.55,rgb(color[0],color[1],color[2]));
+    gradient.addColorStop(1,rgb(color[0]*.88,color[1]*.88,color[2]*.88));
+    path(ctx,face.points,1);ctx.fillStyle=gradient;ctx.fill();
+    if(metal)return;
     var surface=skin.surfacePack?.faces?.[String(sides)];
-    var diffuse = Math.max(0, dot(face.normal, LIGHT));
-    var specular = Math.pow(Math.max(0, dot(face.normal, unit(add(LIGHT, [0, 0, 1])))), 18);
-    var light=.5+diffuse*.85;
-    var color=skin.face.map(function(c){return clamp(c*light+specular*24,0,255);});
-    var points = face.points, center = face.screenCenter;
-    var gradient = ctx.createLinearGradient(-0.9, -1.2, 0.9, 1.3);
-    gradient.addColorStop(0, rgb(color[0]+12,color[1]+12,color[2]+12));
-    gradient.addColorStop(0.5, rgb(color[0],color[1],color[2]));
-    gradient.addColorStop(1, rgb(color[0]*.65,color[1]*.65,color[2]*.65));
-    path(ctx, points, 1); ctx.fillStyle = gradient; ctx.fill();
-    ctx.lineJoin = 'round'; ctx.lineWidth = 0.024;
-    ctx.strokeStyle = '#090e13'; ctx.stroke();
-
-    // A raised metallic rim follows the actual projected polygon edges.
-    var rim = ctx.createLinearGradient(-0.7, -0.8, 0.8, 1);
-    rim.addColorStop(0, skin.rim[0]); rim.addColorStop(0.3, skin.rim[1]);
-    rim.addColorStop(0.52, skin.rim[2]); rim.addColorStop(1, skin.rim[3]);
-    if(!surface?.rim){path(ctx, points, .94); ctx.lineWidth = .035; ctx.strokeStyle = rim; ctx.stroke();}
-    // Texture coordinates follow the face basis, so the material rotates with the die.
-    ctx.save(); path(ctx,points,surface?1:skin.inset);ctx.clip();
-    var right=facePoint(face,.1,0),up=facePoint(face,0,.1),cx=center[0],cy=center[1];
-    ctx.save();ctx.transform((right[0]-cx)*10,(right[1]-cy)*10,(up[0]-cx)*10,(up[1]-cy)*10,cx,cy);
-    if(skin.texture&&!surface?.face){ctx.globalAlpha=skin.textureOpacity;ctx.drawImage(skin.texture,-1,-1,2,2);ctx.globalAlpha=1;}
-    if(detail!=='low')for(var i=0;i<32;i++){
-      var seed=sides*109+face.value*71+i*3,x=pattern(seed)*2-1,y=pattern(seed+1)*2-1;
-      ctx.fillStyle='rgba(230,233,235,'+skin.grain+')';ctx.fillRect(x,y,.012,.012);
-      if(skin.wear>0){ctx.strokeStyle='rgba(215,210,194,'+skin.wear+')';ctx.lineWidth=.004;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+.04,y+.012);ctx.stroke();}
-    }
-    ctx.restore();
+    ctx.save();path(ctx,face.points,.997);ctx.clip();
+    if(skin.texture&&!surface?.face){var center=face.screenCenter,right=facePoint(face,.1,0),up=facePoint(face,0,.1);ctx.save();ctx.transform((right[0]-center[0])*10,(right[1]-center[1])*10,-(up[0]-center[0])*10,-(up[1]-center[1])*10,center[0],center[1]);ctx.globalAlpha=skin.textureOpacity*.55;ctx.drawImage(skin.texture,-1,-1,2,2);ctx.restore();}
     if(surface?.face){ctx.save();ctx.globalAlpha=.88;drawSurface(ctx,face,sides,surface.face,rgb(skin.face[0],skin.face[1],skin.face[2]));ctx.restore();}
     if(surface?.rim)drawSurface(ctx,face,sides,surface.rim,skin.rim[2]);
-    var shine = ctx.createRadialGradient(center[0] - 0.3, center[1] - 0.4, 0, center[0], center[1], 0.85);
-    shine.addColorStop(0, 'rgba(189,222,235,' + (0.10 + specular * 0.12) + ')');
-    shine.addColorStop(1, 'rgba(17,27,37,0)'); ctx.fillStyle = shine;
-    ctx.fillRect(-2, -2, 4, 4); ctx.restore();
-
-    drawNumber(ctx, face, size, selected,skin);
+    var sheen=ctx.createRadialGradient(face.screenCenter[0]-.12,face.screenCenter[1]-.18,.02,face.screenCenter[0],face.screenCenter[1],.9);
+    sheen.addColorStop(0,'rgba(255,241,211,'+(.035+spec*.18)+')');sheen.addColorStop(1,'rgba(255,241,211,0)');ctx.fillStyle=sheen;ctx.fillRect(-2,-2,4,4);
+    ctx.restore();drawNumber(ctx,face,size,selected,skin);
+  }
+  function silhouette(points) {
+    var sorted=points.slice().sort(function(a,b){return a[0]-b[0]||a[1]-b[1];});
+    function turn(o,a,b){return (a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);}
+    var lower=[],upper=[];sorted.forEach(function(p){while(lower.length>1&&turn(lower[lower.length-2],lower[lower.length-1],p)<=0)lower.pop();lower.push(p);});sorted.reverse().forEach(function(p){while(upper.length>1&&turn(upper[upper.length-2],upper[upper.length-1],p)<=0)upper.pop();upper.push(p);});lower.pop();upper.pop();return lower.concat(upper);
   }
 
   function render(ctx, width, height, items, options) {
@@ -340,23 +365,7 @@
         var y = typeof item.y === 'number' ? item.y : height / 2;
         var lift = typeof item.lift === 'number' ? item.lift : 0;
         var glow = clamp(typeof item.glow === 'number' ? item.glow : 0, 0, 1);
-        var projection = project(item.sides, item.value, item.rx, item.ry, item.rz, item.rotation);
-        // A scrolling contact patch represents a longer tabletop: the camera follows
-        // the die while preserving distance/radius rotation, even on a narrow phone.
-        if(item.grounded){
-          ctx.save();
-          var lane=item.cellW||width,patch=size*1.4,offset=item.cameraX||0;
-          ctx.beginPath();ctx.rect(Math.max(0,x-lane*.5),y+size*.45,lane,size*.8);ctx.clip();
-          for(var j=-18;j<=18;j++){
-            var px=(item.groundOrigin||x)+j*14-(offset%14),alpha=Math.max(0,1-Math.abs(px-x)/patch)*.16;
-            ctx.strokeStyle='rgba(168,179,164,'+alpha+')';ctx.lineWidth=.6;
-            for(var row=0;row<3;row++){
-              var py=y+size*(.7+row*.12),len=3+pattern(j+Math.floor(offset/14)+row*77)*5;
-              ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px+len,py);ctx.stroke();
-            }
-          }
-          ctx.restore();
-        }
+        var projection = projectBeveled(item.sides, item.value, item.rx, item.ry, item.rz, item.rotation);
         ctx.save();
         var bottom=Math.max.apply(Math,projection.points.map(function(p){return p[1];}));
         var groundY=y+size*.9;
@@ -375,20 +384,15 @@
           halo.addColorStop(1, 'rgba(208,160,71,0)');
           ctx.fillStyle = halo; ctx.fillRect(-1.5, -1.5, 3, 3);
         }
-        projection.faces.filter(function (face) { return face.visible; }).sort(function (a, b) { return a.depth - b.depth; }).forEach(function (face) {
-          drawFace(ctx, face, item.sides, face.value === item.value, size, options.detail, skin);
-        });
-        // A tiny fixed glint on the uppermost vertex adds a metal highlight.
-        var top = projection.points.reduce(function (best, p) { return p[1] < best[1] ? p : best; }, projection.points[0]);
-        ctx.globalAlpha = 0.45 + glow * 0.35; ctx.strokeStyle = skin.rim[0]; ctx.lineWidth = 0.008;
-        ctx.beginPath(); ctx.moveTo(top[0] - 0.045, top[1]); ctx.lineTo(top[0] + 0.045, top[1]);
-        ctx.moveTo(top[0], top[1] - 0.045); ctx.lineTo(top[0], top[1] + 0.045); ctx.stroke();
+        // One undercoat behind the complete closed solid prevents AA pinholes.
+        path(ctx,silhouette(projection.points),1);ctx.fillStyle=skin.rim[2];ctx.fill();
+        projection.polygons.filter(function(face){return face.visible;}).sort(function(a,b){return a.depth-b.depth;}).forEach(function(face){drawFace(ctx,face,item.sides,face.value===item.value,size,options.detail,skin);});
         ctx.restore();
-        results.push({ value: item.value, sides: item.sides, faces: projection.faces, x: x, y: centerY - lift, size: size });
+        results.push({ value: item.value, sides: item.sides, faces: project(item.sides,item.value,item.rx,item.ry,item.rz,item.rotation).faces, x: x, y: centerY - lift, size: size });
       });
     } finally { ctx.restore(); }
     return results;
   }
 
-  return { render: render, getGeometry: getGeometry, inspect: inspect, project: project, supportedDice: SUPPORTED.slice() };
+  return { render: render, getGeometry: getGeometry, getBeveledGeometry:getBeveledGeometry, projectBeveled:projectBeveled, inspect: inspect, project: project, supportedDice: SUPPORTED.slice() };
 }));

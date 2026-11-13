@@ -355,6 +355,7 @@
     updateCombatRestoreButton();return isNew;
   }
   function hideCombatWindow(){
+    window.RPGUIMotion?.hideBattle(els.modalContent);
     if(!state.combat)return;
     // The eye changes visibility ONLY. Do not close the combat modal, cancel a
     // running dice animation, discard a pending roll, or mutate combat state.
@@ -371,7 +372,7 @@
     if(!localControlsCombat())parkModalForObservedCombat();
     combatWindowHidden=false;
     updateCombatRestoreButton();
-    if(!els.modalContent.querySelector('.combat-shell')||els.modal.hidden||!localControlsCombat())renderCombat();
+    if(!els.modalContent.querySelector('.combat-shell')||els.modal.hidden||!localControlsCombat())renderCombat();else window.RPGUIMotion?.afterCombat(els.modalContent,state.combat.instanceId);
   }
   function canOffturnModalActionFor(heroId){return !!heroId&&modalOffturnOwnerId===heroId}
   function beginSideInteraction(p,type,participantIds=[p?.id].filter(Boolean)){
@@ -459,7 +460,18 @@
   function showSettingsOverlay(){
     const settings=document.getElementById('settingsOverlay');if(!settings)return;
     if(!settings.hidden){closeSettingsOverlay();return}
-    els.journalOverlay.hidden=true;settings.hidden=false;syncTopToolButtons();
+    renderSettingsDifficulty();els.journalOverlay.hidden=true;settings.hidden=false;syncTopToolButtons();
+  }
+  function renderSettingsDifficulty(){
+    const host=document.getElementById('settingsDifficulty');if(!host)return;
+    const p=getPlayer(journalOwnerId());host.hidden=!state.started||!p;if(host.hidden)return;
+    const locked=!!state.sharedDifficulty,foreign=p.id!==currentPlayer()?.id;
+    host.innerHTML=`<div class="eyebrow">СЛОЖНОСТЬ · ${escapeCombatText(p.name)}</div><button id="playerHardModeBtn" type="button" class="secondary" aria-pressed="${!!p.hardMode}" ${locked||foreign?'disabled':''}>${p.hardMode?'Сложный режим':'Обычный режим'}</button><p>${locked?'Режим выбран хозяином комнаты и заблокирован до конца партии. ':foreign?'Изменить сложность можно в свой ход. ':''}${p.hardMode?'Реакции и подсказки скрыты. Базовая вместимость рюкзака — 5 предметов.':'Реакции и подсказки включены. Базовая вместимость рюкзака — 10 предметов.'}</p>`;
+    host.querySelector('button').onclick=()=>{
+      const live=getPlayer(p.id);if(!live||state.sharedDifficulty||live.id!==currentPlayer()?.id)return;
+      if(!live.hardMode&&live.backpack.length>hardBackpackCapacity(live))closeSettingsOverlay();
+      togglePlayerHardMode(live);renderSettingsDifficulty();
+    };
   }
   function renderJournal(){
     const roomCode=String(window.__RPG_ROOM_CODE__||'').trim();
@@ -1224,6 +1236,7 @@
     else {b.disabled=true;b.title='Выберите действие или нажмите «Готово»';}
   }
   function showCard(card,extra='',actions=[]){
+    window.RPGUIMotion?.beforeCard(els.modalContent,card);
     modalOffturnOwnerId=null;modalCloseAction=null;
     const escapeText=v=>escapeCombatText(v);
     const entries=displayCardFieldEntries(card);
@@ -1252,8 +1265,9 @@
     const box=els.modalContent.querySelector('#modalActions');
     actions.forEach(a=>{const b=document.createElement('button');b.className=a.className||'primary';b.textContent=a.label;b.disabled=!!a.disabled;b.onclick=()=>{if(!b.disabled)a.fn()};box.appendChild(b)});
     els.modal.hidden=false;
+    window.RPGUIMotion?.afterCard(els.modalContent);
   }
-  function closeModal(){if(arcanaBattleLayer&&!arcanaBattleLayer.hidden)stopArcanaBattlePresentation();delete els.modal.dataset.lootDraft;els.modal.hidden=true;els.modal.classList.remove('post-combat-prompt');els.modalContent.innerHTML='';els.modalClose.style.display='';modalOffturnOwnerId=null;modalCloseAction=null;visibleGameOverKey=null}
+  function closeModal(){window.RPGUIMotion?.closeCard(els.modalContent);if(arcanaBattleLayer&&!arcanaBattleLayer.hidden)stopArcanaBattlePresentation();delete els.modal.dataset.lootDraft;els.modal.hidden=true;els.modal.classList.remove('post-combat-prompt');els.modalContent.innerHTML='';els.modalClose.style.display='';modalOffturnOwnerId=null;modalCloseAction=null;visibleGameOverKey=null;window.RPGUIMotion?.modalCleared(els.modalContent)}
   function requestModalClose(){if(modalCloseAction){const fn=modalCloseAction;modalCloseAction=null;fn();return}if(state.gameOver&&els.modalContent.querySelector('.game-over-stats')){dismissedGameOverKey=currentGameOverKey();closeModal();return}if(!state.turnLocked)closeModal()}
   const rollPopupQueue=[];
   let rollPopupAfterClose=null;
@@ -1306,7 +1320,7 @@
     els.rollPopupClose.textContent=x.buttonLabel||'Продолжить';
     els.rollPopupClose.disabled=false;
     rollPopupAfterClose=typeof x.onClose==='function'?x.onClose:null;
-    els.rollOverlay.hidden=false;
+    els.rollOverlay.hidden=false;window.RPGUIMotion?.rollShown(els.rollOverlay,x.title);
     // Purely informational dice popups never require an extra click in combat.
     // Results, choices and popups with a continuation callback still wait for the user.
     const seq=++rollPopupDisplaySeq;
@@ -1780,6 +1794,7 @@
   function battleOutcomeImage(hero,type){return BATTLE_RESULT_HERO_IDS.has(hero?.id)&&['victory','defeat'].includes(type)?`assets/results/${hero.id}-${type}.webp`:''}
   function battleFateArt(hero,type){const src=battleOutcomeImage(hero,type);return `<div class="battle-fate-art"><img src="${src}" alt="${escapeCombatText(hero?.name||'Герой')} · ${type==='victory'?'Победа':'Поражение'}" onerror="this.hidden=true" /></div>`;}
   function showDefeatPopup(p,enemy,loss,turnEnded=false,departedMercenaryName=null,xpLost=0){
+    window.RPGUIMotion?.beforeDefeat(els.modalContent);
     rollPopupQueue.length=0;rollPopupAfterClose=null;if(els.rollOverlay)els.rollOverlay.hidden=true;
     const source=enemy?`<b class="fate-hero-name">${escapeCombatText(p.name.toUpperCase())}</b> пал от <b class="defeat-enemy-rank ${enemyRankClass(enemy)}">${escapeCombatText(ENEMY_GENITIVE[enemy.id]||enemy.name)}</b>.`:`<b class="fate-hero-name">${escapeCombatText(p.name.toUpperCase())}</b> пал.`;
     modalOffturnOwnerId=p.id;modalCloseAction=null;
@@ -1788,7 +1803,7 @@
         <div class="battle-fate-info">${source}</div><div class="battle-fate-info battle-fate-gold">Потеряно золота: <b>${loss}</b>${departedMercenaryName?` <span class="battle-fate-merc-loss">/ Наёмник: «${escapeCombatText(departedMercenaryName)}» покинул героя.</span>`:''}</div>
         <div class="battle-fate-note">${xpLost?`Потеряно опыта текущего уровня: <b>${xpLost} ОМ</b>. Уровень сохранён.<br>`:""}Герой возвращается в лагерь залечивать раны.</div></div>
         <div class="battle-fate-footer"><button id="defeatContinue" type="button" class="success">Продолжить</button></div></div></div>`;
-    els.modal.hidden=false;document.getElementById('defeatContinue').onclick=closeModal;
+    els.modal.hidden=false;document.getElementById('defeatContinue').onclick=closeModal;window.RPGUIMotion?.afterDefeat(els.modalContent);
   }
   // Starts a newly generated world while retaining hero progression, gold and owned items.
   // This action is available to the winning hero on the post-boss map, including online.
@@ -2434,7 +2449,7 @@
     if(els.sheetHeroTab){els.sheetHeroTab.classList.toggle('active',!inventory);els.sheetHeroTab.setAttribute('aria-selected',String(!inventory))}
     if(els.sheetInventoryTab){els.sheetInventoryTab.classList.toggle('active',inventory);els.sheetInventoryTab.setAttribute('aria-selected',String(inventory))}
   }
-  function openCharacterSheet(mode='overview',bonusKey=null,playerId=null){if(!state.started)return;const active=currentPlayer(),sideTarget=sideInteractionOwnerId(),target=sideTarget||playerId||onlineLocalHeroId||(playerHardMode(active)?active.id:(state.inspectPlayerId||active.id));sheetView={mode,bonusKey,itemId:null,context:null,playerId:target};els.sheetDrawer.hidden=false;document.body.classList.toggle('sheet-over-combat',!!state.combat&&!els.modal.hidden);renderCharacterSheet(mode,bonusKey);RPGTabletop.syncTabs(true,mode)}
+  function openCharacterSheet(mode='overview',bonusKey=null,playerId=null){if(!state.started)return;const sheetWasHidden=els.sheetDrawer.hidden;const active=currentPlayer(),sideTarget=sideInteractionOwnerId(),target=sideTarget||playerId||onlineLocalHeroId||(playerHardMode(active)?active.id:(state.inspectPlayerId||active.id));sheetView={mode,bonusKey,itemId:null,context:null,playerId:target};els.sheetDrawer.hidden=false;document.body.classList.toggle('sheet-over-combat',!!state.combat&&!els.modal.hidden);renderCharacterSheet(mode,bonusKey);RPGTabletop.syncTabs(true,mode);window.RPGUIMotion?.openSheet(els.sheetDrawer,sheetWasHidden)}
   function toggleCharacterSheet(mode='overview',playerId=null){
     if(!state.started)return;
     const requested=mode==='overview'?'overview':'inventory';
@@ -2442,13 +2457,13 @@
     if(!els.sheetDrawer.hidden&&requested===displayed){closeCharacterSheet();return}
     openCharacterSheet(requested,null,playerId||sideInteractionOwnerId()||onlineLocalHeroId||currentPlayer()?.id);
   }
-  function closeCharacterSheet(){const owner=sideInteractionOwnerId(),player=owner?getPlayer(owner):null;if(sideInteraction?.type==='loot'&&player&&!player.pendingItems?.length)endSideInteraction();if(sideInteraction?.type==='victory'&&player&&!player.pendingItems?.length&&sideInteraction.victoryComplete&&!(onlineLocalHeroId&&window.__RPG_NET_CONNECTED__))endSideInteraction();els.sheetDrawer.hidden=true;document.body.classList.remove('sheet-over-combat');els.sheetContent.innerHTML='';sheetView={mode:'overview',bonusKey:null,itemId:null,context:null,playerId:null};updateSheetTabs('overview');RPGTabletop.syncTabs(false,null)}
+  function closeCharacterSheet(){window.RPGUIMotion?.closeSheet(els.sheetDrawer);const owner=sideInteractionOwnerId(),player=owner?getPlayer(owner):null;if(sideInteraction?.type==='loot'&&player&&!player.pendingItems?.length)endSideInteraction();if(sideInteraction?.type==='victory'&&player&&!player.pendingItems?.length&&sideInteraction.victoryComplete&&!(onlineLocalHeroId&&window.__RPG_NET_CONNECTED__))endSideInteraction();els.sheetDrawer.hidden=true;document.body.classList.remove('sheet-over-combat');els.sheetContent.innerHTML='';sheetView={mode:'overview',bonusKey:null,itemId:null,context:null,playerId:null};updateSheetTabs('overview');RPGTabletop.syncTabs(false,null)}
   function bonusBreakdownHtml(p,key){const src=modifierSources(p,key),total=modifierTotal(p,key),title=key==='defense'?'ЗЩ':statName(key);return `<div class="bonus-popover"><b>Модификатор ${title}: ${signed(total)}</b>${src.length?src.map(x=>`<div class="bonus-row"><span>${x.kind}: ${x.label}</span><b>${signed(x.amount)}</b></div>`).join(''):'<div class="muted small">Активных источников бонуса нет.</div>'}<div class="bonus-row total"><span>Итого</span><b>${signed(total)}</b></div></div>`}
   function restoreCombatModalIfNeeded(){if(state.combat)setTimeout(renderCombat,0)}
   function showHardModeCapacityWarning(p){
     const max=hardBackpackCapacity(p),fake={id:'—',name:'Сложный режим',category:'Настройки героя',deck:'Герой',fields:{'Рюкзак':`${p.backpack.length}/${max}`}};
     showCard(fake,`В рюкзаке героя <b>${p.name}</b> предметов больше максимального количества для сложной версии игры.<br><br>Очистите рюкзак до <b>${max}</b> предметов, затем включите сложный режим.`,[
-      {label:'Открыть рюкзак',className:'success',fn:()=>{closeModal();renderCharacterSheet('backpack');restoreCombatModalIfNeeded()}},
+      {label:'Открыть рюкзак',className:'success',fn:()=>{closeModal();openCharacterSheet('backpack',null,p.id);if(state.combat)document.body.classList.add('sheet-over-combat');restoreCombatModalIfNeeded()}},
       {label:'Отмена',className:'secondary',fn:()=>{closeModal();restoreCombatModalIfNeeded()}}
     ]);
   }
@@ -2458,7 +2473,7 @@
     ensurePlayerModel(p);
     if(!p.hardMode){const max=hardBackpackCapacity(p);if(p.backpack.length>max){showHardModeCapacityWarning(p);return}p.hardMode=true;state.inspectPlayerId=null;state.mapHighlight=null;log(`${p.name}: <b>сложный режим включён</b>.`)}
     else{p.hardMode=false;log(`${p.name}: <b>сложный режим выключен</b>.`)}
-    renderCharacterSheet('overview');if(state.combat)renderCombat();updateUI();renderBoard();
+    if(!els.sheetDrawer.hidden)renderCharacterSheet('overview');if(state.combat)renderCombat();updateUI();renderBoard();
   }
   // v0.6.74 — Every image is linked by the approved card ID, not by a translated name.
   const INVENTORY_IMAGE_IDS=new Set([457,459,464,466,469,471,473,475,477,479,481,483,453,460,467,485,387,388,389,390,391,392,393,394,395,396,397,398,399,400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434,435,436,437,438,439,440,441,442,443,444,445,446,447,448,449,450,451,452,372,373,374,375,376,377,378,379,380,381,382,383,384,385,386,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347]);
@@ -2495,21 +2510,20 @@
       updateUI();if(state.combat)renderCombat();window.dispatchEvent(new Event('rpg-local-mutation'));
     }});
   }
-  function heroProgressionSummary(p){const i=RPGProgression.info(p);return `<section class="hero-progression-summary"><div><b>${i.level} УРОВЕНЬ</b><span>Опыт: <b>${i.xp}/${i.next}</b> ОМ</span></div><progress value="${i.xp-i.floor}" max="${i.next-i.floor}" aria-label="Опыт до следующего уровня"></progress><button id="heroSkillTree">Древо способностей · очки: ${i.points}</button></section>`}
+  function heroProgressionSummary(p){const i=RPGProgression.info(p);return `<section class="hero-progression-summary"><button id="heroSkillTree">Древо способностей · очки: ${i.points}</button><div><b>${i.level} УРОВЕНЬ</b><span>Опыт: <b>${i.xp}/${i.next}</b> ОМ</span></div><progress value="${i.xp-i.floor}" max="${i.next-i.floor}" aria-label="Опыт до следующего уровня"></progress></section>`}
   function renderCharacterSheet(mode=sheetView.mode,bonusKey=sheetView.bonusKey){
     if(!state.started)return;const p=sheetPlayer();ensurePlayerModel(p);sheetView.mode=mode;sheetView.bonusKey=bonusKey;updateSheetTabs(mode);
     if(mode==='inventory'){renderInventory(p);return}if(mode==='potionBag'){renderPotionBag(p);return}if(mode==='backpack'){renderBackpack(p);return}if(mode==='pending'){renderPending(p);return}if(mode==='item'){renderItemDetail(p,sheetView.itemId,sheetView.context);return}
-    const stats=['defense','str','dex','wis','cha'].map(k=>`<div class="sheet-stat"><span>${k==='defense'?'ЗЩ':statName(k)}: <b>${k==='defense'?p.defense:signed(p[k])}</b></span><button class="modifier-link big" data-sheet-bonus="${k}">(${signed(modifierTotal(p,k))})</button><span class="sheet-total">итого ${k==='defense'?effectiveDefense(p):signed(effectiveStat(p,k))}</span></div>`).join('');
+    const stats=['defense','str','dex','wis','cha'].map(k=>{const label=k==='defense'?'ЗЩ':statName(k),base=k==='defense'?p.defense:signed(p[k]),value=k==='defense'?effectiveDefense(p):signed(effectiveStat(p,k));return `<div class="sheet-stat"><span class="dossier-stat-label">${label}</span><strong class="dossier-stat-number">${value}</strong><button class="modifier-link big" data-sheet-bonus="${k}" title="База ${base}; бонус ${signed(modifierTotal(p,k))}" aria-label="${label}: база ${base}, бонус ${signed(modifierTotal(p,k))}. Показать расшифровку."><span class="dossier-stat-bonus">(${signed(modifierTotal(p,k))})</span></button></div>`}).join('');
     const hc=heroCombatInfo(p),effects=activeEffectRows(p);const effectsHtml=effects.length?effects.map(x=>`<div class="hero-effect-row ${x.tone==='negative'?'negative':'positive'}"><span>${x.kind}: </span><b>${x.label}</b></div>`).join(''):'<div class="empty-box compact-empty">Активных эффектов нет.</div>';
     const readOnly=sheetReadOnly(),readOnlyBanner=readOnly?`<div class="read-only-banner">Просмотр героя <b>${p.name}</b>. Сейчас ходит <b>${currentPlayer().name}</b>.</div>`:'';
-    const territoryCount=Object.values(state.territories).filter(t=>t.owner===p.id).length,areaCount=state.areas.filter(a=>a.owner===p.id).length,region=MAP.hexes[p.hex]?regionName(MAP.hexes[p.hex].region):'—';
-    const heroMeta=`<div class="sheet-game-meta"><div class="meta-cell">Личный ход: <b>${p.personalTurn}</b></div><div class="meta-cell">Раунд: <b>${state.round}</b></div><div class="meta-cell">Позиция: <b>${p.hex}</b></div><div class="meta-cell">Регион: <b>${region}</b></div><button class="meta-cell" data-sheet-map-highlight="territories">Территории: <b>${territoryCount}</b></button><button class="meta-cell" data-sheet-map-highlight="areas">Области: <b>${areaCount}</b></button></div>`;
-    const sharedLocked=!!state.sharedDifficulty;const difficultyControl=`<div class="hero-difficulty-row"><button id="playerHardModeBtn" class="hero-difficulty-btn ${p.hardMode?'active':''}" ${(readOnly||sharedLocked)?'disabled':''}>${sharedLocked?'Режим партии':'Сложный режим'}: ${p.hardMode?'СЛОЖНЫЙ':'ОБЫЧНЫЙ'}</button><span>${sharedLocked?'Режим выбран хозяином комнаты и заблокирован до конца партии. ':''}${p.hardMode?'Реакции и обучающие подсказки скрыты. Рюкзак: 5 базовых мест.':'Обычный режим. Рюкзак: 10 базовых мест.'}</span></div>`;
-    els.sheetContent.innerHTML=`${readOnlyBanner}${difficultyControl}<div class="sheet-hero hero-only-head"><div><div class="eyebrow">ЛИСТ ГЕРОЯ</div><h2 style="color:${p.color}">${p.name}</h2></div><div class="sheet-hp"><span class="${p.currentHp<p.maxHp/2?'low-health':''}">ЗД <b>${p.currentHp}/${p.maxHp}</b></span><span>Урон <b>${currentHeroDamage(p)}</b></span></div></div>${!readOnly?territoryPurchaseHtml(p):''}${heroProgressionSummary(p)}${heroMeta}<div class="sheet-stats">${stats}</div>${bonusKey?bonusBreakdownHtml(p,bonusKey):''}<div class="hero-abilities"><div class="hero-ability-card"><small>СПОСОБНОСТЬ ГЕРОЯ</small><b>${escapeCombatText(hc?.ability||'—')}</b><span>${escapeCombatText(hc?.effect||'—')}</span></div><div class="hero-ability-card nat20"><small>НАТУРАЛЬНАЯ 20</small><b>${escapeCombatText(hc?.natural20?.split(' — ')[0]||'Эффект героя')}</b><span>${escapeCombatText(hc?.natural20?.includes(' — ')?hc.natural20.split(' — ').slice(1).join(' — '):(hc?.natural20||'—'))}</span></div></div><h3 class="sheet-section-title">Активные эффекты</h3><div class="hero-effects compact-effects">${effectsHtml}</div>`;
+    const territoryCount=Object.values(state.territories).filter(t=>t.owner===p.id).length,areaCount=state.areas.filter(a=>a.owner===p.id).length;
+    const estates=`<div class="dossier-estates" aria-label="Владения героя"><button class="dossier-estate" data-sheet-map-highlight="territories" aria-label="Территории: ${territoryCount}. Подсветить на карте"><span>Территории</span><strong>${territoryCount}</strong></button><button class="dossier-estate" data-sheet-map-highlight="areas" aria-label="Области: ${areaCount}. Подсветить на карте"><span>Области</span><strong>${areaCount}</strong></button></div>`;
+    els.sheetContent.innerHTML=`${readOnlyBanner}<article class="hero-dossier" style="--dossier-accent:${p.color}">${heroProgressionSummary(p)}<header class="dossier-header"><div class="sheet-hero hero-only-head"><div><div class="eyebrow">ЛИСТ ГЕРОЯ</div><h2 style="color:${p.color}">${escapeCombatText(p.name)}</h2></div><div class="dossier-gold"><small>ЗОЛОТО</small><strong>${p.gold}</strong></div></div></header><div class="dossier-main"><div class="dossier-visual"><div class="dossier-portrait"><img src="${combatPortraitUrl('hero',p.id)}" alt="${escapeCombatText(p.name)}" onerror="this.hidden=true"></div><div class="dossier-values"><div class="sheet-stats" aria-label="Характеристики героя">${stats}</div></div>${battleV086HealthSegments(p.currentHp,p.maxHp)}<div class="dossier-damage"><small>БАЗОВЫЙ УРОН</small><b>${currentHeroDamage(p)}</b></div></div><aside class="dossier-side"><div class="hero-ability-card"><small>СПОСОБНОСТЬ ГЕРОЯ</small><b>${escapeCombatText(hc?.ability||'—')}</b><span>${escapeCombatText(hc?.effect||'—')}</span></div>${bonusKey?bonusBreakdownHtml(p,bonusKey):''}${estates}<section class="dossier-effects"><h3 class="sheet-section-title">Активные эффекты</h3><div class="hero-effects compact-effects">${effectsHtml}</div></section>${!readOnly?territoryPurchaseHtml(p):''}</aside></div></article>`;
+
     bindTerritoryPurchase(els.sheetContent);
     document.getElementById('heroSkillTree').onclick=()=>openHeroProgression(p.id);
-    const difficultyBtn=document.getElementById('playerHardModeBtn');if(difficultyBtn&&!readOnly&&!state.sharedDifficulty)difficultyBtn.onclick=()=>togglePlayerHardMode(p);
-    els.sheetContent.querySelectorAll('[data-sheet-bonus]').forEach(b=>b.onclick=()=>renderCharacterSheet('overview',b.dataset.sheetBonus));
+    els.sheetContent.querySelectorAll('[data-sheet-bonus]').forEach(b=>b.onclick=()=>{renderCharacterSheet('overview',sheetView.bonusKey===b.dataset.sheetBonus?null:b.dataset.sheetBonus);els.sheetContent.querySelector('.bonus-popover')?.scrollIntoView({block:'nearest'})});
     els.sheetContent.querySelectorAll('[data-sheet-map-highlight]').forEach(b=>{const type=b.dataset.sheetMapHighlight;const active=()=>state.mapHighlight?.type===type&&state.mapHighlight?.playerId===p.id;const refresh=()=>{b.classList.toggle('map-highlight-active',active());b.setAttribute('aria-pressed',active()?'true':'false')};const set=()=>{state.mapHighlight={type,playerId:p.id};refresh();renderBoard()};const clear=()=>{if(active()){state.mapHighlight=null;refresh();renderBoard()}};refresh();if(!isMobileViewport()){b.onmouseenter=set;b.onmouseleave=clear}else{b.onmouseenter=null;b.onmouseleave=null}b.onclick=e=>{e.stopPropagation();if(active())state.mapHighlight=null;else state.mapHighlight={type,playerId:p.id};refresh();renderBoard()}});
   }
   function renderInventory(p){
@@ -4021,7 +4035,7 @@
   function battleV086HealthSegments(hp,maxHp){
     const max=Math.max(1,Math.floor(Number(maxHp)||1)),now=Math.max(0,Math.min(max,Math.floor(Number(hp)||0)));
     const parts=Array.from({length:max},(_,i)=>`<span class="battle-v086-hp-segment${i<now?' filled':''}" aria-hidden="true"></span>`).join('');
-    return `<div class="battle-v086-health" role="meter" aria-label="Здоровье: ${now} из ${max}" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${now}" style="--battle-v086-hp-count:${max}" title="ЗД ${now}/${max}">${parts}</div>`;
+    return `<div class="battle-v086-health" role="meter" aria-label="Здоровье: ${now} из ${max}" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${now}" style="--battle-v086-hp-count:${max}" title="ЗД ${now}/${max}">${parts}<span class="reforged-health-value" aria-hidden="true">${now} / ${max}</span></div>`;
   }
   function combatHeroVisualCard(p,c){
     const playerName=String(window.__RPG_HERO_PLAYER_NAMES__?.[p.id]||'').trim();
@@ -4106,7 +4120,8 @@
     const guide=localCombatant&&!playerHardMode(p)?`<div class="combat-effects-manual"><h4>Памятка боя</h4><div class="combat-note">Активные способности, предметы и наёмники применяет игрок. Натуральные 1 и 20 автоматические только при одиночном D20. Лечение доступно до атаки в свой боевой ход и после принятого нелетального урона.</div></div>`:'';
     const journalVisible=combatJournalInstance===c.instanceId?combatJournalVisible:!!c.journalOpen;const oldScroll=els.modalContent.querySelector('.combat-history')?.scrollTop||0;const history=journalVisible?`<div class="combat-history-wrap"><div class="combat-history">${(c.history||[]).map(x=>`<div>${x}</div>`).join('')||'<div>Записей пока нет.</div>'}</div></div>`:'';
     const controlBlock=localCombatant?`${reactions.length?`<div class="combat-reactions"><h4>РЕАКЦИИ — игра напоминает, но решение за игроком</h4><div class="combat-reaction-buttons">${reactions.map((r,i)=>`<button data-reaction="${i}" class="${/^(Каменная кровь|Железная стойкость)/.test(r.label)?'success':'secondary'}">${r.label}</button>`).join('')}</div></div>`:''}<div class="combat-actions">${actions}</div><div class="combat-sheet-actions"><button id="combatHeroSheet" class="secondary">Герой</button><button id="combatInventory" class="secondary">Инвентарь</button></div>${guide}`:'';
-    els.modalContent.innerHTML=`<div class="combat-shell ${localCombatant?'combat-owner-view':'combat-observer-view'}"><div class="combat-summary"><span class="combat-mode-badge">${localCombatant?mode:`Наблюдение за ${observedName}`}</span><span class="combat-pill">Раунд ${c.round}</span></div><div class="combat-head visual-combat-head">${combatHeroVisualCard(p,c)}<div class="combat-vs">VS</div>${combatEnemyVisualCard(e,c)}</div>${phaseHtml}${controlBlock}<div class="combat-journal-control"><button id="combatJournalToggle" class="${journalVisible?'secondary active':'ghost'}">Журнал боя${journalVisible?' ▲':' ▼'}</button></div>${history}</div>`;els.modal.hidden=false;if(journalVisible&&oldScroll)els.modalContent.querySelector('.combat-history')?.scrollTo(0,oldScroll);
+    window.RPGUIMotion?.beforeCombat(els.modalContent,c.instanceId);
+    els.modalContent.innerHTML=`<div class="combat-shell ${localCombatant?'combat-owner-view':'combat-observer-view'}"><div class="combat-summary"><span class="combat-mode-badge">${localCombatant?mode:`Наблюдение за ${observedName}`}</span><span class="combat-pill">Раунд ${c.round}</span></div><div class="combat-head visual-combat-head">${combatHeroVisualCard(p,c)}<div class="combat-vs" aria-label="Бой">⚔</div>${combatEnemyVisualCard(e,c)}</div>${phaseHtml}${controlBlock}<div class="combat-journal-control"><button id="combatJournalToggle" class="${journalVisible?'secondary active':'ghost'}">Журнал боя${journalVisible?' ▲':' ▼'}</button></div>${history}</div>`;els.modal.hidden=false;window.RPGUIMotion?.afterCombat(els.modalContent,c.instanceId);if(journalVisible&&oldScroll)els.modalContent.querySelector('.combat-history')?.scrollTo(0,oldScroll);
     if(localCombatant){reactions.forEach((r,i)=>{const b=els.modalContent.querySelector(`[data-reaction="${i}"]`);if(b)b.onclick=r.fn});els.modalContent.querySelectorAll('[data-auto-choice]').forEach(b=>b.onclick=()=>decisions[Number(b.dataset.autoChoice)]?.fn());els.modalContent.querySelectorAll('[data-cleanse-status]').forEach(b=>b.onclick=()=>chooseCombatCleanseStatus((c.pendingCleanse?.options||[])[Number(b.dataset.cleanseStatus)]))}
     els.modalContent.querySelectorAll('[data-visual-toggle]').forEach(b=>bindScrollSafeFlip(b,()=>toggleCombatVisualFace(b.dataset.visualToggle)));
     const bind=(id,fn)=>{const x=document.getElementById(id);if(x)x.onclick=fn};if(localCombatant){bind('mercAcceptAbility',resolveHeroAbilityAttack);bind('combatFight',combatFight);bind('combatEscapeYes',confirmCombatEscape);bind('combatEscapeNo',cancelCombatEscape);bind('combatResolveEscape',resolveCombatEscapeResult);bind('combatEscapeBefore',()=>requestCombatEscape('before'));bind('combatAttack',combatHeroAttack);bind('combatRollDamage',combatRollHeroDamage);bind('combatSkipChoice',skipCombatChoice);bind('combatEscape',()=>requestCombatEscape('during'));bind('combatHeroAbility',useHeroCombatAbility);bind('combatFinalizeAttack',finalizeHeroAttackRoll);bind('mageLightning',()=>chooseMageNat20('lightning'));bind('mageFire',()=>chooseMageNat20('fire'));bind('combatApplyHeroDamage',applyHeroDamageNow);bind('combatEnemyTurn',combatEnemyTurn);bind('combatFinalizeEnemyRoll',finalizeEnemyAttackRoll);bind('combatAcceptDamage',combatAcceptDamageAndContinue);bind('combatContinueMiss',combatContinueAfterEnemyMiss);bind('combatContinueAfterDamage',combatContinueAfterDamage);bind('combatFinishVictory',()=>showVictoryResults(p,c));bind('combatPostVictory',()=>{if(c.victory?.searchState==='pending'){showVictoryResults(p,c);return}if(c.victory?.searchState==='rolling'){presentVictorySearch(p,c);return}if(c.victory?.lootDraft&&!c.victory.lootDraft.confirmed&&c.victory.lootDraft.keep>0)openVictoryLootDraft();else showPostCombatTerritoryPrompt()});bind('combatHeroSheet',()=>openCharacterSheet('overview'));bind('combatInventory',()=>openCharacterSheet('inventory'))}
@@ -4469,7 +4484,7 @@
 
   if(els.sheetHeroTab)els.sheetHeroTab.addEventListener('click',()=>{toggleCharacterSheet('overview',sheetView.playerId||currentPlayer()?.id)});
   if(els.sheetInventoryTab)els.sheetInventoryTab.addEventListener('click',()=>{toggleCharacterSheet('inventory',sheetView.playerId||currentPlayer()?.id)});
-  if(els.rollPopupClose)els.rollPopupClose.addEventListener('click',()=>{clearLevelUpNotice();els.rollOverlay.hidden=true;document.body.classList.remove('arcana-info-presenting');infoDiceToken++;const after=rollPopupAfterClose;rollPopupAfterClose=null;els.rollPopupClose.textContent='Продолжить';if(after)after();if(els.rollOverlay.hidden)showNextRollPopup();if(sideInteraction?.type==='territory'&&els.rollOverlay.hidden&&!rollPopupQueue.length)endSideInteraction()});
+  if(els.rollPopupClose)els.rollPopupClose.addEventListener('click',()=>{window.RPGUIMotion?.rollClosing(els.rollOverlay,{keepResult:state.combat?.victory?.searchState==='pending'});clearLevelUpNotice();els.rollOverlay.hidden=true;document.body.classList.remove('arcana-info-presenting');infoDiceToken++;const after=rollPopupAfterClose;rollPopupAfterClose=null;els.rollPopupClose.textContent='Продолжить';if(after)after();if(els.rollOverlay.hidden)showNextRollPopup();if(sideInteraction?.type==='territory'&&els.rollOverlay.hidden&&!rollPopupQueue.length)endSideInteraction();window.RPGUIMotion?.rollSettled()});
   const settingsOverlay=document.getElementById('settingsOverlay');
   document.getElementById('settingsClose')?.addEventListener('click',closeSettingsOverlay);
   settingsOverlay?.addEventListener('click',e=>{if(e.target===settingsOverlay)closeSettingsOverlay()});

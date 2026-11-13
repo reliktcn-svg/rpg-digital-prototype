@@ -1,0 +1,72 @@
+/* The hero's portrait, five aligned medallions and ability form one dossier. */
+body.tabletop-upgrade.game-running .sheet-drawer:has(.hero-dossier){width:min(980px,calc(100vw - 24px))!important}
+body.tabletop-upgrade .hero-dossier{container-type:inline-size}
+body.tabletop-upgrade .hero-dossier .hero-progression-summary{margin:0 0 14px;padding:0 0 10px;border-top:0;display:grid;gap:7px}
+body.tabletop-upgrade .hero-dossier .hero-progression-summary button{width:100%;font-size:21px!important;min-height:46px;line-height:1.25}
+body.tabletop-upgrade .hero-dossier .hero-progression-summary>div{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px;line-height:1.4}
+body.tabletop-upgrade .hero-dossier .hero-progression-summary progress{width:100%}
+body.tabletop-upgrade .dossier-header h2{font-size:38px!important}
+body.tabletop-upgrade .dossier-gold small{font-size:11px;line-height:1.3}
+body.tabletop-upgrade .dossier-main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:22px;align-items:start}
+body.tabletop-upgrade .dossier-visual{min-width:0;display:grid;grid-template-columns:minmax(0,5.5fr) minmax(0,1fr);column-gap:12px;align-items:start}
+body.tabletop-upgrade .dossier-portrait{grid-column:1;grid-row:1;box-shadow:0 8px 18px #0008,0 2px 5px #0008}
+body.tabletop-upgrade .dossier-portrait::after{filter:drop-shadow(0 2px 2px #0009)}
+body.tabletop-upgrade .dossier-values{grid-column:2;grid-row:1;align-self:stretch;min-height:0;min-width:0}
+body.tabletop-upgrade .hero-dossier .sheet-stats{display:flex!important;flex-direction:column;justify-content:space-between;gap:0!important;height:100%;margin:0!important}
+body.tabletop-upgrade .hero-dossier .sheet-stat,
+body.tabletop-upgrade .hero-dossier .sheet-stat:last-child{width:100%!important;max-width:none!important;flex:none;grid-column:auto!important;aspect-ratio:1;min-width:0;padding:7px 2px!important;gap:1px!important}
+body.tabletop-upgrade .hero-dossier .dossier-stat-label{font-size:11px!important;line-height:1.15}
+body.tabletop-upgrade .hero-dossier .dossier-stat-number{font-size:27px!important;line-height:1.05}
+body.tabletop-upgrade .hero-dossier .sheet-stat .modifier-link{font-size:12px!important;min-height:18px!important;line-height:1.2}
+body.tabletop-upgrade .dossier-visual>.battle-v086-health{grid-column:1;grid-row:2;margin-top:5px!important}
+body.tabletop-upgrade .dossier-visual>.dossier-damage{grid-column:1;grid-row:3;flex-wrap:wrap;gap:6px 10px;line-height:1.3}
+body.tabletop-upgrade .dossier-damage small{font-size:11px;letter-spacing:.035em}
+body.tabletop-upgrade .dossier-side{min-width:0;display:grid;gap:18px;align-content:start}
+body.tabletop-upgrade .hero-dossier .hero-ability-card{display:grid;gap:7px;padding:14px!important;border-left-width:2px!important;overflow-wrap:anywhere}
+body.tabletop-upgrade .hero-dossier .hero-ability-card small{font-size:11px!important;line-height:1.3}
+body.tabletop-upgrade .hero-dossier .hero-ability-card b{font-size:26px!important;line-height:1.15!important}
+body.tabletop-upgrade .hero-dossier .hero-ability-card span{font-size:16px!important;line-height:1.5!important}
+body.tabletop-upgrade .dossier-estates{display:flex;justify-content:space-evenly;gap:14px;flex-wrap:wrap}
+body.tabletop-upgrade .dossier-estate{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:108px;height:108px;min-height:108px;padding:12px 4px!important;border:0!important;border-radius:50%!important;box-shadow:0 3px 10px #0005!important;background:var(--reforged-stat) center/100% 100% no-repeat,radial-gradient(circle,#574162a6 0 63%,transparent 64%)!important;color:#eddfca}
+body.tabletop-upgrade .dossier-estate>span{font-size:12px;line-height:1.2}
+body.tabletop-upgrade .dossier-estate>strong{font-family:var(--rpg-font-title)!important;font-size:29px;line-height:1.1}
+body.tabletop-upgrade .dossier-estate.map-highlight-active{outline:2px solid #bea7d3;outline-offset:2px}
+body.tabletop-upgrade .dossier-effects .sheet-section-title{font-size:24px;margin:0 0 10px}
+body.tabletop-upgrade .dossier-effects .hero-effect-row,
+body.tabletop-upgrade .dossier-effects .empty-box{font-size:14px!important;line-height:1.5!important;overflow-wrap:anywhere}
+body.tabletop-upgrade .dossier-side .bonus-popover{font-size:14px;line-height:1.45;overflow-wrap:anywhere}
+body.tabletop-upgrade .settings-difficulty{margin:16px 20px 0;padding:0 0 16px;border-bottom:1px solid #9d8c5d66}
+body.tabletop-upgrade .settings-difficulty[hidden]{display:none}
+body.tabletop-upgrade .settings-difficulty .eyebrow{font-size:11px;line-height:1.4}
+body.tabletop-upgrade .settings-difficulty button{width:100%;margin:8px 0;min-height:44px;font-size:19px!important;line-height:1.3}
+body.tabletop-upgrade .settings-difficulty p{font-size:14px;line-height:1.55;margin:0;color:#cbd0c4}
+/* The shadow stays outside the square and does not cover the card's medallions. */
+body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .visual-card-stage{box-shadow:0 7px 15px #0009,0 2px 4px #0008!important}
+@media(max-width:900px),(pointer:coarse){
+ body.tabletop-upgrade.game-running .sheet-drawer:has(.hero-dossier){width:100vw!important}
+ body.tabletop-upgrade .dossier-main{grid-template-columns:minmax(0,1fr);gap:22px}
+ body.tabletop-upgrade .dossier-visual{grid-template-columns:minmax(0,1fr);column-gap:0;row-gap:6px;width:100%;max-width:520px;justify-self:center}
+ body.tabletop-upgrade .dossier-visual .dossier-portrait{grid-column:1;grid-row:1;aspect-ratio:1}
+ body.tabletop-upgrade .dossier-visual>.battle-v086-health{grid-column:1;grid-row:2}
+ body.tabletop-upgrade .dossier-visual>.dossier-values{grid-column:1;grid-row:3}
+ body.tabletop-upgrade .dossier-visual>.dossier-damage{grid-column:1;grid-row:4}
+ body.tabletop-upgrade .hero-dossier .sheet-stats{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:6px!important;height:auto}
+ body.tabletop-upgrade .hero-dossier .sheet-stat,
+ body.tabletop-upgrade .hero-dossier .sheet-stat:last-child{padding:3px 1px!important;gap:1px!important}
+ body.tabletop-upgrade .hero-dossier .dossier-stat-label{font-size:10px!important}
+ body.tabletop-upgrade .hero-dossier .dossier-stat-number{font-size:24px!important}
+ body.tabletop-upgrade .hero-dossier .dossier-stat-bonus{display:none}
+ body.tabletop-upgrade .hero-dossier .sheet-stat .modifier-link{position:absolute;inset:0;width:100%;height:100%;min-height:0!important;padding:0!important;border-radius:50%!important}
+ body.tabletop-upgrade .hero-dossier .hero-progression-summary button{font-size:19px!important}
+ body.tabletop-upgrade .dossier-header h2{font-size:34px!important}
+ body.tabletop-upgrade .dossier-side{gap:16px;width:100%;max-width:520px;justify-self:center}
+ body.tabletop-upgrade .hero-dossier .hero-ability-card b{font-size:24px!important}
+ body.tabletop-upgrade .hero-dossier .hero-ability-card span{font-size:15px!important}
+ body.tabletop-upgrade .dossier-estates{justify-content:center;gap:28px}
+ body.tabletop-upgrade .dossier-estate{width:100px;height:100px;min-height:100px}
+}
+@media(max-height:480px) and (max-width:900px){body.tabletop-upgrade .dossier-visual{max-width:300px}}
+@media(max-width:360px){
+ body.tabletop-upgrade .hero-dossier .dossier-stat-label{font-size:9px!important}
+ body.tabletop-upgrade .hero-dossier .dossier-stat-number{font-size:21px!important}
+}

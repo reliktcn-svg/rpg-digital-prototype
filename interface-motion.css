@@ -1,0 +1,4 @@
+/* Transform-only motion; existing dimensions, scroll and mobile bounds remain. */
+.ui-motion-ghost, .ui-motion-ghost * { pointer-events: none !important; user-select: none !important; }
+.ui-motion-ghost { contain: layout style; }
+@media (prefers-reduced-motion: reduce) { .ui-motion-ghost:not([data-ui-motion-kind$="-hold"]) { display: none !important; } }

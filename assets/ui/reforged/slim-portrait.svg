@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="steel" x2=".8" y2="1">
+      <stop stop-color="#d4d0bc"/><stop offset=".24" stop-color="#787d78"/>
+      <stop offset=".55" stop-color="#b6ad91"/><stop offset=".8" stop-color="#555e5d"/>
+      <stop offset="1" stop-color="#b4ab8e"/>
+    </linearGradient>
+    <g id="corner">
+      <path d="M5 40V13L13 5H40" fill="none" stroke="#1b2527" stroke-width="5"/>
+      <path d="M5 40V13L13 5H40" fill="none" stroke="url(#steel)" stroke-width="2"/>
+      <path d="M11 31V17L17 11H31" fill="none" stroke="#9d8b62" stroke-width="1.3"/>
+      <path d="M7 7L17 10L10 17Z" fill="#8b7954" stroke="#c6b58b" stroke-width=".8"/>
+    </g>
+  </defs>
+  <path d="M17 5H495L507 17V495L495 507H17L5 495V17Z" fill="none" stroke="#152024" stroke-width="6"/>
+  <path d="M17 5H495L507 17V495L495 507H17L5 495V17Z" fill="none" stroke="url(#steel)" stroke-width="2"/>
+  <path d="M19 10H493L502 19V493L493 502H19L10 493V19Z" fill="none" stroke="#a18c5c" stroke-opacity=".65" stroke-width="1"/>
+  <use href="#corner"/><use href="#corner" transform="rotate(90 256 256)"/>
+  <use href="#corner" transform="rotate(180 256 256)"/><use href="#corner" transform="rotate(270 256 256)"/>
+</svg>

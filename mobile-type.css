@@ -1,0 +1,52 @@
+/* Readable content text; map glyphs and compact numeric badges retain their own scale. */
+body.tabletop-upgrade :is(.hero-dossier,.inventory-head,.settings-card,.story-card-info,.loc-cell,.skill-detail-content){overflow-wrap:anywhere}
+body.tabletop-upgrade .combat-effects-manual .combat-note{font-size:13px!important;line-height:1.5!important}
+@media(max-width:900px),(pointer:coarse){
+ body.tabletop-upgrade .eyebrow{font-size:11px!important;line-height:1.3}
+ body.tabletop-upgrade .story-extra{font-size:15px!important;line-height:1.55!important}
+ body.tabletop-upgrade .story-card-info .card-field{font-size:14px!important;line-height:1.5!important}
+ body.tabletop-upgrade .story-card-actions button{font-size:17px!important;line-height:1.3!important;min-height:44px;white-space:normal!important}
+ body.tabletop-upgrade .loc-option{font-size:15px!important;line-height:1.4!important}
+ body.tabletop-upgrade .loc-option :is(span,p){font-size:14px!important;line-height:1.4!important}
+ body.tabletop-upgrade .loc-sell-detail summary b{font-size:15px!important;line-height:1.35!important}
+ body.tabletop-upgrade :is(.loc-note,.loc-current,.loc-merc-text span,.loc-heal small,.loc-option small){font-size:14px!important;line-height:1.45!important}
+ body.tabletop-upgrade :is(.loc-good small,.loc-sell-detail summary small,.loc-section-title small){font-size:11px!important;line-height:1.35!important}
+ body.tabletop-upgrade .loc-good-details,body.tabletop-upgrade .location-ui .card-field{font-size:14px!important;line-height:1.4!important}
+ body.tabletop-upgrade .location-ui :is(.loc-good button,.loc-footer button,.loc-sellbtn){font-size:16px!important;line-height:1.3!important;min-height:44px!important;white-space:normal!important}
+ body.tabletop-upgrade .picture-item-caption{font-size:11px!important;line-height:1.25!important}
+ body.tabletop-upgrade .picture-item-name{font-size:14px!important;line-height:1.3!important}
+ body.tabletop-upgrade.game-running .picture-item-tile :is(.picture-item-caption,.picture-item-name){white-space:normal!important;overflow:visible!important;text-overflow:clip!important;-webkit-line-clamp:unset!important;line-clamp:unset!important}
+ body.tabletop-upgrade .picture-item-id{font-size:11px!important;line-height:1.15!important}
+ body.tabletop-upgrade .inventory-gold small{font-size:11px!important;line-height:1.3!important}
+ body.tabletop-upgrade .inventory-head h2{font-size:30px!important;line-height:1.15!important}
+ body.tabletop-upgrade .sheet-section-title{font-size:21px!important;line-height:1.3!important}
+ body.tabletop-upgrade.game-running .item-detail-card .item-face-hit{width:min(320px,100%)!important}
+ body.tabletop-upgrade .item-detail-card .item-art-title small{font-size:11px!important;line-height:1.25!important}
+ body.tabletop-upgrade .item-detail-card .item-art-title strong{font-size:20px!important;line-height:1.2!important}
+ body.tabletop-upgrade :is(.item-lock-note,.item-use-badge){font-size:13px!important;line-height:1.5!important}
+ body.tabletop-upgrade :is(.loc-kicker,.story-kicker){font-size:11px!important;line-height:1.3!important;letter-spacing:.06em!important}
+ body.tabletop-upgrade .loc-price{font-size:14px!important;line-height:1.35!important}
+ body.tabletop-upgrade .loc-num{font-size:11px!important}
+ body.tabletop-upgrade .inventory-card-reverse small{font-size:11px!important;line-height:1.3!important}
+ body.tabletop-upgrade .inventory-card-reverse :is(.reverse-properties span,.reverse-effect span){font-size:14px!important;line-height:1.45!important}
+ body.tabletop-upgrade .hero-dossier .dossier-gold small{font-size:11px!important;line-height:1.3}
+ body.tabletop-upgrade .log-entry{font-size:14px!important;line-height:1.55!important}
+ body.tabletop-upgrade .log-time{font-size:11px!important}
+ body.tabletop-upgrade .combat-mode-badge,body.tabletop-upgrade .combat-pill{font-size:10px!important;line-height:1.35!important}
+ body.tabletop-upgrade .combat-effects-manual h4{font-size:15px!important;line-height:1.3!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-note span{font-size:13px!important;line-height:1.45!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-note small{font-size:10px!important;line-height:1.35!important;overflow-wrap:anywhere}
+ body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .visual-card-front .battle-overlay-stat{padding:2px 1px!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .visual-card-front .battle-overlay-stat .stat-label{font-size:9px!important;line-height:1.05!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .visual-card-front .battle-overlay-stat strong{font-size:14px!important;line-height:1.05!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .visual-card-front :is(.stat-hp,.stat-attack) strong{font-size:12px!important}
+ body.tabletop-upgrade .skill-detail-content{font-size:15px!important;line-height:1.5!important}
+ body.tabletop-upgrade .skill-footer{font-size:13px!important;line-height:1.4!important}
+ body.tabletop-upgrade .skill-footer span{font-size:12px!important;line-height:1.4!important}
+ body.tabletop-upgrade #actionPanel .small{font-size:14px!important;line-height:1.45!important}
+ body.tabletop-upgrade #actionPanel .action-title{font-size:20px!important;line-height:1.25!important}
+ body.tabletop-upgrade #actionPanel .action-buttons button{font-size:16px!important;line-height:1.3!important;min-height:44px}
+ body.tabletop-upgrade .skill-panel p{font-size:14px!important;line-height:1.45!important}
+}
+@media(max-width:430px){body.tabletop-upgrade.game-running .inventory-gear{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:360px){body.tabletop-upgrade.game-running #modal .combat-shell .combat-actions button{font-size:16px!important;line-height:1.3!important}}

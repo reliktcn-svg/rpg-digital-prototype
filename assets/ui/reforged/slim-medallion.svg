@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="rim" x2=".8" y2="1">
+      <stop stop-color="#d3c9a9"/><stop offset=".34" stop-color="#667573"/>
+      <stop offset=".7" stop-color="#9d9377"/><stop offset="1" stop-color="#485b5c"/>
+    </linearGradient>
+    <path id="tip" d="M128 6L132 14L128 19L124 14Z" fill="#b39d70"/>
+  </defs>
+  <circle cx="128" cy="128" r="119" fill="#152429" fill-opacity=".8" stroke="#0d191d" stroke-width="3"/>
+  <circle cx="128" cy="128" r="118" fill="none" stroke="url(#rim)" stroke-width="3"/>
+  <circle cx="128" cy="128" r="111" fill="none" stroke="#96825b" stroke-opacity=".6" stroke-width="1"/>
+  <use href="#tip"/><use href="#tip" transform="rotate(90 128 128)"/>
+  <use href="#tip" transform="rotate(180 128 128)"/><use href="#tip" transform="rotate(270 128 128)"/>
+</svg>
