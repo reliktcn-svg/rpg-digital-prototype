@@ -1,0 +1,47 @@
+/* v0.6.82 — identical slim card headings, full-size portrait area, compact battle HUD. */
+body.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .tabletop-card-heading{
+  box-sizing:border-box!important;height:33px!important;min-height:33px!important;max-height:33px!important;
+  padding:4px 7px!important;gap:0!important;overflow:hidden!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+}
+body.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-heading h3{
+  display:block!important;max-width:100%!important;width:100%!important;
+  white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+  overflow-wrap:normal!important;line-height:1.08!important;
+  font:800 12px/1.08 Georgia,'Times New Roman',serif!important;
+}
+body.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-heading small{display:none!important}
+body.game-running #modal .tabletop-battle-card .battle-enemy-taxonomy{
+  text-align:center;margin:-3px 0 8px;font-size:12px;font-weight:800;
+  color:#725434;letter-spacing:.02em;border-bottom:1px solid #aa8d67;padding-bottom:7px;
+}
+/* The existing image remains square. No gaming action below the card is moved. */
+@media (min-width:901px) and (pointer:fine){
+  body.game-running #modal:has(.combat-shell):not([hidden])>.modal-card{
+    min-height:min(740px,calc(100dvh - 130px))!important;
+    height:min(740px,calc(100dvh - 130px))!important;
+    width:min(730px,calc(100vw - 44px))!important;
+    max-height:calc(100dvh - 75px)!important;
+    transform:translateY(28px)!important;
+    overflow:auto!important;
+  }
+  body.game-running #modal .combat-shell{
+    min-height:min(695px,calc(100dvh - 180px))!important;
+    align-content:start!important;
+  }
+}
+@media(max-width:900px),(pointer:coarse){
+  body.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .tabletop-card-heading{
+    height:25px!important;min-height:25px!important;max-height:25px!important;padding:3px 4px!important;
+  }
+  body.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-heading h3{font-size:10px!important}
+  body.game-running #modal .tabletop-battle-card .battle-enemy-taxonomy{font-size:9px;margin:0 0 5px}
+}
+/* Prior location stylesheet set bold labels to display:block, breaking text into a column. */
+body.game-running #modal .loc-option.loc-visit-result .loc-result-line{
+  display:block!important;flex:1 1 auto!important;min-width:0!important;
+  font-size:13px!important;line-height:1.45!important;white-space:normal!important;
+}
+body.game-running #modal .loc-option.loc-visit-result .loc-result-line b{
+  display:inline!important;white-space:nowrap!important;
+}

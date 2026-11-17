@@ -26,6 +26,11 @@ body.net-lobby-open #settingsOverlay{z-index:6000}
 
 #onlineLobby [hidden]{display:none!important}
 #onlineLobby .online-lobby-card{margin:auto}
+/* A black entry screen lets the heart blend into the surrounding surface. */
+body:has(#onlineLobby:not([hidden]) #heartFront:not([hidden])){background:#000!important}
+body.tabletop-upgrade #onlineLobby:has(#heartFront:not([hidden])),
+body.tabletop-upgrade #onlineLobby:has(#heartFront:not([hidden])) .online-lobby-card{background:#000!important}
+#onlineLobby .heart-front img{mix-blend-mode:screen;-webkit-mask-image:radial-gradient(ellipse at center,#000 67%,transparent 100%);mask-image:radial-gradient(ellipse at center,#000 67%,transparent 100%)}
 body.net-lobby-open #settingsSaveBtn,body.net-lobby-open #settingsLoadBtn,body.net-lobby-open #settingsResetBtn{display:none}
 
 #partyLibraryPanel{display:flex;flex-direction:column;gap:16px}#partyLibraryPanel[hidden]{display:none!important}.saved-party-card{padding:16px;border:1px solid #816443;border-radius:8px;display:flex;flex-direction:column;gap:10px;overflow-wrap:anywhere}.saved-party-card h3,.saved-party-card p{margin:0}.saved-party-card button{min-height:44px}

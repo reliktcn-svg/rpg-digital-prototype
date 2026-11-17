@@ -1,0 +1,264 @@
+/* v0.6.110 stable eye logic + full-height map + original text menu */
+body.tabletop-upgrade.game-running .journal-overlay:not([hidden]),body.tabletop-upgrade.game-running #journalOverlay:not([hidden]){z-index:28500!important;}
+body.tabletop-upgrade.game-running .settings-overlay:not([hidden]),body.tabletop-upgrade.game-running #settingsOverlay:not([hidden]){z-index:28700!important;}
+body.tabletop-upgrade.game-running #modal:not([hidden]),body.tabletop-upgrade.game-running #rollOverlay:not([hidden]),body.tabletop-upgrade.game-running #sheetDrawer:not([hidden]){top:var(--rpg-turnbar-height)!important;max-height:calc(100dvh - var(--rpg-turnbar-height))!important;}
+body.tabletop-upgrade.game-running #sheetDrawer:not([hidden]){z-index:24500!important;bottom:0!important;}
+body.tabletop-upgrade.game-running #modal:not([hidden]){z-index:22000!important;}
+body.tabletop-upgrade.game-running #rollOverlay:not([hidden]){z-index:23000!important;}
+body.tabletop-upgrade.game-running .arcana-battle-layer:not([hidden]){z-index:23500!important;}
+body.tabletop-upgrade.game-running .turn-order-banner{z-index:30000!important;}
+/* Hide only the battle displays, never close their data/state. */
+body.game-running.combat-window-hidden #modal:has(.combat-shell),body.game-running.combat-window-hidden .arcana-battle-layer:not([hidden]),body.game-running.combat-window-hidden #rollOverlay:not([hidden]){visibility:hidden!important;opacity:0!important;pointer-events:none!important;}
+body.tabletop-upgrade.game-running [data-table-combat] .eye-slash{display:none}
+body.tabletop-upgrade.game-running [data-table-combat] svg.eye-closed .eye-slash{display:block;stroke:#ff8377;stroke-width:2.7}
+@media(max-width:900px),(pointer:coarse){
+ body.tabletop-upgrade.game-running #sheetDrawer:not([hidden]){position:fixed!important;left:0!important;right:0!important;top:var(--rpg-turnbar-height)!important;bottom:0!important;width:100vw!important;max-width:100vw!important;height:auto!important;display:block!important;overflow-y:auto!important;}
+ body.tabletop-upgrade.game-running #journalOverlay:not([hidden]){z-index:28500!important;}
+ body.tabletop-upgrade.game-running .board-panel{align-items:stretch!important;justify-content:stretch!important;padding:0!important;}
+ body.tabletop-upgrade.game-running .board-wrap{width:100%!important;height:100%!important;min-height:0!important;max-height:100%!important;aspect-ratio:auto!important;flex:1 1 auto!important;border-radius:0!important;}
+}
+
+/* v0.6.113 — Mobile permanent locations only (tavern, shrine, merchant).
+   The modal is bounded BELOW the turn banner. A short location sizes to its
+   contents; a long location scrolls as ONE window, including the footer.
+   Do not change combat, other event dialogs, or the desktop layout. */
+@media (max-width:900px), (pointer:coarse) {
+  body.tabletop-upgrade.game-running #modal:has(> .modal-card .location-ui):not([hidden]) {
+    position:fixed!important;
+    inset:var(--rpg-turnbar-height) 0 0 0!important;
+    top:var(--rpg-turnbar-height)!important;
+    right:0!important;
+    bottom:0!important;
+    left:0!important;
+    width:100vw!important;
+    height:calc(100dvh - var(--rpg-turnbar-height))!important;
+    max-height:calc(100dvh - var(--rpg-turnbar-height))!important;
+    box-sizing:border-box!important;
+    padding:8px 7px calc(9px + env(safe-area-inset-bottom,0px))!important;
+    display:grid!important;
+    place-items:center!important;
+    overflow:hidden!important;
+  }
+  body.tabletop-upgrade.game-running #modal:has(.location-ui):not([hidden]) > .modal-card {
+    width:100%!important;
+    max-width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:100%!important;
+    margin:auto!important;
+    padding:0!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-y:contain;
+    touch-action:pan-y;
+    scrollbar-width:thin;
+  }
+  body.tabletop-upgrade.game-running #modal:has(.location-ui) #modalContent {
+    height:auto!important;
+    min-height:0!important;
+    display:block!important;
+  }
+  body.tabletop-upgrade.game-running #modal:has(.location-ui) .location-ui {
+    display:flex!important;
+    flex-direction:column!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  body.tabletop-upgrade.game-running #modal:has(.location-ui) .loc-panel {
+    display:contents!important;
+  }
+  body.tabletop-upgrade.game-running #modal:has(.location-ui) .loc-scroll {
+    flex:0 0 auto!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+    touch-action:auto!important;
+  }
+  body.tabletop-upgrade.game-running #modal:has(.location-ui) .loc-footer {
+    order:3!important;
+    flex:0 0 auto!important;
+    margin-top:0!important;
+    position:relative!important;
+    bottom:auto!important;
+  }
+}
+
+/* v0.6.114 — Mobile dialogs must be content-sized and scroll WHOLE, including
+   action buttons. Scoped to phone-sized/coarse displays; desktop unchanged.
+   Permanent locations already have their own v0.6.113 rules above. */
+@media (max-width:900px), (pointer:coarse) {
+  /* All ordinary modal dialogs fit BELOW the persistent turn banner, including
+     story cards, choices, loot, trade, battle result and building screens. */
+  body.tabletop-upgrade.game-running #modal:not([hidden]):not(:has(.combat-shell)):not(:has(.location-ui)) {
+    position:fixed!important;
+    inset:var(--rpg-turnbar-height) 0 0 0!important;
+    width:100vw!important;
+    height:calc(100dvh - var(--rpg-turnbar-height))!important;
+    max-height:calc(100dvh - var(--rpg-turnbar-height))!important;
+    box-sizing:border-box!important;
+    padding:8px 7px calc(10px + env(safe-area-inset-bottom,0px))!important;
+    display:grid!important;
+    place-items:center!important;
+    overflow:hidden!important;
+  }
+  /* Generic dialogs already scroll, but constrain them to the available overlay
+     rather than a second estimate based on 76px/86px legacy headers. */
+  body.tabletop-upgrade.game-running #modal:not([hidden]):not(:has(.combat-shell)):not(:has(.location-ui)) > .modal-card {
+    box-sizing:border-box!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:100%!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    overscroll-behavior-y:contain!important;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-y;
+  }
+  /* Story event, trap, special and treasure cards: remove the 86dvh fixed
+     frame and nested text scrollbar (the source of the invisible buttons).
+     The art stays a 1:1 square; image, description and action buttons now
+     scroll in ONE list on the card itself. */
+  body.tabletop-upgrade.game-running #modal:has(.story-card-shell) > .modal-card {
+    width:min(440px,100%)!important;
+    max-width:100%!important;
+    margin:auto!important;
+    padding:0!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    scrollbar-width:thin;
+    border-radius:15px!important;
+  }
+  body.tabletop-upgrade.game-running #modal:has(.story-card-shell) #modalContent {
+    display:block!important;
+    min-height:0!important;
+    height:auto!important;
+  }
+  body.tabletop-upgrade.game-running #modal:has(.story-card-shell) .story-card-shell {
+    display:flex!important;
+    flex-direction:column!important;
+    width:100%!important;
+    aspect-ratio:auto!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  body.tabletop-upgrade.game-running #modal:has(.story-card-shell) .story-card-art {
+    display:block!important;
+    width:100%!important;
+    height:auto!important;
+    max-height:none!important;
+    aspect-ratio:1 / 1!important;
+    flex:0 0 auto!important;
+    overflow:hidden!important;
+  }
+  body.tabletop-upgrade.game-running #modal:has(.story-card-shell) .story-card-info {
+    flex:0 0 auto!important;
+    display:flex!important;
+    flex-direction:column!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  body.tabletop-upgrade.game-running #modal:has(.story-card-shell) .story-card-scroller {
+    flex:0 0 auto!important;
+    height:auto!important;
+    max-height:none!important;
+    min-height:0!important;
+    overflow:visible!important;
+    touch-action:auto!important;
+  }
+  body.tabletop-upgrade.game-running #modal:has(.story-card-shell) .story-card-actions.modal-actions {
+    flex:0 0 auto!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+    padding-bottom:8px!important;
+  }
+  /* Defeat and victory art/results use the same single-scroll model, while
+     retaining original button callbacks and card illustrations. */
+  body.tabletop-upgrade.game-running #modal:has(.battle-fate) > .modal-card {
+    width:min(440px,100%)!important;
+    max-width:100%!important;
+    overflow-y:auto!important;
+  }
+  body.tabletop-upgrade.game-running #modal:has(.battle-fate) #modalContent {
+    height:auto!important;
+    min-height:0!important;
+  }
+  body.tabletop-upgrade.game-running #modal:has(.battle-fate) .battle-fate {
+    display:flex!important;
+    flex-direction:column!important;
+    max-height:none!important;
+    height:auto!important;
+    overflow:visible!important;
+  }
+  body.tabletop-upgrade.game-running #modal:has(.battle-fate) .battle-fate-right {
+    flex:0 0 auto!important;
+    min-height:0!important;
+    height:auto!important;
+    overflow:visible!important;
+  }
+  body.tabletop-upgrade.game-running #modal:has(.battle-fate) .battle-fate-scroll {
+    flex:0 0 auto!important;
+    max-height:none!important;
+    height:auto!important;
+    overflow:visible!important;
+  }
+  body.tabletop-upgrade.game-running #rollOverlay.battle-results-illustrated:not([hidden]) {
+    position:fixed!important;
+    inset:var(--rpg-turnbar-height) 0 0 0!important;
+    width:100vw!important;
+    height:calc(100dvh - var(--rpg-turnbar-height))!important;
+    max-height:calc(100dvh - var(--rpg-turnbar-height))!important;
+    padding:8px 7px calc(10px + env(safe-area-inset-bottom,0px))!important;
+    display:grid!important;
+    place-items:center!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+  }
+  body.tabletop-upgrade.game-running #rollOverlay.battle-results-illustrated:not([hidden]) > .roll-popup-card {
+    width:min(440px,100%)!important;
+    max-width:100%!important;
+    min-height:0!important;
+    height:auto!important;
+    max-height:100%!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    overscroll-behavior-y:contain!important;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-y;
+  }
+  body.tabletop-upgrade.game-running #rollOverlay.battle-results-illustrated .roll-result-text {
+    flex:0 0 auto!important;
+    min-height:0!important;
+    height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  /* Ordinary dice rolls / status checks also have an accessible bottom button
+     on short devices. Does NOT touch the ongoing battle overlay. */
+  body.tabletop-upgrade.game-running #rollOverlay:not([hidden]):not(.battle-results-illustrated) {
+    top:var(--rpg-turnbar-height)!important;
+    bottom:0!important;
+    padding:8px 7px calc(10px + env(safe-area-inset-bottom,0px))!important;
+    max-height:calc(100dvh - var(--rpg-turnbar-height))!important;
+    overflow:hidden!important;
+  }
+  body.tabletop-upgrade.game-running #rollOverlay:not([hidden]):not(.battle-results-illustrated) > .roll-popup-card {
+    box-sizing:border-box!important;
+    max-height:100%!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    overscroll-behavior-y:contain!important;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-y;
+  }
+}

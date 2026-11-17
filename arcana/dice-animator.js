@@ -247,7 +247,10 @@
         emit('dice:start', Object.freeze({ roll: next }));
         // Event handlers are allowed to skip, replace or destroy this presentation.
         if (active !== run) return promise;
-        if (ms === 0 || mode === 'text' || doc.hidden || reduced === 'always' || (reduced === 'auto' && motionQuery && motionQuery.matches)) finish('completed');
+        if (ms === 0 || mode === 'text' || doc.hidden || reduced === 'always' || (reduced === 'auto' && motionQuery && motionQuery.matches)) {
+          finish('completed');
+          if(!doc.hidden)global.RPGDiceSound?.landing(next.dice,skinId);
+        }
         else frame = win.requestAnimationFrame(tick);
         return promise;
       },

@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <meta name="theme-color" content="#111418" />
+  <meta name="theme-color" content="#000000" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/heart-touch-180-ecdb548078a8.png" />
   <link rel="preload" as="image" href="assets/heroes/warrior.webp" />
   <link rel="preload" as="image" href="assets/heroes/dwarf.webp" />
   <link rel="preload" as="image" href="assets/heroes/mage.webp" />
@@ -34,7 +34,7 @@
 <link rel="stylesheet" href="equipment-colors.css?v=6989690d40f07f34">
 <link rel="stylesheet" href="popup-bounds.css?v=cbd63237891e260a">
 <link rel="stylesheet" href="effect-help.css?v=6582b06335a188a5">
-<script id="rpg-build">window.RPG_CLIENT_BUILD={"id":"6afdf6b675ccac165d33db5f86641ee5e5a22b9245cbc2ecad6d3841fd479c1b","version":"v0.7.1.04","protocol":2};</script>
+<script id="rpg-build">window.RPG_CLIENT_BUILD={"id":"6bb9791e67debdd4de6b7c3cbe53173cfe4f975973a79bac76f340378f956aae","version":"v0.7.1.05","protocol":2};</script>
 <link rel="stylesheet" href="update-client.css?v=3cc719aaf3dd099e">
 <link rel="stylesheet" href="solo-saves.css?v=ad6b2b53e96c0684" />
 <link rel="stylesheet" href="mobile-input-v129.css?v=1487506075430a1f" />
@@ -52,11 +52,13 @@
 <meta name="application-name" content="Сердце тьмы">
 <meta name="apple-mobile-web-app-title" content="Сердце тьмы">
 <link rel="icon" type="image/png" href="icons/favicon-32.png">
-<link rel="stylesheet" href="heart-menu.css?v=db80673915a527c6">
+<link rel="stylesheet" href="heart-menu.css?v=e14aa8985f27428c">
 <link rel="stylesheet" href="party-chat.css?v=a1ee245652e6dc9f">
 <link rel="stylesheet" href="party-voting.css?v=0c54fc3f1e02a5d4">
 <link rel="stylesheet" href="mobile-layout-v07103.css?v=cfe2ae8b54e6e3c3">
 <link rel="stylesheet" href="orientation-layout.css?v=7182570548b2d56b">
+<link rel="stylesheet" href="loot-offers.css?v=33798738ccca0dfb">
+<link rel="stylesheet" href="game-dialogs.css?v=f6e6d65f1f7a3234">
 </head>
 <body class="tabletop-upgrade">
   
@@ -64,7 +66,7 @@
     <div class="online-lobby-card">
       <div class="eyebrow">Сердце тьмы</div>
       <h2 id="networkHeading" hidden>Собери свой отряд</h2>
-<div id="heartFront" class="heart-front"><img src="assets/heart-of-darkness.png" alt="Знак Сердца тьмы: расколотое сердце в золотом шестиграннике"><h1>Сердце тьмы</h1><p class="hint">Настольная RPG в твоём телефоне</p><p>За последними огнями Королевства<br>начинается твоя история.</p><div class="heart-menu-actions"><button id="heartCompany" class="primary wide" type="button">Начать приключение в компании</button><button id="heartSolo" class="secondary wide" type="button">Начать приключение в соло</button><button class="ghost wide" type="button" data-author-support>ПОДДЕРЖКА АВТОРА</button></div><button id="heartParties" class="ghost wide" type="button" hidden>Мои партии</button><small>v0.7.1.04</small></div>
+<div id="heartFront" class="heart-front"><img src="assets/heart-of-darkness.png" alt="Знак Сердца тьмы: расколотое сердце в золотом шестиграннике"><h1>Сердце тьмы</h1><p class="hint">Настольная RPG в твоём телефоне</p><p>За последними огнями Королевства<br>начинается твоя история.</p><div class="heart-menu-actions"><button id="heartCompany" class="primary wide" type="button">Начать приключение в компании</button><button id="heartSolo" class="secondary wide" type="button">Начать приключение в соло</button><button class="ghost wide" type="button" data-author-support>ПОДДЕРЖКА АВТОРА</button></div><button id="heartParties" class="ghost wide" type="button" hidden>Мои партии</button><small>v0.7.1.05</small></div>
       <div id="partyLibraryPanel" hidden></div>
 <div id="onlineHome">
         <label class="net-label">Ваше имя<input id="netName" maxlength="24" placeholder="Игрок" /></label>
@@ -101,7 +103,7 @@
   <header class="topbar">
     <div>
       <div class="eyebrow">СЕРДЦЕ ТЬМЫ</div>
-      <h1>Сердце тьмы · v0.7.1.04</h1>
+      <h1>Сердце тьмы · v0.7.1.05</h1>
       <div class="header-tools">
         <button id="journalBtn" class="journal-top" type="button">Журнал</button>
       </div>
@@ -246,8 +248,8 @@
   <script src="arcana/dice-motion.js?v=78812b4c0a665b33"></script>
   <script src="arcana/dice-skins.js?v=5e67da648f9c1dda"></script>
   <script src="arcana/dice-renderer.js?v=76ff1ed6ca3bac5e"></script>
-  <script src="arcana/dice-sound.js?v=5d04ab2f8c6c435e"></script>
-  <script src="arcana/dice-animator.js?v=a6d0fe144083370a"></script>
+  <script src="arcana/dice-sound.js?v=a62f9f41a04c192a"></script>
+  <script src="arcana/dice-animator.js?v=ebe6c7e3f71b9cfd"></script>
   <script src="arcana/dice-packs.js?v=26312b088199644b"></script>
   <script src="arcana/dice-settings.js?v=63221577bc405b87"></script>
   <script src="tabletop-enhancements.js?v=96569361f7946f2f"></script>
@@ -258,14 +260,15 @@
   <script src="boss-lore.js?v=5a273354ce667ce1"></script>
 <script src="boss-rules.js?v=df0b2a361db83bc8"></script>
 <link rel="stylesheet" href="boss-clues.css?v=a62646d0f138c653">
-<script src="solo-saves.js?v=ac051e9c21f2b672"></script>
+<script src="solo-saves.js?v=1d58b2f6b0d87605"></script>
 <script src="interface-motion.js?v=023268e00d5d704c"></script>
 <script src="card-interaction.js?v=80994181771726e1"></script>
 <script src="safe-save.js?v=9a8c13c4251232e5"></script>
 <script src="party-library.js?v=009b8decd7750340"></script>
-<script src="app.js?v=c270eeb8a577a497"></script>
+  <script src="game-dialogs.js?v=043458b183d48228"></script>
+<script src="app.js?v=75f9b449e3f45608"></script>
   <script src="network-lobby.js?v=5035347ec88ea57e"></script>
-<script src="update-client.js?v=0d4d674e53bacad3" defer></script>
+<script src="update-client.js?v=266070fb6f255494" defer></script>
 <script src="rules-content.js?v=b2ee25878bf16d6a"></script><script src="rules-guide.js?v=8e3a6646ea6b071a"></script>
 <script src="author-support.js?v=3ff76f51328e31a4"></script>
 <script src="party-chat.js?v=692d6300e86b5c50"></script>

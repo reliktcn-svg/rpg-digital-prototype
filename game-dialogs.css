@@ -1,0 +1,8 @@
+dialog.rpg-game-dialog{width:min(460px,calc(100vw - 24px));max-width:calc(100vw - 24px)!important;max-height:calc(100dvh - 24px)!important;box-sizing:border-box;overflow:auto;padding:22px;color:#e8ddc6;background:linear-gradient(135deg,#233035,#111d21);border:2px solid #ad9564;border-radius:7px;box-shadow:0 20px 70px #000b;font-family:var(--rpg-font-text,Georgia,serif)}
+dialog.rpg-game-dialog::backdrop{background:#000b}
+dialog.rpg-game-dialog h2{font-family:var(--rpg-font-title,Georgia,serif);font-size:24px;color:#dfc491;line-height:1.2;margin:0 0 14px}
+dialog.rpg-game-dialog p{font-size:16px;line-height:1.55;white-space:pre-line;overflow-wrap:anywhere;margin:0 0 20px}
+dialog.rpg-game-dialog .rpg-game-dialog-actions{display:flex;flex-wrap:wrap;gap:9px}
+dialog.rpg-game-dialog button{flex:1 1 120px;min-height:44px;font-size:16px;padding:9px;white-space:normal;line-height:1.25}
+dialog.rpg-game-dialog button:focus-visible{outline:2px solid #f0d08e;outline-offset:3px}
+@media(orientation:landscape) and (max-height:500px){dialog.rpg-game-dialog{padding:16px}dialog.rpg-game-dialog h2{font-size:21px;margin-bottom:10px}dialog.rpg-game-dialog p{font-size:14px;margin-bottom:14px}dialog.rpg-game-dialog button{font-size:14px;min-height:40px}}

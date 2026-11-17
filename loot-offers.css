@@ -1,0 +1,21 @@
+/* Loot uses the same item presentation as the merchant, without a flip surface. */
+body.game-running #modal[data-loot-draft] .loot-draft-grid{--loc-cell:#17242a}
+body.game-running #modal[data-loot-draft] .loot-draft-card.loc-good{padding:7px!important;gap:7px!important;border-radius:8px}
+body.game-running #modal[data-loot-draft] .loot-draft-card.loc-good>strong{font-size:14px;line-height:1.25;overflow-wrap:anywhere}
+body.game-running #modal[data-loot-draft] .loot-draft-card.loc-good>small{font-size:11px;line-height:1.35}
+body.game-running #modal[data-loot-draft] .loc-good-art .item-card-art{position:static;width:100%;height:100%;display:block;object-fit:cover}
+body.game-running #modal[data-loot-draft] .loc-good-details{font-size:12px;padding:6px}
+body.game-running #modal[data-loot-draft] .loc-good-details summary{min-height:32px;display:list-item;align-content:center;line-height:1.35}
+body.game-running #modal[data-loot-draft] .loc-good-details .card-fields{max-height:none;overflow:visible;margin-top:6px}
+body.game-running #modal[data-loot-draft] .loc-good-details .card-field{font-size:12px;line-height:1.4;padding:6px;overflow-wrap:anywhere}
+body.game-running #modal[data-loot-draft] .loc-good button{min-height:40px;font-size:14px;line-height:1.3;padding:7px;white-space:normal}
+body.game-running #modal[data-loot-draft] .loot-draft-card.selected .loc-buy{background:#554621;border-color:#e2b951;color:#fff0ca}
+@media(max-width:900px),(pointer:coarse){
+ body.tabletop-upgrade.game-running #modal[data-loot-draft]>.modal-card{width:100%!important;max-width:100%!important}
+ body.game-running #modal[data-loot-draft] .loc-good button,
+ body.game-running #modal[data-loot-draft] #lootDraftConfirm{min-height:44px;font-size:14px}
+ body.game-running #modal[data-loot-draft] .loc-good-details summary{min-height:36px}
+}
+@media(orientation:landscape) and (max-width:1100px),(orientation:landscape) and (pointer:coarse){
+ body.game-running #modal[data-loot-draft] .loc-good button{min-height:40px;font-size:13px}
+}

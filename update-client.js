@@ -25,7 +25,7 @@
  async function apply(){main.disabled=true;try{
   if(window.__RPG_ONLINE__?.isStarted()){
    try{await window.RPGPrepareUpdateReload?.()}
-   catch(e){if(!confirm('Не удалось подтвердить сохранение всех действий: '+e.message+'\nПерезагрузить игру всё равно?'))return}
+   catch(e){if(!await window.RPGDialogs.confirm('Не удалось подтвердить сохранение всех действий: '+e.message+'\nПерезагрузить игру всё равно?'))return}
   }
   const result=await send('APPLY',{id:target});if(result.state==='error')throw Error(result.message);
   // Reload is only reached from the explicit button. Other tabs remain pinned.

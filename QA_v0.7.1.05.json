@@ -1,0 +1,517 @@
+{
+  "version": "0.7.1.05",
+  "date": "2026-11-17",
+  "browser": "Safari (macOS); real Web Audio and DOM",
+  "mobileMethod": "Same release assets in iframes; only pointer media emulated in disposable test copy. Not physical phone tests.",
+  "functional": {
+    "kind": "functional",
+    "checks": [
+      "Black initial screen",
+      "Loot: descriptions, selection cap, preserved expansion, no purchase, exactly-once delivery and deck return",
+      "Single reward replacement and deselection",
+      "Cards 66/68/96/116: one description; actual effects preserved",
+      "Full catalog rendered, including inactive cards",
+      "End turn: cancel and approve via game UI",
+      "Queued notices, save-slot selection, underlying window preserved",
+      "Escape cancels without closing hero"
+    ],
+    "audited": 463
+  },
+  "merchant": {
+    "kind": "merchant-discard",
+    "passed": true,
+    "cost": 10
+  },
+  "audio": [
+    {
+      "kind": "audio",
+      "enabled": true,
+      "state": "running",
+      "hits": 4,
+      "peak": 0.019534069221827408,
+      "samples": 110
+    },
+    {
+      "kind": "audio",
+      "enabled": true,
+      "state": "running",
+      "hits": 4,
+      "peak": 0.014867318190899308,
+      "samples": 375
+    },
+    {
+      "kind": "audio",
+      "enabled": false,
+      "state": "running",
+      "hits": 0,
+      "peak": 0,
+      "samples": 536
+    },
+    {
+      "kind": "audio-reduced",
+      "enabled": true,
+      "state": "running",
+      "hits": 1,
+      "peak": 0.03619632415696737,
+      "samples": 21
+    }
+  ],
+  "layouts": [
+    {
+      "kind": "layout",
+      "size": [
+        402,
+        874
+      ],
+      "home": {
+        "body": "rgb(0, 0, 0)",
+        "overlay": "rgb(0, 0, 0)",
+        "panel": "rgb(0, 0, 0)"
+      },
+      "frame": {
+        "x": 7,
+        "y": 88,
+        "w": 388,
+        "h": 776,
+        "right": 395,
+        "bottom": 864
+      },
+      "inside": true,
+      "columns": "180px 180px",
+      "detailsNative": true,
+      "buttons": [
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Подтвердить (0/2)",
+          "inside": true
+        }
+      ],
+      "confirmation": {
+        "inside": true,
+        "style": "linear-gradient(135deg, rgb(35, 48, 53), rgb(17, 29, 33))",
+        "underlying": 3
+      }
+    },
+    {
+      "kind": "layout",
+      "size": [
+        412,
+        891
+      ],
+      "home": {
+        "body": "rgb(0, 0, 0)",
+        "overlay": "rgb(0, 0, 0)",
+        "panel": "rgb(0, 0, 0)"
+      },
+      "frame": {
+        "x": 7,
+        "y": 88,
+        "w": 398,
+        "h": 793,
+        "right": 405,
+        "bottom": 881
+      },
+      "inside": true,
+      "columns": "185px 185px",
+      "detailsNative": true,
+      "buttons": [
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Подтвердить (0/2)",
+          "inside": true
+        }
+      ],
+      "confirmation": {
+        "inside": true,
+        "style": "linear-gradient(135deg, rgb(35, 48, 53), rgb(17, 29, 33))",
+        "underlying": 3
+      }
+    },
+    {
+      "kind": "layout",
+      "size": [
+        382,
+        580
+      ],
+      "home": {
+        "body": "rgb(0, 0, 0)",
+        "overlay": "rgb(0, 0, 0)",
+        "panel": "rgb(0, 0, 0)"
+      },
+      "frame": {
+        "x": 7,
+        "y": 88,
+        "w": 368,
+        "h": 482,
+        "right": 375,
+        "bottom": 570
+      },
+      "inside": true,
+      "columns": "170px 170px",
+      "detailsNative": true,
+      "buttons": [
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Подтвердить (0/2)",
+          "inside": true
+        }
+      ],
+      "confirmation": {
+        "inside": true,
+        "style": "linear-gradient(135deg, rgb(35, 48, 53), rgb(17, 29, 33))",
+        "underlying": 3
+      }
+    },
+    {
+      "kind": "layout",
+      "size": [
+        669,
+        867
+      ],
+      "home": {
+        "body": "rgb(0, 0, 0)",
+        "overlay": "rgb(0, 0, 0)",
+        "panel": "rgb(0, 0, 0)"
+      },
+      "frame": {
+        "x": 7,
+        "y": 88,
+        "w": 655,
+        "h": 769,
+        "right": 662,
+        "bottom": 857
+      },
+      "inside": true,
+      "columns": "313.5px 313.5px",
+      "detailsNative": true,
+      "buttons": [
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Подтвердить (0/2)",
+          "inside": true
+        }
+      ],
+      "confirmation": {
+        "inside": true,
+        "style": "linear-gradient(135deg, rgb(35, 48, 53), rgb(17, 29, 33))",
+        "underlying": 3
+      }
+    },
+    {
+      "kind": "layout",
+      "size": [
+        951,
+        585
+      ],
+      "home": {
+        "body": "rgb(0, 0, 0)",
+        "overlay": "rgb(0, 0, 0)",
+        "panel": "rgb(0, 0, 0)"
+      },
+      "frame": {
+        "x": 7,
+        "y": 88,
+        "w": 937,
+        "h": 487,
+        "right": 944,
+        "bottom": 575
+      },
+      "inside": true,
+      "columns": "454.5px 454.5px",
+      "detailsNative": true,
+      "buttons": [
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Подтвердить (0/2)",
+          "inside": true
+        }
+      ],
+      "confirmation": {
+        "inside": true,
+        "style": "linear-gradient(135deg, rgb(35, 48, 53), rgb(17, 29, 33))",
+        "underlying": 3
+      }
+    },
+    {
+      "kind": "layout",
+      "size": [
+        385,
+        571
+      ],
+      "home": {
+        "body": "rgb(0, 0, 0)",
+        "overlay": "rgb(0, 0, 0)",
+        "panel": "rgb(0, 0, 0)"
+      },
+      "frame": {
+        "x": 7,
+        "y": 88,
+        "w": 371,
+        "h": 473,
+        "right": 378,
+        "bottom": 561
+      },
+      "inside": true,
+      "columns": "171.5px 171.5px",
+      "detailsNative": true,
+      "buttons": [
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Подтвердить (0/2)",
+          "inside": true
+        }
+      ],
+      "confirmation": {
+        "inside": true,
+        "style": "linear-gradient(135deg, rgb(35, 48, 53), rgb(17, 29, 33))",
+        "underlying": 3
+      }
+    },
+    {
+      "kind": "layout",
+      "size": [
+        874,
+        402
+      ],
+      "home": {
+        "body": "rgb(0, 0, 0)",
+        "overlay": "rgb(0, 0, 0)",
+        "panel": "rgb(0, 0, 0)"
+      },
+      "frame": {
+        "x": 7,
+        "y": 88,
+        "w": 860,
+        "h": 304,
+        "right": 867,
+        "bottom": 392
+      },
+      "inside": true,
+      "columns": "416px 416px",
+      "detailsNative": true,
+      "buttons": [
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Подтвердить (0/2)",
+          "inside": true
+        }
+      ],
+      "confirmation": {
+        "inside": true,
+        "style": "linear-gradient(135deg, rgb(35, 48, 53), rgb(17, 29, 33))",
+        "underlying": 3
+      }
+    },
+    {
+      "kind": "layout",
+      "size": [
+        594,
+        368
+      ],
+      "home": {
+        "body": "rgb(0, 0, 0)",
+        "overlay": "rgb(0, 0, 0)",
+        "panel": "rgb(0, 0, 0)"
+      },
+      "frame": {
+        "x": 7,
+        "y": 88,
+        "w": 580,
+        "h": 270,
+        "right": 587,
+        "bottom": 358
+      },
+      "inside": true,
+      "columns": "276px 276px",
+      "detailsNative": true,
+      "buttons": [
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Подтвердить (0/2)",
+          "inside": true
+        }
+      ],
+      "confirmation": {
+        "inside": true,
+        "style": "linear-gradient(135deg, rgb(35, 48, 53), rgb(17, 29, 33))",
+        "underlying": 3
+      }
+    },
+    {
+      "kind": "layout",
+      "size": [
+        402,
+        700
+      ],
+      "home": {
+        "body": "rgb(0, 0, 0)",
+        "overlay": "rgb(0, 0, 0)",
+        "panel": "rgb(0, 0, 0)"
+      },
+      "frame": {
+        "x": 7,
+        "y": 88,
+        "w": 388,
+        "h": 602,
+        "right": 395,
+        "bottom": 690
+      },
+      "inside": true,
+      "columns": "180px 180px",
+      "detailsNative": true,
+      "buttons": [
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Выбрать",
+          "inside": true
+        },
+        {
+          "text": "Подтвердить (0/2)",
+          "inside": true
+        }
+      ],
+      "confirmation": {
+        "inside": true,
+        "style": "linear-gradient(135deg, rgb(35, 48, 53), rgb(17, 29, 33))",
+        "underlying": 3
+      }
+    }
+  ],
+  "unitResults": [
+    {
+      "filename": "verify-release.cjs",
+      "logs": [
+        "PASS: menu routes, solo entry/return, initial screen without settings, all support links, later, Escape, inert/focus restore, JavaScript syntax.",
+        "PASS: CloudTips/Boosty only; safe deferred reminders at 10/20/30/40; one show per milestone; reminder to chooser.",
+        "PASS: milestone ledger survives module reload."
+      ],
+      "passed": true
+    },
+    {
+      "filename": "test_combined.cjs",
+      "logs": [
+        "PASS: safe-save gates, requested endpoint fixtures, durable multiple-party migration, immutable serialized slot writes."
+      ],
+      "passed": true
+    },
+    {
+      "filename": "test_combat_restore.cjs",
+      "logs": [
+        "PASS: restored combat controls reflect current phase without rerolls; retained excluded tokens removed."
+      ],
+      "passed": true
+    },
+    {
+      "filename": "test_ui_v07105.cjs",
+      "logs": [
+        "PASS: trusted audio activation, interrupted/closed recovery, mute persistence, reduced-motion landing, no game RNG.",
+        "PASS: end-turn confirmation waits, cancel preserves turn, stale approval ignored.",
+        "PASS: no native game dialogs; script syntax; versioned app icon references and stable launch URL."
+      ],
+      "passed": true
+    }
+  ],
+  "python": {
+    "tests": 15,
+    "passed": true
+  },
+  "harnessNotes": [
+    "Initial merchant QA called a helper not exposed in its test copy. Helper added only in QA and entire scenario passed on rerun."
+  ],
+  "productionFixtures": false
+}
