@@ -7,13 +7,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="preload" as="image" href="assets/heroes/warrior.webp" />
   <link rel="preload" as="image" href="assets/heroes/dwarf.webp" />
   <link rel="preload" as="image" href="assets/heroes/mage.webp" />
   <link rel="preload" as="image" href="assets/heroes/archer.webp" />
   <link rel="preload" as="image" href="assets/heroes/rogue.webp" />
-  <title>RPG Digital Prototype v0.6.148 - Mobile Optimization &amp; Persistent Saves</title>
+  <title>Сердце тьмы</title>
   <link rel="stylesheet" href="styles.css?v=e34cb7d5007c1e70" />
   <link rel="stylesheet" href="location-ui.css?v=75037e5fa6c99286" />
   <link rel="stylesheet" href="battle-result-ui.css?v=72147762ab958765" />
@@ -34,7 +34,7 @@
 <link rel="stylesheet" href="equipment-colors.css?v=6989690d40f07f34">
 <link rel="stylesheet" href="popup-bounds.css?v=cbd63237891e260a">
 <link rel="stylesheet" href="effect-help.css?v=6582b06335a188a5">
-<script id="rpg-build">window.RPG_CLIENT_BUILD={"id":"7a00dc3442c4b5b9903f16620a4e38d52860526fb1105f2977068dd57a023328","version":"v0.6.148","protocol":1};</script>
+<script id="rpg-build">window.RPG_CLIENT_BUILD={"id":"6afdf6b675ccac165d33db5f86641ee5e5a22b9245cbc2ecad6d3841fd479c1b","version":"v0.7.1.04","protocol":2};</script>
 <link rel="stylesheet" href="update-client.css?v=3cc719aaf3dd099e">
 <link rel="stylesheet" href="solo-saves.css?v=ad6b2b53e96c0684" />
 <link rel="stylesheet" href="mobile-input-v129.css?v=1487506075430a1f" />
@@ -46,25 +46,36 @@
 <link rel="stylesheet" href="interface-motion.css?v=641e23c7ed42bb33">
 <link rel="stylesheet" href="visual-theme.css?v=2b21bc329ab661fb">
 <link rel="stylesheet" href="reforged-ui.css?v=1f4f8e06ab7cbcf1">
-  <link rel="stylesheet" href="hero-layout.css?v=c3a2d0005bfeecc8">
+  <link rel="stylesheet" href="hero-layout.css?v=549bb2982814b37f">
   <link rel="stylesheet" href="mobile-type.css?v=a592191574878303">
   <link rel="stylesheet" href="card-interaction.css?v=e5f019a086e99967">
+<meta name="application-name" content="Сердце тьмы">
+<meta name="apple-mobile-web-app-title" content="Сердце тьмы">
+<link rel="icon" type="image/png" href="icons/favicon-32.png">
+<link rel="stylesheet" href="heart-menu.css?v=db80673915a527c6">
+<link rel="stylesheet" href="party-chat.css?v=a1ee245652e6dc9f">
+<link rel="stylesheet" href="party-voting.css?v=0c54fc3f1e02a5d4">
+<link rel="stylesheet" href="mobile-layout-v07103.css?v=cfe2ae8b54e6e3c3">
+<link rel="stylesheet" href="orientation-layout.css?v=7182570548b2d56b">
 </head>
 <body class="tabletop-upgrade">
   
   <div id="onlineLobby" class="online-lobby" hidden>
     <div class="online-lobby-card">
-      <div class="eyebrow">RPG ONLINE</div>
-      <h2>Сетевая партия</h2>
-      <div id="onlineHome">
+      <div class="eyebrow">Сердце тьмы</div>
+      <h2 id="networkHeading" hidden>Собери свой отряд</h2>
+<div id="heartFront" class="heart-front"><img src="assets/heart-of-darkness.png" alt="Знак Сердца тьмы: расколотое сердце в золотом шестиграннике"><h1>Сердце тьмы</h1><p class="hint">Настольная RPG в твоём телефоне</p><p>За последними огнями Королевства<br>начинается твоя история.</p><div class="heart-menu-actions"><button id="heartCompany" class="primary wide" type="button">Начать приключение в компании</button><button id="heartSolo" class="secondary wide" type="button">Начать приключение в соло</button><button class="ghost wide" type="button" data-author-support>ПОДДЕРЖКА АВТОРА</button></div><button id="heartParties" class="ghost wide" type="button" hidden>Мои партии</button><small>v0.7.1.04</small></div>
+      <div id="partyLibraryPanel" hidden></div>
+<div id="onlineHome">
         <label class="net-label">Ваше имя<input id="netName" maxlength="24" placeholder="Игрок" /></label>
         <button id="netResume" class="resume-game wide" type="button" hidden>Продолжить последнюю партию</button>
         <button id="netCreate" class="primary wide" type="button">Создать комнату</button>
         <div class="net-or">или</div>
         <label class="net-label">Код комнаты<input id="netCodeInput" inputmode="numeric" maxlength="6" placeholder="000000" /></label>
         <button id="netJoin" class="secondary wide" type="button">Присоединиться</button>
-        <button id="netMapJoin" class="ghost wide" type="button">🗺 Присоединиться как Карта (планшет)</button>
-        <button id="netLocal" class="ghost wide" type="button">Соло-режим · один герой</button>
+        <button hidden id="netMapJoin" class="ghost wide" type="button">🗺 Присоединиться как Карта (планшет)</button>
+        <button hidden id="netLocal" class="ghost wide" type="button">Соло-режим · один герой</button>
+<button id="heartBack" type="button" class="ghost wide heart-lobby-back">Вернуться к выбору пути</button>
       </div>
       <div id="onlineRoom" hidden>
         <div class="net-code-box"><span>КОД КОМНАТЫ</span><strong id="roomCode">------</strong><small id="roomWho"></small></div>
@@ -89,8 +100,8 @@
 
   <header class="topbar">
     <div>
-      <div class="eyebrow">RPG DIGITAL PROTOTYPE</div>
-      <h1>Прототип v0.6.148 · Настольный интерфейс</h1>
+      <div class="eyebrow">СЕРДЦЕ ТЬМЫ</div>
+      <h1>Сердце тьмы · v0.7.1.04</h1>
       <div class="header-tools">
         <button id="journalBtn" class="journal-top" type="button">Журнал</button>
       </div>
@@ -112,7 +123,8 @@
         <p class="muted setup-copy">Выберите одного героя. Все возможности игры доступны в соло-режиме.</p>
         <div id="heroPicker" class="hero-picker"></div>
         <label class="net-label">Повышать уровень врагов<select id="soloEnemyScaling"><option value="yes">Да</option><option value="no">Нет</option></select></label><p class="hint">Характеристики врагов растут вместе с уровнем героя. Боссы не усиливаются.</p>
-        <button id="startBtn" class="primary wide">Начать партию</button>
+        <button id="startBtn" class="primary wide">Начать путь</button>
+<button id="soloMenuBack" type="button" class="ghost wide">Вернуться к выбору пути</button>
         <div id="setupError" class="error"></div>
       </section>
 
@@ -174,9 +186,11 @@
 
   <div id="journalOverlay" class="journal-overlay" hidden>
     <div class="journal-card">
-      <div class="journal-head"><div><div class="eyebrow">RPG DIGITAL PROTOTYPE</div><b id="journalTitle">Журнал партии</b></div><button id="journalClose" class="sheet-close" aria-label="Закрыть журнал">×</button></div>
+      <div class="journal-head"><div><div class="eyebrow">СЕРДЦЕ ТЬМЫ</div><b id="journalTitle">Журнал партии</b></div><button id="journalClose" class="sheet-close" aria-label="Закрыть журнал">×</button></div>
       <div class="journal-filters" role="group" aria-label="Фильтр журнала">
         <button id="journalMine" class="journal-filter active" type="button">Мои действия</button>
+        <button id="partyVotingButton" class="journal-filter" type="button" hidden>ГОЛОСОВАНИЕ</button>
+        <button id="partyChatButton" class="journal-filter" type="button" hidden>ЧАТ</button>
         <button id="journalAll" class="journal-filter" type="button">Все игроки</button>
       </div>
     <div class="journal-utility-tools" aria-label="Управление сохранением партии" hidden>
@@ -195,7 +209,8 @@
       <div class="journal-head"><b>Настройки</b><button id="settingsClose" class="sheet-close" type="button" aria-label="Закрыть настройки">×</button></div>
       <section id="settingsDifficulty" class="settings-difficulty" hidden></section>
       <div class="settings-actions journal-utility-tools" aria-label="Настройки партии">
-        <button type="button" id="settingsDiceBtn" class="ghost">Кубик</button>
+        <button type="button" class="ghost" data-author-support>ПОДДЕРЖКА АВТОРА</button>
+<button type="button" id="settingsDiceBtn" class="ghost">Кубик</button>
         <button type="button" id="settingsSaveBtn" class="ghost">Сохранить</button>
         <button type="button" id="settingsLoadBtn" class="ghost">Загрузить</button>
         <button type="button" id="settingsResetBtn" class="danger">Выйти</button>
@@ -243,12 +258,18 @@
   <script src="boss-lore.js?v=5a273354ce667ce1"></script>
 <script src="boss-rules.js?v=df0b2a361db83bc8"></script>
 <link rel="stylesheet" href="boss-clues.css?v=a62646d0f138c653">
-<script src="solo-saves.js?v=9c6dd82c9649a17b"></script>
+<script src="solo-saves.js?v=ac051e9c21f2b672"></script>
 <script src="interface-motion.js?v=023268e00d5d704c"></script>
 <script src="card-interaction.js?v=80994181771726e1"></script>
-<script src="app.js?v=d8ef49f81f163ab6"></script>
-  <script src="network-lobby.js?v=11a9af2767c0b3c8"></script>
+<script src="safe-save.js?v=9a8c13c4251232e5"></script>
+<script src="party-library.js?v=009b8decd7750340"></script>
+<script src="app.js?v=c270eeb8a577a497"></script>
+  <script src="network-lobby.js?v=5035347ec88ea57e"></script>
 <script src="update-client.js?v=0d4d674e53bacad3" defer></script>
 <script src="rules-content.js?v=b2ee25878bf16d6a"></script><script src="rules-guide.js?v=8e3a6646ea6b071a"></script>
+<script src="author-support.js?v=3ff76f51328e31a4"></script>
+<script src="party-chat.js?v=692d6300e86b5c50"></script>
+<script src="party-voting.js?v=38e5a01439a41d44"></script>
+<script src="hero-sheet-layout.js?v=e5c45d658024d7c9"></script>
 </body>
 </html>

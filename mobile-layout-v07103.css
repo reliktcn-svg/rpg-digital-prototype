@@ -1,0 +1,36 @@
+/* Touch layouts depend on available space, including foldable split windows. */
+@media(max-width:900px),(pointer:coarse){
+ body.tabletop-upgrade .hero-dossier .hero-progression-summary{gap:5px;margin-bottom:10px;padding-bottom:8px}
+ body.tabletop-upgrade .hero-dossier .hero-progression-summary button{font-size:17px!important;min-height:44px}
+ body.tabletop-upgrade .dossier-header .sheet-hero{display:grid;grid-template-columns:minmax(0,1fr) auto 45px;gap:8px;align-items:center;margin-bottom:10px}
+ body.tabletop-upgrade .dossier-header h2{font-size:27px!important;overflow-wrap:anywhere}
+ body.tabletop-upgrade .dossier-header .eyebrow{font-size:9px}
+ body.tabletop-upgrade .dossier-header .dossier-estates{order:initial;width:auto;display:flex;flex-wrap:nowrap;gap:6px;margin:0}
+ body.tabletop-upgrade .dossier-header .dossier-estate{width:48px;height:48px;min-height:48px;padding:3px 1px!important;gap:0}
+ body.tabletop-upgrade .dossier-estate>span{font-size:8px;white-space:nowrap}
+ body.tabletop-upgrade .dossier-estate>strong{font-size:19px}
+ body.tabletop-upgrade .dossier-gold strong{font-size:25px}
+ body.tabletop-upgrade .dossier-main{gap:14px}
+ body.tabletop-upgrade .dossier-visual{position:relative;display:block;width:min(100%,260px);max-width:260px;justify-self:center}
+ body.tabletop-upgrade .dossier-visual .dossier-portrait{aspect-ratio:1}
+ body.tabletop-upgrade .dossier-visual>.dossier-values{position:absolute;inset:8px 8px auto auto;width:44px;height:calc(var(--hero-portrait-height,260px) - 16px);z-index:3}
+ body.tabletop-upgrade .hero-dossier .sheet-stats{display:flex!important;flex-direction:column;justify-content:space-between;gap:0!important;height:100%}
+ body.tabletop-upgrade .hero-dossier .sheet-stat,
+ body.tabletop-upgrade .hero-dossier .sheet-stat:last-child{flex:0 0 44px;width:44px!important;height:44px;max-height:44px;aspect-ratio:1;padding:2px!important;flex-wrap:nowrap;background:var(--reforged-stat) center/100% 100% no-repeat!important}
+ body.tabletop-upgrade .hero-dossier .dossier-stat-label{font-size:8px!important}
+ body.tabletop-upgrade .hero-dossier .dossier-stat-number{font-size:20px!important}
+ body.tabletop-upgrade .dossier-visual>.dossier-damage{margin-top:7px;justify-content:center}
+ body.tabletop-upgrade .dossier-side{gap:12px}
+ body.tabletop-upgrade .hero-dossier .hero-ability-card{padding:10px!important;gap:6px}
+ body.tabletop-upgrade .hero-dossier .hero-ability-card b{font-size:20px!important;line-height:1.25!important}
+ body.tabletop-upgrade .hero-dossier .hero-ability-card span{font-size:15px!important;line-height:1.45!important}
+ body.tabletop-upgrade .dossier-effects .sheet-section-title{font-size:21px;margin-bottom:8px}
+ /* Reduce the card's width/art by 20%; preserve readable text and 44px actions. */
+ body.tabletop-upgrade.game-running #modal:has(.story-card-shell)>.modal-card{width:min(352px,80%)!important;max-width:80%!important}
+ body.tabletop-upgrade.game-running #modal:has(.story-card-shell) .story-card-info{padding:10px!important}
+ body.tabletop-upgrade.game-running #modal:has(.story-card-shell) .story-card-actions button{min-height:44px!important;font-size:16px!important}
+}
+@media(min-width:600px) and (max-width:900px),(min-width:600px) and (pointer:coarse){
+ body.tabletop-upgrade .dossier-main{grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:16px;align-items:start}
+ body.tabletop-upgrade .dossier-side{max-width:none}
+}

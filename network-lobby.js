@@ -8,8 +8,8 @@
   const RECOVERY_KEY='rpg-online-recovery-v0635';
   const LEGACY_RECOVERY_KEYS=['rpg-online-recovery-v0634'];
   const LEGACY_SESSION_KEYS=['rpg-online-session-v0632'];
-  function saveResumeSession(){try{if(!session.code||!session.playerId||!session.playerSecret)return;localStorage.setItem(SESSION_KEY,JSON.stringify({code:session.code,playerId:session.playerId,playerSecret:session.playerSecret,recoveryKey:session.recoveryKey||session.room?.recoveryKey||null,name:myPlayer()?.name||$('netName')?.value||'',build:CLIENT_BUILD,savedAt:Date.now()}));saveRecoverySnapshot();renderResumeButton()}catch{}}
-  function readResumeSession(){try{const keys=[SESSION_KEY,...LEGACY_SESSION_KEYS];for(const k of keys){const raw=localStorage.getItem(k);if(raw){const v=JSON.parse(raw);if(v?.code&&v?.playerId&&v?.playerSecret){if(k!==SESSION_KEY)localStorage.setItem(SESSION_KEY,raw);return v}}}return null}catch{return null}}
+  function saveResumeSession(){try{if(!session.code||!session.playerId||!session.playerSecret)return;const saved={code:session.code,playerId:session.playerId,playerSecret:session.playerSecret,recoveryKey:session.recoveryKey||session.room?.recoveryKey||null,name:myPlayer()?.name||$('netName')?.value||'',heroId:myHeroId(),participants:(session.room?.players||[]).map(p=>({name:p.name,heroId:p.heroId})),expiresAt:session.room?.expiresAt||0,build:CLIENT_BUILD,savedAt:Date.now()};localStorage.setItem(SESSION_KEY,JSON.stringify(saved));window.RPGPartyLibrary?.put(saved);saveRecoverySnapshot();renderResumeButton()}catch(e){console.warn('Не удалось записать список партий',e);}}
+  function readResumeSession(){try{const keys=[SESSION_KEY,...LEGACY_SESSION_KEYS];for(const k of keys){const raw=localStorage.getItem(k);if(raw){const v=JSON.parse(raw);if(v?.code&&v?.playerId&&v?.playerSecret){if(k!==SESSION_KEY)localStorage.setItem(SESSION_KEY,raw);window.RPGPartyLibrary?.migrate(v,readRecoverySnapshot());return v}}}return null}catch{return null}}
   function readRecoverySnapshot(){try{for(const k of [RECOVERY_KEY,...LEGACY_RECOVERY_KEYS]){const raw=localStorage.getItem(k);if(raw){const v=JSON.parse(raw);if(k!==RECOVERY_KEY)localStorage.setItem(RECOVERY_KEY,raw);return v}}return null}catch{return null}}
   function saveRecoverySnapshot(stateOverride){try{
     if(!session.code||!session.playerId||!session.playerSecret||!session.room)return;
@@ -20,7 +20,7 @@
     localStorage.setItem(RECOVERY_KEY,JSON.stringify({code:session.code,recoveryKey:rkey,playerId:session.playerId,playerSecret:session.playerSecret,lastActiveAt:Number(room.lastActiveAt||0),build:CLIENT_BUILD,savedAt:Date.now(),revision:Number(session.lastRevision||room.gameRevision||0),room,state:st||null}));
   }catch{}}
   function clearResumeSession(){try{localStorage.removeItem(SESSION_KEY);localStorage.removeItem(RECOVERY_KEY);for(const k of LEGACY_RECOVERY_KEYS)localStorage.removeItem(k);for(const k of LEGACY_SESSION_KEYS)localStorage.removeItem(k)}catch{}renderResumeButton()}
-  function renderResumeButton(){const b=$('netResume');if(!b)return;const x=readResumeSession();b.hidden=!x?.code||x.build!==CLIENT_BUILD;b.textContent=x?.code?`Продолжить партию · код ${x.code}`:'Продолжить последнюю партию'}
+  function renderResumeButton(){readResumeSession();const rows=window.RPGPartyLibrary?.all()||[];const b=$('netResume');if(b){b.hidden=!rows.length;b.textContent='Мои партии · '+rows.length;}const front=$('heartParties');if(front){front.hidden=!rows.length;front.textContent='Мои партии · '+rows.length;}}
   function setRoomCodeUi(){const b=$('turnOrderBanner');if(b){if(session.code)b.dataset.roomCode=session.code;else delete b.dataset.roomCode}window.__RPG_ROOM_CODE__=session.code||'';engine()?.refreshUI?.()}
   const $=id=>document.getElementById(id);
   const overlay=$('onlineLobby');
@@ -72,7 +72,7 @@
   function auth(){return{playerId:session.playerId,playerSecret:session.playerSecret}}
   function updateHeroPlayerNames(room){window.__RPG_HERO_PLAYER_NAMES__=Object.fromEntries((room?.players||[]).filter(p=>p.heroId&&p.name).map(p=>[p.heroId,p.name]));}
   function acceptRoom(room){session.room=room;updateHeroPlayerNames(room);if(room?.recoveryKey)session.recoveryKey=room.recoveryKey;saveResumeSession();return room}
-  function validRecoveryFor(code){const x=readRecoverySnapshot();if(!x||String(x.code)!==String(code)||!x.recoveryKey||x.build!==CLIENT_BUILD)return null;const last=Number(x.room?.gameUpdatedAt||x.lastActiveAt||0);if(!last||Math.floor(Date.now()/1000)-last>86400)return null;return x}
+  function validRecoveryFor(code){const x=readRecoverySnapshot();if(!x||String(x.code)!==String(code)||!x.recoveryKey||x.build!==CLIENT_BUILD)return null;const last=Number(x.room?.gameUpdatedAt||x.lastActiveAt||0);if(!last||Math.floor(Date.now()/1000)-last>604800)return null;return x}
   async function recoverSession(saved){const recovery=validRecoveryFor(saved?.code);const recoveryKey=saved?.recoveryKey||recovery?.recoveryKey;if(!recoveryKey)throw Object.assign(new Error('Нет актуального снимка партии для восстановления.'),{status:404});
     const d=await api(`/api/rooms/${saved.code}/resume`,{method:'POST',body:JSON.stringify({playerId:saved.playerId,playerSecret:saved.playerSecret,recoveryKey,recovery})});acceptRoom(d.room);return d;
   }
@@ -92,14 +92,20 @@
   async function checkPresence(){
     if(!session.gameEntered||!session.code)return;
     const own=session;
-    try{const d=await api(`/api/rooms/${session.code}/presence?playerId=${encodeURIComponent(session.playerId)}&playerSecret=${encodeURIComponent(session.playerSecret)}`);
+    try{const d=await api(`/api/rooms/${session.code}/presence?playerId=${encodeURIComponent(session.playerId)}&playerSecret=${encodeURIComponent(session.playerSecret)}&chatAfter=${window.RPGPartyChat?.cursor()||0}`);
       if(own!==session)return;
+      receiveVoting(d,true);
+      if(window.__RPG_VOTE_EXCLUDED__){setWaiting(false);await pullGame(true,true);return;}
+      window.RPGPartyChat?.receive({code:session.code,playerId:session.playerId,send:payload=>api(`/api/rooms/${own.code}/chat`,{method:"POST",body:JSON.stringify({playerId:own.playerId,playerSecret:own.playerSecret,...payload})})},d);
       const missing=(d.players||session.room?.players||[]).filter(p=>!(d.online||[]).includes(p.id)).map(p=>p.heroId||p.name||p.id);
       const waiting=missing.length>0;
       setWaiting(waiting,missing);
       if(!waiting)syncGame();
     }catch(err){if(own===session)setWaiting(true)}
   }
+  window.RPGChatRefresh=checkPresence;
+  function receiveVoting(d,fresh=false){if(d?.voting&&session.room){for(const p of session.room.players||[]){const authoritative=d.voting.participants.find(a=>a.id===p.id);if(authoritative){p.host=authoritative.host;p.exclusion=!!authoritative.exclusion;}}}if(d?.voting)window.RPGPartyVoting?.receive({code:session.code,playerId:session.playerId,send:payload=>api(`/api/rooms/${session.code}/vote`,{method:'POST',body:JSON.stringify({...auth(),...payload})})},d.voting,fresh);}
+  window.RPGVotingRefresh=async()=>{await checkPresence();await pullGame(true,false);};
   function startPresence(){clearInterval(presenceTimer);setWaiting(true);checkPresence();presenceTimer=setInterval(checkPresence,5000)}
   function stopPresence(){clearInterval(presenceTimer);presenceTimer=null;setWaiting(false)}
   function updateTurnGuard(){
@@ -110,12 +116,13 @@
     b.innerHTML=isMine?`Ваш ход · <b>${esc(heroName(mine))}</b>`:`Сейчас ходит <b>${esc(heroName(active))}</b> · ваш герой: ${esc(heroName(mine))}`;
   }
   function showHome(){
+    window.RPGPartyChat?.reset();window.RPGPartyVoting?.reset();
     stopPresence();clearInterval(session.timer);clearInterval(session.gameTimer);clearTimeout(session.kickTimer);clearTimeout(localMutationTimer);session={mode:null,code:null,playerId:null,playerSecret:null,recoveryKey:null,room:null,timer:null,gameTimer:null,gameEntered:false,lastRevision:0,lastSnapshot:'',lastServerActiveHero:null,syncBusy:false,lastSideSnapshot:'',lastServerState:null,sideAcks:{}};
     window.__RPG_HERO_PLAYER_NAMES__={};$('onlineHome').hidden=false;$('onlineRoom').hidden=true;showError('');document.body.classList.remove('online-game','online-not-my-turn');const b=$('onlineTurnBanner');if(b)b.hidden=true;const q=$('turnOrderBanner');if(q)delete q.dataset.roomCode;window.__RPG_ROOM_CODE__='';renderResumeButton();
   }
   function renderRoom(){
-    const r=session.room;if(!r)return;updateHeroPlayerNames(r);
-    $('onlineHome').hidden=true;$('onlineRoom').hidden=false;
+    const r=session.room;if(!r)return;$('partyLibraryPanel').hidden=true;updateHeroPlayerNames(r);
+    $('heartFront').hidden=true;$('networkHeading').hidden=false;$('onlineHome').hidden=true;$('onlineRoom').hidden=false;
     $('roomCode').textContent=r.code;
     const me=myPlayer();$('roomWho').textContent=me?`${me.name}${me.host?' · хозяин':''}`:'';
     $('roomPlayers').innerHTML=r.players.map(p=>`<div class="net-player ${p.id===session.playerId?'me':''}"><b>${esc(p.name)}</b><span>${p.heroId?esc(heroName(p.heroId)):'герой не выбран'}</span>${p.host?'<em>Хозяин</em>':''}</div>`).join('')+((Number(r.mapViewers)||0)>0?`<div class="net-player net-map-observer"><b>🗺 Карта</b><span>Подключено экранов: ${Number(r.mapViewers)}</span></div>`:'');
@@ -123,7 +130,7 @@
     $('netHeroPicker').innerHTML=HEROES.map(([id,name,color])=>{
       const owner=taken.get(id), mine=owner?.id===session.playerId, disabled=owner&&!mine;
       return `<button class="net-hero ${mine?'selected':''}" data-hero="${id}" ${disabled||r.started?'disabled':''} style="--hc:${color}"><img class="net-hero-art" src="assets/heroes/${id}.webp" alt="" loading="lazy"><b>${name}</b><small>${disabled?'занят: '+esc(owner.name):mine?'выбран вами':'свободен'}</small></button>`;
-    }).join('')+`<button class="net-hero net-hero-map" type="button" id="netSelectMap" style="--hc:#d7b570" ${me?.host||r.started?'disabled':''}><span class="net-map-art" aria-hidden="true">🗺</span><b>Карта</b><small>${me?.host?'Только с другого устройства':'Общее поле без выбора героя'}</small></button>`;
+    }).join('')+`<button hidden class="net-hero net-hero-map" type="button" id="netSelectMap" style="--hc:#d7b570" ${me?.host||r.started?'disabled':''}><span class="net-map-art" aria-hidden="true">🗺</span><b>Карта</b><small>${me?.host?'Только с другого устройства':'Общее поле без выбора героя'}</small></button>`;
     $('netHeroPicker').querySelectorAll('[data-hero]').forEach(b=>b.onclick=()=>selectHero(b.dataset.hero));
     $('netSelectMap').onclick=convertToMap;
 
@@ -176,12 +183,13 @@
     if(!session.gameEntered||session.syncBusy)return;
     const owner=session;session.syncBusy=true;
     try{
-      const d=await fetchGame(!force);if(d.notModified||!d.ready)return;const remoteRevision=Number(d.revision||0),remoteSnap=snap(d.state);
+      const d=await fetchGame(!force);if(d.notModified||!d.ready)return;receiveVoting(d);const remoteRevision=Number(d.revision||0),remoteSnap=snap(d.state);
       // Side-sync (инвентарь/торговля) больше не двигает основную ревизию партии,
       // поэтому сравниваем не только revision, но и само серверное состояние.
       // A local sale/equip/loot change has not yet been acknowledged by the server.
       // Do not replace the local snapshot with an older poll response.
       const current=engine()?.exportState?.();
+      if((current?.membershipRevision||0)!==(d.state?.membershipRevision||0))discardLocal=true;
       const unsent=current&&snap(current)!==session.lastSnapshot;
       const dirtySide=sideSnap(engine(),myHeroId())!==session.lastSideSnapshot;
       if(unsent&&!discardLocal&&(session.lastServerActiveHero===myHeroId()||engine()?.canOffturnSharedAction?.(myHeroId())||dirtySide))return;
@@ -191,8 +199,12 @@
       acknowledgeSideVersions(d);session.gameETag=d._etag;
     }catch(e){if(e.status===404){try{session.gameETag=null;await recoverSession({code:session.code,playerId:session.playerId,playerSecret:session.playerSecret,recoveryKey:session.recoveryKey})}catch(re){console.warn('online recovery',re)}}else if(e.status!==202)console.warn('online pull',e)}finally{owner.syncBusy=false}
   }
+  async function settleVote(){if(!window.__RPG_VOTE_PENDING__||session.voteSettleBusy||myHeroId()!==session.lastServerActiveHero||!window.RPGVoteSafeBoundary?.()||snap(engine()?.exportState?.())!==session.lastSnapshot)return;const owner=session;owner.voteSettleBusy=true;try{const d=await api(`/api/rooms/${session.code}/vote`,{method:'POST',body:JSON.stringify({...auth(),action:'settle'})});if(owner===session){receiveVoting(d,true);session.gameETag=null;}}catch(e){if(owner===session)console.warn('vote safe boundary',e.message)}finally{owner.voteSettleBusy=false;}}
   async function syncGame(){
-    if(!session.gameEntered||session.syncBusy||window.__RPG_NETWORK_WAITING__)return;
+    if(!session.gameEntered||session.syncBusy)return;
+    if(window.__RPG_VOTE_EXCLUDED__||(window.__RPG_NETWORK_WAITING__&&!window.__RPG_VOTE_PENDING__)){await pullGame();return;}
+    await settleVote();
+    if(window.__RPG_VOTE_EXCLUDED__)return;
     const syncOwner=session;
     const e=engine(),mine=myHeroId();if(!e||!mine)return;
     const local=e.exportState(),localSnap=snap(local),serverActor=session.lastServerActiveHero;
@@ -316,8 +328,8 @@
   async function startRoom(){
     try{const d=await api(`/api/rooms/${session.code}/start`,{method:'POST',body:JSON.stringify(auth())});acceptRoom(d.room);renderRoom();await ensureOnlineGame()}catch(e){showError(e.message)}
   }
-  async function resumeRoom(){
-    const saved=readResumeSession();if(!saved?.code||!saved?.playerId||!saved?.playerSecret||saved.build!==CLIENT_BUILD)return showError('Нет сохранённой партии этой версии. Старые сохранения сохранены отдельно.');
+  async function resumeRoom(candidate=null){
+    const saved=candidate?.code?candidate:readResumeSession();if(!saved?.code||!saved?.playerId||!saved?.playerSecret||saved.build!==CLIENT_BUILD)return showError('Нет сохранённой партии этой версии. Старые сохранения сохранены отдельно.');
     showError('Подключаемся к сохранённой партии…');
     try{
       const d=await recoverSession(saved),room=d.room,me=room.players?.find(p=>p.id===saved.playerId);if(!me){clearResumeSession();throw new Error('Сохранённый игрок больше не найден в этой комнате.')}
@@ -342,13 +354,37 @@
 
   window.addEventListener('rpg-side-interaction-change',e=>{if(!session.gameEntered)return;if(e.detail?.active){session.lastSideSnapshot=''}else{session.lastSideSnapshot='';setTimeout(()=>syncGame(),80)}});
 
-  window.RPGNetworkReturnHome=()=>{stopPresence();clearInterval(session.timer);clearInterval(session.gameTimer);session.gameEntered=false;window.__RPG_NET_CONNECTED__=false;overlay.hidden=false;document.body.classList.add('net-lobby-open');showHome();};
+  window.RPGNetworkReturnHome=()=>{stopPresence();clearInterval(session.timer);clearInterval(session.gameTimer);session.gameEntered=false;window.__RPG_NET_CONNECTED__=false;overlay.hidden=false;document.body.classList.add('net-lobby-open');showHome();showFront();};
   $('netMapJoin').onclick=()=>{
     const code=$('netCodeInput').value.replace(/\D/g,'').slice(0,6);
     if(code.length!==6){showError('Введите 6-значный код комнаты для карты.');return}
     window.location.href=`map.html?code=${encodeURIComponent(code)}`;
   };
-  $('netCreate').onclick=createRoom;$('netJoin').onclick=joinRoom;$('netResume').onclick=resumeRoom;$('netStart').onclick=startRoom;$('netBack').onclick=showHome;$('netLocal').onclick=localGame;
+  $('netCreate').onclick=createRoom;$('netJoin').onclick=joinRoom;$('netResume').onclick=showPartyLibrary;$('netStart').onclick=startRoom;$('netBack').onclick=showHome;$('netLocal').onclick=localGame;
   $('netCodeInput').addEventListener('input',e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,6));
-  document.body.classList.add('net-lobby-open');overlay.hidden=false;showHome();
+
+  function showFront(){if($('partyLibraryPanel'))$('partyLibraryPanel').hidden=true;overlay.hidden=false;document.body.classList.add('net-lobby-open');$('heartFront').hidden=false;$('networkHeading').hidden=true;$('onlineHome').hidden=true;$('onlineRoom').hidden=true;$('onlineError').textContent='';}
+  $('heartCompany').onclick=()=>{showHome();$('heartFront').hidden=true;$('networkHeading').hidden=false;$('netName').focus();};
+  $('heartSolo').onclick=()=>{localGame();document.getElementById('setupSection').scrollIntoView({block:'start'});document.querySelector('#heroPicker input:checked')?.focus();};
+  $('heartBack').onclick=()=>{showHome();showFront();};
+  $('soloMenuBack').onclick=()=>{showHome();showFront();};
+
+  async function showPartyLibrary(){
+    showHome();$('heartFront').hidden=true;$('onlineHome').hidden=true;$('onlineRoom').hidden=true;$('networkHeading').hidden=true;
+    const panel=$('partyLibraryPanel');panel.hidden=false;panel.replaceChildren();
+    const h=document.createElement('h2');h.textContent='Мои партии';panel.append(h);
+    const note=document.createElement('p');note.className='hint';note.textContent='Список доступен на этом устройстве. Срок проверяется на сервере; просмотр карточек его не продлевает.';panel.append(note);
+    const rows=window.RPGPartyLibrary?.all()||[];for(const record of rows.sort((a,b)=>b.savedAt-a.savedAt)){
+      const card=document.createElement('section');card.className='saved-party-card';const title=document.createElement('h3');title.textContent='Комната '+record.code+' · '+heroName(record.heroId||'Герой');
+      const members=document.createElement('p');members.textContent=(record.participants||[]).map(p=>p.name).join(', ')||record.name||'';
+      const status=document.createElement('p');status.textContent='Проверяем срок хранения…';
+      const play=document.createElement('button');play.type='button';play.textContent='Продолжить';play.disabled=true;play.onclick=()=>resumeRoom(record);card.append(title,members,status,play);panel.append(card);
+      api(`/api/rooms/${record.code}/saved?`+new URLSearchParams({playerId:record.playerId,playerSecret:record.playerSecret})).then(d=>{if(panel.hidden||!card.isConnected)return;const deadline=d.room.expiresAt;status.textContent=d.access==='expired'?'Возвращение в эту партию недоступно':(d.access==='return'?'Требуется согласие отряда. ':'')+'Можно продолжить до '+new Date(deadline*1000).toLocaleString('ru-RU');play.disabled=d.access==='expired';play.textContent=d.access==='return'?'Запросить возвращение':'Продолжить';window.RPGPartyLibrary.put({...record,expiresAt:deadline,participants:d.room.players.map(p=>({name:p.name,heroId:p.heroId}))});}).catch(e=>{if(card.isConnected)status.textContent=e.status===404||e.status===410?'Срок истёк или партия удалена.':e.status===403?'Нет доступа к этой партии.':'Сервер недоступен. Попробуйте открыть список позже.';});
+    }
+    if(!rows.length){const p=document.createElement('p');p.textContent='Здесь появятся ваши сетевые приключения.';panel.append(p);}
+    const back=document.createElement('button');back.type='button';back.textContent='Вернуться к выбору пути';back.onclick=showFront;panel.append(back);
+  }
+  $('heartParties').onclick=showPartyLibrary;
+
+  document.body.classList.add('net-lobby-open');overlay.hidden=false;showHome();showFront();
 })();

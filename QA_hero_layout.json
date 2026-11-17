@@ -1,0 +1,53 @@
+{
+  "environment": "Safari desktop; local QA copy",
+  "results": [
+    {
+      "id": "warrior",
+      "textFits": true,
+      "font": "16.75px",
+      "abilityWithinPortrait": true,
+      "statsWithinPortrait": true,
+      "estatesInHeader": true
+    },
+    {
+      "id": "dwarf",
+      "textFits": true,
+      "font": "16.75px",
+      "abilityWithinPortrait": true,
+      "statsWithinPortrait": true,
+      "estatesInHeader": true
+    },
+    {
+      "id": "mage",
+      "textFits": true,
+      "font": "16.75px",
+      "abilityWithinPortrait": true,
+      "statsWithinPortrait": true,
+      "estatesInHeader": true
+    },
+    {
+      "id": "archer",
+      "textFits": true,
+      "font": "16.75px",
+      "abilityWithinPortrait": true,
+      "statsWithinPortrait": true,
+      "estatesInHeader": true
+    },
+    {
+      "id": "rogue",
+      "textFits": true,
+      "font": "16.75px",
+      "abilityWithinPortrait": true,
+      "statsWithinPortrait": true,
+      "estatesInHeader": true
+    },
+    {
+      "id": "paladin",
+      "textFits": true,
+      "font": "16.75px",
+      "abilityWithinPortrait": true,
+      "statsWithinPortrait": true,
+      "estatesInHeader": true
+    }
+  ]
+}

@@ -1,11 +1,11 @@
-"""Server-side 24h room snapshots. SQLite path must be on a persistent volume in production.
+"""Server-side seven-day room snapshots. SQLite path must be on a persistent volume in production.
 This module never stores client-supplied solo saves.
 """
 import json, os, sqlite3, time, tempfile, hashlib
 from contextlib import closing
 from pathlib import Path
 
-TTL=24*60*60
+TTL=7*24*60*60
 IDLE_TTL=3*60*60
 PROJECT_TAG=hashlib.sha256(str(Path(__file__).resolve().parent).encode()).hexdigest()[:12]
 PATH=Path(os.environ.get('RPG_SAVE_DB_PATH',str(Path(tempfile.gettempdir())/f'rpg-digital-network-{PROJECT_TAG}.sqlite3'))).expanduser().resolve()
@@ -21,7 +21,7 @@ def connect():
     return db
 
 def expiry(room):
-    t=int(room.get('gameUpdatedAt') or room.get('lastActiveAt') or room.get('createdAt') or time.time())
+    t=int((room.get('lastPlayerSeenAt') or room.get('gameUpdatedAt') or room.get('lastActiveAt') or room.get('createdAt') or time.time()) if room.get('started') else (room.get('lastActiveAt') or room.get('createdAt') or time.time()))
     return t+(TTL if room.get('started') else IDLE_TTL)
 
 def snapshot(room):
@@ -39,13 +39,29 @@ def save(room):
 
 def remove(codes):
     if not codes:return
-    with closing(connect()) as db, db:db.executemany('DELETE FROM room_saves WHERE code=?',[(c,) for c in codes])
+    with closing(connect()) as db, db:
+        db.executemany('DELETE FROM room_saves WHERE code=?',[(c,) for c in codes])
+        if db.execute("SELECT name FROM sqlite_master WHERE name='party_chat'").fetchone():db.executemany('DELETE FROM party_chat WHERE room=?',[(c,) for c in codes])
 
 def restore(now=None):
     now=int(time.time() if now is None else now)
     with closing(connect()) as db, db:
-        db.execute('DELETE FROM room_saves WHERE expires_at<=?',(now,))
         rows=db.execute('SELECT code,state FROM room_saves').fetchall()
+        kept=[]
+        for code,text in rows:
+            try:
+                record=json.loads(text)
+                if record.get('started') and not record.get('lastPlayerSeenAt'):record['lastPlayerSeenAt']=int(record.get('gameUpdatedAt') or record.get('lastActiveAt') or record.get('createdAt') or 0)
+                deadline=expiry(record)
+                text=json.dumps(record,ensure_ascii=False,separators=(',',':'))
+            except (ValueError,TypeError,KeyError):deadline=0
+            if deadline<=now:
+                db.execute('DELETE FROM room_saves WHERE code=?',(code,))
+                if db.execute("SELECT name FROM sqlite_master WHERE name='party_chat'").fetchone():db.execute('DELETE FROM party_chat WHERE room=?',(code,))
+            else:
+                db.execute('UPDATE room_saves SET expires_at=? WHERE code=?',(deadline,code))
+                kept.append((code,text))
+        rows=kept
     output={}
     for code,text in rows:
         try:

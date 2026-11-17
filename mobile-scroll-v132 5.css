@@ -1,0 +1,42 @@
+/* v0.6.132 — One reliable scroll owner for Hero/Inventory on mobile.
+   The v0.6.110 override set #sheetDrawer to display:block !important,
+   defeating the flex child scroller from the mobile layout. Avoid two nested
+   vertical scroll regions and keep the header visible while the content pans.
+*/
+@media (max-width:900px), (pointer:coarse) {
+  body.tabletop-upgrade.game-running #sheetDrawer.sheet-drawer:not([hidden]) {
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:hidden!important;
+    overflow-x:hidden!important;
+    overflow-y:hidden!important;
+    min-height:0!important;
+    height:auto!important;
+    max-height:calc(100dvh - var(--rpg-turnbar-height))!important;
+    box-sizing:border-box!important;
+    padding-top:0!important;
+    touch-action:pan-x pan-y!important;
+  }
+  body.tabletop-upgrade.game-running #sheetDrawer .sheet-drawer-head {
+    position:relative!important;
+    flex:0 0 auto!important;
+    min-height:0;
+    touch-action:manipulation;
+  }
+  body.tabletop-upgrade.game-running #sheetDrawer #sheetContent.sheet-content {
+    display:block!important;
+    flex:1 1 0%!important;
+    min-height:0!important;
+    height:auto!important;
+    max-height:none!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    overscroll-behavior-y:contain!important;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-x pan-y!important;
+  }
+  /* Rows of inventory items keep their intended horizontal scrolling. */
+  body.tabletop-upgrade.game-running #sheetDrawer #sheetContent .inventory-two-row-grid {
+    touch-action:pan-x pan-y!important;
+  }
+}

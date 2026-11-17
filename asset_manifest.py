@@ -31,8 +31,8 @@ def build_manifest(root):
    text=re.sub(r'((?:src|href)=\")([^\"]+\.(?:js|css)(?:\?[^\"]*)?)(\")',versioned,text)
    text=re.sub(r'<script id="rpg-build">.*?</script>','<script id="rpg-build"></script>',text,flags=re.S)
    normalized[p]=text
-  version='v'+re.search(r'0\.6\.\d+',normalized[htmls[0]]).group(0)
-  protocol=1
+  version='v'+re.search(r'0\.\d+\.\d+(?:\.\d+)?',normalized[htmls[0]]).group(0)
+  protocol=2
   identity=[(str(p.relative_to(root)),sha(normalized[p].encode()) if p in normalized else file_hash(p)) for p in files]
   build_id=sha(json.dumps({'protocol':protocol,'files':identity},separators=(',',':')).encode())
   config={'id':build_id,'version':version,'protocol':protocol}

@@ -1,0 +1,12 @@
+#partyChatToast{position:fixed;left:max(12px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));z-index:2147483100;pointer-events:none;background:#241d19ed;color:#f1e1c4;border:1px solid #947044;border-radius:8px;padding:10px 14px;max-width:min(360px,calc(100vw - 24px));box-sizing:border-box;overflow-wrap:anywhere;font:14px/1.45 system-ui;transition:opacity .15s}
+#partyChat{position:fixed;inset:0;z-index:2147483050;background:#08080bd9;display:flex;align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));box-sizing:border-box}
+#partyChat[hidden],#partyChatToast[hidden]{display:none!important}
+#partyChat .party-chat-card{box-sizing:border-box;width:min(760px,100%);max-height:100%;background:#211a1b;color:#efdfc2;border:1px solid #997248;border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:14px}
+#partyChat header{display:flex;align-items:center;justify-content:space-between;gap:10px}#partyChat h2{font:24px/1.3 Georgia;margin:0;color:#d9b67b}
+#partyChat .chat-columns{display:grid;grid-template-columns:170px minmax(0,1fr);gap:16px;min-height:0}
+#partyChat aside{font:14px/1.5 system-ui;border-right:1px solid #66503c;padding-right:12px;overflow:auto;max-height:320px}#partyChat aside p{margin:0 0 12px}
+#partyChatLog{overflow:auto;overscroll-behavior:contain;height:min(45dvh,360px);min-height:100px;overflow-wrap:anywhere;font:16px/1.5 system-ui}
+#partyChatLog article{margin-bottom:16px}#partyChatLog small{color:#cdb48d;font-size:12px}#partyChatLog p{margin:4px 0 0;white-space:pre-wrap}
+#partyChat form{display:flex;gap:10px;min-width:0}#partyChat input{min-width:0;flex:1;background:#100e11;border:1px solid #84653e;border-radius:6px;padding:12px;color:#efdfc2;font:16px system-ui}#partyChat button{min-height:44px;white-space:normal}#partyChatError{color:#edb1a7;font-size:14px}
+@media(max-width:560px){#partyChat .chat-columns{grid-template-columns:1fr}#partyChat aside{border:0;border-bottom:1px solid #66503c;max-height:80px;display:flex;flex-wrap:wrap;gap:10px}#partyChat aside p{margin:0}#partyChat form{flex-wrap:wrap}#partyChat form button{width:100%}#partyChat .party-chat-card{padding:14px}}
+@media(prefers-reduced-motion:reduce){#partyChatToast{transition:none}}

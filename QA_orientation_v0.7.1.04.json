@@ -1,0 +1,5479 @@
+{
+  "method": "Safari iframe viewports; coarse-pointer branches enabled in QA copy; not physical phones",
+  "viewports": [
+    {
+      "tag": "iPhone 16 Pro",
+      "hero": {
+        "viewport": [
+          402,
+          874
+        ],
+        "sheet": {
+          "x": 0,
+          "y": 80,
+          "w": 402,
+          "h": 794,
+          "right": 402,
+          "bottom": 874
+        },
+        "sheetInside": true,
+        "portrait": {
+          "x": 71,
+          "y": 316,
+          "w": 260,
+          "h": 260,
+          "right": 331,
+          "bottom": 576
+        },
+        "statsInside": true,
+        "abilityFits": true,
+        "columns": "374px",
+        "ability": {
+          "x": 14,
+          "y": 658,
+          "w": 374,
+          "h": 176,
+          "right": 388,
+          "bottom": 834
+        },
+        "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Событие",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Темница",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Элитная опасность",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Тёмное испытание",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Проклятый шаг",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Золото и сокровища",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        }
+      ],
+      "heroes": [
+        {
+          "id": "warrior",
+          "viewport": [
+            402,
+            874
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 794,
+            "right": 402,
+            "bottom": 874
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 71,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 331,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "374px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 374,
+            "h": 92,
+            "right": 388,
+            "bottom": 750
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"warrior\",\"hp\":12,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "dwarf",
+          "viewport": [
+            402,
+            874
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 794,
+            "right": 402,
+            "bottom": 874
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 71,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 331,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "374px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 374,
+            "h": 92,
+            "right": 388,
+            "bottom": 750
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"dwarf\",\"hp\":14,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "mage",
+          "viewport": [
+            402,
+            874
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 794,
+            "right": 402,
+            "bottom": 874
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 71,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 331,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "374px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 374,
+            "h": 92,
+            "right": 388,
+            "bottom": 750
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"mage\",\"hp\":8,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "archer",
+          "viewport": [
+            402,
+            874
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 794,
+            "right": 402,
+            "bottom": 874
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 71,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 331,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "374px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 374,
+            "h": 155,
+            "right": 388,
+            "bottom": 813
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"archer\",\"hp\":11,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "rogue",
+          "viewport": [
+            402,
+            874
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 794,
+            "right": 402,
+            "bottom": 874
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 71,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 331,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "374px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 374,
+            "h": 155,
+            "right": 388,
+            "bottom": 813
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"rogue\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "paladin",
+          "viewport": [
+            402,
+            874
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 794,
+            "right": 402,
+            "bottom": 874
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 71,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 331,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "374px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 374,
+            "h": 176,
+            "right": 388,
+            "bottom": 834
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        }
+      ],
+      "combat": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      },
+      "location": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      }
+    },
+    {
+      "tag": "Galaxy S26 Ultra",
+      "hero": {
+        "viewport": [
+          412,
+          891
+        ],
+        "sheet": {
+          "x": 0,
+          "y": 80,
+          "w": 412,
+          "h": 811,
+          "right": 412,
+          "bottom": 891
+        },
+        "sheetInside": true,
+        "portrait": {
+          "x": 76,
+          "y": 316,
+          "w": 260,
+          "h": 260,
+          "right": 336,
+          "bottom": 576
+        },
+        "statsInside": true,
+        "abilityFits": true,
+        "columns": "384px",
+        "ability": {
+          "x": 14,
+          "y": 658,
+          "w": 384,
+          "h": 176,
+          "right": 398,
+          "bottom": 834
+        },
+        "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Событие",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Темница",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Элитная опасность",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Тёмное испытание",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Проклятый шаг",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Золото и сокровища",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        }
+      ],
+      "heroes": [
+        {
+          "id": "warrior",
+          "viewport": [
+            412,
+            891
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 412,
+            "h": 811,
+            "right": 412,
+            "bottom": 891
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 76,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 336,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "384px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 384,
+            "h": 92,
+            "right": 398,
+            "bottom": 750
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"warrior\",\"hp\":12,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "dwarf",
+          "viewport": [
+            412,
+            891
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 412,
+            "h": 811,
+            "right": 412,
+            "bottom": 891
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 76,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 336,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "384px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 384,
+            "h": 92,
+            "right": 398,
+            "bottom": 750
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"dwarf\",\"hp\":14,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "mage",
+          "viewport": [
+            412,
+            891
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 412,
+            "h": 811,
+            "right": 412,
+            "bottom": 891
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 76,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 336,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "384px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 384,
+            "h": 92,
+            "right": 398,
+            "bottom": 750
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"mage\",\"hp\":8,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "archer",
+          "viewport": [
+            412,
+            891
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 412,
+            "h": 811,
+            "right": 412,
+            "bottom": 891
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 76,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 336,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "384px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 384,
+            "h": 155,
+            "right": 398,
+            "bottom": 813
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"archer\",\"hp\":11,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "rogue",
+          "viewport": [
+            412,
+            891
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 412,
+            "h": 811,
+            "right": 412,
+            "bottom": 891
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 76,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 336,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "384px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 384,
+            "h": 155,
+            "right": 398,
+            "bottom": 813
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"rogue\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "paladin",
+          "viewport": [
+            412,
+            891
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 412,
+            "h": 811,
+            "right": 412,
+            "bottom": 891
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 76,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 336,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "384px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 384,
+            "h": 176,
+            "right": 398,
+            "bottom": 834
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        }
+      ],
+      "combat": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      },
+      "location": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      }
+    },
+    {
+      "tag": "Duo внешний",
+      "hero": {
+        "viewport": [
+          382,
+          580
+        ],
+        "sheet": {
+          "x": 0,
+          "y": 80,
+          "w": 382,
+          "h": 500,
+          "right": 382,
+          "bottom": 580
+        },
+        "sheetInside": true,
+        "portrait": {
+          "x": 61,
+          "y": 316,
+          "w": 260,
+          "h": 260,
+          "right": 321,
+          "bottom": 576
+        },
+        "statsInside": true,
+        "abilityFits": true,
+        "columns": "354px",
+        "ability": {
+          "x": 14,
+          "y": 658,
+          "w": 354,
+          "h": 197,
+          "right": 368,
+          "bottom": 855
+        },
+        "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Событие",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Темница",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Элитная опасность",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Тёмное испытание",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Проклятый шаг",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Золото и сокровища",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        }
+      ],
+      "heroes": [
+        {
+          "id": "warrior",
+          "viewport": [
+            382,
+            580
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 382,
+            "h": 500,
+            "right": 382,
+            "bottom": 580
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 61,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 321,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "354px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 354,
+            "h": 92,
+            "right": 368,
+            "bottom": 750
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"warrior\",\"hp\":12,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "dwarf",
+          "viewport": [
+            382,
+            580
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 382,
+            "h": 500,
+            "right": 382,
+            "bottom": 580
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 61,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 321,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "354px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 354,
+            "h": 92,
+            "right": 368,
+            "bottom": 750
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"dwarf\",\"hp\":14,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "mage",
+          "viewport": [
+            382,
+            580
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 382,
+            "h": 500,
+            "right": 382,
+            "bottom": 580
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 61,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 321,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "354px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 354,
+            "h": 92,
+            "right": 368,
+            "bottom": 750
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"mage\",\"hp\":8,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "archer",
+          "viewport": [
+            382,
+            580
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 382,
+            "h": 500,
+            "right": 382,
+            "bottom": 580
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 61,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 321,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "354px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 354,
+            "h": 155,
+            "right": 368,
+            "bottom": 813
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"archer\",\"hp\":11,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "rogue",
+          "viewport": [
+            382,
+            580
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 382,
+            "h": 500,
+            "right": 382,
+            "bottom": 580
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 61,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 321,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "354px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 354,
+            "h": 155,
+            "right": 368,
+            "bottom": 813
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"rogue\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "paladin",
+          "viewport": [
+            382,
+            580
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 382,
+            "h": 500,
+            "right": 382,
+            "bottom": 580
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 61,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 321,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "354px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 354,
+            "h": 197,
+            "right": 368,
+            "bottom": 855
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        }
+      ],
+      "combat": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      },
+      "location": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      }
+    },
+    {
+      "tag": "Duo раскрытый портрет",
+      "hero": {
+        "viewport": [
+          669,
+          867
+        ],
+        "sheet": {
+          "x": 0,
+          "y": 80,
+          "w": 669,
+          "h": 787,
+          "right": 669,
+          "bottom": 867
+        },
+        "sheetInside": true,
+        "portrait": {
+          "x": 204.5,
+          "y": 316,
+          "w": 260,
+          "h": 260,
+          "right": 464.5,
+          "bottom": 576
+        },
+        "statsInside": true,
+        "abilityFits": true,
+        "columns": "641px",
+        "ability": {
+          "x": 14,
+          "y": 660,
+          "w": 641,
+          "h": 134,
+          "right": 655,
+          "bottom": 794
+        },
+        "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Событие",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Темница",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Элитная опасность",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Тёмное испытание",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Проклятый шаг",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Золото и сокровища",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        }
+      ],
+      "heroes": [
+        {
+          "id": "warrior",
+          "viewport": [
+            669,
+            867
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 669,
+            "h": 787,
+            "right": 669,
+            "bottom": 867
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 204.5,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 464.5,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "641px",
+          "ability": {
+            "x": 14,
+            "y": 660,
+            "w": 641,
+            "h": 92,
+            "right": 655,
+            "bottom": 752
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"warrior\",\"hp\":12,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "dwarf",
+          "viewport": [
+            669,
+            867
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 669,
+            "h": 787,
+            "right": 669,
+            "bottom": 867
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 204.5,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 464.5,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "641px",
+          "ability": {
+            "x": 14,
+            "y": 660,
+            "w": 641,
+            "h": 92,
+            "right": 655,
+            "bottom": 752
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"dwarf\",\"hp\":14,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "mage",
+          "viewport": [
+            669,
+            867
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 669,
+            "h": 787,
+            "right": 669,
+            "bottom": 867
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 204.5,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 464.5,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "641px",
+          "ability": {
+            "x": 14,
+            "y": 660,
+            "w": 641,
+            "h": 92,
+            "right": 655,
+            "bottom": 752
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"mage\",\"hp\":8,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "archer",
+          "viewport": [
+            669,
+            867
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 669,
+            "h": 787,
+            "right": 669,
+            "bottom": 867
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 204.5,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 464.5,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "641px",
+          "ability": {
+            "x": 14,
+            "y": 660,
+            "w": 641,
+            "h": 134,
+            "right": 655,
+            "bottom": 794
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"archer\",\"hp\":11,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "rogue",
+          "viewport": [
+            669,
+            867
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 669,
+            "h": 787,
+            "right": 669,
+            "bottom": 867
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 204.5,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 464.5,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "641px",
+          "ability": {
+            "x": 14,
+            "y": 660,
+            "w": 641,
+            "h": 134,
+            "right": 655,
+            "bottom": 794
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"rogue\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "paladin",
+          "viewport": [
+            669,
+            867
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 669,
+            "h": 787,
+            "right": 669,
+            "bottom": 867
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 204.5,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 464.5,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "641px",
+          "ability": {
+            "x": 14,
+            "y": 660,
+            "w": 641,
+            "h": 134,
+            "right": 655,
+            "bottom": 794
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        }
+      ],
+      "combat": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      },
+      "location": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      }
+    },
+    {
+      "tag": "Duo раскрытый альбом",
+      "hero": {
+        "viewport": [
+          951,
+          585
+        ],
+        "sheet": {
+          "x": 295,
+          "y": 80,
+          "w": 650,
+          "h": 499,
+          "right": 945,
+          "bottom": 579
+        },
+        "sheetInside": true,
+        "portrait": {
+          "x": 309,
+          "y": 296,
+          "w": 220,
+          "h": 220,
+          "right": 529,
+          "bottom": 516
+        },
+        "statsInside": true,
+        "abilityFits": true,
+        "columns": "220px 390px",
+        "ability": {
+          "x": 541,
+          "y": 296,
+          "w": 390,
+          "h": 220,
+          "right": 931,
+          "bottom": 516
+        },
+        "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "inViewport": true,
+          "columns": "303.109375px 538.890625px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Событие",
+          "inViewport": true,
+          "columns": "303.109375px 538.890625px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Темница",
+          "inViewport": true,
+          "columns": "303.109375px 538.890625px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Элитная опасность",
+          "inViewport": true,
+          "columns": "303.109375px 538.890625px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Тёмное испытание",
+          "inViewport": true,
+          "columns": "303.109375px 538.890625px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Проклятый шаг",
+          "inViewport": true,
+          "columns": "303.109375px 538.890625px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Золото и сокровища",
+          "inViewport": true,
+          "columns": "303.109375px 538.890625px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        }
+      ],
+      "heroes": [
+        {
+          "id": "warrior",
+          "viewport": [
+            951,
+            585
+          ],
+          "sheet": {
+            "x": 295,
+            "y": 80,
+            "w": 650,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 309,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 529,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 541,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 931,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"warrior\",\"hp\":12,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "dwarf",
+          "viewport": [
+            951,
+            585
+          ],
+          "sheet": {
+            "x": 295,
+            "y": 80,
+            "w": 650,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 309,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 529,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 541,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 931,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"dwarf\",\"hp\":14,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "mage",
+          "viewport": [
+            951,
+            585
+          ],
+          "sheet": {
+            "x": 295,
+            "y": 80,
+            "w": 650,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 309,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 529,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 541,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 931,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"mage\",\"hp\":8,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "archer",
+          "viewport": [
+            951,
+            585
+          ],
+          "sheet": {
+            "x": 295,
+            "y": 80,
+            "w": 650,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 309,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 529,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 541,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 931,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"archer\",\"hp\":11,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "rogue",
+          "viewport": [
+            951,
+            585
+          ],
+          "sheet": {
+            "x": 295,
+            "y": 80,
+            "w": 650,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 309,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 529,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 541,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 931,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"rogue\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "paladin",
+          "viewport": [
+            951,
+            585
+          ],
+          "sheet": {
+            "x": 295,
+            "y": 80,
+            "w": 650,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 309,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 529,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 541,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 931,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        }
+      ],
+      "combat": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      },
+      "location": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      }
+    },
+    {
+      "tag": "Duo разделение",
+      "hero": {
+        "viewport": [
+          385,
+          571
+        ],
+        "sheet": {
+          "x": 0,
+          "y": 80,
+          "w": 385,
+          "h": 491,
+          "right": 385,
+          "bottom": 571
+        },
+        "sheetInside": true,
+        "portrait": {
+          "x": 62.5,
+          "y": 316,
+          "w": 260,
+          "h": 260,
+          "right": 322.5,
+          "bottom": 576
+        },
+        "statsInside": true,
+        "abilityFits": true,
+        "columns": "357px",
+        "ability": {
+          "x": 14,
+          "y": 658,
+          "w": 357,
+          "h": 197,
+          "right": 371,
+          "bottom": 855
+        },
+        "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Событие",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Темница",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Элитная опасность",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Тёмное испытание",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Проклятый шаг",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Золото и сокровища",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        }
+      ],
+      "heroes": [
+        {
+          "id": "warrior",
+          "viewport": [
+            385,
+            571
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 385,
+            "h": 491,
+            "right": 385,
+            "bottom": 571
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 62.5,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 322.5,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "357px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 357,
+            "h": 92,
+            "right": 371,
+            "bottom": 750
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"warrior\",\"hp\":12,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "dwarf",
+          "viewport": [
+            385,
+            571
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 385,
+            "h": 491,
+            "right": 385,
+            "bottom": 571
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 62.5,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 322.5,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "357px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 357,
+            "h": 92,
+            "right": 371,
+            "bottom": 750
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"dwarf\",\"hp\":14,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "mage",
+          "viewport": [
+            385,
+            571
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 385,
+            "h": 491,
+            "right": 385,
+            "bottom": 571
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 62.5,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 322.5,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "357px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 357,
+            "h": 92,
+            "right": 371,
+            "bottom": 750
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"mage\",\"hp\":8,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "archer",
+          "viewport": [
+            385,
+            571
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 385,
+            "h": 491,
+            "right": 385,
+            "bottom": 571
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 62.5,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 322.5,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "357px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 357,
+            "h": 155,
+            "right": 371,
+            "bottom": 813
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"archer\",\"hp\":11,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "rogue",
+          "viewport": [
+            385,
+            571
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 385,
+            "h": 491,
+            "right": 385,
+            "bottom": 571
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 62.5,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 322.5,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "357px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 357,
+            "h": 155,
+            "right": 371,
+            "bottom": 813
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"rogue\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "paladin",
+          "viewport": [
+            385,
+            571
+          ],
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 385,
+            "h": 491,
+            "right": 385,
+            "bottom": 571
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 62.5,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 322.5,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "357px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 357,
+            "h": 197,
+            "right": 371,
+            "bottom": 855
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        }
+      ],
+      "combat": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      },
+      "location": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      }
+    },
+    {
+      "tag": "iPhone 16 Pro альбом",
+      "hero": {
+        "viewport": [
+          874,
+          402
+        ],
+        "sheet": {
+          "x": 218,
+          "y": 80,
+          "w": 650,
+          "h": 316,
+          "right": 868,
+          "bottom": 396
+        },
+        "sheetInside": true,
+        "portrait": {
+          "x": 232,
+          "y": 296,
+          "w": 220,
+          "h": 220,
+          "right": 452,
+          "bottom": 516
+        },
+        "statsInside": true,
+        "abilityFits": true,
+        "columns": "220px 390px",
+        "ability": {
+          "x": 464,
+          "y": 296,
+          "w": 390,
+          "h": 220,
+          "right": 854,
+          "bottom": 516
+        },
+        "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "inViewport": true,
+          "columns": "243.859375px 433.53125px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Событие",
+          "inViewport": true,
+          "columns": "243.859375px 433.53125px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Темница",
+          "inViewport": true,
+          "columns": "243.859375px 433.53125px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Элитная опасность",
+          "inViewport": true,
+          "columns": "243.859375px 433.53125px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Тёмное испытание",
+          "inViewport": true,
+          "columns": "243.859375px 433.53125px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Проклятый шаг",
+          "inViewport": true,
+          "columns": "243.859375px 433.53125px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Золото и сокровища",
+          "inViewport": true,
+          "columns": "243.859375px 433.53125px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        }
+      ],
+      "heroes": [
+        {
+          "id": "warrior",
+          "viewport": [
+            874,
+            402
+          ],
+          "sheet": {
+            "x": 218,
+            "y": 80,
+            "w": 650,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 232,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 452,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 464,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 854,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"warrior\",\"hp\":12,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "dwarf",
+          "viewport": [
+            874,
+            402
+          ],
+          "sheet": {
+            "x": 218,
+            "y": 80,
+            "w": 650,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 232,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 452,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 464,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 854,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"dwarf\",\"hp\":14,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "mage",
+          "viewport": [
+            874,
+            402
+          ],
+          "sheet": {
+            "x": 218,
+            "y": 80,
+            "w": 650,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 232,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 452,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 464,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 854,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"mage\",\"hp\":8,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "archer",
+          "viewport": [
+            874,
+            402
+          ],
+          "sheet": {
+            "x": 218,
+            "y": 80,
+            "w": 650,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 232,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 452,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 464,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 854,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"archer\",\"hp\":11,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "rogue",
+          "viewport": [
+            874,
+            402
+          ],
+          "sheet": {
+            "x": 218,
+            "y": 80,
+            "w": 650,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 232,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 452,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 464,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 854,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"rogue\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "paladin",
+          "viewport": [
+            874,
+            402
+          ],
+          "sheet": {
+            "x": 218,
+            "y": 80,
+            "w": 650,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 232,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 452,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 464,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 854,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        }
+      ],
+      "combat": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      },
+      "location": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      }
+    },
+    {
+      "tag": "Duo внешний альбом",
+      "hero": {
+        "viewport": [
+          594,
+          368
+        ],
+        "sheet": {
+          "x": 10,
+          "y": 80,
+          "w": 578,
+          "h": 282,
+          "right": 588,
+          "bottom": 362
+        },
+        "sheetInside": true,
+        "portrait": {
+          "x": 24,
+          "y": 296,
+          "w": 220,
+          "h": 220,
+          "right": 244,
+          "bottom": 516
+        },
+        "statsInside": true,
+        "abilityFits": true,
+        "columns": "220px 318px",
+        "ability": {
+          "x": 256,
+          "y": 296,
+          "w": 318,
+          "h": 220,
+          "right": 574,
+          "bottom": 516
+        },
+        "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Событие",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Темница",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Элитная опасность",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Тёмное испытание",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Проклятый шаг",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Золото и сокровища",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        }
+      ],
+      "heroes": [
+        {
+          "id": "warrior",
+          "viewport": [
+            594,
+            368
+          ],
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 296,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"warrior\",\"hp\":12,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "dwarf",
+          "viewport": [
+            594,
+            368
+          ],
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 296,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"dwarf\",\"hp\":14,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "mage",
+          "viewport": [
+            594,
+            368
+          ],
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 296,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"mage\",\"hp\":8,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "archer",
+          "viewport": [
+            594,
+            368
+          ],
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 296,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"archer\",\"hp\":11,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "rogue",
+          "viewport": [
+            594,
+            368
+          ],
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 296,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"rogue\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "paladin",
+          "viewport": [
+            594,
+            368
+          ],
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 296,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        }
+      ],
+      "combat": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      },
+      "location": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      }
+    },
+    {
+      "tag": "iPhone с панелями браузера",
+      "hero": {
+        "viewport": [
+          402,
+          700
+        ],
+        "board": {
+          "x": 0,
+          "y": 80,
+          "w": 402,
+          "h": 421,
+          "right": 402,
+          "bottom": 501
+        },
+        "controls": {
+          "x": 0,
+          "y": 501,
+          "w": 402,
+          "h": 199,
+          "right": 402,
+          "bottom": 700
+        },
+        "sheet": {
+          "x": 0,
+          "y": 80,
+          "w": 402,
+          "h": 620,
+          "right": 402,
+          "bottom": 700
+        },
+        "sheetInside": true,
+        "portrait": {
+          "x": 71,
+          "y": 316,
+          "w": 260,
+          "h": 260,
+          "right": 331,
+          "bottom": 576
+        },
+        "statsInside": true,
+        "abilityFits": true,
+        "columns": "374px",
+        "ability": {
+          "x": 14,
+          "y": 658,
+          "w": 374,
+          "h": 176,
+          "right": 388,
+          "bottom": 834
+        },
+        "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Событие",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Темница",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Элитная опасность",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Тёмное испытание",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Проклятый шаг",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Золото и сокровища",
+          "inViewport": true,
+          "columns": "43% minmax(0px, 1fr)",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        }
+      ],
+      "heroes": [
+        {
+          "id": "warrior",
+          "viewport": [
+            402,
+            700
+          ],
+          "board": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 421,
+            "right": 402,
+            "bottom": 501
+          },
+          "controls": {
+            "x": 0,
+            "y": 501,
+            "w": 402,
+            "h": 199,
+            "right": 402,
+            "bottom": 700
+          },
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 620,
+            "right": 402,
+            "bottom": 700
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 71,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 331,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "374px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 374,
+            "h": 92,
+            "right": 388,
+            "bottom": 750
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"warrior\",\"hp\":12,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "dwarf",
+          "viewport": [
+            402,
+            700
+          ],
+          "board": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 421,
+            "right": 402,
+            "bottom": 501
+          },
+          "controls": {
+            "x": 0,
+            "y": 501,
+            "w": 402,
+            "h": 199,
+            "right": 402,
+            "bottom": 700
+          },
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 620,
+            "right": 402,
+            "bottom": 700
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 71,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 331,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "374px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 374,
+            "h": 92,
+            "right": 388,
+            "bottom": 750
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"dwarf\",\"hp\":14,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "mage",
+          "viewport": [
+            402,
+            700
+          ],
+          "board": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 421,
+            "right": 402,
+            "bottom": 501
+          },
+          "controls": {
+            "x": 0,
+            "y": 501,
+            "w": 402,
+            "h": 199,
+            "right": 402,
+            "bottom": 700
+          },
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 620,
+            "right": 402,
+            "bottom": 700
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 71,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 331,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "374px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 374,
+            "h": 92,
+            "right": 388,
+            "bottom": 750
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"mage\",\"hp\":8,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "archer",
+          "viewport": [
+            402,
+            700
+          ],
+          "board": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 421,
+            "right": 402,
+            "bottom": 501
+          },
+          "controls": {
+            "x": 0,
+            "y": 501,
+            "w": 402,
+            "h": 199,
+            "right": 402,
+            "bottom": 700
+          },
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 620,
+            "right": 402,
+            "bottom": 700
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 71,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 331,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "374px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 374,
+            "h": 155,
+            "right": 388,
+            "bottom": 813
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"archer\",\"hp\":11,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "rogue",
+          "viewport": [
+            402,
+            700
+          ],
+          "board": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 421,
+            "right": 402,
+            "bottom": 501
+          },
+          "controls": {
+            "x": 0,
+            "y": 501,
+            "w": 402,
+            "h": 199,
+            "right": 402,
+            "bottom": 700
+          },
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 620,
+            "right": 402,
+            "bottom": 700
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 71,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 331,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "374px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 374,
+            "h": 155,
+            "right": 388,
+            "bottom": 813
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"rogue\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "paladin",
+          "viewport": [
+            402,
+            700
+          ],
+          "board": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 421,
+            "right": 402,
+            "bottom": 501
+          },
+          "controls": {
+            "x": 0,
+            "y": 501,
+            "w": 402,
+            "h": 199,
+            "right": 402,
+            "bottom": 700
+          },
+          "sheet": {
+            "x": 0,
+            "y": 80,
+            "w": 402,
+            "h": 620,
+            "right": 402,
+            "bottom": 700
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 71,
+            "y": 316,
+            "w": 260,
+            "h": 260,
+            "right": 331,
+            "bottom": 576
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "374px",
+          "ability": {
+            "x": 14,
+            "y": 658,
+            "w": 374,
+            "h": 176,
+            "right": 388,
+            "bottom": 834
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        }
+      ],
+      "combat": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      },
+      "location": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      }
+    }
+  ],
+  "landscapePanelChecks": [
+    {
+      "tag": "Duo раскрытый альбом",
+      "hero": {
+        "viewport": [
+          951,
+          585
+        ],
+        "board": {
+          "x": 190,
+          "y": 80,
+          "w": 755,
+          "h": 499,
+          "right": 945,
+          "bottom": 579
+        },
+        "controls": {
+          "x": 6,
+          "y": 80,
+          "w": 174,
+          "h": 499,
+          "right": 180,
+          "bottom": 579
+        },
+        "sheet": {
+          "x": 295,
+          "y": 80,
+          "w": 650,
+          "h": 499,
+          "right": 945,
+          "bottom": 579
+        },
+        "sheetInside": true,
+        "portrait": {
+          "x": 309,
+          "y": 296,
+          "w": 220,
+          "h": 220,
+          "right": 529,
+          "bottom": 516
+        },
+        "statsInside": true,
+        "abilityFits": true,
+        "columns": "220px 390px",
+        "ability": {
+          "x": 541,
+          "y": 296,
+          "w": 390,
+          "h": 220,
+          "right": 931,
+          "bottom": 516
+        },
+        "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "inViewport": true,
+          "columns": "303.109375px 538.890625px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Событие",
+          "inViewport": true,
+          "columns": "303.109375px 538.890625px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Темница",
+          "inViewport": true,
+          "columns": "303.109375px 538.890625px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Элитная опасность",
+          "inViewport": true,
+          "columns": "303.109375px 538.890625px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Тёмное испытание",
+          "inViewport": true,
+          "columns": "303.109375px 538.890625px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Проклятый шаг",
+          "inViewport": true,
+          "columns": "303.109375px 538.890625px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Золото и сокровища",
+          "inViewport": true,
+          "columns": "303.109375px 538.890625px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        }
+      ],
+      "heroes": [
+        {
+          "id": "warrior",
+          "viewport": [
+            951,
+            585
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 755,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 499,
+            "right": 180,
+            "bottom": 579
+          },
+          "sheet": {
+            "x": 295,
+            "y": 80,
+            "w": 650,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 309,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 529,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 541,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 931,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"warrior\",\"hp\":12,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "dwarf",
+          "viewport": [
+            951,
+            585
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 755,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 499,
+            "right": 180,
+            "bottom": 579
+          },
+          "sheet": {
+            "x": 295,
+            "y": 80,
+            "w": 650,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 309,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 529,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 541,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 931,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"dwarf\",\"hp\":14,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "mage",
+          "viewport": [
+            951,
+            585
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 755,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 499,
+            "right": 180,
+            "bottom": 579
+          },
+          "sheet": {
+            "x": 295,
+            "y": 80,
+            "w": 650,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 309,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 529,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 541,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 931,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"mage\",\"hp\":8,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "archer",
+          "viewport": [
+            951,
+            585
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 755,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 499,
+            "right": 180,
+            "bottom": 579
+          },
+          "sheet": {
+            "x": 295,
+            "y": 80,
+            "w": 650,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 309,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 529,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 541,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 931,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"archer\",\"hp\":11,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "rogue",
+          "viewport": [
+            951,
+            585
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 755,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 499,
+            "right": 180,
+            "bottom": 579
+          },
+          "sheet": {
+            "x": 295,
+            "y": 80,
+            "w": 650,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 309,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 529,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 541,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 931,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"rogue\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "paladin",
+          "viewport": [
+            951,
+            585
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 755,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 499,
+            "right": 180,
+            "bottom": 579
+          },
+          "sheet": {
+            "x": 295,
+            "y": 80,
+            "w": 650,
+            "h": 499,
+            "right": 945,
+            "bottom": 579
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 309,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 529,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 541,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 931,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        }
+      ],
+      "combat": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      },
+      "location": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      }
+    },
+    {
+      "tag": "iPhone 16 Pro альбом",
+      "hero": {
+        "viewport": [
+          874,
+          402
+        ],
+        "board": {
+          "x": 190,
+          "y": 80,
+          "w": 678,
+          "h": 316,
+          "right": 868,
+          "bottom": 396
+        },
+        "controls": {
+          "x": 6,
+          "y": 80,
+          "w": 174,
+          "h": 316,
+          "right": 180,
+          "bottom": 396
+        },
+        "sheet": {
+          "x": 218,
+          "y": 80,
+          "w": 650,
+          "h": 316,
+          "right": 868,
+          "bottom": 396
+        },
+        "sheetInside": true,
+        "portrait": {
+          "x": 232,
+          "y": 296,
+          "w": 220,
+          "h": 220,
+          "right": 452,
+          "bottom": 516
+        },
+        "statsInside": true,
+        "abilityFits": true,
+        "columns": "220px 390px",
+        "ability": {
+          "x": 464,
+          "y": 296,
+          "w": 390,
+          "h": 220,
+          "right": 854,
+          "bottom": 516
+        },
+        "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "inViewport": true,
+          "columns": "243.859375px 433.53125px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Событие",
+          "inViewport": true,
+          "columns": "243.859375px 433.53125px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Темница",
+          "inViewport": true,
+          "columns": "243.859375px 433.53125px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Элитная опасность",
+          "inViewport": true,
+          "columns": "243.859375px 433.53125px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Тёмное испытание",
+          "inViewport": true,
+          "columns": "243.859375px 433.53125px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Проклятый шаг",
+          "inViewport": true,
+          "columns": "243.859375px 433.53125px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Золото и сокровища",
+          "inViewport": true,
+          "columns": "243.859375px 433.53125px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        }
+      ],
+      "heroes": [
+        {
+          "id": "warrior",
+          "viewport": [
+            874,
+            402
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 678,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 316,
+            "right": 180,
+            "bottom": 396
+          },
+          "sheet": {
+            "x": 218,
+            "y": 80,
+            "w": 650,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 232,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 452,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 464,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 854,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"warrior\",\"hp\":12,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "dwarf",
+          "viewport": [
+            874,
+            402
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 678,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 316,
+            "right": 180,
+            "bottom": 396
+          },
+          "sheet": {
+            "x": 218,
+            "y": 80,
+            "w": 650,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 232,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 452,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 464,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 854,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"dwarf\",\"hp\":14,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "mage",
+          "viewport": [
+            874,
+            402
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 678,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 316,
+            "right": 180,
+            "bottom": 396
+          },
+          "sheet": {
+            "x": 218,
+            "y": 80,
+            "w": 650,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 232,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 452,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 464,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 854,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"mage\",\"hp\":8,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "archer",
+          "viewport": [
+            874,
+            402
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 678,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 316,
+            "right": 180,
+            "bottom": 396
+          },
+          "sheet": {
+            "x": 218,
+            "y": 80,
+            "w": 650,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 232,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 452,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 464,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 854,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"archer\",\"hp\":11,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "rogue",
+          "viewport": [
+            874,
+            402
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 678,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 316,
+            "right": 180,
+            "bottom": 396
+          },
+          "sheet": {
+            "x": 218,
+            "y": 80,
+            "w": 650,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 232,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 452,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 464,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 854,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"rogue\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "paladin",
+          "viewport": [
+            874,
+            402
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 678,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 316,
+            "right": 180,
+            "bottom": 396
+          },
+          "sheet": {
+            "x": 218,
+            "y": 80,
+            "w": 650,
+            "h": 316,
+            "right": 868,
+            "bottom": 396
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 232,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 452,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 390px",
+          "ability": {
+            "x": 464,
+            "y": 296,
+            "w": 390,
+            "h": 220,
+            "right": 854,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        }
+      ],
+      "combat": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      },
+      "location": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      }
+    },
+    {
+      "tag": "Duo внешний альбом",
+      "hero": {
+        "viewport": [
+          594,
+          368
+        ],
+        "board": {
+          "x": 190,
+          "y": 80,
+          "w": 398,
+          "h": 282,
+          "right": 588,
+          "bottom": 362
+        },
+        "controls": {
+          "x": 6,
+          "y": 80,
+          "w": 174,
+          "h": 282,
+          "right": 180,
+          "bottom": 362
+        },
+        "sheet": {
+          "x": 10,
+          "y": 80,
+          "w": 578,
+          "h": 282,
+          "right": 588,
+          "bottom": 362
+        },
+        "sheetInside": true,
+        "portrait": {
+          "x": 24,
+          "y": 296,
+          "w": 220,
+          "h": 220,
+          "right": 244,
+          "bottom": 516
+        },
+        "statsInside": true,
+        "abilityFits": true,
+        "columns": "220px 318px",
+        "ability": {
+          "x": 256,
+          "y": 296,
+          "w": 318,
+          "h": 220,
+          "right": 574,
+          "bottom": 516
+        },
+        "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Событие",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Темница",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Элитная опасность",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Тёмное испытание",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Проклятый шаг",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Золото и сокровища",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        }
+      ],
+      "heroes": [
+        {
+          "id": "warrior",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 296,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"warrior\",\"hp\":12,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "dwarf",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 296,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"dwarf\",\"hp\":14,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "mage",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 296,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"mage\",\"hp\":8,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "archer",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 296,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"archer\",\"hp\":11,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "rogue",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 296,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"rogue\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "paladin",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 296,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 516
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 296,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 516
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        }
+      ],
+      "combat": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      },
+      "location": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      }
+    },
+    {
+      "tag": "Duo внешний альбом",
+      "hero": {
+        "viewport": [
+          594,
+          368
+        ],
+        "board": {
+          "x": 190,
+          "y": 80,
+          "w": 398,
+          "h": 282,
+          "right": 588,
+          "bottom": 362
+        },
+        "controls": {
+          "x": 6,
+          "y": 80,
+          "w": 174,
+          "h": 282,
+          "right": 180,
+          "bottom": 362
+        },
+        "sheet": {
+          "x": 10,
+          "y": 80,
+          "w": 578,
+          "h": 282,
+          "right": 588,
+          "bottom": 362
+        },
+        "sheetInside": true,
+        "portrait": {
+          "x": 24,
+          "y": 270,
+          "w": 220,
+          "h": 220,
+          "right": 244,
+          "bottom": 490
+        },
+        "statsInside": true,
+        "abilityFits": true,
+        "columns": "220px 318px",
+        "ability": {
+          "x": 256,
+          "y": 270,
+          "w": 318,
+          "h": 220,
+          "right": 574,
+          "bottom": 490
+        },
+        "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Событие",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Темница",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Элитная опасность",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Тёмное испытание",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Проклятый шаг",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Золото и сокровища",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        }
+      ],
+      "heroes": [
+        {
+          "id": "warrior",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 270,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 490
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 270,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 490
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"warrior\",\"hp\":12,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "dwarf",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 270,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 490
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 270,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 490
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"dwarf\",\"hp\":14,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "mage",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 270,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 490
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 270,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 490
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"mage\",\"hp\":8,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "archer",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 270,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 490
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 270,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 490
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"archer\",\"hp\":11,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "rogue",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 270,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 490
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 270,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 490
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"rogue\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "paladin",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 270,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 490
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 270,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 490
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        }
+      ],
+      "combat": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      },
+      "location": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      }
+    },
+    {
+      "tag": "Duo внешний альбом",
+      "hero": {
+        "viewport": [
+          594,
+          368
+        ],
+        "board": {
+          "x": 190,
+          "y": 80,
+          "w": 398,
+          "h": 282,
+          "right": 588,
+          "bottom": 362
+        },
+        "controls": {
+          "x": 6,
+          "y": 80,
+          "w": 174,
+          "h": 282,
+          "right": 180,
+          "bottom": 362
+        },
+        "sheet": {
+          "x": 10,
+          "y": 80,
+          "w": 578,
+          "h": 282,
+          "right": 588,
+          "bottom": 362
+        },
+        "sheetInside": true,
+        "portrait": {
+          "x": 24,
+          "y": 250,
+          "w": 220,
+          "h": 220,
+          "right": 244,
+          "bottom": 470
+        },
+        "statsInside": true,
+        "abilityFits": true,
+        "columns": "220px 318px",
+        "ability": {
+          "x": 256,
+          "y": 250,
+          "w": 318,
+          "h": 220,
+          "right": 574,
+          "bottom": 470
+        },
+        "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Событие",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Темница",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Элитная опасность",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Тёмное испытание",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Проклятый шаг",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        },
+        {
+          "category": "Золото и сокровища",
+          "inViewport": true,
+          "columns": "203.03125px 360.96875px",
+          "buttons": {
+            "count": 3,
+            "pass": true
+          }
+        }
+      ],
+      "heroes": [
+        {
+          "id": "warrior",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 250,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 470
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 250,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 470
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"warrior\",\"hp\":12,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "dwarf",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 250,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 470
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 250,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 470
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"dwarf\",\"hp\":14,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "mage",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 250,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 470
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 250,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 470
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"mage\",\"hp\":8,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "archer",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 250,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 470
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 250,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 470
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"archer\",\"hp\":11,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "rogue",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 250,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 470
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 250,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 470
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"rogue\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        },
+        {
+          "id": "paladin",
+          "viewport": [
+            594,
+            368
+          ],
+          "board": {
+            "x": 190,
+            "y": 80,
+            "w": 398,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "controls": {
+            "x": 6,
+            "y": 80,
+            "w": 174,
+            "h": 282,
+            "right": 180,
+            "bottom": 362
+          },
+          "sheet": {
+            "x": 10,
+            "y": 80,
+            "w": 578,
+            "h": 282,
+            "right": 588,
+            "bottom": 362
+          },
+          "sheetInside": true,
+          "portrait": {
+            "x": 24,
+            "y": 250,
+            "w": 220,
+            "h": 220,
+            "right": 244,
+            "bottom": 470
+          },
+          "statsInside": true,
+          "abilityFits": true,
+          "columns": "220px 318px",
+          "ability": {
+            "x": 256,
+            "y": 250,
+            "w": 318,
+            "h": 220,
+            "right": 574,
+            "bottom": 470
+          },
+          "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+        }
+      ],
+      "combat": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      },
+      "location": {
+        "inViewport": true,
+        "buttons": {
+          "count": 4,
+          "pass": true
+        }
+      }
+    }
+  ],
+  "rotations": [
+    {
+      "tag": "rotation",
+      "hero": {
+        "viewport": [
+          368,
+          594
+        ],
+        "board": {
+          "x": 0,
+          "y": 80,
+          "w": 368,
+          "h": 315,
+          "right": 368,
+          "bottom": 395
+        },
+        "controls": {
+          "x": 0,
+          "y": 395,
+          "w": 368,
+          "h": 199,
+          "right": 368,
+          "bottom": 594
+        },
+        "sheet": {
+          "x": 0,
+          "y": 80,
+          "w": 368,
+          "h": 514,
+          "right": 368,
+          "bottom": 594
+        },
+        "sheetInside": true,
+        "portrait": {
+          "x": 54,
+          "y": 316,
+          "w": 260,
+          "h": 260,
+          "right": 314,
+          "bottom": 576
+        },
+        "statsInside": true,
+        "abilityFits": true,
+        "columns": "340px",
+        "ability": {
+          "x": 14,
+          "y": 658,
+          "w": 340,
+          "h": 197,
+          "right": 354,
+          "bottom": 855
+        },
+        "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+      }
+    },
+    {
+      "tag": "rotation",
+      "hero": {
+        "viewport": [
+          594,
+          368
+        ],
+        "board": {
+          "x": 190,
+          "y": 80,
+          "w": 398,
+          "h": 282,
+          "right": 588,
+          "bottom": 362
+        },
+        "controls": {
+          "x": 6,
+          "y": 80,
+          "w": 174,
+          "h": 282,
+          "right": 180,
+          "bottom": 362
+        },
+        "sheet": {
+          "x": 10,
+          "y": 80,
+          "w": 578,
+          "h": 282,
+          "right": 588,
+          "bottom": 362
+        },
+        "sheetInside": true,
+        "portrait": {
+          "x": 24,
+          "y": 250,
+          "w": 220,
+          "h": 220,
+          "right": 244,
+          "bottom": 470
+        },
+        "statsInside": true,
+        "abilityFits": true,
+        "columns": "220px 318px",
+        "ability": {
+          "x": 256,
+          "y": 250,
+          "w": 318,
+          "h": 220,
+          "right": 574,
+          "bottom": 470
+        },
+        "game": "{\"round\":1,\"players\":[{\"id\":\"paladin\",\"hp\":10,\"hex\":\"ЛГ01\"}]}"
+      }
+    }
+  ]
+}

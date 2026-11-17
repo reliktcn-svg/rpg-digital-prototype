@@ -1,7 +1,7 @@
 {
-  "name": "RPG Digital Prototype Online",
-  "short_name": "RPG",
-  "description": "Мобильный прототип настольной RPG",
+  "name": "Сердце тьмы",
+  "short_name": "Сердце тьмы",
+  "description": "Настольная RPG в твоём телефоне · тёмное фэнтези",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -9,7 +9,23 @@
   "theme_color": "#111418",
   "orientation": "any",
   "icons": [
-    {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
-    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

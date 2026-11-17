@@ -2,8 +2,10 @@
 import json, os, random, string, threading, time, urllib.parse
 from http_transport import TransportMixin
 from asset_manifest import build_manifest
-from network_storage import save as persist_room, remove as remove_persisted, restore as restore_rooms, TTL as NETWORK_SAVE_TTL, PATH as NETWORK_DB_PATH
+from network_storage import save as persist_room, remove as remove_persisted, restore as restore_rooms, TTL as NETWORK_SAVE_TTL, PATH as NETWORK_DB_PATH, expiry as room_expiry
 import hashlib, sqlite3
+import party_voting as voting
+from party_chat import history as chat_history, send as chat_send
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from dice_pack_catalog import dice_pack_catalog
 from hero_atlas import read_atlas, learn_ability, ensure_progression, progression_level
@@ -11,7 +13,7 @@ from hero_atlas import read_atlas, learn_ability, ensure_progression, progressio
 ROOT = os.path.dirname(os.path.abspath(__file__))
 ROOMS = restore_rooms()
 LOCK = threading.RLock()
-ROOM_IDLE_TTL = max(30, int(os.environ.get('RPG_ROOM_IDLE_TTL', '10800')))  # lobby: 3 hours; saved game: 24 hours
+ROOM_IDLE_TTL = max(30, int(os.environ.get('RPG_ROOM_IDLE_TTL', '10800')))  # lobby: 3 hours; played room: seven days
 
 HERO_IDS = ['warrior','dwarf','mage','archer','rogue','paladin']
 
@@ -28,21 +30,25 @@ def room_code():
                 return c
 
 
-def touch_room(room):
+def touch_room(room,participant=None):
     room['lastActiveAt']=int(time.time())
+    if participant and not participant.get('exclusion') and int(time.time())-int(room.get('lastPlayerSeenAt') or 0)>=5:
+        room['lastPlayerSeenAt']=int(time.time())
+        persist_room(room)
 
 def cleanup_rooms(now=None):
-    # Gameplay updates the 24-hour recovery deadline. Polls do NOT extend it.
+    # Recovery expires seven days after authenticated participant activity.
     # An actively connected session is not interrupted when its save expires.
     now=int(time.time() if now is None else now)
+    for room in ROOMS.values():
+        if voting.tick(room,now):persist_room(room)
     stale=[]
     for code,room in list(ROOMS.items()):
         if room.get('started'):
-            action_at=int(room.get('gameUpdatedAt') or room.get('createdAt') or now)
-            expired=now-action_at>=NETWORK_SAVE_TTL
+            expired=now>=room_expiry(room)
             # Allow currently connected clients to finish safely. GET requests
             # do not alter gameUpdatedAt and therefore cannot prolong recovery.
-            playing=now-int(room.get('lastActiveAt') or 0)<120
+            playing=False
             if expired and not playing:stale.append(code)
         elif now-int(room.get('lastActiveAt') or room.get('createdAt') or now)>ROOM_IDLE_TTL:stale.append(code)
     for code in stale:ROOMS.pop(code,None)
@@ -56,7 +62,7 @@ def public_room(room, include_recovery=False):
         'createdAt': room['createdAt'],
         'lastActiveAt': int(room.get('lastActiveAt') or room['createdAt']),
         'players': [
-            {'id':p['id'],'name':p['name'],'heroId':p.get('heroId'),'host':p.get('host',False)}
+            {'id':p['id'],'name':p['name'],'heroId':p.get('heroId'),'host':p.get('host',False),'exclusion':bool(p.get('exclusion'))}
             for p in room['players'].values()
         ],
         'hardMode': bool(room.get('hardMode', False)),
@@ -66,15 +72,22 @@ def public_room(room, include_recovery=False):
         'roomIdleTtl': ROOM_IDLE_TTL,
         'gameUpdatedAt': int(room.get('gameUpdatedAt') or room.get('createdAt') or 0),
         'networkRecoveryTtl': NETWORK_SAVE_TTL,
+        'expiresAt':room_expiry(room),
+        'serverTime':int(time.time()),
         'mapViewers': len(room.get('mapViewers') or {}),
+        'excludedHeroes': (room.get('gameState') or {}).get('excludedHeroes',{}),
     }
     if include_recovery:
         data['recoveryKey']=room.get('recoveryKey')
     return data
 
-def authorized_player(room, pid, secret):
+def credential_player(room, pid, secret):
     pl=room.get('players',{}).get(pid)
     return pl if pl and pl.get('secret')==secret else None
+
+def authorized_player(room,pid,secret):
+    p=credential_player(room,pid,secret)
+    return p if p and not p.get('exclusion') else None
 
 def merge_journal(existing_game, incoming_game, limit=600):
     existing = existing_game.get('journal', []) if isinstance(existing_game, dict) else []
@@ -262,7 +275,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
         if self.command=='POST' and room is not None:room.pop('_http_cache',None)
         conditional=self.command=='GET' and path.endswith(('/game','/map')) and status==200
         cache=room.setdefault('_http_cache',{}) if conditional and room is not None else {}
-        key=parts[-1]
+        key=parts[-1]+':'+(urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query).get('playerId') or [''])[0]
         if conditional and key in cache:raw,digest=cache[key]
         else:
             raw=json.dumps(data, ensure_ascii=False, separators=(',',':')).encode('utf-8')
@@ -280,7 +293,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
     def client_compatible(self):
         try:protocol=int(self.headers.get('X-RPG-Protocol','1'))
         except ValueError:protocol=0
-        return protocol>=int(os.environ.get('RPG_MIN_CLIENT_PROTOCOL','1'))
+        return protocol>=int(os.environ.get('RPG_MIN_CLIENT_PROTOCOL','2'))
 
     def do_GET(self):
         if self.path.startswith('/api/rooms/') and not self.client_compatible():return self._json(426,{'error':'Обновите игру: версия клиента несовместима с сервером'})
@@ -297,6 +310,15 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
             return self.send_bytes(200,payload,'application/javascript; charset=utf-8',conditional=True)
         if p.path == '/api/health':
             return self._json(200, {'ok':True,'rooms':len(ROOMS)})
+        if p.path.startswith('/api/rooms/') and p.path.endswith('/saved'):
+            code=p.path.split('/')[-2];q=urllib.parse.parse_qs(p.query)
+            with LOCK:
+                room=ROOMS.get(code)
+                if not room:return self._json(404,{'error':'Срок хранения истёк или комната недоступна'})
+                player=credential_player(room,(q.get('playerId') or [''])[0],(q.get('playerSecret') or [''])[0])
+                if not player:return self._json(403,{'error':'Нет доступа к партии'})
+                ex=player.get('exclusion') or {}
+                return self._json(200,{'room':public_room(room,True),'access':'expired' if ex.get('expired') else 'return' if ex else 'active'})
         # Spectator-only endpoint, completely separate from player game access.
         if p.path.startswith('/api/rooms/') and p.path.endswith('/presence'):
             parts=[x for x in p.path.split('/') if x];code=parts[2] if len(parts)==4 else ''
@@ -305,11 +327,13 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
             with LOCK:
                 room=ROOMS.get(code)
                 if not room:return self._json(404,{'error':'Комната не найдена'})
-                player=authorized_player(room,pid,secret)
+                player=credential_player(room,pid,secret)
                 if not player:return self._json(403,{'error':'Нет доступа'})
-                now=int(time.time());player['_lastSeenAt']=now;touch_room(room)
-                connected=[k for k,v in room['players'].items() if now-int(v.get('_lastSeenAt') or 0)<=16]
-                return self._json(200,{'online':connected,'total':len(room['players']),'players':[{'id':item['id'],'heroId':item.get('heroId'),'name':item.get('name')} for item in room['players'].values()]})
+                now=int(time.time());player['_lastSeenAt']=now;touch_room(room,player)
+                connected=[k for k,v in room['players'].items() if not v.get('exclusion') and now-int(v.get('_lastSeenAt') or 0)<=16]
+                try:after=max(0,int((query.get('chatAfter') or ['0'])[0]))
+                except ValueError:after=0
+                return self._json(200,{'voting':voting.info(room,pid),'chat':chat_history(code,after) if not player.get('exclusion') else [],'online':connected,'total':len(room['players']),'players':[{'id':item['id'],'heroId':item.get('heroId'),'name':item.get('name')} for item in room['players'].values() if not item.get('exclusion')]})
         if p.path.startswith('/api/rooms/') and p.path.endswith('/map'):
             parts=[x for x in p.path.split('/') if x]
             code=parts[2] if len(parts)==4 else ''
@@ -331,19 +355,19 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
             with LOCK:
                 room=ROOMS.get(code)
                 if not room: return self._json(404, {'error':'Комната не найдена'})
-                if not authorized_player(room,pid,secret): return self._json(403, {'error':'Нет доступа'})
-                touch_room(room)
+                if not credential_player(room,pid,secret): return self._json(403, {'error':'Нет доступа'})
+                touch_room(room,credential_player(room,pid,secret))
                 if not room.get('started'): return self._json(409, {'error':'Партия ещё не началась'})
                 if room.get('gameState') is None: return self._json(202, {'ready':False,'revision':int(room.get('gameRevision') or 0)})
-                return self._json(200, {'ready':True,'revision':int(room.get('gameRevision') or 0),'state':room.get('gameState'),'sideVersions':{hid:int(entry.get('seq') or 0) for hid,entry in (room.get('sidePlayerOverrides') or {}).items()}})
+                return self._json(200, {'voting':voting.info(room,pid),'ready':True,'revision':int(room.get('gameRevision') or 0),'state':room.get('gameState'),'sideVersions':{hid:int(entry.get('seq') or 0) for hid,entry in (room.get('sidePlayerOverrides') or {}).items()}})
         if p.path.startswith('/api/rooms/'):
             code=p.path.split('/')[-1]; q=urllib.parse.parse_qs(p.query)
             pid=(q.get('playerId') or [''])[0]; secret=(q.get('playerSecret') or [''])[0]
             with LOCK:
                 room=ROOMS.get(code)
                 if not room: return self._json(404, {'error':'Комната не найдена'})
-                auth_pl=authorized_player(room,pid,secret) if pid and secret else None
-                if auth_pl: touch_room(room)
+                auth_pl=credential_player(room,pid,secret) if pid and secret else None
+                if auth_pl: touch_room(room,auth_pl)
                 return self._json(200, public_room(room, bool(auth_pl)))
         return super().do_GET()
 
@@ -352,6 +376,44 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
         p=urllib.parse.urlparse(self.path).path
         with LOCK: cleanup_rooms()
         body=self._body()
+        if not isinstance(body,dict):return self._json(400,{'error':'Некорректный запрос'})
+        parts=p.split('/')
+        if len(parts)>4 and parts[1:3]==['api','rooms'] and parts[-1] not in ('vote','resume'):
+            with LOCK:
+                guarded=ROOMS.get(parts[3])
+                actor=credential_player(guarded,body.get('playerId'),body.get('playerSecret')) if guarded else None
+                if actor and actor.get('exclusion'):return self._json(403,{'error':'Исключённый игрок не может выполнять игровые действия'})
+        if p.startswith('/api/rooms/') and p.endswith('/vote'):
+            code=p.split('/')[3]
+            with LOCK:
+                room=ROOMS.get(code)
+                if not room:return self._json(404,{'error':'Комната не найдена'})
+                player=credential_player(room,body.get('playerId'),body.get('playerSecret'))
+                if not player:return self._json(403,{'error':'Нет доступа'})
+                try:
+                    if body.get('action')=='start':voting.start(room,player['id'],body.get('kind'),body.get('target'))
+                    elif body.get('action')=='settle':
+                        game=room.get('gameState') or {};order=game.get('order') or []
+                        current=order[int(game.get('currentIndex',0))%len(order)] if order else None
+                        if player.get('heroId')!=current or player.get('exclusion'):raise ValueError('Подтверждение границы доступно текущему игроку')
+                        voting.tick(room,settle=True)
+                    elif body.get('action')=='cast':voting.cast(room,player['id'],body.get('voteId'),body.get('yes'))
+                    else:raise ValueError('Неизвестное действие')
+                except ValueError as e:return self._json(409,{'error':str(e)})
+                return self._json(200,{'voting':voting.info(room,player['id'])})
+        if p.startswith('/api/rooms/') and p.endswith('/chat'):
+            parts=p.split('/')
+            code=parts[3] if len(parts)==5 else ''
+            with LOCK:
+                room=ROOMS.get(code)
+                if not room:return self._json(404,{'error':'Комната не найдена'})
+                player=authorized_player(room,body.get('playerId'),body.get('playerSecret'))
+                if not player:return self._json(403,{'error':'Нет доступа'})
+                try:mid=chat_send(code,player,body.get('text'),body.get('nonce'))
+                except ValueError as e:return self._json(400,{'error':str(e)})
+                except OverflowError as e:return self._json(429,{'error':str(e)})
+                except sqlite3.Error:return self._json(503,{'error':'Не удалось сохранить сообщение. Повтори отправку.'})
+                return self._json(200,{'id':mid})
         if p == '/api/rooms':
             code=room_code(); pid=token(12); secret=token(24)
             name=(body.get('name') or 'Хозяин').strip()[:24] or 'Хозяин'
@@ -359,7 +421,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                 ROOMS[code]={
                     'code':code,'createdAt':int(time.time()),'started':False,'hostId':pid,'hardMode':False,
                     'players':{pid:{'id':pid,'secret':secret,'name':name,'heroId':None,'host':True}},
-                    'gameState':None,'gameRevision':0,'gameUpdatedAt':None,'lastActiveAt':int(time.time()),'recoveryKey':token(32)
+                    'gameState':None,'gameRevision':0,'gameUpdatedAt':None,'lastPlayerSeenAt':int(time.time()),'lastActiveAt':int(time.time()),'recoveryKey':token(32)
                 }
                 data=public_room(ROOMS[code], True)
             return self._json(201, {'room':data,'playerId':pid,'playerSecret':secret})
@@ -369,9 +431,9 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
             with LOCK:
                 room=ROOMS.get(code)
                 if room:
-                    pl=authorized_player(room,pid,secret)
+                    pl=credential_player(room,pid,secret)
                     if not pl: return self._json(403, {'error':'Нет доступа к сохранённой партии'})
-                    touch_room(room)
+                    touch_room(room,pl)
                     return self._json(200, {'room':public_room(room, True),'revived':False})
                 return self._json(410, {'error':'Сетевая партия не найдена или срок восстановления истёк. Данные клиента не заменяют серверное сохранение.'})
         # An unlimited-turn, read-only map observer. No hero, no player slot.
@@ -433,6 +495,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                 for q in room['players'].values():
                     if q['id']!=pid and q.get('heroId')==hero:
                         return self._json(409, {'error':'Этот герой уже занят'})
+                if room.get('started'):return self._json(409,{'error':'После старта смена героя недоступна'})
                 pl['heroId']=hero
                 data=public_room(room, True)
             return self._json(200, {'room':data})
@@ -564,6 +627,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                     hid=incoming.get('id'); cur=current_players.get(hid)
                     if not cur: continue
                     # Помимо своего героя разрешаем менять только героя на том же гексе — это нужно для сделки между игроками.
+                    if hid in game.get('excludedHeroes',{}):continue
                     if hid!=owner and cur.get('hex')!=owner_cur.get('hex'): continue
                     for key in mutable:
                         if key in incoming and cur.get(key)!=incoming[key]:
@@ -739,6 +803,8 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                     if known_original and all(any(a.get('id')==item.get('id') for a in game['areas']) for item in record.get('areas') or []):
                         # Overlay is now part of an authoritative main snapshot.
                         room['sideTerritoryOverrides'].pop(off_owner,None)
+                try:voting.protect(room,game)
+                except ValueError as e:return self._json(409,{'error':str(e)})
                 merge_journal(existing, game)
                 
                 for hero in game.get('players',[]):ensure_progression(hero)
@@ -751,7 +817,7 @@ if __name__ == '__main__':
     build_manifest(ROOT)
     port=int(os.environ.get('PORT','8080'))
     os.chdir(ROOT)
-    print(f'RPG Online Lobby: http://0.0.0.0:{port}')
+    print(f'Сердце тьмы: http://0.0.0.0:{port}')
     print('Оставьте это окно Терминала открытым.')
     print('Сетевые сохранения SQLite:',NETWORK_DB_PATH, '(на Render Free без постоянного диска рестарт не гарантирован)')
     ThreadingHTTPServer(('0.0.0.0',port), Handler).serve_forever()

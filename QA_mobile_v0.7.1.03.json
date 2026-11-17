@@ -1,0 +1,1293 @@
+{
+  "method": "Safari, iframe viewport sizes; coarse-pointer CSS branches enabled in QA-only copy; animations settled before geometry checks; not physical devices",
+  "beforeAfter": [
+    {
+      "device": "iPhone 16 Pro",
+      "before": 388,
+      "after": 310.390625
+    },
+    {
+      "device": "Galaxy S26 Ultra",
+      "before": 398,
+      "after": 318.390625
+    },
+    {
+      "device": "Duo внешний",
+      "before": 368,
+      "after": 294.390625
+    },
+    {
+      "device": "Duo раскрытый портрет",
+      "before": 440,
+      "after": 352
+    },
+    {
+      "device": "Duo раскрытый альбом",
+      "before": 440,
+      "after": 352
+    },
+    {
+      "device": "Duo разделение",
+      "before": 371,
+      "after": 296.796875
+    },
+    {
+      "device": "iPhone 16 Pro альбом",
+      "before": 440,
+      "after": 352
+    }
+  ],
+  "results": [
+    {
+      "buttonReachable": true,
+      "tag": "iPhone 16 Pro",
+      "hero": {
+        "viewport": [
+          402,
+          874
+        ],
+        "drawer": {
+          "x": 0,
+          "y": 80,
+          "w": 402,
+          "h": 794,
+          "bottom": 874
+        },
+        "portrait": {
+          "x": 71,
+          "y": 316,
+          "w": 260,
+          "h": 260,
+          "bottom": 576
+        },
+        "stats": [
+          {
+            "x": 279,
+            "y": 324,
+            "w": 44,
+            "h": 44,
+            "bottom": 368
+          },
+          {
+            "x": 279,
+            "y": 374,
+            "w": 44,
+            "h": 44,
+            "bottom": 418
+          },
+          {
+            "x": 279,
+            "y": 424,
+            "w": 44,
+            "h": 44,
+            "bottom": 468
+          },
+          {
+            "x": 279,
+            "y": 474,
+            "w": 44,
+            "h": 44,
+            "bottom": 518
+          },
+          {
+            "x": 279,
+            "y": 524,
+            "w": 44,
+            "h": 44,
+            "bottom": 568
+          }
+        ],
+        "ability": {
+          "x": 14,
+          "y": 658,
+          "w": 374,
+          "h": 176,
+          "bottom": 834
+        },
+        "sheetOverflow": 394
+      },
+      "story": {
+        "modal": {
+          "x": 45.796875,
+          "y": 210.796875,
+          "w": 310.390625,
+          "h": 530.390625,
+          "bottom": 741.1875
+        },
+        "art": {
+          "x": 48.796875,
+          "y": 213.796875,
+          "w": 304.390625,
+          "h": 304.390625,
+          "bottom": 518.1875
+        },
+        "scrollH": 528,
+        "clientH": 528,
+        "button": {
+          "x": 58.796875,
+          "y": 676.1875,
+          "w": 284.390625,
+          "h": 44,
+          "bottom": 720.1875
+        },
+        "font": "16px"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "id": 106,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Событие",
+          "id": 119,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Темница",
+          "id": 93,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Элитная опасность",
+          "id": 125,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Тёмное испытание",
+          "id": 133,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Проклятый шаг",
+          "id": 137,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Золото и сокровища",
+          "id": 280,
+          "inViewport": true,
+          "reachable": true
+        }
+      ]
+    },
+    {
+      "buttonReachable": true,
+      "tag": "Galaxy S26 Ultra",
+      "hero": {
+        "viewport": [
+          412,
+          891
+        ],
+        "drawer": {
+          "x": 0,
+          "y": 80,
+          "w": 412,
+          "h": 811,
+          "bottom": 891
+        },
+        "portrait": {
+          "x": 76,
+          "y": 316,
+          "w": 260,
+          "h": 260,
+          "bottom": 576
+        },
+        "stats": [
+          {
+            "x": 284,
+            "y": 324,
+            "w": 44,
+            "h": 44,
+            "bottom": 368
+          },
+          {
+            "x": 284,
+            "y": 374,
+            "w": 44,
+            "h": 44,
+            "bottom": 418
+          },
+          {
+            "x": 284,
+            "y": 424,
+            "w": 44,
+            "h": 44,
+            "bottom": 468
+          },
+          {
+            "x": 284,
+            "y": 474,
+            "w": 44,
+            "h": 44,
+            "bottom": 518
+          },
+          {
+            "x": 284,
+            "y": 524,
+            "w": 44,
+            "h": 44,
+            "bottom": 568
+          }
+        ],
+        "ability": {
+          "x": 14,
+          "y": 658,
+          "w": 384,
+          "h": 176,
+          "bottom": 834
+        },
+        "sheetOverflow": 404
+      },
+      "story": {
+        "modal": {
+          "x": 46.796875,
+          "y": 215.296875,
+          "w": 318.390625,
+          "h": 538.390625,
+          "bottom": 753.6875
+        },
+        "art": {
+          "x": 49.796875,
+          "y": 218.296875,
+          "w": 312.390625,
+          "h": 312.390625,
+          "bottom": 530.6875
+        },
+        "scrollH": 536,
+        "clientH": 536,
+        "button": {
+          "x": 59.796875,
+          "y": 688.6875,
+          "w": 292.390625,
+          "h": 44,
+          "bottom": 732.6875
+        },
+        "font": "16px"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "id": 106,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Событие",
+          "id": 119,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Темница",
+          "id": 93,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Элитная опасность",
+          "id": 125,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Тёмное испытание",
+          "id": 133,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Проклятый шаг",
+          "id": 137,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Золото и сокровища",
+          "id": 280,
+          "inViewport": true,
+          "reachable": true
+        }
+      ]
+    },
+    {
+      "buttonReachable": true,
+      "tag": "Duo внешний",
+      "hero": {
+        "viewport": [
+          382,
+          580
+        ],
+        "drawer": {
+          "x": 0,
+          "y": 80,
+          "w": 382,
+          "h": 500,
+          "bottom": 580
+        },
+        "portrait": {
+          "x": 61,
+          "y": 316,
+          "w": 260,
+          "h": 260,
+          "bottom": 576
+        },
+        "stats": [
+          {
+            "x": 269,
+            "y": 324,
+            "w": 44,
+            "h": 44,
+            "bottom": 368
+          },
+          {
+            "x": 269,
+            "y": 374,
+            "w": 44,
+            "h": 44,
+            "bottom": 418
+          },
+          {
+            "x": 269,
+            "y": 424,
+            "w": 44,
+            "h": 44,
+            "bottom": 468
+          },
+          {
+            "x": 269,
+            "y": 474,
+            "w": 44,
+            "h": 44,
+            "bottom": 518
+          },
+          {
+            "x": 269,
+            "y": 524,
+            "w": 44,
+            "h": 44,
+            "bottom": 568
+          }
+        ],
+        "ability": {
+          "x": 14,
+          "y": 658,
+          "w": 354,
+          "h": 197,
+          "bottom": 855
+        },
+        "sheetOverflow": 374
+      },
+      "story": {
+        "modal": {
+          "x": 43.796875,
+          "y": 88,
+          "w": 294.390625,
+          "h": 482,
+          "bottom": 570
+        },
+        "art": {
+          "x": 46.796875,
+          "y": 59,
+          "w": 288.390625,
+          "h": 288.390625,
+          "bottom": 347.390625
+        },
+        "scrollH": 512,
+        "clientH": 480,
+        "button": {
+          "x": 56.796875,
+          "y": 505.390625,
+          "w": 268.390625,
+          "h": 44,
+          "bottom": 549.390625
+        },
+        "font": "16px"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "id": 106,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Событие",
+          "id": 119,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Темница",
+          "id": 93,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Элитная опасность",
+          "id": 125,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Тёмное испытание",
+          "id": 133,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Проклятый шаг",
+          "id": 137,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Золото и сокровища",
+          "id": 280,
+          "inViewport": true,
+          "reachable": true
+        }
+      ]
+    },
+    {
+      "buttonReachable": true,
+      "tag": "Duo раскрытый портрет",
+      "hero": {
+        "viewport": [
+          669,
+          867
+        ],
+        "drawer": {
+          "x": 0,
+          "y": 80,
+          "w": 669,
+          "h": 787,
+          "bottom": 867
+        },
+        "portrait": {
+          "x": 14,
+          "y": 316,
+          "w": 260,
+          "h": 260,
+          "bottom": 576
+        },
+        "stats": [
+          {
+            "x": 222,
+            "y": 324,
+            "w": 44,
+            "h": 44,
+            "bottom": 368
+          },
+          {
+            "x": 222,
+            "y": 374,
+            "w": 44,
+            "h": 44,
+            "bottom": 418
+          },
+          {
+            "x": 222,
+            "y": 424,
+            "w": 44,
+            "h": 44,
+            "bottom": 468
+          },
+          {
+            "x": 222,
+            "y": 474,
+            "w": 44,
+            "h": 44,
+            "bottom": 518
+          },
+          {
+            "x": 222,
+            "y": 524,
+            "w": 44,
+            "h": 44,
+            "bottom": 568
+          }
+        ],
+        "ability": {
+          "x": 290,
+          "y": 316,
+          "w": 365,
+          "h": 197,
+          "bottom": 513
+        },
+        "sheetOverflow": 661
+      },
+      "story": {
+        "modal": {
+          "x": 158.5,
+          "y": 186.5,
+          "w": 352,
+          "h": 572,
+          "bottom": 758.5
+        },
+        "art": {
+          "x": 161.5,
+          "y": 189.5,
+          "w": 346,
+          "h": 346,
+          "bottom": 535.5
+        },
+        "scrollH": 570,
+        "clientH": 570,
+        "button": {
+          "x": 171.5,
+          "y": 693.5,
+          "w": 326,
+          "h": 44,
+          "bottom": 737.5
+        },
+        "font": "16px"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "id": 106,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Событие",
+          "id": 119,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Темница",
+          "id": 93,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Элитная опасность",
+          "id": 125,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Тёмное испытание",
+          "id": 133,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Проклятый шаг",
+          "id": 137,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Золото и сокровища",
+          "id": 280,
+          "inViewport": true,
+          "reachable": true
+        }
+      ]
+    },
+    {
+      "buttonReachable": true,
+      "tag": "Duo раскрытый альбом",
+      "hero": {
+        "viewport": [
+          951,
+          585
+        ],
+        "drawer": {
+          "x": 0,
+          "y": 80,
+          "w": 951,
+          "h": 505,
+          "bottom": 585
+        },
+        "portrait": {
+          "x": 14,
+          "y": 316,
+          "w": 260,
+          "h": 260,
+          "bottom": 576
+        },
+        "stats": [
+          {
+            "x": 222,
+            "y": 324,
+            "w": 44,
+            "h": 44,
+            "bottom": 368
+          },
+          {
+            "x": 222,
+            "y": 374,
+            "w": 44,
+            "h": 44,
+            "bottom": 418
+          },
+          {
+            "x": 222,
+            "y": 424,
+            "w": 44,
+            "h": 44,
+            "bottom": 468
+          },
+          {
+            "x": 222,
+            "y": 474,
+            "w": 44,
+            "h": 44,
+            "bottom": 518
+          },
+          {
+            "x": 222,
+            "y": 524,
+            "w": 44,
+            "h": 44,
+            "bottom": 568
+          }
+        ],
+        "ability": {
+          "x": 290,
+          "y": 316,
+          "w": 647,
+          "h": 134,
+          "bottom": 450
+        },
+        "sheetOverflow": 943
+      },
+      "story": {
+        "modal": {
+          "x": 299.5,
+          "y": 88,
+          "w": 352,
+          "h": 487,
+          "bottom": 575
+        },
+        "art": {
+          "x": 302.5,
+          "y": 6,
+          "w": 346,
+          "h": 346,
+          "bottom": 352
+        },
+        "scrollH": 570,
+        "clientH": 485,
+        "button": {
+          "x": 312.5,
+          "y": 510,
+          "w": 326,
+          "h": 44,
+          "bottom": 554
+        },
+        "font": "16px"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "id": 106,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Событие",
+          "id": 119,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Темница",
+          "id": 93,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Элитная опасность",
+          "id": 125,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Тёмное испытание",
+          "id": 133,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Проклятый шаг",
+          "id": 137,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Золото и сокровища",
+          "id": 280,
+          "inViewport": true,
+          "reachable": true
+        }
+      ]
+    },
+    {
+      "buttonReachable": true,
+      "tag": "Duo разделение",
+      "hero": {
+        "viewport": [
+          385,
+          571
+        ],
+        "drawer": {
+          "x": 0,
+          "y": 80,
+          "w": 385,
+          "h": 491,
+          "bottom": 571
+        },
+        "portrait": {
+          "x": 62.5,
+          "y": 316,
+          "w": 260,
+          "h": 260,
+          "bottom": 576
+        },
+        "stats": [
+          {
+            "x": 270.5,
+            "y": 324,
+            "w": 44,
+            "h": 44,
+            "bottom": 368
+          },
+          {
+            "x": 270.5,
+            "y": 374,
+            "w": 44,
+            "h": 44,
+            "bottom": 418
+          },
+          {
+            "x": 270.5,
+            "y": 424,
+            "w": 44,
+            "h": 44,
+            "bottom": 468
+          },
+          {
+            "x": 270.5,
+            "y": 474,
+            "w": 44,
+            "h": 44,
+            "bottom": 518
+          },
+          {
+            "x": 270.5,
+            "y": 524,
+            "w": 44,
+            "h": 44,
+            "bottom": 568
+          }
+        ],
+        "ability": {
+          "x": 14,
+          "y": 658,
+          "w": 357,
+          "h": 197,
+          "bottom": 855
+        },
+        "sheetOverflow": 377
+      },
+      "story": {
+        "modal": {
+          "x": 44.09375,
+          "y": 88,
+          "w": 296.796875,
+          "h": 473,
+          "bottom": 561
+        },
+        "art": {
+          "x": 47.09375,
+          "y": 47,
+          "w": 290.796875,
+          "h": 290.796875,
+          "bottom": 337.796875
+        },
+        "scrollH": 515,
+        "clientH": 471,
+        "button": {
+          "x": 57.09375,
+          "y": 495.796875,
+          "w": 270.796875,
+          "h": 44,
+          "bottom": 539.796875
+        },
+        "font": "16px"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "id": 106,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Событие",
+          "id": 119,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Темница",
+          "id": 93,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Элитная опасность",
+          "id": 125,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Тёмное испытание",
+          "id": 133,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Проклятый шаг",
+          "id": 137,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Золото и сокровища",
+          "id": 280,
+          "inViewport": true,
+          "reachable": true
+        }
+      ]
+    },
+    {
+      "buttonReachable": true,
+      "tag": "iPhone 16 Pro альбом",
+      "hero": {
+        "viewport": [
+          874,
+          402
+        ],
+        "drawer": {
+          "x": 0,
+          "y": 80,
+          "w": 874,
+          "h": 322,
+          "bottom": 402
+        },
+        "portrait": {
+          "x": 14,
+          "y": 316,
+          "w": 260,
+          "h": 260,
+          "bottom": 576
+        },
+        "stats": [
+          {
+            "x": 222,
+            "y": 324,
+            "w": 44,
+            "h": 44,
+            "bottom": 368
+          },
+          {
+            "x": 222,
+            "y": 374,
+            "w": 44,
+            "h": 44,
+            "bottom": 418
+          },
+          {
+            "x": 222,
+            "y": 424,
+            "w": 44,
+            "h": 44,
+            "bottom": 468
+          },
+          {
+            "x": 222,
+            "y": 474,
+            "w": 44,
+            "h": 44,
+            "bottom": 518
+          },
+          {
+            "x": 222,
+            "y": 524,
+            "w": 44,
+            "h": 44,
+            "bottom": 568
+          }
+        ],
+        "ability": {
+          "x": 290,
+          "y": 316,
+          "w": 570,
+          "h": 134,
+          "bottom": 450
+        },
+        "sheetOverflow": 866
+      },
+      "story": {
+        "modal": {
+          "x": 261,
+          "y": 88,
+          "w": 352,
+          "h": 304,
+          "bottom": 392
+        },
+        "art": {
+          "x": 264,
+          "y": -177,
+          "w": 346,
+          "h": 346,
+          "bottom": 169
+        },
+        "scrollH": 570,
+        "clientH": 302,
+        "button": {
+          "x": 274,
+          "y": 327,
+          "w": 326,
+          "h": 44,
+          "bottom": 371
+        },
+        "font": "16px"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "id": 106,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Событие",
+          "id": 119,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Темница",
+          "id": 93,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Элитная опасность",
+          "id": 125,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Тёмное испытание",
+          "id": 133,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Проклятый шаг",
+          "id": 137,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Золото и сокровища",
+          "id": 280,
+          "inViewport": true,
+          "reachable": true
+        }
+      ]
+    },
+    {
+      "buttonReachable": true,
+      "tag": "Duo внешний альбом",
+      "hero": {
+        "viewport": [
+          594,
+          368
+        ],
+        "drawer": {
+          "x": 0,
+          "y": 80,
+          "w": 594,
+          "h": 288,
+          "bottom": 368
+        },
+        "portrait": {
+          "x": 167,
+          "y": 316,
+          "w": 260,
+          "h": 260,
+          "bottom": 576
+        },
+        "stats": [
+          {
+            "x": 375,
+            "y": 324,
+            "w": 44,
+            "h": 44,
+            "bottom": 368
+          },
+          {
+            "x": 375,
+            "y": 374,
+            "w": 44,
+            "h": 44,
+            "bottom": 418
+          },
+          {
+            "x": 375,
+            "y": 424,
+            "w": 44,
+            "h": 44,
+            "bottom": 468
+          },
+          {
+            "x": 375,
+            "y": 474,
+            "w": 44,
+            "h": 44,
+            "bottom": 518
+          },
+          {
+            "x": 375,
+            "y": 524,
+            "w": 44,
+            "h": 44,
+            "bottom": 568
+          }
+        ],
+        "ability": {
+          "x": 37,
+          "y": 658,
+          "w": 520,
+          "h": 155,
+          "bottom": 813
+        },
+        "sheetOverflow": 586
+      },
+      "story": {
+        "modal": {
+          "x": 121,
+          "y": 88,
+          "w": 352,
+          "h": 270,
+          "bottom": 358
+        },
+        "art": {
+          "x": 124,
+          "y": -211,
+          "w": 346,
+          "h": 346,
+          "bottom": 135
+        },
+        "scrollH": 570,
+        "clientH": 268,
+        "button": {
+          "x": 134,
+          "y": 293,
+          "w": 326,
+          "h": 44,
+          "bottom": 337
+        },
+        "font": "16px"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "id": 106,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Событие",
+          "id": 119,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Темница",
+          "id": 93,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Элитная опасность",
+          "id": 125,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Тёмное испытание",
+          "id": 133,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Проклятый шаг",
+          "id": 137,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Золото и сокровища",
+          "id": 280,
+          "inViewport": true,
+          "reachable": true
+        }
+      ]
+    },
+    {
+      "buttonReachable": true,
+      "tag": "iPhone с панелями браузера",
+      "hero": {
+        "viewport": [
+          402,
+          700
+        ],
+        "drawer": {
+          "x": 0,
+          "y": 80,
+          "w": 402,
+          "h": 620,
+          "bottom": 700
+        },
+        "portrait": {
+          "x": 71,
+          "y": 316,
+          "w": 260,
+          "h": 260,
+          "bottom": 576
+        },
+        "stats": [
+          {
+            "x": 279,
+            "y": 324,
+            "w": 44,
+            "h": 44,
+            "bottom": 368
+          },
+          {
+            "x": 279,
+            "y": 374,
+            "w": 44,
+            "h": 44,
+            "bottom": 418
+          },
+          {
+            "x": 279,
+            "y": 424,
+            "w": 44,
+            "h": 44,
+            "bottom": 468
+          },
+          {
+            "x": 279,
+            "y": 474,
+            "w": 44,
+            "h": 44,
+            "bottom": 518
+          },
+          {
+            "x": 279,
+            "y": 524,
+            "w": 44,
+            "h": 44,
+            "bottom": 568
+          }
+        ],
+        "ability": {
+          "x": 14,
+          "y": 658,
+          "w": 374,
+          "h": 176,
+          "bottom": 834
+        },
+        "sheetOverflow": 394
+      },
+      "story": {
+        "modal": {
+          "x": 45.796875,
+          "y": 123.796875,
+          "w": 310.390625,
+          "h": 530.390625,
+          "bottom": 654.1875
+        },
+        "art": {
+          "x": 48.796875,
+          "y": 126.796875,
+          "w": 304.390625,
+          "h": 304.390625,
+          "bottom": 431.1875
+        },
+        "scrollH": 528,
+        "clientH": 528,
+        "button": {
+          "x": 58.796875,
+          "y": 589.1875,
+          "w": 284.390625,
+          "h": 44,
+          "bottom": 633.1875
+        },
+        "font": "16px"
+      },
+      "cards": [
+        {
+          "category": "Ловушка",
+          "id": 106,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Событие",
+          "id": 119,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Темница",
+          "id": 93,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Элитная опасность",
+          "id": 125,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Тёмное испытание",
+          "id": 133,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Проклятый шаг",
+          "id": 137,
+          "inViewport": true,
+          "reachable": true
+        },
+        {
+          "category": "Золото и сокровища",
+          "id": 280,
+          "inViewport": true,
+          "reachable": true
+        }
+      ]
+    }
+  ]
+}

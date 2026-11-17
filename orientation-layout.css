@@ -1,0 +1,65 @@
+/* Portrait stays stacked, even on a wide foldable display. */
+@media(orientation:portrait) and (max-width:1100px),(orientation:portrait) and (pointer:coarse){
+ body.tabletop-upgrade .dossier-main{grid-template-columns:minmax(0,1fr)}
+}
+/* Landscape touch screens use compact desktop-like columns. */
+@media(orientation:landscape) and (max-width:1100px),(orientation:landscape) and (pointer:coarse){
+ body.tabletop-upgrade.game-running .side-panel{left:max(6px,env(safe-area-inset-left))!important;right:auto!important;top:var(--rpg-turnbar-height,80px)!important;bottom:max(6px,env(safe-area-inset-bottom))!important;width:174px!important;height:auto!important;padding:8px!important;border-radius:5px!important;overflow:auto!important;max-height:none!important;position:fixed!important;margin:0!important;}
+ body.tabletop-upgrade.game-running .board-panel{left:190px!important;right:max(6px,env(safe-area-inset-right))!important;top:var(--rpg-turnbar-height,80px)!important;bottom:max(6px,env(safe-area-inset-bottom))!important;position:fixed!important;width:auto!important;height:auto!important;}
+ body.tabletop-upgrade.game-running .mobile-quick-actions{gap:4px;padding:3px 0 6px}
+ body.tabletop-upgrade.game-running .side-panel button{font-size:13px!important;line-height:1.25;min-height:40px;padding:6px!important;white-space:normal}
+ body.tabletop-upgrade.game-running #sheetDrawer.sheet-drawer:not([hidden]),
+ body.tabletop-upgrade.game-running #sheetDrawer.sheet-drawer:has(.hero-dossier):not([hidden]){left:auto!important;right:max(6px,env(safe-area-inset-right))!important;top:var(--rpg-turnbar-height,80px)!important;bottom:max(6px,env(safe-area-inset-bottom))!important;width:min(650px,calc(100vw - 16px))!important;max-width:calc(100vw - 16px)!important;height:auto!important;padding-top:0}
+ body.tabletop-upgrade.game-running #sheetDrawer .sheet-drawer-head{min-height:42px!important;padding:4px 8px!important}
+ body.tabletop-upgrade.game-running #sheetDrawer .sheet-drawer-head button{min-height:36px!important;font-size:15px!important;padding:5px 9px!important}
+ body.tabletop-upgrade .sheet-content{padding:10px!important}
+ body.tabletop-upgrade .hero-dossier .hero-progression-summary{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;margin-bottom:6px;padding-bottom:5px;gap:4px}
+ body.tabletop-upgrade .hero-dossier .hero-progression-summary button{font-size:14px!important;min-height:36px;padding:5px!important}
+ body.tabletop-upgrade .hero-dossier .hero-progression-summary>div{font-size:11px;justify-content:space-between;gap:4px}
+ body.tabletop-upgrade .hero-dossier .hero-progression-summary progress{grid-column:1/-1;height:3px}
+ body.tabletop-upgrade .dossier-header .sheet-hero{margin-bottom:8px}
+ body.tabletop-upgrade .dossier-header h2{font-size:26px!important}
+ body.tabletop-upgrade .dossier-header .eyebrow{display:none}
+ body.tabletop-upgrade .dossier-header .dossier-gold small{font-size:9px;letter-spacing:.06em;white-space:nowrap}
+ body.tabletop-upgrade .dossier-main{grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:12px;align-items:start}
+ body.tabletop-upgrade .dossier-visual{width:220px;max-width:100%;position:relative;display:block}
+ body.tabletop-upgrade .dossier-portrait{aspect-ratio:1!important}
+ body.tabletop-upgrade .dossier-visual>.dossier-values{position:absolute;inset:8px 8px auto auto;width:38px;height:calc(var(--hero-portrait-height,220px) - 16px)}
+ body.tabletop-upgrade .hero-dossier .sheet-stat,
+ body.tabletop-upgrade .hero-dossier .sheet-stat:last-child{flex:0 0 38px;width:38px!important;height:38px;max-height:38px}
+ body.tabletop-upgrade .hero-dossier .dossier-stat-number{font-size:18px!important}
+ body.tabletop-upgrade .dossier-side{gap:8px;padding-top:0}
+ body.tabletop-upgrade .hero-dossier .hero-ability-card{display:flex;flex-direction:column;gap:5px;height:220px;max-height:var(--hero-portrait-height,220px);padding:8px!important;box-sizing:border-box;overflow:hidden}
+ body.tabletop-upgrade .hero-dossier .hero-ability-card>*{flex:0 0 auto}
+ body.tabletop-upgrade .hero-dossier .hero-ability-card small{font-size:10px!important;line-height:1.2}
+ body.tabletop-upgrade .hero-dossier .hero-ability-card b{font-size:17px!important;line-height:1.2!important}
+ body.tabletop-upgrade .hero-dossier .hero-ability-card span{font-size:13px!important;line-height:1.4!important}
+ body.tabletop-upgrade .dossier-effects .sheet-section-title{font-size:18px;margin-bottom:6px}
+ body.tabletop-upgrade .dossier-effects .empty-box,
+ body.tabletop-upgrade .dossier-effects .hero-effect-row{font-size:12px!important}
+ body.tabletop-upgrade .inventory-gear{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ body.tabletop-upgrade.game-running #modal:has(.story-card-shell)>.modal-card{width:min(848px,calc(100vw - 24px),170dvh)!important;max-width:calc(100vw - 24px)!important}
+ body.tabletop-upgrade.game-running #modal:has(.story-card-shell) .story-card-shell{display:grid!important;grid-template-columns:36% minmax(0,1fr)!important;align-items:start;min-height:0!important;height:auto!important;aspect-ratio:auto!important}
+ body.tabletop-upgrade.game-running #modal:has(.story-card-shell) .story-card-art{height:auto!important;width:100%!important;aspect-ratio:1!important;position:sticky;top:0;align-self:start}
+ body.tabletop-upgrade.game-running #modal:has(.story-card-shell) .story-card-info{padding:9px!important;gap:5px}
+ body.tabletop-upgrade.game-running #modal:has(.story-card-shell) .story-title{font-size:22px!important;line-height:1.2}
+ body.tabletop-upgrade.game-running #modal:has(.story-card-shell) .card-field{font-size:13px!important;line-height:1.4!important}
+ body.tabletop-upgrade.game-running #modal:has(.story-card-shell) .story-card-actions button{font-size:14px!important;min-height:40px!important;padding:6px 8px!important}
+ body.tabletop-upgrade.game-running #modal:has(.combat-shell):not([hidden])>.modal-card{width:min(760px,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;padding:8px!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card{--battle-art-width:min(190px,40dvh)}
+ body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .visual-card-stage{width:min(100%,190px,40dvh)!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-card-note{min-height:0!important;padding:6px!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-card-note strong{font-size:17px!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-card-note span{font-size:12px!important}
+ body.tabletop-upgrade.game-running #modal .combat-actions button{font-size:16px!important;min-height:40px!important;padding:6px 10px!important}
+ body.tabletop-upgrade.game-running #modal:has(.location-ui)>.modal-card{width:min(848px,calc(100vw - 24px))!important;height:auto!important;overflow-y:auto!important}
+ body.tabletop-upgrade.game-running #modal:has(.location-ui) #modalContent{height:auto!important}
+ body.tabletop-upgrade .location-ui{display:grid;grid-template-columns:34% minmax(0,1fr);height:auto;overflow:visible}
+ body.tabletop-upgrade .location-ui .loc-art{display:flex;flex-direction:column;gap:6px;padding:8px;align-self:start}
+ body.tabletop-upgrade .location-ui .loc-art-frame{width:100%;flex:0 0 auto;max-height:none}
+ body.tabletop-upgrade .location-ui .loc-panel{display:flex;flex-direction:column;min-width:0}
+ body.tabletop-upgrade .location-ui .loc-scroll{overflow:visible;flex:0 0 auto}
+ body.tabletop-upgrade .location-ui .loc-head{min-height:42px;padding:7px 9px}
+ body.tabletop-upgrade .location-ui .loc-head h2{font-size:20px}
+ body.tabletop-upgrade .location-ui .loc-footer button{font-size:13px!important;min-height:40px!important;padding:6px!important}
+}
