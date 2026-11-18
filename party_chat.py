@@ -27,3 +27,8 @@ def send(code, player, text, nonce):
         cur=db.execute('INSERT INTO party_chat(room,player,name,hero,text,ts,nonce) VALUES(?,?,?,?,?,?,?)',(code,player['id'],player['name'],player.get('heroId'),text.strip(),now,nonce))
         db.execute('DELETE FROM party_chat WHERE room=? AND id NOT IN (SELECT id FROM party_chat WHERE room=? ORDER BY id DESC LIMIT 300)',(code,code))
         return cur.lastrowid
+
+
+from network_storage import DATABASE_URL
+if DATABASE_URL:
+    from postgres_storage import chat_history as history, chat_send as send

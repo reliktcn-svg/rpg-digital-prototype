@@ -5,6 +5,9 @@ import json, os, sqlite3, time, tempfile, hashlib
 from contextlib import closing
 from pathlib import Path
 
+class StorageError(Exception):
+    """A durable write could not be confirmed. Never fall back to empty storage."""
+
 TTL=7*24*60*60
 IDLE_TTL=3*60*60
 PROJECT_TAG=hashlib.sha256(str(Path(__file__).resolve().parent).encode()).hexdigest()[:12]
@@ -69,3 +72,37 @@ def restore(now=None):
             if isinstance(room,dict) and room.get('code')==code and isinstance(room.get('players'),dict):output[code]=room
         except (ValueError,TypeError):pass
     return output
+
+
+DATABASE_URL=os.environ.get('RPG_DATABASE_URL') or os.environ.get('DATABASE_URL')
+PERSISTENT=bool(DATABASE_URL or os.environ.get('RPG_STORAGE_PERSISTENT')=='1')
+
+def storage_info():
+    return {'backend':'postgresql' if DATABASE_URL else 'sqlite',
+            'persistent':PERSISTENT,'retentionSeconds':TTL}
+
+# A Render deployment must not silently create a new temporary database.
+if os.environ.get('RENDER')=='true' and not PERSISTENT:
+    raise RuntimeError('Configure DATABASE_URL or a verified persistent disk before deploying network play.')
+
+if DATABASE_URL:
+    def save(room):
+        from postgres_storage import save as write
+        return write(room)
+
+    def remove(codes):
+        from postgres_storage import remove as delete
+        return delete(codes)
+
+    def restore(now=None):
+        from postgres_storage import restore as load
+        return load(now)
+
+def check_ready():
+    if DATABASE_URL:
+        from postgres_storage import transaction, guard_writer
+        with transaction() as db:
+            guard_writer(db)
+    else:
+        with closing(connect()) as db:
+            db.execute('SELECT 1 FROM room_saves LIMIT 1')

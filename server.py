@@ -3,7 +3,9 @@ import json, os, random, string, threading, time, urllib.parse
 from http_transport import TransportMixin
 from asset_manifest import build_manifest
 from network_storage import save as persist_room, remove as remove_persisted, restore as restore_rooms, TTL as NETWORK_SAVE_TTL, PATH as NETWORK_DB_PATH, expiry as room_expiry
-import hashlib, sqlite3
+import hashlib, sqlite3, uuid
+from functools import wraps
+from network_storage import StorageError, storage_info, check_ready
 import party_voting as voting
 from party_chat import history as chat_history, send as chat_send
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
@@ -11,6 +13,7 @@ from dice_pack_catalog import dice_pack_catalog
 from hero_atlas import read_atlas, learn_ability, ensure_progression, progression_level
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
+SERVER_INSTANCE = uuid.uuid4().hex
 ROOMS = restore_rooms()
 LOCK = threading.RLock()
 ROOM_IDLE_TTL = max(30, int(os.environ.get('RPG_ROOM_IDLE_TTL', '10800')))  # lobby: 3 hours; played room: seven days
@@ -264,6 +267,15 @@ def preserve_side_clue_decks(game,decks):
     return incoming
 
 
+def storage_request(handler):
+    @wraps(handler)
+    def guarded(self):
+        try:
+            return handler(self)
+        except StorageError:
+            return self._json(503,{'error':'Постоянная база временно недоступна. Изменения не подтверждены; повторите попытку позже.'})
+    return guarded
+
 class Handler(TransportMixin, SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=ROOT, **kwargs)
@@ -285,7 +297,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                     new_room=ROOMS.get(data['room'].get('code'))
                     if new_room:
                         with LOCK:persist_room(new_room)
-            except (OSError,ValueError,sqlite3.Error) as exc:
+            except (OSError,ValueError,sqlite3.Error,StorageError) as exc:
                 print('RPG network snapshot failed:',exc)
                 status=503;data={'error':'Не удалось записать сетевое сохранение. Проверьте постоянное хранилище.'}
         if self.command=='POST' and room is not None:room.pop('_http_cache',None)
@@ -311,6 +323,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
         except ValueError:protocol=0
         return protocol>=int(os.environ.get('RPG_MIN_CLIENT_PROTOCOL','2'))
 
+    @storage_request
     def do_GET(self):
         if self.path.startswith('/api/rooms/') and not self.client_compatible():return self._json(426,{'error':'Обновите игру: версия клиента несовместима с сервером'})
         p=urllib.parse.urlparse(self.path)
@@ -325,7 +338,8 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
             payload=('window.RPG_HERO_ATLAS = '+json.dumps(data,ensure_ascii=False).replace('</','<\\/')+';').encode('utf-8')
             return self.send_bytes(200,payload,'application/javascript; charset=utf-8',conditional=True)
         if p.path == '/api/health':
-            return self._json(200, {'ok':True,'rooms':len(ROOMS)})
+            check_ready()
+            return self._json(200, {'ok':True,'bootId':SERVER_INSTANCE,'rooms':len(ROOMS),'storage':storage_info()})
         if p.path.startswith('/api/rooms/') and p.path.endswith('/saved'):
             code=p.path.split('/')[-2];q=urllib.parse.parse_qs(p.query)
             with LOCK:
@@ -387,6 +401,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                 return self._json(200, public_room(room, bool(auth_pl)))
         return super().do_GET()
 
+    @storage_request
     def do_POST(self):
         if self.path.startswith('/api/rooms') and not self.client_compatible():return self._json(426,{'error':'Обновите игру: версия клиента несовместима с сервером'})
         p=urllib.parse.urlparse(self.path).path
@@ -428,7 +443,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                 try:mid=chat_send(code,player,body.get('text'),body.get('nonce'))
                 except ValueError as e:return self._json(400,{'error':str(e)})
                 except OverflowError as e:return self._json(429,{'error':str(e)})
-                except sqlite3.Error:return self._json(503,{'error':'Не удалось сохранить сообщение. Повтори отправку.'})
+                except (sqlite3.Error,StorageError):return self._json(503,{'error':'Не удалось сохранить сообщение. Повтори отправку.'})
                 return self._json(200,{'id':mid})
         if p == '/api/rooms':
             code=room_code(); pid=token(12); secret=token(24)
@@ -835,5 +850,5 @@ if __name__ == '__main__':
     os.chdir(ROOT)
     print(f'Сердце тьмы: http://0.0.0.0:{port}')
     print('Оставьте это окно Терминала открытым.')
-    print('Сетевые сохранения SQLite:',NETWORK_DB_PATH, '(на Render Free без постоянного диска рестарт не гарантирован)')
+    print('Сетевые сохранения: PostgreSQL, постоянная внешняя база' if storage_info()['backend']=='postgresql' else f'Сетевые сохранения SQLite: {NETWORK_DB_PATH}')
     ThreadingHTTPServer(('0.0.0.0',port), Handler).serve_forever()

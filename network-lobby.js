@@ -330,7 +330,7 @@
     try{
       const d=await recoverSession(saved),room=d.room,me=room.players?.find(p=>p.id===saved.playerId);if(!me){clearResumeSession();throw new Error('Сохранённый игрок больше не найден в этой комнате.')}
       Object.assign(session,{mode:'online',code:saved.code,playerId:saved.playerId,playerSecret:saved.playerSecret,recoveryKey:room.recoveryKey||saved.recoveryKey||session.recoveryKey,room});if($('netName'))$('netName').value=me.name||saved.name||'';saveResumeSession();renderRoom();poll();if(room.started)await ensureOnlineGame();showError(d.revived?'Партия восстановлена после перезапуска сервера.':'');
-    }catch(err){if(err.status===410||err.status===403)clearResumeSession();showError(`Не удалось продолжить партию: ${err.message}`)}
+    }catch(err){showError(`Не удалось продолжить партию: ${err.message}`)}
   }
   function localGame(){showHome();window.__RPG_NET_CONNECTED__=false;overlay.hidden=true;document.body.classList.remove('net-lobby-open')}
 
@@ -375,7 +375,7 @@
       const members=document.createElement('p');members.textContent=(record.participants||[]).map(p=>p.name).join(', ')||record.name||'';
       const status=document.createElement('p');status.textContent='Проверяем срок хранения…';
       const play=document.createElement('button');play.type='button';play.textContent='Продолжить';play.disabled=true;play.onclick=()=>resumeRoom(record);card.append(title,members,status,play);panel.append(card);
-      api(`/api/rooms/${record.code}/saved?`+new URLSearchParams({playerId:record.playerId,playerSecret:record.playerSecret})).then(d=>{if(panel.hidden||!card.isConnected)return;const deadline=d.room.expiresAt;status.textContent=d.access==='expired'?'Возвращение в эту партию недоступно':(d.access==='return'?'Требуется согласие отряда. ':'')+'Можно продолжить до '+new Date(deadline*1000).toLocaleString('ru-RU');play.disabled=d.access==='expired';play.textContent=d.access==='return'?'Запросить возвращение':'Продолжить';window.RPGPartyLibrary.put({...record,expiresAt:deadline,participants:d.room.players.map(p=>({name:p.name,heroId:p.heroId}))});}).catch(e=>{if(card.isConnected)status.textContent=e.status===404||e.status===410?'Срок истёк или партия удалена.':e.status===403?'Нет доступа к этой партии.':'Сервер недоступен. Попробуйте открыть список позже.';});
+      api(`/api/rooms/${record.code}/saved?`+new URLSearchParams({playerId:record.playerId,playerSecret:record.playerSecret})).then(d=>{if(panel.hidden||!card.isConnected)return;const deadline=d.room.expiresAt;status.textContent=d.access==='expired'?'Возвращение в эту партию недоступно':(d.access==='return'?'Требуется согласие отряда. ':'')+'Можно продолжить до '+new Date(deadline*1000).toLocaleString('ru-RU');play.disabled=d.access==='expired';play.textContent=d.access==='return'?'Запросить возвращение':'Продолжить';window.RPGPartyLibrary.put({...record,expiresAt:deadline,participants:d.room.players.map(p=>({name:p.name,heroId:p.heroId}))});}).catch(e=>{if(card.isConnected)status.textContent=e.status===404||e.status===410?'Сервер не нашёл сохранение партии. Срок хранения мог ещё не истечь.':e.status===403?'Нет доступа к этой партии.':'Сервер недоступен. Попробуйте открыть список позже.';});
     }
     if(!rows.length){const p=document.createElement('p');p.textContent='Здесь появятся ваши сетевые приключения.';panel.append(p);}
     const back=document.createElement('button');back.type='button';back.textContent='Вернуться к выбору пути';back.onclick=showFront;panel.append(back);
