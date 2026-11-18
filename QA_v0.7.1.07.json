@@ -1,0 +1,1681 @@
+{
+  "version": "0.7.1.07",
+  "date": "2026-11-18",
+  "method": "Safari desktop iframes; VisualViewport height/offset simulated only in disposable QA copy. No physical iPhone keyboard test.",
+  "cases": [
+    {
+      "kind": "chat",
+      "size": [
+        1512,
+        810
+      ],
+      "notice": {
+        "x": 24,
+        "y": 166,
+        "w": 304,
+        "h": 74,
+        "right": 328,
+        "bottom": 240
+      },
+      "checks": [
+        {
+          "label": "normal",
+          "log": {
+            "x": 581,
+            "y": 172,
+            "w": 536,
+            "h": 460,
+            "right": 1117,
+            "bottom": 632
+          },
+          "form": {
+            "x": 395,
+            "y": 646,
+            "w": 722,
+            "h": 50,
+            "right": 1117,
+            "bottom": 696
+          },
+          "last": 632
+        },
+        {
+          "label": "viewport 440 offset 0",
+          "log": {
+            "x": 581,
+            "y": 89,
+            "w": 536,
+            "h": 256,
+            "right": 1117,
+            "bottom": 345
+          },
+          "form": {
+            "x": 395,
+            "y": 359,
+            "w": 722,
+            "h": 50,
+            "right": 1117,
+            "bottom": 409
+          },
+          "last": 345
+        },
+        {
+          "label": "viewport 330 offset 0",
+          "log": {
+            "x": 387,
+            "y": 75,
+            "w": 738,
+            "h": 180,
+            "right": 1125,
+            "bottom": 255
+          },
+          "form": {
+            "x": 387,
+            "y": 263,
+            "w": 738,
+            "h": 44,
+            "right": 1125,
+            "bottom": 307
+          },
+          "last": 255
+        },
+        {
+          "label": "viewport 260 offset 80",
+          "log": {
+            "x": 387,
+            "y": 155,
+            "w": 738,
+            "h": 110,
+            "right": 1125,
+            "bottom": 265
+          },
+          "form": {
+            "x": 387,
+            "y": 273,
+            "w": 738,
+            "h": 44,
+            "right": 1125,
+            "bottom": 317
+          },
+          "last": 265
+        },
+        {
+          "label": "viewport 330 offset 120",
+          "log": {
+            "x": 387,
+            "y": 195,
+            "w": 738,
+            "h": 180,
+            "right": 1125,
+            "bottom": 375
+          },
+          "form": {
+            "x": 387,
+            "y": 383,
+            "w": 738,
+            "h": 44,
+            "right": 1125,
+            "bottom": 427
+          },
+          "last": 375
+        },
+        {
+          "label": "viewport 810 offset 0",
+          "log": {
+            "x": 581,
+            "y": 172,
+            "w": 536,
+            "h": 460,
+            "right": 1117,
+            "bottom": 632
+          },
+          "form": {
+            "x": 395,
+            "y": 646,
+            "w": 722,
+            "h": 50,
+            "right": 1117,
+            "bottom": 696
+          },
+          "last": 632
+        },
+        {
+          "label": "jump to new",
+          "log": {
+            "x": 581,
+            "y": 172,
+            "w": 536,
+            "h": 460,
+            "right": 1117,
+            "bottom": 632
+          },
+          "form": {
+            "x": 395,
+            "y": 646,
+            "w": 722,
+            "h": 50,
+            "right": 1117,
+            "bottom": 696
+          },
+          "last": 632
+        },
+        {
+          "label": "after send",
+          "log": {
+            "x": 581,
+            "y": 172,
+            "w": 536,
+            "h": 460,
+            "right": 1117,
+            "bottom": 632
+          },
+          "form": {
+            "x": 395,
+            "y": 646,
+            "w": 722,
+            "h": 50,
+            "right": 1117,
+            "bottom": 696
+          },
+          "last": 632
+        }
+      ],
+      "history": true,
+      "send": true,
+      "combatAnchored": true,
+      "combatPreserved": true,
+      "passed": true
+    },
+    {
+      "kind": "chat",
+      "size": [
+        1280,
+        800
+      ],
+      "notice": {
+        "x": 24,
+        "y": 166,
+        "w": 304,
+        "h": 74,
+        "right": 328,
+        "bottom": 240
+      },
+      "checks": [
+        {
+          "label": "normal",
+          "log": {
+            "x": 465,
+            "y": 167,
+            "w": 536,
+            "h": 460,
+            "right": 1001,
+            "bottom": 627
+          },
+          "form": {
+            "x": 279,
+            "y": 641,
+            "w": 722,
+            "h": 50,
+            "right": 1001,
+            "bottom": 691
+          },
+          "last": 627
+        },
+        {
+          "label": "viewport 440 offset 0",
+          "log": {
+            "x": 465,
+            "y": 89,
+            "w": 536,
+            "h": 256,
+            "right": 1001,
+            "bottom": 345
+          },
+          "form": {
+            "x": 279,
+            "y": 359,
+            "w": 722,
+            "h": 50,
+            "right": 1001,
+            "bottom": 409
+          },
+          "last": 345
+        },
+        {
+          "label": "viewport 330 offset 0",
+          "log": {
+            "x": 271,
+            "y": 75,
+            "w": 738,
+            "h": 180,
+            "right": 1009,
+            "bottom": 255
+          },
+          "form": {
+            "x": 271,
+            "y": 263,
+            "w": 738,
+            "h": 44,
+            "right": 1009,
+            "bottom": 307
+          },
+          "last": 255
+        },
+        {
+          "label": "viewport 260 offset 80",
+          "log": {
+            "x": 271,
+            "y": 155,
+            "w": 738,
+            "h": 110,
+            "right": 1009,
+            "bottom": 265
+          },
+          "form": {
+            "x": 271,
+            "y": 273,
+            "w": 738,
+            "h": 44,
+            "right": 1009,
+            "bottom": 317
+          },
+          "last": 265
+        },
+        {
+          "label": "viewport 330 offset 120",
+          "log": {
+            "x": 271,
+            "y": 195,
+            "w": 738,
+            "h": 180,
+            "right": 1009,
+            "bottom": 375
+          },
+          "form": {
+            "x": 271,
+            "y": 383,
+            "w": 738,
+            "h": 44,
+            "right": 1009,
+            "bottom": 427
+          },
+          "last": 375
+        },
+        {
+          "label": "viewport 800 offset 0",
+          "log": {
+            "x": 465,
+            "y": 167,
+            "w": 536,
+            "h": 460,
+            "right": 1001,
+            "bottom": 627
+          },
+          "form": {
+            "x": 279,
+            "y": 641,
+            "w": 722,
+            "h": 50,
+            "right": 1001,
+            "bottom": 691
+          },
+          "last": 627
+        },
+        {
+          "label": "jump to new",
+          "log": {
+            "x": 465,
+            "y": 167,
+            "w": 536,
+            "h": 460,
+            "right": 1001,
+            "bottom": 627
+          },
+          "form": {
+            "x": 279,
+            "y": 641,
+            "w": 722,
+            "h": 50,
+            "right": 1001,
+            "bottom": 691
+          },
+          "last": 627
+        },
+        {
+          "label": "after send",
+          "log": {
+            "x": 465,
+            "y": 167,
+            "w": 536,
+            "h": 460,
+            "right": 1001,
+            "bottom": 627
+          },
+          "form": {
+            "x": 279,
+            "y": 641,
+            "w": 722,
+            "h": 50,
+            "right": 1001,
+            "bottom": 691
+          },
+          "last": 627
+        }
+      ],
+      "history": true,
+      "send": true,
+      "combatAnchored": true,
+      "combatPreserved": true,
+      "passed": true
+    },
+    {
+      "kind": "chat",
+      "size": [
+        402,
+        874
+      ],
+      "notice": {
+        "x": 12,
+        "y": 88,
+        "w": 360,
+        "h": 62,
+        "right": 372,
+        "bottom": 150
+      },
+      "checks": [
+        {
+          "label": "normal",
+          "log": {
+            "x": 27,
+            "y": 226,
+            "w": 348,
+            "h": 392,
+            "right": 375,
+            "bottom": 618
+          },
+          "form": {
+            "x": 27,
+            "y": 628,
+            "w": 348,
+            "h": 104,
+            "right": 375,
+            "bottom": 732
+          },
+          "last": 618
+        },
+        {
+          "label": "viewport 440 offset 0",
+          "log": {
+            "x": 27,
+            "y": 111,
+            "w": 348,
+            "h": 188,
+            "right": 375,
+            "bottom": 299
+          },
+          "form": {
+            "x": 27,
+            "y": 309,
+            "w": 348,
+            "h": 104,
+            "right": 375,
+            "bottom": 413
+          },
+          "last": 299
+        },
+        {
+          "label": "viewport 330 offset 0",
+          "log": {
+            "x": 23,
+            "y": 75,
+            "w": 356,
+            "h": 180,
+            "right": 379,
+            "bottom": 255
+          },
+          "form": {
+            "x": 23,
+            "y": 263,
+            "w": 356,
+            "h": 44,
+            "right": 379,
+            "bottom": 307
+          },
+          "last": 255
+        },
+        {
+          "label": "viewport 260 offset 80",
+          "log": {
+            "x": 23,
+            "y": 155,
+            "w": 356,
+            "h": 110,
+            "right": 379,
+            "bottom": 265
+          },
+          "form": {
+            "x": 23,
+            "y": 273,
+            "w": 356,
+            "h": 44,
+            "right": 379,
+            "bottom": 317
+          },
+          "last": 265
+        },
+        {
+          "label": "viewport 330 offset 120",
+          "log": {
+            "x": 23,
+            "y": 195,
+            "w": 356,
+            "h": 180,
+            "right": 379,
+            "bottom": 375
+          },
+          "form": {
+            "x": 23,
+            "y": 383,
+            "w": 356,
+            "h": 44,
+            "right": 379,
+            "bottom": 427
+          },
+          "last": 375
+        },
+        {
+          "label": "viewport 874 offset 0",
+          "log": {
+            "x": 27,
+            "y": 226,
+            "w": 348,
+            "h": 392,
+            "right": 375,
+            "bottom": 618
+          },
+          "form": {
+            "x": 27,
+            "y": 628,
+            "w": 348,
+            "h": 104,
+            "right": 375,
+            "bottom": 732
+          },
+          "last": 618
+        },
+        {
+          "label": "jump to new",
+          "log": {
+            "x": 27,
+            "y": 226,
+            "w": 348,
+            "h": 392,
+            "right": 375,
+            "bottom": 618
+          },
+          "form": {
+            "x": 27,
+            "y": 628,
+            "w": 348,
+            "h": 104,
+            "right": 375,
+            "bottom": 732
+          },
+          "last": 618
+        },
+        {
+          "label": "after send",
+          "log": {
+            "x": 27,
+            "y": 226,
+            "w": 348,
+            "h": 392,
+            "right": 375,
+            "bottom": 618
+          },
+          "form": {
+            "x": 27,
+            "y": 628,
+            "w": 348,
+            "h": 104,
+            "right": 375,
+            "bottom": 732
+          },
+          "last": 618
+        }
+      ],
+      "history": true,
+      "send": true,
+      "combatAnchored": true,
+      "combatPreserved": true,
+      "passed": true
+    },
+    {
+      "kind": "chat",
+      "size": [
+        412,
+        891
+      ],
+      "notice": {
+        "x": 12,
+        "y": 88,
+        "w": 360,
+        "h": 62,
+        "right": 372,
+        "bottom": 150
+      },
+      "checks": [
+        {
+          "label": "normal",
+          "log": {
+            "x": 27,
+            "y": 234.5,
+            "w": 358,
+            "h": 392,
+            "right": 385,
+            "bottom": 626.5
+          },
+          "form": {
+            "x": 27,
+            "y": 636.5,
+            "w": 358,
+            "h": 104,
+            "right": 385,
+            "bottom": 740.5
+          },
+          "last": 626.5
+        },
+        {
+          "label": "viewport 440 offset 0",
+          "log": {
+            "x": 27,
+            "y": 111,
+            "w": 358,
+            "h": 188,
+            "right": 385,
+            "bottom": 299
+          },
+          "form": {
+            "x": 27,
+            "y": 309,
+            "w": 358,
+            "h": 104,
+            "right": 385,
+            "bottom": 413
+          },
+          "last": 299
+        },
+        {
+          "label": "viewport 330 offset 0",
+          "log": {
+            "x": 23,
+            "y": 75,
+            "w": 366,
+            "h": 180,
+            "right": 389,
+            "bottom": 255
+          },
+          "form": {
+            "x": 23,
+            "y": 263,
+            "w": 366,
+            "h": 44,
+            "right": 389,
+            "bottom": 307
+          },
+          "last": 255
+        },
+        {
+          "label": "viewport 260 offset 80",
+          "log": {
+            "x": 23,
+            "y": 155,
+            "w": 366,
+            "h": 110,
+            "right": 389,
+            "bottom": 265
+          },
+          "form": {
+            "x": 23,
+            "y": 273,
+            "w": 366,
+            "h": 44,
+            "right": 389,
+            "bottom": 317
+          },
+          "last": 265
+        },
+        {
+          "label": "viewport 330 offset 120",
+          "log": {
+            "x": 23,
+            "y": 195,
+            "w": 366,
+            "h": 180,
+            "right": 389,
+            "bottom": 375
+          },
+          "form": {
+            "x": 23,
+            "y": 383,
+            "w": 366,
+            "h": 44,
+            "right": 389,
+            "bottom": 427
+          },
+          "last": 375
+        },
+        {
+          "label": "viewport 891 offset 0",
+          "log": {
+            "x": 27,
+            "y": 234.5,
+            "w": 358,
+            "h": 392,
+            "right": 385,
+            "bottom": 626.5
+          },
+          "form": {
+            "x": 27,
+            "y": 636.5,
+            "w": 358,
+            "h": 104,
+            "right": 385,
+            "bottom": 740.5
+          },
+          "last": 626.5
+        },
+        {
+          "label": "jump to new",
+          "log": {
+            "x": 27,
+            "y": 234.5,
+            "w": 358,
+            "h": 392,
+            "right": 385,
+            "bottom": 626.5
+          },
+          "form": {
+            "x": 27,
+            "y": 636.5,
+            "w": 358,
+            "h": 104,
+            "right": 385,
+            "bottom": 740.5
+          },
+          "last": 626.5
+        },
+        {
+          "label": "after send",
+          "log": {
+            "x": 27,
+            "y": 234.5,
+            "w": 358,
+            "h": 392,
+            "right": 385,
+            "bottom": 626.5
+          },
+          "form": {
+            "x": 27,
+            "y": 636.5,
+            "w": 358,
+            "h": 104,
+            "right": 385,
+            "bottom": 740.5
+          },
+          "last": 626.5
+        }
+      ],
+      "history": true,
+      "send": true,
+      "combatAnchored": true,
+      "combatPreserved": true,
+      "passed": true
+    },
+    {
+      "kind": "chat",
+      "size": [
+        385,
+        571
+      ],
+      "notice": {
+        "x": 12,
+        "y": 88,
+        "w": 360,
+        "h": 62,
+        "right": 372,
+        "bottom": 150
+      },
+      "checks": [
+        {
+          "label": "normal",
+          "log": {
+            "x": 27,
+            "y": 111,
+            "w": 331,
+            "h": 319,
+            "right": 358,
+            "bottom": 430
+          },
+          "form": {
+            "x": 27,
+            "y": 440,
+            "w": 331,
+            "h": 104,
+            "right": 358,
+            "bottom": 544
+          },
+          "last": 430
+        },
+        {
+          "label": "viewport 440 offset 0",
+          "log": {
+            "x": 27,
+            "y": 111,
+            "w": 331,
+            "h": 188,
+            "right": 358,
+            "bottom": 299
+          },
+          "form": {
+            "x": 27,
+            "y": 309,
+            "w": 331,
+            "h": 104,
+            "right": 358,
+            "bottom": 413
+          },
+          "last": 299
+        },
+        {
+          "label": "viewport 330 offset 0",
+          "log": {
+            "x": 23,
+            "y": 75,
+            "w": 339,
+            "h": 180,
+            "right": 362,
+            "bottom": 255
+          },
+          "form": {
+            "x": 23,
+            "y": 263,
+            "w": 339,
+            "h": 44,
+            "right": 362,
+            "bottom": 307
+          },
+          "last": 255
+        },
+        {
+          "label": "viewport 260 offset 80",
+          "log": {
+            "x": 23,
+            "y": 155,
+            "w": 339,
+            "h": 110,
+            "right": 362,
+            "bottom": 265
+          },
+          "form": {
+            "x": 23,
+            "y": 273,
+            "w": 339,
+            "h": 44,
+            "right": 362,
+            "bottom": 317
+          },
+          "last": 265
+        },
+        {
+          "label": "viewport 330 offset 120",
+          "log": {
+            "x": 23,
+            "y": 195,
+            "w": 339,
+            "h": 180,
+            "right": 362,
+            "bottom": 375
+          },
+          "form": {
+            "x": 23,
+            "y": 383,
+            "w": 339,
+            "h": 44,
+            "right": 362,
+            "bottom": 427
+          },
+          "last": 375
+        },
+        {
+          "label": "viewport 571 offset 0",
+          "log": {
+            "x": 27,
+            "y": 111,
+            "w": 331,
+            "h": 319,
+            "right": 358,
+            "bottom": 430
+          },
+          "form": {
+            "x": 27,
+            "y": 440,
+            "w": 331,
+            "h": 104,
+            "right": 358,
+            "bottom": 544
+          },
+          "last": 430
+        },
+        {
+          "label": "jump to new",
+          "log": {
+            "x": 27,
+            "y": 111,
+            "w": 331,
+            "h": 319,
+            "right": 358,
+            "bottom": 430
+          },
+          "form": {
+            "x": 27,
+            "y": 440,
+            "w": 331,
+            "h": 104,
+            "right": 358,
+            "bottom": 544
+          },
+          "last": 430
+        },
+        {
+          "label": "after send",
+          "log": {
+            "x": 27,
+            "y": 111,
+            "w": 331,
+            "h": 319,
+            "right": 358,
+            "bottom": 430
+          },
+          "form": {
+            "x": 27,
+            "y": 440,
+            "w": 331,
+            "h": 104,
+            "right": 358,
+            "bottom": 544
+          },
+          "last": 430
+        }
+      ],
+      "history": true,
+      "send": true,
+      "combatAnchored": true,
+      "combatPreserved": true,
+      "passed": true
+    },
+    {
+      "kind": "chat",
+      "size": [
+        669,
+        867
+      ],
+      "notice": {
+        "x": 12,
+        "y": 88,
+        "w": 360,
+        "h": 62,
+        "right": 372,
+        "bottom": 150
+      },
+      "checks": [
+        {
+          "label": "normal",
+          "log": {
+            "x": 217,
+            "y": 200.5,
+            "w": 421,
+            "h": 460,
+            "right": 638,
+            "bottom": 660.5
+          },
+          "form": {
+            "x": 31,
+            "y": 674.5,
+            "w": 607,
+            "h": 50,
+            "right": 638,
+            "bottom": 724.5
+          },
+          "last": 660.5
+        },
+        {
+          "label": "viewport 440 offset 0",
+          "log": {
+            "x": 217,
+            "y": 89,
+            "w": 421,
+            "h": 256,
+            "right": 638,
+            "bottom": 345
+          },
+          "form": {
+            "x": 31,
+            "y": 359,
+            "w": 607,
+            "h": 50,
+            "right": 638,
+            "bottom": 409
+          },
+          "last": 345
+        },
+        {
+          "label": "viewport 330 offset 0",
+          "log": {
+            "x": 23,
+            "y": 75,
+            "w": 623,
+            "h": 180,
+            "right": 646,
+            "bottom": 255
+          },
+          "form": {
+            "x": 23,
+            "y": 263,
+            "w": 623,
+            "h": 44,
+            "right": 646,
+            "bottom": 307
+          },
+          "last": 255
+        },
+        {
+          "label": "viewport 260 offset 80",
+          "log": {
+            "x": 23,
+            "y": 155,
+            "w": 623,
+            "h": 110,
+            "right": 646,
+            "bottom": 265
+          },
+          "form": {
+            "x": 23,
+            "y": 273,
+            "w": 623,
+            "h": 44,
+            "right": 646,
+            "bottom": 317
+          },
+          "last": 265
+        },
+        {
+          "label": "viewport 330 offset 120",
+          "log": {
+            "x": 23,
+            "y": 195,
+            "w": 623,
+            "h": 180,
+            "right": 646,
+            "bottom": 375
+          },
+          "form": {
+            "x": 23,
+            "y": 383,
+            "w": 623,
+            "h": 44,
+            "right": 646,
+            "bottom": 427
+          },
+          "last": 375
+        },
+        {
+          "label": "viewport 867 offset 0",
+          "log": {
+            "x": 217,
+            "y": 200.5,
+            "w": 421,
+            "h": 460,
+            "right": 638,
+            "bottom": 660.5
+          },
+          "form": {
+            "x": 31,
+            "y": 674.5,
+            "w": 607,
+            "h": 50,
+            "right": 638,
+            "bottom": 724.5
+          },
+          "last": 660.5
+        },
+        {
+          "label": "jump to new",
+          "log": {
+            "x": 217,
+            "y": 200.5,
+            "w": 421,
+            "h": 460,
+            "right": 638,
+            "bottom": 660.5
+          },
+          "form": {
+            "x": 31,
+            "y": 674.5,
+            "w": 607,
+            "h": 50,
+            "right": 638,
+            "bottom": 724.5
+          },
+          "last": 660.5
+        },
+        {
+          "label": "after send",
+          "log": {
+            "x": 217,
+            "y": 200.5,
+            "w": 421,
+            "h": 460,
+            "right": 638,
+            "bottom": 660.5
+          },
+          "form": {
+            "x": 31,
+            "y": 674.5,
+            "w": 607,
+            "h": 50,
+            "right": 638,
+            "bottom": 724.5
+          },
+          "last": 660.5
+        }
+      ],
+      "history": true,
+      "send": true,
+      "combatAnchored": true,
+      "combatPreserved": true,
+      "passed": true
+    },
+    {
+      "kind": "chat",
+      "size": [
+        951,
+        585
+      ],
+      "notice": {
+        "x": 202,
+        "y": 90,
+        "w": 360,
+        "h": 62,
+        "right": 562,
+        "bottom": 152
+      },
+      "checks": [
+        {
+          "label": "normal",
+          "log": {
+            "x": 300.5,
+            "y": 89,
+            "w": 536,
+            "h": 401,
+            "right": 836.5,
+            "bottom": 490
+          },
+          "form": {
+            "x": 114.5,
+            "y": 504,
+            "w": 722,
+            "h": 50,
+            "right": 836.5,
+            "bottom": 554
+          },
+          "last": 490
+        },
+        {
+          "label": "viewport 440 offset 0",
+          "log": {
+            "x": 300.5,
+            "y": 89,
+            "w": 536,
+            "h": 256,
+            "right": 836.5,
+            "bottom": 345
+          },
+          "form": {
+            "x": 114.5,
+            "y": 359,
+            "w": 722,
+            "h": 50,
+            "right": 836.5,
+            "bottom": 409
+          },
+          "last": 345
+        },
+        {
+          "label": "viewport 330 offset 0",
+          "log": {
+            "x": 106.5,
+            "y": 75,
+            "w": 738,
+            "h": 180,
+            "right": 844.5,
+            "bottom": 255
+          },
+          "form": {
+            "x": 106.5,
+            "y": 263,
+            "w": 738,
+            "h": 44,
+            "right": 844.5,
+            "bottom": 307
+          },
+          "last": 255
+        },
+        {
+          "label": "viewport 260 offset 80",
+          "log": {
+            "x": 106.5,
+            "y": 155,
+            "w": 738,
+            "h": 110,
+            "right": 844.5,
+            "bottom": 265
+          },
+          "form": {
+            "x": 106.5,
+            "y": 273,
+            "w": 738,
+            "h": 44,
+            "right": 844.5,
+            "bottom": 317
+          },
+          "last": 265
+        },
+        {
+          "label": "viewport 330 offset 120",
+          "log": {
+            "x": 106.5,
+            "y": 195,
+            "w": 738,
+            "h": 180,
+            "right": 844.5,
+            "bottom": 375
+          },
+          "form": {
+            "x": 106.5,
+            "y": 383,
+            "w": 738,
+            "h": 44,
+            "right": 844.5,
+            "bottom": 427
+          },
+          "last": 375
+        },
+        {
+          "label": "viewport 585 offset 0",
+          "log": {
+            "x": 300.5,
+            "y": 89,
+            "w": 536,
+            "h": 401,
+            "right": 836.5,
+            "bottom": 490
+          },
+          "form": {
+            "x": 114.5,
+            "y": 504,
+            "w": 722,
+            "h": 50,
+            "right": 836.5,
+            "bottom": 554
+          },
+          "last": 490
+        },
+        {
+          "label": "jump to new",
+          "log": {
+            "x": 300.5,
+            "y": 89,
+            "w": 536,
+            "h": 401,
+            "right": 836.5,
+            "bottom": 490
+          },
+          "form": {
+            "x": 114.5,
+            "y": 504,
+            "w": 722,
+            "h": 50,
+            "right": 836.5,
+            "bottom": 554
+          },
+          "last": 490
+        },
+        {
+          "label": "after send",
+          "log": {
+            "x": 300.5,
+            "y": 89,
+            "w": 536,
+            "h": 401,
+            "right": 836.5,
+            "bottom": 490
+          },
+          "form": {
+            "x": 114.5,
+            "y": 504,
+            "w": 722,
+            "h": 50,
+            "right": 836.5,
+            "bottom": 554
+          },
+          "last": 490
+        }
+      ],
+      "history": true,
+      "send": true,
+      "combatAnchored": true,
+      "combatPreserved": true,
+      "passed": true
+    },
+    {
+      "kind": "chat",
+      "size": [
+        874,
+        402
+      ],
+      "notice": {
+        "x": 202,
+        "y": 88,
+        "w": 360,
+        "h": 62,
+        "right": 562,
+        "bottom": 150
+      },
+      "checks": [
+        {
+          "label": "normal",
+          "log": {
+            "x": 262,
+            "y": 89,
+            "w": 536,
+            "h": 218,
+            "right": 798,
+            "bottom": 307
+          },
+          "form": {
+            "x": 76,
+            "y": 321,
+            "w": 722,
+            "h": 50,
+            "right": 798,
+            "bottom": 371
+          },
+          "last": 307
+        },
+        {
+          "label": "viewport 402 offset 0",
+          "log": {
+            "x": 262,
+            "y": 89,
+            "w": 536,
+            "h": 218,
+            "right": 798,
+            "bottom": 307
+          },
+          "form": {
+            "x": 76,
+            "y": 321,
+            "w": 722,
+            "h": 50,
+            "right": 798,
+            "bottom": 371
+          },
+          "last": 307
+        },
+        {
+          "label": "viewport 330 offset 0",
+          "log": {
+            "x": 68,
+            "y": 75,
+            "w": 738,
+            "h": 180,
+            "right": 806,
+            "bottom": 255
+          },
+          "form": {
+            "x": 68,
+            "y": 263,
+            "w": 738,
+            "h": 44,
+            "right": 806,
+            "bottom": 307
+          },
+          "last": 255
+        },
+        {
+          "label": "viewport 260 offset 80",
+          "log": {
+            "x": 68,
+            "y": 155,
+            "w": 738,
+            "h": 110,
+            "right": 806,
+            "bottom": 265
+          },
+          "form": {
+            "x": 68,
+            "y": 273,
+            "w": 738,
+            "h": 44,
+            "right": 806,
+            "bottom": 317
+          },
+          "last": 265
+        },
+        {
+          "label": "viewport 330 offset 120",
+          "log": {
+            "x": 68,
+            "y": 195,
+            "w": 738,
+            "h": 180,
+            "right": 806,
+            "bottom": 375
+          },
+          "form": {
+            "x": 68,
+            "y": 383,
+            "w": 738,
+            "h": 44,
+            "right": 806,
+            "bottom": 427
+          },
+          "last": 375
+        },
+        {
+          "label": "viewport 402 offset 0",
+          "log": {
+            "x": 262,
+            "y": 89,
+            "w": 536,
+            "h": 218,
+            "right": 798,
+            "bottom": 307
+          },
+          "form": {
+            "x": 76,
+            "y": 321,
+            "w": 722,
+            "h": 50,
+            "right": 798,
+            "bottom": 371
+          },
+          "last": 307
+        },
+        {
+          "label": "jump to new",
+          "log": {
+            "x": 262,
+            "y": 89,
+            "w": 536,
+            "h": 218,
+            "right": 798,
+            "bottom": 307
+          },
+          "form": {
+            "x": 76,
+            "y": 321,
+            "w": 722,
+            "h": 50,
+            "right": 798,
+            "bottom": 371
+          },
+          "last": 307
+        },
+        {
+          "label": "after send",
+          "log": {
+            "x": 262,
+            "y": 89,
+            "w": 536,
+            "h": 218,
+            "right": 798,
+            "bottom": 307
+          },
+          "form": {
+            "x": 76,
+            "y": 321,
+            "w": 722,
+            "h": 50,
+            "right": 798,
+            "bottom": 371
+          },
+          "last": 307
+        }
+      ],
+      "history": true,
+      "send": true,
+      "combatAnchored": true,
+      "combatPreserved": true,
+      "passed": true
+    },
+    {
+      "kind": "chat",
+      "size": [
+        594,
+        368
+      ],
+      "notice": {
+        "x": 202,
+        "y": 88,
+        "w": 360,
+        "h": 62,
+        "right": 562,
+        "bottom": 150
+      },
+      "checks": [
+        {
+          "label": "normal",
+          "log": {
+            "x": 217,
+            "y": 89,
+            "w": 346,
+            "h": 184,
+            "right": 563,
+            "bottom": 273
+          },
+          "form": {
+            "x": 31,
+            "y": 287,
+            "w": 532,
+            "h": 50,
+            "right": 563,
+            "bottom": 337
+          },
+          "last": 273
+        },
+        {
+          "label": "viewport 368 offset 0",
+          "log": {
+            "x": 217,
+            "y": 89,
+            "w": 346,
+            "h": 184,
+            "right": 563,
+            "bottom": 273
+          },
+          "form": {
+            "x": 31,
+            "y": 287,
+            "w": 532,
+            "h": 50,
+            "right": 563,
+            "bottom": 337
+          },
+          "last": 273
+        },
+        {
+          "label": "viewport 330 offset 0",
+          "log": {
+            "x": 23,
+            "y": 75,
+            "w": 548,
+            "h": 180,
+            "right": 571,
+            "bottom": 255
+          },
+          "form": {
+            "x": 23,
+            "y": 263,
+            "w": 548,
+            "h": 44,
+            "right": 571,
+            "bottom": 307
+          },
+          "last": 255
+        },
+        {
+          "label": "viewport 260 offset 80",
+          "log": {
+            "x": 23,
+            "y": 155,
+            "w": 548,
+            "h": 110,
+            "right": 571,
+            "bottom": 265
+          },
+          "form": {
+            "x": 23,
+            "y": 273,
+            "w": 548,
+            "h": 44,
+            "right": 571,
+            "bottom": 317
+          },
+          "last": 265
+        },
+        {
+          "label": "viewport 330 offset 120",
+          "log": {
+            "x": 23,
+            "y": 195,
+            "w": 548,
+            "h": 180,
+            "right": 571,
+            "bottom": 375
+          },
+          "form": {
+            "x": 23,
+            "y": 383,
+            "w": 548,
+            "h": 44,
+            "right": 571,
+            "bottom": 427
+          },
+          "last": 375
+        },
+        {
+          "label": "viewport 368 offset 0",
+          "log": {
+            "x": 217,
+            "y": 89,
+            "w": 346,
+            "h": 184,
+            "right": 563,
+            "bottom": 273
+          },
+          "form": {
+            "x": 31,
+            "y": 287,
+            "w": 532,
+            "h": 50,
+            "right": 563,
+            "bottom": 337
+          },
+          "last": 273
+        },
+        {
+          "label": "jump to new",
+          "log": {
+            "x": 217,
+            "y": 89,
+            "w": 346,
+            "h": 184,
+            "right": 563,
+            "bottom": 273
+          },
+          "form": {
+            "x": 31,
+            "y": 287,
+            "w": 532,
+            "h": 50,
+            "right": 563,
+            "bottom": 337
+          },
+          "last": 273
+        },
+        {
+          "label": "after send",
+          "log": {
+            "x": 217,
+            "y": 89,
+            "w": 346,
+            "h": 184,
+            "right": 563,
+            "bottom": 273
+          },
+          "form": {
+            "x": 31,
+            "y": 287,
+            "w": 532,
+            "h": 50,
+            "right": 563,
+            "bottom": 337
+          },
+          "last": 273
+        }
+      ],
+      "history": true,
+      "send": true,
+      "combatAnchored": true,
+      "combatPreserved": true,
+      "passed": true
+    }
+  ],
+  "regressions": [
+    {
+      "filename": "verify-release.cjs",
+      "pass": true,
+      "logs": [
+        "PASS: menu routes, solo entry/return, initial screen without settings, all support links, later, Escape, inert/focus restore, JavaScript syntax.",
+        "PASS: CloudTips/Boosty only; safe deferred reminders at 10/20/30/40; one show per milestone; reminder to chooser.",
+        "PASS: milestone ledger survives module reload."
+      ]
+    },
+    {
+      "filename": "test_combined.cjs",
+      "pass": true,
+      "logs": [
+        "PASS: safe-save gates, requested endpoint fixtures, durable multiple-party migration, immutable serialized slot writes."
+      ]
+    },
+    {
+      "filename": "test_combat_restore.cjs",
+      "pass": true,
+      "logs": [
+        "PASS: restored combat controls reflect current phase without rerolls; retained excluded tokens removed."
+      ]
+    },
+    {
+      "filename": "test_ui_v07105.cjs",
+      "pass": true,
+      "logs": [
+        "PASS: trusted audio activation, interrupted/closed recovery, mute persistence, reduced-motion landing, no game RNG.",
+        "PASS: end-turn confirmation waits, cancel preserves turn, stale approval ignored.",
+        "PASS: no native game dialogs; script syntax; versioned app icon references and stable launch URL."
+      ]
+    }
+  ],
+  "pythonTests": 15,
+  "qaFixturesExcluded": true
+}
