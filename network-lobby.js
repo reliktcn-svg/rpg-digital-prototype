@@ -16,7 +16,7 @@
     const rkey=session.recoveryKey||session.room?.recoveryKey;if(!rkey)return;
     session.recoveryKey=rkey;
     const st=stateOverride!==undefined?stateOverride:(session.gameEntered?exported():null);
-    const room={code:session.room.code,started:!!session.room.started,createdAt:session.room.createdAt||Math.floor(Date.now()/1000),lastActiveAt:session.room.lastActiveAt||Math.floor(Date.now()/1000),hardMode:!!session.room.hardMode,enemyScaling:session.room.enemyScaling!==false,gameRevision:Number(session.lastRevision||session.room.gameRevision||0),gameUpdatedAt:Number(session.room.gameUpdatedAt||0),players:(session.room.players||[]).map(p=>({id:p.id,name:p.name,heroId:p.heroId||null,host:!!p.host}))};
+    const room={code:session.room.code,started:!!session.room.started,createdAt:session.room.createdAt||Math.floor(Date.now()/1000),lastActiveAt:session.room.lastActiveAt||Math.floor(Date.now()/1000),hardMode:false,enemyScaling:session.room.enemyScaling!==false,gameRevision:Number(session.lastRevision||session.room.gameRevision||0),gameUpdatedAt:Number(session.room.gameUpdatedAt||0),players:(session.room.players||[]).map(p=>({id:p.id,name:p.name,heroId:p.heroId||null,host:!!p.host}))};
     localStorage.setItem(RECOVERY_KEY,JSON.stringify({code:session.code,recoveryKey:rkey,playerId:session.playerId,playerSecret:session.playerSecret,lastActiveAt:Number(room.lastActiveAt||0),build:CLIENT_BUILD,savedAt:Date.now(),revision:Number(session.lastRevision||room.gameRevision||0),room,state:st||null}));
   }catch{}}
   function clearResumeSession(){try{localStorage.removeItem(SESSION_KEY);localStorage.removeItem(RECOVERY_KEY);for(const k of LEGACY_RECOVERY_KEYS)localStorage.removeItem(k);for(const k of LEGACY_SESSION_KEYS)localStorage.removeItem(k)}catch{}renderResumeButton()}
@@ -134,14 +134,10 @@
     $('netHeroPicker').querySelectorAll('[data-hero]').forEach(b=>b.onclick=()=>selectHero(b.dataset.hero));
     $('netSelectMap').onclick=convertToMap;
 
-    const isHost=!!me?.host, ready=r.players.length>=2&&r.players.every(p=>p.heroId),hard=!!r.hardMode;
-    const scaling=$('netEnemyScaling');scaling.value=r.enemyScaling===false?'no':'yes';scaling.disabled=!isHost||r.started;scaling.onchange=()=>setRoomMode(hard,scaling.value!=='no');
-    const normalBtn=$('netModeNormal'),hardBtn=$('netModeHard');
-    if(normalBtn){normalBtn.classList.toggle('selected',!hard);normalBtn.disabled=!isHost||r.started;normalBtn.onclick=()=>setRoomMode(false)}
-    if(hardBtn){hardBtn.classList.toggle('selected',hard);hardBtn.disabled=!isHost||r.started;hardBtn.onclick=()=>setRoomMode(true)}
-    if($('roomModeHint'))$('roomModeHint').textContent=`Режим партии: ${hard?'СЛОЖНЫЙ':'ОБЫЧНЫЙ'}. ${isHost&&!r.started?'Выбор хозяина применяется ко всем героям и блокируется после старта.':'Изменить режим во время партии нельзя.'}`;
+    const isHost=!!me?.host, ready=r.players.length>=2&&r.players.every(p=>p.heroId);
+    const scaling=$('netEnemyScaling');scaling.value=r.enemyScaling===false?'no':'yes';scaling.disabled=!isHost||r.started;scaling.onchange=()=>setRoomMode(scaling.value!=='no');
     $('netStart').hidden=!isHost;$('netStart').disabled=!ready||r.started;$('netStart').textContent=r.started?'Комната запущена':'Начать сетевую игру';
-    $('roomStatus').textContent=r.started?(r.gameReady?'Общая партия создана. Открываем карту…':'Комната запущена. Хозяин создаёт общую карту…'):ready?`Все готовы. Хозяин может начать · ${hard?'сложный':'обычный'} режим.`:`Игроков: ${r.players.length}/6. Нужно минимум 2 и каждый выбирает героя.`;
+    $('roomStatus').textContent=r.started?(r.gameReady?'Общая партия создана. Открываем карту…':'Комната запущена. Хозяин создаёт общую карту…'):ready?'Все готовы. Хозяин может начать приключение.':`Игроков: ${r.players.length}/6. Нужно минимум 2 и каждый выбирает героя.`;
   }
   async function fetchGame(conditional=false){
     const d=await api(`/api/rooms/${session.code}/game?playerId=${encodeURIComponent(session.playerId)}&playerSecret=${encodeURIComponent(session.playerSecret)}`,{headers:conditional&&session.gameETag?{'If-None-Match':session.gameETag}:{}});
@@ -165,7 +161,7 @@
     const me=myPlayer();
     if(me?.host&&!session.gameEntered){
       try{
-        const ids=session.room.players.map(p=>p.heroId).filter(Boolean),initial=e.startWithHeroes(ids,{hardMode:!!session.room.hardMode,enemyScaling:session.room.enemyScaling!==false});
+        const ids=session.room.players.map(p=>p.heroId).filter(Boolean),initial=e.startWithHeroes(ids,{hardMode:false,enemyScaling:session.room.enemyScaling!==false});
         const d=await api(`/api/rooms/${session.code}/game/init`,{method:'POST',body:JSON.stringify({...auth(),state:initial})});
         enterGame(d.state,d.revision);
       }catch(err){showError(err.message)}
@@ -322,8 +318,8 @@
   async function selectHero(heroId){
     try{const d=await api(`/api/rooms/${session.code}/select`,{method:'POST',body:JSON.stringify({...auth(),heroId})});acceptRoom(d.room);renderRoom()}catch(e){showError(e.message);refresh()}
   }
-  async function setRoomMode(hardMode,enemyScaling=session.room.enemyScaling!==false){
-    try{const d=await api(`/api/rooms/${session.code}/mode`,{method:'POST',body:JSON.stringify({...auth(),hardMode:!!hardMode,enemyScaling})});acceptRoom(d.room);renderRoom()}catch(e){showError(e.message);refresh()}
+  async function setRoomMode(enemyScaling=session.room.enemyScaling!==false){
+    try{const d=await api(`/api/rooms/${session.code}/mode`,{method:'POST',body:JSON.stringify({...auth(),hardMode:false,enemyScaling})});acceptRoom(d.room);renderRoom()}catch(e){showError(e.message);refresh()}
   }
   async function startRoom(){
     try{const d=await api(`/api/rooms/${session.code}/start`,{method:'POST',body:JSON.stringify(auth())});acceptRoom(d.room);renderRoom();await ensureOnlineGame()}catch(e){showError(e.message)}

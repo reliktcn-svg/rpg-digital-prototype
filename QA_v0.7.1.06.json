@@ -1,0 +1,401 @@
+{
+  "version": "0.7.1.06",
+  "date": "2026-11-18",
+  "tutorial": [
+    {
+      "type": "tutorial",
+      "size": [
+        402,
+        874
+      ],
+      "passed": true,
+      "steps": [
+        {
+          "title": "Первые шаги",
+          "scroll": false
+        },
+        {
+          "title": "Как ходить",
+          "scroll": false
+        },
+        {
+          "title": "Как исследовать",
+          "scroll": false
+        },
+        {
+          "title": "Как сражаться",
+          "scroll": true
+        },
+        {
+          "title": "Герой и снаряжение",
+          "scroll": false
+        },
+        {
+          "title": "Зачем посещать локации",
+          "scroll": false
+        },
+        {
+          "title": "Зачем строить территории",
+          "scroll": true
+        },
+        {
+          "title": "Сохранение и путь к Владыке",
+          "scroll": true
+        }
+      ],
+      "migration": true,
+      "network": true
+    },
+    {
+      "type": "tutorial",
+      "size": [
+        412,
+        891
+      ],
+      "passed": true,
+      "steps": [
+        {
+          "title": "Первые шаги",
+          "scroll": false
+        },
+        {
+          "title": "Как ходить",
+          "scroll": false
+        },
+        {
+          "title": "Как исследовать",
+          "scroll": false
+        },
+        {
+          "title": "Как сражаться",
+          "scroll": true
+        },
+        {
+          "title": "Герой и снаряжение",
+          "scroll": false
+        },
+        {
+          "title": "Зачем посещать локации",
+          "scroll": false
+        },
+        {
+          "title": "Зачем строить территории",
+          "scroll": true
+        },
+        {
+          "title": "Сохранение и путь к Владыке",
+          "scroll": true
+        }
+      ],
+      "migration": true,
+      "network": true
+    },
+    {
+      "type": "tutorial",
+      "size": [
+        385,
+        571
+      ],
+      "passed": true,
+      "steps": [
+        {
+          "title": "Первые шаги",
+          "scroll": true
+        },
+        {
+          "title": "Как ходить",
+          "scroll": true
+        },
+        {
+          "title": "Как исследовать",
+          "scroll": true
+        },
+        {
+          "title": "Как сражаться",
+          "scroll": true
+        },
+        {
+          "title": "Герой и снаряжение",
+          "scroll": true
+        },
+        {
+          "title": "Зачем посещать локации",
+          "scroll": true
+        },
+        {
+          "title": "Зачем строить территории",
+          "scroll": true
+        },
+        {
+          "title": "Сохранение и путь к Владыке",
+          "scroll": true
+        }
+      ],
+      "migration": true,
+      "network": true
+    },
+    {
+      "type": "tutorial",
+      "size": [
+        669,
+        867
+      ],
+      "passed": true,
+      "steps": [
+        {
+          "title": "Первые шаги",
+          "scroll": false
+        },
+        {
+          "title": "Как ходить",
+          "scroll": false
+        },
+        {
+          "title": "Как исследовать",
+          "scroll": false
+        },
+        {
+          "title": "Как сражаться",
+          "scroll": false
+        },
+        {
+          "title": "Герой и снаряжение",
+          "scroll": false
+        },
+        {
+          "title": "Зачем посещать локации",
+          "scroll": false
+        },
+        {
+          "title": "Зачем строить территории",
+          "scroll": false
+        },
+        {
+          "title": "Сохранение и путь к Владыке",
+          "scroll": false
+        }
+      ],
+      "migration": true,
+      "network": true
+    },
+    {
+      "type": "tutorial",
+      "size": [
+        951,
+        585
+      ],
+      "passed": true,
+      "steps": [
+        {
+          "title": "Первые шаги",
+          "scroll": false
+        },
+        {
+          "title": "Как ходить",
+          "scroll": false
+        },
+        {
+          "title": "Как исследовать",
+          "scroll": false
+        },
+        {
+          "title": "Как сражаться",
+          "scroll": true
+        },
+        {
+          "title": "Герой и снаряжение",
+          "scroll": false
+        },
+        {
+          "title": "Зачем посещать локации",
+          "scroll": false
+        },
+        {
+          "title": "Зачем строить территории",
+          "scroll": true
+        },
+        {
+          "title": "Сохранение и путь к Владыке",
+          "scroll": true
+        }
+      ],
+      "migration": true,
+      "network": true
+    },
+    {
+      "type": "tutorial",
+      "size": [
+        874,
+        402
+      ],
+      "passed": true,
+      "steps": [
+        {
+          "title": "Первые шаги",
+          "scroll": true
+        },
+        {
+          "title": "Как ходить",
+          "scroll": true
+        },
+        {
+          "title": "Как исследовать",
+          "scroll": true
+        },
+        {
+          "title": "Как сражаться",
+          "scroll": true
+        },
+        {
+          "title": "Герой и снаряжение",
+          "scroll": true
+        },
+        {
+          "title": "Зачем посещать локации",
+          "scroll": true
+        },
+        {
+          "title": "Зачем строить территории",
+          "scroll": true
+        },
+        {
+          "title": "Сохранение и путь к Владыке",
+          "scroll": true
+        }
+      ],
+      "migration": true,
+      "network": true
+    },
+    {
+      "type": "tutorial",
+      "size": [
+        594,
+        368
+      ],
+      "passed": true,
+      "steps": [
+        {
+          "title": "Первые шаги",
+          "scroll": true
+        },
+        {
+          "title": "Как ходить",
+          "scroll": true
+        },
+        {
+          "title": "Как исследовать",
+          "scroll": true
+        },
+        {
+          "title": "Как сражаться",
+          "scroll": true
+        },
+        {
+          "title": "Герой и снаряжение",
+          "scroll": true
+        },
+        {
+          "title": "Зачем посещать локации",
+          "scroll": true
+        },
+        {
+          "title": "Зачем строить территории",
+          "scroll": true
+        },
+        {
+          "title": "Сохранение и путь к Владыке",
+          "scroll": true
+        }
+      ],
+      "migration": true,
+      "network": true
+    },
+    {
+      "type": "tutorial",
+      "size": [
+        1280,
+        800
+      ],
+      "passed": true,
+      "steps": [
+        {
+          "title": "Первые шаги",
+          "scroll": false
+        },
+        {
+          "title": "Как ходить",
+          "scroll": false
+        },
+        {
+          "title": "Как исследовать",
+          "scroll": false
+        },
+        {
+          "title": "Как сражаться",
+          "scroll": false
+        },
+        {
+          "title": "Герой и снаряжение",
+          "scroll": false
+        },
+        {
+          "title": "Зачем посещать локации",
+          "scroll": false
+        },
+        {
+          "title": "Зачем строить территории",
+          "scroll": false
+        },
+        {
+          "title": "Сохранение и путь к Владыке",
+          "scroll": false
+        }
+      ],
+      "migration": true,
+      "network": true
+    }
+  ],
+  "regression": [
+    {
+      "filename": "verify-release.cjs",
+      "logs": [
+        "PASS: menu routes, solo entry/return, initial screen without settings, all support links, later, Escape, inert/focus restore, JavaScript syntax.",
+        "PASS: CloudTips/Boosty only; safe deferred reminders at 10/20/30/40; one show per milestone; reminder to chooser.",
+        "PASS: milestone ledger survives module reload."
+      ],
+      "pass": true
+    },
+    {
+      "filename": "test_combined.cjs",
+      "logs": [
+        "PASS: safe-save gates, requested endpoint fixtures, durable multiple-party migration, immutable serialized slot writes."
+      ],
+      "pass": true
+    },
+    {
+      "filename": "test_combat_restore.cjs",
+      "logs": [
+        "PASS: restored combat controls reflect current phase without rerolls; retained excluded tokens removed."
+      ],
+      "pass": true
+    },
+    {
+      "filename": "test_ui_v07105.cjs",
+      "logs": [
+        "PASS: trusted audio activation, interrupted/closed recovery, mute persistence, reduced-motion landing, no game RNG.",
+        "PASS: end-turn confirmation waits, cancel preserves turn, stale approval ignored.",
+        "PASS: no native game dialogs; script syntax; versioned app icon references and stable launch URL."
+      ],
+      "pass": true
+    }
+  ],
+  "pythonTests": 15,
+  "serverHTTP": {
+    "twoPlayers": true,
+    "start": true,
+    "legacyFlagIgnored": true,
+    "scalingIndependent": true,
+    "guestReceivesNormalizedState": true,
+    "gearRetained": true
+  }
+}

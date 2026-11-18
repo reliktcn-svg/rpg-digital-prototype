@@ -18,6 +18,22 @@ ROOM_IDLE_TTL = max(30, int(os.environ.get('RPG_ROOM_IDLE_TTL', '10800')))  # lo
 HERO_IDS = ['warrior','dwarf','mage','archer','rogue','paladin']
 
 
+def normalize_game_mode(game):
+    if not isinstance(game,dict):return
+    game['hardMode']=False
+    game['sharedDifficulty']='normal' if game.get('mode')=='network' else None
+    for hero in game.get('players',[]):
+        if isinstance(hero,dict):hero['hardMode']=False
+    for retained in (game.get('excludedHeroes') or {}).values():
+        if isinstance(retained,dict):
+            hero=retained.get('hero')
+            if isinstance(hero,dict):hero['hardMode']=False
+
+for saved_room in ROOMS.values():
+    saved_room['hardMode']=False
+    normalize_game_mode(saved_room.get('gameState'))
+
+
 def token(n=20):
     alphabet = string.ascii_letters + string.digits
     return ''.join(random.choice(alphabet) for _ in range(n))
@@ -65,7 +81,7 @@ def public_room(room, include_recovery=False):
             {'id':p['id'],'name':p['name'],'heroId':p.get('heroId'),'host':p.get('host',False),'exclusion':bool(p.get('exclusion'))}
             for p in room['players'].values()
         ],
-        'hardMode': bool(room.get('hardMode', False)),
+        'hardMode': False,
         'enemyScaling': room.get('enemyScaling', True),
         'gameReady': room.get('gameState') is not None,
         'gameRevision': int(room.get('gameRevision') or 0),
@@ -116,7 +132,7 @@ def public_map_snapshot(room):
         'territoryCount':sum(1 for t in (game.get('territories') or {}).values() if isinstance(t,dict) and t.get('owner')==p.get('id')),
         'areaCount':sum(1 for a in (game.get('areas') or []) if isinstance(a,dict) and a.get('owner')==p.get('id')),
     } for p in game.get('players', []) if isinstance(p, dict)]
-    hidden=bool(room.get('hardMode'))
+    hidden=False
     discovered=set()
     if hidden:
         for p in game.get('players', []):
@@ -500,7 +516,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                 data=public_room(room, True)
             return self._json(200, {'room':data})
         if p.endswith('/mode') and p.startswith('/api/rooms/'):
-            code=p.split('/')[-2]; pid=body.get('playerId'); secret=body.get('playerSecret'); hard=bool(body.get('hardMode'))
+            code=p.split('/')[-2]; pid=body.get('playerId'); secret=body.get('playerSecret'); hard=False
             with LOCK:
                 room=ROOMS.get(code)
                 if not room: return self._json(404, {'error':'Комната не найдена'})
@@ -542,7 +558,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                     
                     for hero in game.get('players',[]):ensure_progression(hero)
                     game['enemyScaling']=room.get('enemyScaling',True)
-                    room['gameState']=game; room['gameRevision']=1; room['gameUpdatedAt']=int(time.time())
+                    normalize_game_mode(game);room['gameState']=game; room['gameRevision']=1; room['gameUpdatedAt']=int(time.time())
                 return self._json(200, {'revision':room['gameRevision'],'state':room['gameState']})
         if p.endswith('/game/respec') and p.startswith('/api/rooms/'):
             code=p.split('/')[-3]
@@ -809,7 +825,7 @@ class Handler(TransportMixin, SimpleHTTPRequestHandler):
                 
                 for hero in game.get('players',[]):ensure_progression(hero)
                 game['enemyScaling']=existing.get('enemyScaling',room.get('enemyScaling',True))
-                room['gameState']=game; room['gameRevision']=base+1; room['gameUpdatedAt']=int(time.time())
+                normalize_game_mode(game);room['gameState']=game; room['gameRevision']=base+1; room['gameUpdatedAt']=int(time.time())
                 return self._json(200, {'revision':room['gameRevision']})
         return self._json(404, {'error':'Неизвестный запрос'})
 

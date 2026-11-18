@@ -464,20 +464,9 @@
   function showSettingsOverlay(){
     const settings=document.getElementById('settingsOverlay');if(!settings)return;
     if(!settings.hidden){closeSettingsOverlay();return}
-    renderSettingsDifficulty();els.journalOverlay.hidden=true;settings.hidden=false;syncTopToolButtons();
+    els.journalOverlay.hidden=true;settings.hidden=false;syncTopToolButtons();
   }
   window.RPGOpenSettings=showSettingsOverlay;
-  function renderSettingsDifficulty(){
-    const host=document.getElementById('settingsDifficulty');if(!host)return;
-    const p=getPlayer(journalOwnerId());host.hidden=!state.started||!p;if(host.hidden)return;
-    const locked=!!state.sharedDifficulty,foreign=p.id!==currentPlayer()?.id;
-    host.innerHTML=`<div class="eyebrow">СЛОЖНОСТЬ · ${escapeCombatText(p.name)}</div><button id="playerHardModeBtn" type="button" class="secondary" aria-pressed="${!!p.hardMode}" ${locked||foreign?'disabled':''}>${p.hardMode?'Сложный режим':'Обычный режим'}</button><p>${locked?'Режим выбран хозяином комнаты и заблокирован до конца партии. ':foreign?'Изменить сложность можно в свой ход. ':''}${p.hardMode?'Реакции и подсказки скрыты. Базовая вместимость рюкзака — 5 предметов.':'Реакции и подсказки включены. Базовая вместимость рюкзака — 10 предметов.'}</p>`;
-    host.querySelector('button').onclick=()=>{
-      const live=getPlayer(p.id);if(!live||state.sharedDifficulty||live.id!==currentPlayer()?.id)return;
-      if(!live.hardMode&&live.backpack.length>hardBackpackCapacity(live))closeSettingsOverlay();
-      togglePlayerHardMode(live);renderSettingsDifficulty();
-    };
-  }
   function renderJournal(){
     const roomCode=String(window.__RPG_ROOM_CODE__||'').trim();
     if(els.journalTitle)els.journalTitle.textContent=roomCode?`Журнал партии / комната №${roomCode}`:'Журнал партии';
@@ -544,7 +533,7 @@
   // Подсказка не должна переживать закрытие модальных окон на мобильных устройствах.
   const negativeEffectWindowObserver=new MutationObserver(mutations=>{if(mutations.some(m=>m.attributeName==='hidden'&&m.target.hidden))hideNegativeEffectTooltip()});
   for(const overlay of [els.modal,els.sheetDrawer,els.journalOverlay,els.rollOverlay])if(overlay)negativeEffectWindowObserver.observe(overlay,{attributes:true,attributeFilter:['hidden']});
-  function playerHardMode(p=currentPlayer()){return !!p?.hardMode}
+  function playerHardMode(){return false}
   function inspectedPlayer(){
     const active=currentPlayer(),local=onlineLocalHeroId?getPlayer(onlineLocalHeroId):null;
     if(local)return local;
@@ -656,7 +645,7 @@
     {const seen=new Set();p.combatEffects=p.combatEffects.filter(e=>{if(!NON_STACKING_EVENT_EFFECTS.has(e?.label))return true;const key=e.label;if(seen.has(key))return false;seen.add(key);return true})}
     if(!p.itemUsage)p.itemUsage={};
     if(!p.lockedItems||typeof p.lockedItems!=='object')p.lockedItems={};
-    if(p.hardMode==null)p.hardMode=false;
+    p.hardMode=false;
     if(!p.locationVisits)p.locationVisits={};
     if(!p.discoveredLocations||typeof p.discoveredLocations!=='object')p.discoveredLocations={};
     if(!p.statusTimers)p.statusTimers={};
@@ -749,7 +738,6 @@
   function equippedEntries(p){ensurePlayerModel(p);return Object.keys(SLOT_LABELS).map(slot=>({slot,id:getSlotId(p,slot)})).filter(x=>x.id!=null)}
   function baseBackpackCapacity(p){ensurePlayerModel(p);return (playerHardMode(p)?5:10)+carryingRank(p)*2}
   function backpackCapacityWithArtifact(p,artifactId=getSlotId(p,'artifact'),artifact2Id=getSlotId(p,'artifact2')){return baseBackpackCapacity(p)+([artifactId,artifact2Id].some(id=>Number(id)===191)?5:0)+(Number(getSlotId(p,'mercenary'))===372?2:0)}
-  function hardBackpackCapacity(p){ensurePlayerModel(p);return 5+carryingRank(p)*2+(hasArtifactEquipped(p,191)?5:0)+(Number(getSlotId(p,'mercenary'))===372?2:0)}
   function backpackCapacity(p){ensurePlayerModel(p);return backpackCapacityWithArtifact(p)}
   function hasBackpackRoom(p,n=1){return p.backpack.length+n<=backpackCapacity(p)}
   function bonusRegexSources(card,key){
@@ -848,7 +836,7 @@
     window.RPGSoloSaves?.reset();soloSaveGeneration++;clearTimeout(soloSaveTimer);soloLastSnapshot='';
     const ids=Array.isArray(forcedIds)?[...forcedIds]:[...els.heroPicker.querySelectorAll('input:checked')].map(x=>x.value);
     if(Array.isArray(forcedIds)?ids.length<1||ids.length>6:ids.length!==1){els.setupError.textContent='В соло-режиме выберите одного героя.';return}
-    state=freshState();state.supportCampaignId=crypto.randomUUID();state.enemyScaling=options.enemyScaling!==undefined?options.enemyScaling!==false:(Array.isArray(forcedIds)||document.getElementById("soloEnemyScaling")?.value!=="no");state.boss=RPGBoss.generate();dismissedGameOverKey=null;visibleGameOverKey=null;state.started=true;state.mode=Array.isArray(forcedIds)?'network':'solo';const sharedHard=options?.sharedDifficulty==='hard'||options?.hardMode===true;state.sharedDifficulty=Array.isArray(forcedIds)?(sharedHard?'hard':'normal'):null;
+    state=freshState();state.supportCampaignId=crypto.randomUUID();state.enemyScaling=options.enemyScaling!==undefined?options.enemyScaling!==false:(Array.isArray(forcedIds)||document.getElementById("soloEnemyScaling")?.value!=="no");state.boss=RPGBoss.generate();dismissedGameOverKey=null;visibleGameOverKey=null;state.started=true;state.mode=Array.isArray(forcedIds)?'network':'solo';const sharedHard=false;state.sharedDifficulty=Array.isArray(forcedIds)?'normal':null;
     state.players=ids.map(id=>{const h=HEROES.find(x=>x.id===id);return {...h,progressionVersion:2,masteryPoints:0,maxHp:h.hp,currentHp:h.hp,gold:0,hex:MAP.startHex,personalTurn:1,initiative:null,initiativeRerolls:[],statuses:[],statusTimers:{},statusTickedTurn:{},backpack:[],pendingItems:[],equipment:{weapon:null,armor:null,amulet:null,rings:[null,null],artifact:null,artifact2:null,potions:[null,null,null,null,null],mercenary:null},temporaryEffects:[],combatEffects:[],itemUsage:{},hardMode:sharedHard,locationVisits:{},discoveredLocations:{},reexploreRiskHex:null,inDungeon:false,dungeonCard:null,dungeonEnteredTurn:null,notes:[],stats:freshPlayerStats(),territoryBuildSeq:{kingdom:0,cursed:0}}});
     generatePermanentLocations({preserve:false});
     state.order=rollInitiative(state.players);document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;els.sheetDrawer.hidden=true;setTimeout(()=>centerMapOnPlayer(currentPlayer(),'auto'),80);
@@ -1839,8 +1827,8 @@
       preserved.ngPlusStartLevel=startLevel;
       return preserved;
     });
-    const oldMode=prior.mode,hardMode=prior.sharedDifficulty,enemyScaling=prior.enemyScaling;
-    state=freshState();state.started=true;state.mode=oldMode;state.sharedDifficulty=hardMode;
+    const oldMode=prior.mode,enemyScaling=prior.enemyScaling;
+    state=freshState();state.started=true;state.mode=oldMode;state.sharedDifficulty=oldMode==='network'?'normal':null;
     state.enemyScaling=enemyScaling;state.ngPlusCycle=oldCycle+1;
     state.ngPlusStartLevels=Object.fromEntries(survivors.map(p=>[p.id,p.ngPlusStartLevel]));
     state.players=survivors;
@@ -2480,21 +2468,6 @@
   function closeCharacterSheet(){window.RPGUIMotion?.closeSheet(els.sheetDrawer);const owner=sideInteractionOwnerId(),player=owner?getPlayer(owner):null;if(sideInteraction?.type==='loot'&&player&&!player.pendingItems?.length)endSideInteraction();if(sideInteraction?.type==='victory'&&player&&!player.pendingItems?.length&&sideInteraction.victoryComplete&&!(onlineLocalHeroId&&window.__RPG_NET_CONNECTED__))endSideInteraction();els.sheetDrawer.hidden=true;document.body.classList.remove('sheet-over-combat');els.sheetContent.innerHTML='';sheetView={mode:'overview',bonusKey:null,itemId:null,context:null,playerId:null};updateSheetTabs('overview');RPGTabletop.syncTabs(false,null)}
   function bonusBreakdownHtml(p,key){const src=modifierSources(p,key),total=modifierTotal(p,key),title=key==='defense'?'ЗЩ':statName(key);return `<div class="bonus-popover"><b>Модификатор ${title}: ${signed(total)}</b>${src.length?src.map(x=>`<div class="bonus-row"><span>${x.kind}: ${x.label}</span><b>${signed(x.amount)}</b></div>`).join(''):'<div class="muted small">Активных источников бонуса нет.</div>'}<div class="bonus-row total"><span>Итого</span><b>${signed(total)}</b></div></div>`}
   function restoreCombatModalIfNeeded(){if(state.combat)setTimeout(renderCombat,0)}
-  function showHardModeCapacityWarning(p){
-    const max=hardBackpackCapacity(p),fake={id:'—',name:'Сложный режим',category:'Настройки героя',deck:'Герой',fields:{'Рюкзак':`${p.backpack.length}/${max}`}};
-    showCard(fake,`В рюкзаке героя <b>${p.name}</b> предметов больше максимального количества для сложной версии игры.<br><br>Очистите рюкзак до <b>${max}</b> предметов, затем включите сложный режим.`,[
-      {label:'Открыть рюкзак',className:'success',fn:()=>{closeModal();openCharacterSheet('backpack',null,p.id);if(state.combat)document.body.classList.add('sheet-over-combat');restoreCombatModalIfNeeded()}},
-      {label:'Отмена',className:'secondary',fn:()=>{closeModal();restoreCombatModalIfNeeded()}}
-    ]);
-  }
-  function togglePlayerHardMode(p){
-    if(state.sharedDifficulty)return;
-    if(!p||p.id!==currentPlayer()?.id)return;
-    ensurePlayerModel(p);
-    if(!p.hardMode){const max=hardBackpackCapacity(p);if(p.backpack.length>max){showHardModeCapacityWarning(p);return}p.hardMode=true;state.inspectPlayerId=null;state.mapHighlight=null;log(`${p.name}: <b>сложный режим включён</b>.`)}
-    else{p.hardMode=false;log(`${p.name}: <b>сложный режим выключен</b>.`)}
-    if(!els.sheetDrawer.hidden)renderCharacterSheet('overview');if(state.combat)renderCombat();updateUI();renderBoard();
-  }
   // v0.6.74 — Every image is linked by the approved card ID, not by a translated name.
   const INVENTORY_IMAGE_IDS=new Set([457,459,464,466,469,471,473,475,477,479,481,483,453,460,467,485,387,388,389,390,391,392,393,394,395,396,397,398,399,400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434,435,436,437,438,439,440,441,442,443,444,445,446,447,448,449,450,451,452,372,373,374,375,376,377,378,379,380,381,382,383,384,385,386,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347]);
   function itemImageHtml(card){const id=Number(card?.artSourceId||card?.id);return card&&INVENTORY_IMAGE_IDS.has(id)?`<img class="item-card-art" src="assets/items/${id}.webp" loading="lazy" decoding="async" alt="" onerror="this.hidden=true">`:''}
@@ -4191,7 +4164,7 @@
       }
       const previewLoc=state.locations[p.hex];
       if(previewLoc&&!locationVisibleToPlayer(p,p.hex)){
-        addActionBox('Неизвестный гекс','В сложном режиме содержимое этого гекса пока скрыто. Вход зафиксирует маршрут и откроет то, что здесь находится.',[{label:'Войти на гекс',className:'primary',fn:()=>commitPendingMove()}]);
+        addActionBox('Неизвестный гекс','Войдите на гекс, чтобы открыть его содержимое.',[{label:'Войти на гекс',className:'primary',fn:()=>commitPendingMove()}]);
         return;
       }
       if(previewLoc){
@@ -4456,7 +4429,7 @@
       if(state.dungeonEntryNotice){const dh=state.players?.find(q=>q.id===state.dungeonEntryNotice.heroId);if(!dh?.inDungeon||(dh.dungeonEnteredTurn!=null&&dh.personalTurn>dh.dungeonEnteredTurn))state.dungeonEntryNotice=null;}
       state.territoryBuiltNotice=null;if(state.movePending===undefined)state.movePending=false;if(state.moveOriginHex===undefined)state.moveOriginHex=null;if(state.moveTransit===undefined)state.moveTransit=null;if(state.pendingMoveAction===undefined)state.pendingMoveAction=null;if(state.chosenMovePlan===undefined)state.chosenMovePlan=null;if(state.inspectPlayerId===undefined)state.inspectPlayerId=null;if(state.mapHighlight===undefined)state.mapHighlight=null;if(state.mapZoom===undefined)state.mapZoom=1;if(state.gameOver===undefined)state.gameOver=false;if(state.sharedDifficulty===undefined)state.sharedDifficulty=null;if(!Array.isArray(state.journal))state.journal=[];
       if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
-      const legacyHard=!!state.hardMode;state.players.forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
+      state.sharedDifficulty=state.mode==='network'?'normal':null;state.players.forEach(p=>{p.hardMode=false;ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
       if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
       document.body.classList.add('game-running');els.setupSection.hidden=true;els.gameSection.hidden=false;els.saveBtn.disabled=false;els.inventoryBtn.hidden=true;if(playerHardMode(currentPlayer()))state.inspectPlayerId=null;if(state.combat===undefined)state.combat=null;if(state.combat&&state.combat.journalOpen==null)state.combat.journalOpen=false;
       state.ngPlusCycle=Math.max(0,Number(state.ngPlusCycle)||0);state.ngPlusStartLevels=state.ngPlusStartLevels||{};
@@ -4483,7 +4456,7 @@
       if(state.dungeonEntryNotice){const dh=state.players?.find(q=>q.id===state.dungeonEntryNotice.heroId);if(!dh?.inDungeon||(dh.dungeonEnteredTurn!=null&&dh.personalTurn>dh.dungeonEnteredTurn))state.dungeonEntryNotice=null;}
       state.territoryBuiltNotice=null;if(state.movePending===undefined)state.movePending=false;if(state.moveOriginHex===undefined)state.moveOriginHex=null;if(state.moveTransit===undefined)state.moveTransit=null;if(state.pendingMoveAction===undefined)state.pendingMoveAction=null;if(state.chosenMovePlan===undefined)state.chosenMovePlan=null;if(state.inspectPlayerId===undefined)state.inspectPlayerId=null;if(state.mapHighlight===undefined)state.mapHighlight=null;if(state.mapZoom===undefined)state.mapZoom=1;if(state.gameOver===undefined)state.gameOver=false;if(state.sharedDifficulty===undefined)state.sharedDifficulty=null;if(!Array.isArray(state.journal))state.journal=[];
     if(state.tradeOpportunity){if(state.tradeOpportunity.visitorId==null&&state.tradeOpportunity.buyerId!=null)state.tradeOpportunity.visitorId=state.tradeOpportunity.buyerId;if(!state.tradeOpportunity.otherIds&&state.tradeOpportunity.sellerIds)state.tradeOpportunity.otherIds=[...state.tradeOpportunity.sellerIds]}
-    const legacyHard=!!state.hardMode;(state.players||[]).forEach(p=>{if(p.hardMode==null)p.hardMode=legacyHard;if(state.sharedDifficulty)p.hardMode=state.sharedDifficulty==='hard';ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
+    state.sharedDifficulty=state.mode==='network'?'normal':null;(state.players||[]).forEach(p=>{p.hardMode=false;ensurePlayerModel(p);for(const hex of Object.keys(p.locationVisits||{}))if(state.locations[hex])p.discoveredLocations[hex]=true;if(state.locations[p.hex])p.discoveredLocations[p.hex]=true});delete state.hardMode;
     if(state.gameWon&&!state.gameOver){state.gameOver={winnerId:state.gameWon.heroId,heroName:state.gameWon.heroName,round:state.gameWon.round||state.round,personalTurn:state.gameWon.personalTurn||getPlayer(state.gameWon.heroId)?.personalTurn||null};state.turnLocked=true}
     state.ngPlusCycle=Math.max(0,Number(state.ngPlusCycle)||0);state.ngPlusStartLevels=state.ngPlusStartLevels||{};
     // Migrate saves created before NG+ round recovery was reset (v0.6.135).
@@ -4504,7 +4477,7 @@
     if(focusKey&&applyOnlineState.lastFocusKey!==focusKey){applyOnlineState.lastFocusKey=focusKey;setTimeout(()=>centerMapOnPlayer(mapFocusPlayer(),'auto'),40)}
     if(state.gameOver)setTimeout(()=>showGameOverPopup(getPlayer(state.gameOver.winnerId)||currentPlayer()),0);
   }
-  function startOnlineGame(heroIds,options={}){startGame(heroIds,{sharedDifficulty:options?.hardMode?'hard':'normal',hardMode:!!options?.hardMode,enemyScaling:options?.enemyScaling!==false});return exportOnlineState()}
+  function startOnlineGame(heroIds,options={}){startGame(heroIds,{sharedDifficulty:'normal',hardMode:false,enemyScaling:options?.enemyScaling!==false});return exportOnlineState()}
 
   function exitSnapshot(s){const copy=JSON.parse(JSON.stringify(s));for(const key of ['soloViewport','mapZoom','inspectPlayerId','mapHighlight','journal','version'])delete copy[key];return JSON.stringify(copy)}
   async function requestExit(){closeSettingsOverlay();if(!state.started||state.mode!=='solo'){resetGame(true);return}if(manualSaveBlocked()){if(await window.RPGDialogs.confirm('Текущее действие ещё не завершено. Выйти без записи незавершённого хода? Последнее безопасное сохранение останется.',{accept:'Выйти'}))resetGame(true);return;}const records=await window.RPGSoloSaves.records().catch(()=>[]);const rec=records.find(x=>x?.slot===window.RPGSoloSaves.active);if(rec&&exitSnapshot(JSON.parse(rec.state))===exitSnapshot(soloSnapshot())){resetGame(true);return}const d=document.createElement('dialog');d.className='exit-party-prompt';d.innerHTML='<h2>Хотите сохранить текущую партию?</h2><div><button data-yes>ДА</button><button data-no>НЕТ</button></div>';document.body.append(d);d.querySelector('[data-no]').onclick=()=>{d.close();d.remove();resetGame(true)};d.querySelector('[data-yes]').onclick=()=>{d.close();d.remove();window.RPGSoloSaves.saveUI(soloSnapshot).catch(e=>window.RPGDialogs.alert(e.message))};d.addEventListener('cancel',()=>d.remove());d.showModal()}

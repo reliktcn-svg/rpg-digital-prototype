@@ -21,7 +21,12 @@ def build_manifest(root):
   files += [root/n for n in ('index.html','map.html','manifest.webmanifest')]
   for folder in ('assets','arcana','icons'):
    files += [p for p in (root/folder).rglob('*') if p.is_file() and p.suffix.lower() in ('.png','.webp','.jpg','.jpeg','.svg','.gif','.mp3','.ogg','.wav','.js','.css','.json','.woff','.woff2')]
-  files=sorted(set(files));htmls=[root/'index.html',root/'map.html']
+  # Finder may leave numbered copies beside canonical game assets. They are
+  # backups, not release resources; never precache them when the original exists.
+  def release_asset(p):
+   original=re.sub(r' [0-9]+(?=\.[^.]+$)','',p.name)
+   return original==p.name or not p.with_name(original).is_file()
+  files=sorted(p for p in set(files) if release_asset(p));htmls=[root/'index.html',root/'map.html']
   normalized={};original_html={}
   for p in htmls:
    text=p.read_text();original_html[p]=text

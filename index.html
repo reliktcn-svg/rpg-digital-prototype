@@ -14,7 +14,7 @@
   <link rel="preload" as="image" href="assets/heroes/archer.webp" />
   <link rel="preload" as="image" href="assets/heroes/rogue.webp" />
   <title>Сердце тьмы</title>
-  <link rel="stylesheet" href="styles.css?v=e34cb7d5007c1e70" />
+  <link rel="stylesheet" href="styles.css?v=8e45df92bbdef313" />
   <link rel="stylesheet" href="location-ui.css?v=75037e5fa6c99286" />
   <link rel="stylesheet" href="battle-result-ui.css?v=72147762ab958765" />
   <link rel="stylesheet" href="tabletop-enhancements.css?v=8d418e80043ae9e7" />
@@ -34,14 +34,14 @@
 <link rel="stylesheet" href="equipment-colors.css?v=6989690d40f07f34">
 <link rel="stylesheet" href="popup-bounds.css?v=cbd63237891e260a">
 <link rel="stylesheet" href="effect-help.css?v=6582b06335a188a5">
-<script id="rpg-build">window.RPG_CLIENT_BUILD={"id":"6bb9791e67debdd4de6b7c3cbe53173cfe4f975973a79bac76f340378f956aae","version":"v0.7.1.05","protocol":2};</script>
+<script id="rpg-build">window.RPG_CLIENT_BUILD={"id":"fa4524443c52670a15c55da7d3448ecf533c7566275cf4e7b00e58d7b680e6de","version":"v0.7.1.06","protocol":2};</script>
 <link rel="stylesheet" href="update-client.css?v=3cc719aaf3dd099e">
 <link rel="stylesheet" href="solo-saves.css?v=ad6b2b53e96c0684" />
 <link rel="stylesheet" href="mobile-input-v129.css?v=1487506075430a1f" />
 <link rel="stylesheet" href="mobile-carry-v130.css?v=f14f1ef56a68a6cc" />
 <link rel="stylesheet" href="mobile-scroll-v132.css?v=0c99ce61cd336e55" />
 <link rel="stylesheet" href="new-game-plus-v133.css?v=e090473d12105097" />
-<link rel="stylesheet" href="rules-guide.css?v=793eae30fb31b8f8">
+<link rel="stylesheet" href="rules-guide.css?v=6b2216b9b3a61ad1">
 <link rel="stylesheet" href="interface-v139.css?v=640ca4c46166986c">
 <link rel="stylesheet" href="interface-motion.css?v=641e23c7ed42bb33">
 <link rel="stylesheet" href="visual-theme.css?v=2b21bc329ab661fb">
@@ -66,7 +66,7 @@
     <div class="online-lobby-card">
       <div class="eyebrow">Сердце тьмы</div>
       <h2 id="networkHeading" hidden>Собери свой отряд</h2>
-<div id="heartFront" class="heart-front"><img src="assets/heart-of-darkness.png" alt="Знак Сердца тьмы: расколотое сердце в золотом шестиграннике"><h1>Сердце тьмы</h1><p class="hint">Настольная RPG в твоём телефоне</p><p>За последними огнями Королевства<br>начинается твоя история.</p><div class="heart-menu-actions"><button id="heartCompany" class="primary wide" type="button">Начать приключение в компании</button><button id="heartSolo" class="secondary wide" type="button">Начать приключение в соло</button><button class="ghost wide" type="button" data-author-support>ПОДДЕРЖКА АВТОРА</button></div><button id="heartParties" class="ghost wide" type="button" hidden>Мои партии</button><small>v0.7.1.05</small></div>
+<div id="heartFront" class="heart-front"><img src="assets/heart-of-darkness.png" alt="Знак Сердца тьмы: расколотое сердце в золотом шестиграннике"><h1>Сердце тьмы</h1><p class="hint">Настольная RPG в твоём телефоне</p><p>За последними огнями Королевства<br>начинается твоя история.</p><div class="heart-menu-actions"><button id="heartCompany" class="primary wide" type="button">Начать приключение в компании</button><button id="heartSolo" class="secondary wide" type="button">Начать приключение в соло</button><button class="ghost wide" type="button" data-author-support>ПОДДЕРЖКА АВТОРА</button></div><button id="heartParties" class="ghost wide" type="button" hidden>Мои партии</button><small>v0.7.1.06</small></div>
       <div id="partyLibraryPanel" hidden></div>
 <div id="onlineHome">
         <label class="net-label">Ваше имя<input id="netName" maxlength="24" placeholder="Игрок" /></label>
@@ -83,12 +83,6 @@
         <div class="net-code-box"><span>КОД КОМНАТЫ</span><strong id="roomCode">------</strong><small id="roomWho"></small></div>
         <h3>Игроки</h3><div id="roomPlayers" class="net-players"></div>
         <h3>Выберите героя</h3><div id="netHeroPicker" class="net-hero-picker"></div>
-        <h3>Режим партии</h3>
-        <div class="net-mode-picker" aria-label="Режим партии">
-          <button id="netModeNormal" class="net-mode selected" type="button">Обычный</button>
-          <button id="netModeHard" class="net-mode" type="button">Сложный</button>
-        </div>
-        <div id="roomModeHint" class="hint net-mode-hint"></div>
         <label class="net-label">Повышать уровень врагов<select id="netEnemyScaling"><option value="yes">Да</option><option value="no">Нет</option></select></label><p class="hint">Общее правило партии. Не действует на боссов.</p>
         <div id="roomStatus" class="hint"></div>
         <button id="netStart" class="primary wide" type="button">Начать сетевую игру</button>
@@ -103,7 +97,7 @@
   <header class="topbar">
     <div>
       <div class="eyebrow">СЕРДЦЕ ТЬМЫ</div>
-      <h1>Сердце тьмы · v0.7.1.05</h1>
+      <h1>Сердце тьмы · v0.7.1.06</h1>
       <div class="header-tools">
         <button id="journalBtn" class="journal-top" type="button">Журнал</button>
       </div>
@@ -209,7 +203,6 @@
   <div id="settingsOverlay" class="journal-overlay settings-overlay" hidden>
     <div class="settings-card" role="dialog" aria-label="Настройки игры">
       <div class="journal-head"><b>Настройки</b><button id="settingsClose" class="sheet-close" type="button" aria-label="Закрыть настройки">×</button></div>
-      <section id="settingsDifficulty" class="settings-difficulty" hidden></section>
       <div class="settings-actions journal-utility-tools" aria-label="Настройки партии">
         <button type="button" class="ghost" data-author-support>ПОДДЕРЖКА АВТОРА</button>
 <button type="button" id="settingsDiceBtn" class="ghost">Кубик</button>
@@ -266,10 +259,10 @@
 <script src="safe-save.js?v=9a8c13c4251232e5"></script>
 <script src="party-library.js?v=009b8decd7750340"></script>
   <script src="game-dialogs.js?v=043458b183d48228"></script>
-<script src="app.js?v=75f9b449e3f45608"></script>
-  <script src="network-lobby.js?v=5035347ec88ea57e"></script>
+<script src="app.js?v=9fc372de2437bc9e"></script>
+  <script src="network-lobby.js?v=676f711d13d9689e"></script>
 <script src="update-client.js?v=266070fb6f255494" defer></script>
-<script src="rules-content.js?v=b2ee25878bf16d6a"></script><script src="rules-guide.js?v=8e3a6646ea6b071a"></script>
+<script src="rules-content.js?v=1dd0ce34468b7aa6"></script><script src="rules-guide.js?v=eef1825c23ba76cc"></script>
 <script src="author-support.js?v=3ff76f51328e31a4"></script>
 <script src="party-chat.js?v=692d6300e86b5c50"></script>
 <script src="party-voting.js?v=38e5a01439a41d44"></script>
