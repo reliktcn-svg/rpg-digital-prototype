@@ -1,0 +1,21 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync(__dirname+'/app.js','utf8');
+const start=source.indexOf('  let combatEscapePromptPending=false;');
+const end=source.indexOf('  function cancelCombatEscape()',start);
+assert(start>0&&end>start);
+(async()=>{
+ let answer,shown=0,before=0,during=0,local=true;
+ const battle=()=>({instanceId:'qa',heroId:'warrior',round:2,phase:'hero_turn',heroAttackCount:1});
+ const state={combat:battle()};
+ const context={state,localControlsCombat:()=>local,window:{RPGDialogs:{confirm:()=>{shown++;return new Promise(r=>answer=r)}}},combatEscapeBefore:()=>before++,combatEscapeDuring:()=>during++};
+ vm.runInNewContext(source.slice(start,end),context);
+ const ask=()=>context.requestCombatEscape('during');
+ let pending=ask();await ask();assert.equal(shown,1,'double click does not open another dialog');answer(false);await pending;assert.equal(during,0);
+ pending=ask();state.combat.round++;answer(true);await pending;assert.equal(during,0,'stale approval must not start an escape in a later round');
+ state.combat=battle();pending=ask();local=false;answer(true);await pending;assert.equal(during,0,'lost ownership invalidates approval');
+ local=true;pending=ask();answer(true);await pending;assert.equal(during,1,'current owner can confirm escape');
+ state.combat=battle();state.combat.phase='pre';pending=context.requestCombatEscape('before');answer(true);await pending;assert.equal(before,1,'before-combat escape remains supported');
+ state.combat=null;await ask();assert.equal(shown,5,'no dialog without combat');
+ state.combat=battle();state.combat.phase='pre';await ask();assert.equal(shown,5,'wrong combat phase cannot open a dialog');assert.equal(during,1);
+ console.log('PASS: escape cancel, duplicate clicks, stale approval, ownership, before/during escape.');
+})().catch(e=>{console.error(e);throw e});

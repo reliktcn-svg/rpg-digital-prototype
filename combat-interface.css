@@ -1,112 +1,76 @@
-/* v0.7.1.09: one steady combat frame; reaction content owns its scroll. */
+/* Candidate layout for approval: square cards share one size in player and observer views. */
 body.tabletop-upgrade.game-running #modal:has(.combat-shell):not([hidden])>.modal-card{
- --combat-room:calc(100dvh - var(--rpg-turnbar-height,80px) - 24px - env(safe-area-inset-bottom,0px));
- width:min(760px,100%)!important;height:min(850px,var(--combat-room),calc(min(45vw,300px) + clamp(92px,21dvh,174px) + 345px))!important;
- min-height:0!important;max-height:100%!important;padding:10px!important;
- overflow:hidden!important;transform:none!important;position:relative!important;flex:none!important;
+ --combat-art-size:min(320px,calc((100vw - 68px)/2),max(120px,calc(100dvh - var(--rpg-turnbar-height,80px) - 450px)));
+ --combat-reaction-height:102px;
+ width:min(700px,calc(var(--combat-art-size)*2 + 44px),100%)!important;height:auto!important;min-height:0!important;max-height:100%!important;
+ padding:10px!important;overflow-y:auto!important;overflow-x:hidden!important;transform:none!important;position:relative!important;flex:0 1 auto!important;
 }
-body.tabletop-upgrade.game-running #modal:has(.combat-shell) #modalContent{
- height:100%!important;min-height:0!important;overflow:hidden!important;display:block!important;
-}
-body.tabletop-upgrade.game-running #modal .combat-shell{
- height:100%!important;min-height:0!important;max-height:100%!important;overflow:hidden!important;
- display:grid!important;grid-template-rows:minmax(140px,1fr) 36px clamp(92px,21dvh,174px) 46px 40px 36px!important;
- gap:8px!important;align-content:stretch!important;position:relative;
-}
-body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head{
- height:100%!important;max-height:100%!important;min-height:0!important;overflow:hidden!important;
- grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;align-items:stretch!important;
-}
+body.tabletop-upgrade.game-running #modal:has(.combat-shell) #modalContent{height:auto!important;min-height:0!important;overflow:visible!important;display:block!important}
+body.tabletop-upgrade.game-running #modal .combat-shell{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;display:flex!important;flex-direction:column!important;gap:8px!important;position:relative;align-content:start!important}
+body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head{display:grid!important;height:auto!important;max-height:none!important;min-height:0!important;overflow:visible!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;align-items:start!important}
 body.tabletop-upgrade.game-running #modal .combat-shell .combat-vs{display:none!important}
 body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card{
- display:grid!important;grid-template-rows:30px minmax(0,1fr) 11px 68px!important;gap:5px!important;
- width:100%!important;height:100%!important;min-height:0!important;max-height:100%!important;
- border-radius:5px!important;overflow:hidden!important;
+ --battle-art-width:var(--combat-art-size);display:flex!important;flex-direction:column!important;align-items:stretch!important;
+ width:var(--combat-art-size)!important;max-width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;gap:5px!important;
+ margin:0 auto!important;padding:0!important;border-radius:5px!important;overflow:visible!important;
 }
-body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-heading{
- height:30px!important;min-height:30px!important;max-height:30px!important;padding:4px!important;
-}
-body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-heading h3{font-size:clamp(13px,2vw,21px)!important}
+body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .tabletop-card-heading{height:30px!important;min-height:30px!important;max-height:30px!important;padding:4px!important;box-sizing:border-box}
+body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .tabletop-card-heading h3{font-size:clamp(13px,1.7vw,20px)!important;white-space:normal!important;line-height:1.1!important;display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden!important}
 body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .visual-card-stage{
- height:100%!important;width:100%!important;aspect-ratio:auto!important;min-height:0!important;max-height:100%!important;
- margin:0!important;flex:none!important;
+ width:100%!important;height:auto!important;aspect-ratio:1 / 1!important;min-height:0!important;max-height:none!important;
+ margin:0!important;padding:0!important;flex:0 0 auto!important;box-sizing:border-box!important;align-self:stretch!important;
 }
 body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .visual-card-front,
-body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .visual-card-back{height:100%!important;min-height:0!important}
+body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .visual-card-back{inset:2%!important;width:auto!important;height:auto!important;min-height:0!important;box-sizing:border-box!important}
+body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .battle-v086-health{
+ width:100%!important;max-width:none!important;height:24px!important;min-height:24px!important;max-height:24px!important;
+ margin:0!important;padding:6px 3.4%!important;box-sizing:border-box!important;flex:0 0 24px!important;align-self:stretch!important;
+}
 body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-note{
- height:68px!important;min-height:0!important;max-height:68px!important;margin:0!important;padding:5px 7px!important;
- overflow-y:auto!important;overscroll-behavior:contain;box-sizing:border-box;display:flex!important;gap:3px!important;
+ width:100%!important;max-width:none!important;height:56px!important;min-height:56px!important;max-height:56px!important;
+ margin:0!important;padding:5px 6px!important;box-sizing:border-box!important;flex:0 0 56px!important;
+ display:flex!important;flex-direction:column!important;justify-content:center!important;gap:3px!important;
+ overflow:auto!important;overscroll-behavior:contain;align-self:stretch!important;
 }
-body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-card-note>small{font-size:9px!important;line-height:1.2!important}
-body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-card-note .combat-ability-row{
- display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:5px!important;
-}
-body.tabletop-upgrade.game-running #modal .combat-shell .combat-ability-row strong{font-size:clamp(13px,1.8vw,18px)!important;line-height:1.15!important;overflow-wrap:anywhere}
-body.tabletop-upgrade.game-running #modal .combat-shell .combat-ability-row .combat-ability-use{
- flex:none!important;width:auto!important;min-height:28px!important;max-width:85px!important;margin:0!important;
- padding:4px 6px!important;font-size:11px!important;line-height:1.15!important;
-}
+body.tabletop-upgrade.game-running #modal .combat-shell .combat-ability-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:6px!important;width:100%}
+body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .tabletop-card-note .combat-ability-row strong{font-size:clamp(13px,1.5vw,18px)!important;line-height:1.15!important;overflow-wrap:anywhere}
+body.tabletop-upgrade.game-running #modal .combat-shell .combat-ability-row .combat-ability-use{flex:none!important;width:auto!important;min-height:28px!important;max-width:85px!important;margin:0!important;padding:4px 6px!important;font-size:11px!important;line-height:1.15!important}
+body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-card-note.ability-used{opacity:1!important;isolation:auto!important}
+body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-card-note.ability-used::after{display:none!important;content:none!important}
+body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-card-note.ability-used .combat-ability-row strong{text-decoration:line-through;text-decoration-thickness:1.5px;text-decoration-color:#dfaaa4;opacity:.7}
 body.tabletop-upgrade.game-running #modal .combat-shell .enemy-note>strong{display:none!important}
-body.tabletop-upgrade.game-running #modal .combat-shell .enemy-note>span{font-size:12px!important;line-height:1.3!important;flex:0 0 auto!important}
-/* The label and its long value occupy separate lines on either card back. */
+body.tabletop-upgrade.game-running #modal .combat-shell .enemy-note>small{font-size:9px!important;line-height:1.1!important;flex:none}
+body.tabletop-upgrade.game-running #modal .combat-shell .enemy-note>span{font-size:12px!important;line-height:1.3!important;flex:none!important}
 body.game-running #modal .tabletop-battle-card .battle-back-detail{grid-template-columns:minmax(0,1fr) minmax(0,auto)!important;min-width:0;gap:5px!important}
 body.game-running #modal .tabletop-battle-card .battle-back-detail>*{min-width:0;max-width:100%;white-space:normal!important;overflow-wrap:anywhere}
 body.game-running #modal .tabletop-battle-card .battle-back-detail.battle-immunities{grid-template-columns:minmax(0,1fr)!important;align-items:start!important;text-align:left!important}
 body.game-running #modal .tabletop-battle-card .battle-immunities>strong{display:block;line-height:1.4!important;text-align:left!important}
-body.tabletop-upgrade.game-running #modal .combat-phase-status{min-height:0;overflow:auto;overscroll-behavior:contain;display:flex;align-items:center}
+body.tabletop-upgrade.game-running #modal .combat-phase-status{height:28px!important;min-height:28px!important;max-height:28px!important;overflow:auto;display:flex;align-items:center;overscroll-behavior:contain;flex:0 0 28px!important}
+body.tabletop-upgrade.game-running #modal .combat-phase-status:empty{display:none!important;height:0!important;min-height:0!important;max-height:0!important;flex:0 0 0!important}
 body.tabletop-upgrade.game-running #modal .combat-phase-status .combat-pending{margin:0!important;padding:3px 5px!important;font-size:12px!important;line-height:1.25!important;max-height:100%;overflow:auto;box-sizing:border-box;width:100%}
 body.tabletop-upgrade.game-running #modal .combat-phase-status .big{font-size:16px!important}
-body.tabletop-upgrade.game-running #modal .combat-reactions{
- height:100%!important;max-height:100%!important;min-height:0!important;display:grid!important;grid-template-rows:18px minmax(0,1fr)!important;
- gap:5px!important;padding:7px!important;margin:0!important;overflow:hidden!important;box-sizing:border-box;
- background:#25271a;border:1px solid #8f804d;border-radius:10px;
-}
-body.tabletop-upgrade.game-running #modal .combat-reactions h4{font-size:12px!important;line-height:18px!important;margin:0!important;color:#d9c08b}
-body.tabletop-upgrade.game-running #modal .combat-reaction-list{
- display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-rows:max-content!important;
- align-content:start!important;gap:6px!important;min-height:0!important;height:100%!important;max-height:100%!important;
- overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;touch-action:pan-y;
- -webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#ab9564 #152126;scrollbar-gutter:stable;padding:0 3px 0 0!important;
-}
-body.tabletop-upgrade.game-running #modal .combat-reaction-tile{
- display:grid;grid-template-columns:48px minmax(0,1fr);align-items:start;min-width:0;
- gap:6px;padding:5px!important;border:1px solid #677078;border-radius:5px;background:#202b30;
-}
-body.tabletop-upgrade.game-running #modal .combat-reaction-tile .combat-reaction-art{
- width:48px!important;height:62px!important;min-height:0!important;padding:0!important;margin:0!important;
- border:1px solid #a49a80;border-radius:4px;overflow:hidden;position:relative;touch-action:pan-y;
-}
+body.tabletop-upgrade.game-running #modal .combat-reactions{height:var(--combat-reaction-height)!important;min-height:0!important;max-height:var(--combat-reaction-height)!important;flex:0 0 var(--combat-reaction-height)!important;display:grid!important;grid-template-rows:17px minmax(0,1fr)!important;gap:4px!important;padding:6px!important;margin:0!important;overflow:hidden!important;box-sizing:border-box;background:#25271a;border:1px solid #8f804d;border-radius:9px}
+body.tabletop-upgrade.game-running #modal .combat-reactions h4{font-size:12px!important;line-height:17px!important;margin:0!important;color:#d9c08b}
+body.tabletop-upgrade.game-running #modal .combat-reaction-list{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-rows:max-content!important;align-content:start!important;gap:6px!important;min-height:0!important;height:100%!important;max-height:100%!important;overflow:auto!important;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#ab9564 #152126;scrollbar-gutter:stable;padding:0 3px 0 0!important}
+body.tabletop-upgrade.game-running #modal .combat-reaction-tile{display:grid;grid-template-columns:40px minmax(0,1fr);align-items:start;min-width:0;gap:5px;padding:4px!important;border:1px solid #677078;border-radius:5px;background:#202b30}
+body.tabletop-upgrade.game-running #modal .combat-reaction-tile .combat-reaction-art{width:40px!important;height:52px!important;min-height:0!important;padding:0!important;margin:0!important;border:1px solid #a49a80;border-radius:4px;overflow:hidden;position:relative;touch-action:pan-y}
 body.tabletop-upgrade.game-running #modal .combat-reaction-art .item-card-art{position:static!important;width:100%!important;height:100%!important;object-fit:cover!important;display:block}
-body.tabletop-upgrade.game-running #modal .combat-reaction-body{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:5px}
-body.tabletop-upgrade.game-running #modal .combat-reaction-body strong{font-size:13px!important;line-height:1.15!important;font-weight:600;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
-body.tabletop-upgrade.game-running #modal .combat-reaction-body .combat-reaction-use{
- width:auto!important;max-width:100%!important;min-height:26px!important;padding:3px 8px!important;
- font-size:11px!important;line-height:1.15!important;margin:0!important;flex:none!important;
-}
-body.tabletop-upgrade.game-running #modal .combat-reactions .combat-reactions-empty{grid-column:1/-1;color:#cabd9f;font-size:13px;padding:7px 2px}
+body.tabletop-upgrade.game-running #modal .combat-reaction-body{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+body.tabletop-upgrade.game-running #modal .combat-reaction-body strong{font-size:12px!important;line-height:1.15!important;font-weight:600;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+body.tabletop-upgrade.game-running #modal .combat-reaction-body .combat-reaction-use{width:auto!important;max-width:100%!important;min-height:24px!important;padding:3px 6px!important;font-size:10px!important;line-height:1.15!important;margin:0!important;flex:none!important}
+body.tabletop-upgrade.game-running #modal .combat-reactions-empty{grid-column:1/-1;color:#cabd9f;font-size:13px;padding:7px 2px}
 body.tabletop-upgrade.game-running #modal .combat-shell>.combat-actions,
-body.tabletop-upgrade.game-running #modal .combat-shell>.combat-sheet-actions{
- position:static!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
- height:100%!important;min-height:0!important;gap:7px!important;padding:0!important;margin:0!important;
- overflow-y:auto!important;overscroll-behavior:contain;align-content:stretch!important;
-}
-body.tabletop-upgrade.game-running #modal .combat-shell :is(.combat-actions,.combat-sheet-actions)>button{
- width:100%!important;min-width:0!important;min-height:38px!important;margin:0!important;padding:5px 7px!important;
- font-size:clamp(12px,1.8vw,18px)!important;line-height:1.15!important;white-space:normal!important;overflow-wrap:anywhere;
-}
+body.tabletop-upgrade.game-running #modal .combat-shell>.combat-sheet-actions{position:static!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;height:42px!important;min-height:42px!important;max-height:42px!important;gap:7px!important;padding:0!important;margin:0!important;overflow:auto!important;overscroll-behavior:contain;flex:0 0 42px!important}
+body.tabletop-upgrade.game-running #modal .combat-shell :is(.combat-actions,.combat-sheet-actions)>button{width:100%!important;min-width:0!important;min-height:38px!important;margin:0!important;padding:5px 7px!important;font-size:clamp(12px,1.6vw,17px)!important;line-height:1.15!important;white-space:normal!important;overflow-wrap:anywhere}
 body.tabletop-upgrade.game-running #modal .combat-waiting{grid-column:1/-1;display:grid;place-items:center;font-size:13px;color:#c6bea5}
-body.tabletop-upgrade.game-running #modal .combat-actions .combat-escape-confirm{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) 48px 48px;align-items:center;gap:5px;font-size:12px;line-height:1.15}
-body.tabletop-upgrade.game-running #modal .combat-escape-buttons{display:contents}
-body.tabletop-upgrade.game-running #modal .combat-escape-buttons button{min-height:36px;margin:0;padding:4px;font-size:12px}
-body.tabletop-upgrade.game-running #modal .combat-observer-view>.combat-head{grid-row:1/6}
-body.tabletop-upgrade.game-running #modal .combat-observer-view>.combat-phase-status{display:none}
-body.tabletop-upgrade.game-running #modal .combat-observer-view>.combat-journal-control{grid-row:6}
-body.tabletop-upgrade.game-running #modal .combat-journal-control{min-height:0!important;margin:0!important}
+body.tabletop-upgrade.game-running #modal .combat-journal-control{height:34px!important;min-height:34px!important;max-height:34px!important;flex:0 0 34px!important;margin:0!important}
 body.tabletop-upgrade.game-running #modal .combat-journal-control button{min-height:32px!important;height:100%!important;padding:4px 8px!important;font-size:13px!important;line-height:1.1!important}
-body.tabletop-upgrade.game-running #modal .combat-history-wrap{position:absolute;inset:8px 8px 46px;z-index:10;display:grid;grid-template-rows:auto minmax(0,1fr);background:#142126;border:1px solid #9d8a5b;border-radius:7px;padding:10px;min-height:0}
+body.tabletop-upgrade.game-running #modal .combat-history-wrap{position:absolute;inset:8px 8px 42px;z-index:10;display:grid;grid-template-rows:auto minmax(0,1fr);background:#142126;border:1px solid #9d8a5b;border-radius:7px;padding:10px;min-height:0}
 body.tabletop-upgrade.game-running #modal .combat-history-wrap>header{display:flex;justify-content:space-between;align-items:center;padding-bottom:7px}
 body.tabletop-upgrade.game-running #modal .combat-history-wrap>header button{min-height:32px;padding:3px 10px;font-size:22px}
 body.tabletop-upgrade.game-running #modal .combat-history{height:100%!important;max-height:100%!important;min-height:0!important;overflow:auto!important;margin:0!important;overscroll-behavior:contain}
+body.tabletop-upgrade.game-running #modal .combat-observer-view>.combat-phase-status{display:none!important}
+
 /* Independent item surfaces leave the drawer, its content, and its scroll in place. */
 .rpg-item-window{position:fixed;inset:0;z-index:32010;display:flex;justify-content:center;align-items:center;box-sizing:border-box;padding:max(12px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));background:#0009;overscroll-behavior:contain}
 .rpg-item-window :is(.sheet-item-window,.rpg-item-description){position:relative;box-sizing:border-box;background:#18282b;color:#eee2c6;border:1px solid #b29b68;border-radius:10px;box-shadow:0 12px 50px #000b;max-width:100%;min-height:0}
@@ -121,6 +85,8 @@ body.tabletop-upgrade.game-running #modal .combat-history{height:100%!important;
 .rpg-item-description-scroll{min-height:0;overflow:auto;overscroll-behavior:contain;touch-action:pan-y;font:15px/1.5 var(--rpg-font-text,Georgia)}
 .rpg-item-description-scroll p{margin:0}
 /* Loot is a single vertical list of horizontal merchant-style rows. */
+body.tabletop-upgrade.game-running #modal[data-loot-draft]:not([hidden])>.modal-card{width:min(660px,calc(100vw - 16px))!important;max-width:100%!important;box-sizing:border-box!important;flex:0 0 auto!important}
+body.tabletop-upgrade.game-running #modal[data-loot-draft] .loot-choice-row{width:100%!important;min-width:0!important;box-sizing:border-box!important;flex:none!important}
 body.game-running #modal[data-loot-draft] .loot-draft-grid{display:flex!important;flex-direction:column!important;gap:8px!important;grid-template-columns:none!important;width:100%}
 body.game-running #modal[data-loot-draft] .loot-choice-row{--loc-cell:#1c292d;grid-template-columns:60px minmax(0,1fr) 104px;gap:9px;min-height:76px;padding:6px;align-items:center}
 body.game-running #modal[data-loot-draft] .loot-row-art{padding:0!important;min-height:0!important;width:60px;height:60px;margin:0!important}
@@ -131,20 +97,20 @@ body.game-running #modal[data-loot-draft] .loc-sell-detail .card-fields{max-heig
 body.game-running #modal[data-loot-draft] .loc-sell-detail .card-field{font-size:13px;line-height:1.4}
 body.game-running #modal[data-loot-draft] .loot-choice-row .loc-sellbtn{font-size:14px;min-height:40px;padding:6px}
 body.game-running #modal[data-loot-draft] .loot-choice-row.selected{border-color:#ddc17b!important;background:#393624}
-@media(max-width:560px){
- body.tabletop-upgrade.game-running #modal:has(.combat-shell):not([hidden])>.modal-card{padding:7px!important;height:min(var(--combat-room),calc(min(45vw,230px) + clamp(92px,19dvh,166px) + 300px))!important}
- body.tabletop-upgrade.game-running #modal .combat-shell{gap:6px!important;grid-template-rows:minmax(125px,1fr) 32px clamp(92px,19dvh,166px) 44px 38px 32px!important}
- body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head{gap:7px!important}
- body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card{grid-template-rows:26px minmax(0,1fr) 9px 62px!important;gap:4px!important}
- body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-heading{height:26px!important;min-height:26px!important;max-height:26px!important}
- body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-note{height:62px!important;max-height:62px!important;padding:4px!important}
- body.tabletop-upgrade.game-running #modal .combat-shell .combat-ability-row strong{font-size:12px!important}
- body.tabletop-upgrade.game-running #modal .combat-shell .combat-ability-row .combat-ability-use{font-size:10px!important;padding:4px!important;min-height:26px!important;max-width:65px!important}
+
+@media(max-width:600px){
+ body.tabletop-upgrade.game-running #modal:has(.combat-shell):not([hidden])>.modal-card{--combat-art-size:min(calc((100vw - 50px)/2),220px);--combat-reaction-height:142px;padding:7px!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell{gap:6px!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head{gap:8px!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .tabletop-card-heading{height:28px!important;min-height:28px!important;max-height:28px!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .tabletop-card-heading h3{font-size:13px!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .combat-ability-row{gap:4px!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .tabletop-card-note .combat-ability-row strong{font-size:12px!important;overflow-wrap:normal!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .combat-ability-row .combat-ability-use{font-size:9px!important;padding:3px!important;min-height:26px!important;max-width:56px!important}
  body.tabletop-upgrade.game-running #modal .combat-shell .enemy-note>span{font-size:11px!important}
- body.tabletop-upgrade.game-running #modal .combat-reaction-tile{grid-template-columns:38px minmax(0,1fr);gap:5px;padding:4px!important}
- body.tabletop-upgrade.game-running #modal .combat-reaction-tile .combat-reaction-art{width:38px!important;height:54px!important}
- body.tabletop-upgrade.game-running #modal .combat-reaction-body strong{font-size:12px!important}
- body.tabletop-upgrade.game-running #modal .combat-reaction-body .combat-reaction-use{font-size:10px!important;padding:3px 6px!important;min-height:24px!important}
+ body.tabletop-upgrade.game-running #modal .combat-reaction-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body.tabletop-upgrade.game-running #modal .combat-reaction-tile{grid-template-columns:36px minmax(0,1fr)}
+ body.tabletop-upgrade.game-running #modal .combat-reaction-tile .combat-reaction-art{width:36px!important;height:52px!important}
  body.game-running #modal[data-loot-draft] .loot-choice-row{grid-template-columns:48px minmax(0,1fr) 81px;gap:7px;min-height:62px;padding:5px}
  body.game-running #modal[data-loot-draft] .loot-row-art{width:48px;height:48px}
  body.game-running #modal[data-loot-draft] .loc-sell-detail summary b{font-size:14px}
@@ -152,24 +118,21 @@ body.game-running #modal[data-loot-draft] .loot-choice-row.selected{border-color
  body.game-running #modal[data-loot-draft] .loot-choice-row .loc-sellbtn{font-size:12px}
 }
 @media(orientation:portrait) and (max-height:720px){
- body.tabletop-upgrade.game-running #modal .combat-shell{grid-template-rows:minmax(0,1fr) 26px 92px 40px 36px 30px!important;gap:4px!important}
- body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card{grid-template-rows:24px minmax(0,1fr) 7px 53px!important;gap:3px!important}
- body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-note{height:53px!important;max-height:53px!important}
- body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-heading{height:24px!important;min-height:24px!important;max-height:24px!important}
+ body.tabletop-upgrade.game-running #modal:has(.combat-shell):not([hidden])>.modal-card{--combat-art-size:min(calc((100vw - 50px)/2),150px);--combat-reaction-height:102px}
+ body.tabletop-upgrade.game-running #modal .combat-shell{gap:4px!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-note{height:48px!important;min-height:48px!important;max-height:48px!important;flex-basis:48px!important}
 }
-/* Wide, short phones reserve a steady controls column instead of crushing portraits. */
 @media(orientation:landscape) and (max-height:600px){
- body.tabletop-upgrade.game-running #modal:has(.combat-shell):not([hidden])>.modal-card{width:min(1040px,100%)!important;padding:6px!important}
- body.tabletop-upgrade.game-running #modal .combat-shell{grid-template-columns:minmax(0,1fr) minmax(240px,40%);grid-template-rows:28px minmax(70px,1fr) 40px 36px 30px!important;gap:5px!important}
- body.tabletop-upgrade.game-running #modal .combat-shell>.combat-head{grid-column:1;grid-row:1/-1}
- body.tabletop-upgrade.game-running #modal .combat-shell>.combat-phase-status{grid-column:2;grid-row:1}
- body.tabletop-upgrade.game-running #modal .combat-shell>.combat-reactions{grid-column:2;grid-row:2}
- body.tabletop-upgrade.game-running #modal .combat-shell>.combat-actions{grid-column:2;grid-row:3}
- body.tabletop-upgrade.game-running #modal .combat-shell>.combat-sheet-actions{grid-column:2;grid-row:4}
- body.tabletop-upgrade.game-running #modal .combat-shell>.combat-journal-control{grid-column:2;grid-row:5}
+ body.tabletop-upgrade.game-running #modal:has(.combat-shell):not([hidden])>.modal-card{--combat-art-size:clamp(80px,calc(100dvh - var(--rpg-turnbar-height,80px) - 190px),180px);--combat-reaction-height:90px;width:min(1040px,100%)!important;padding:6px!important}
+ body.tabletop-upgrade.game-running #modal .combat-owner-view{display:grid!important;height:calc(100dvh - var(--rpg-turnbar-height,80px) - 40px)!important;grid-template-columns:minmax(0,1fr) minmax(240px,42%);grid-template-rows:24px minmax(70px,1fr) 38px 36px 30px;gap:5px!important}
+ body.tabletop-upgrade.game-running #modal .combat-owner-view>.combat-head{grid-column:1;grid-row:1/-1}
+ body.tabletop-upgrade.game-running #modal .combat-owner-view>.combat-phase-status{grid-column:2;grid-row:1;height:24px!important;min-height:24px!important;max-height:24px!important}
+ body.tabletop-upgrade.game-running #modal .combat-owner-view>.combat-reactions{grid-column:2;grid-row:2;height:100%!important;max-height:100%!important}
+ body.tabletop-upgrade.game-running #modal .combat-owner-view>.combat-actions{grid-column:2;grid-row:3;height:38px!important;min-height:38px!important;max-height:38px!important}
+ body.tabletop-upgrade.game-running #modal .combat-owner-view>.combat-sheet-actions{grid-column:2;grid-row:4;height:36px!important;min-height:36px!important;max-height:36px!important}
+ body.tabletop-upgrade.game-running #modal .combat-owner-view>.combat-journal-control{grid-column:2;grid-row:5;height:30px!important;min-height:30px!important;max-height:30px!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head .tabletop-battle-card .tabletop-card-heading{height:24px!important;min-height:24px!important;max-height:24px!important}
+ body.tabletop-upgrade.game-running #modal .combat-shell .tabletop-battle-card .tabletop-card-note{height:48px!important;min-height:48px!important;max-height:48px!important;flex-basis:48px!important}
+ body.tabletop-upgrade.game-running #modal .combat-reaction-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}
  body.tabletop-upgrade.game-running #modal .combat-shell .visual-combat-head{gap:6px!important}
- body.tabletop-upgrade.game-running #modal .combat-shell .combat-reaction-body strong{font-size:11px!important}
- body.tabletop-upgrade.game-running #modal .combat-shell .combat-reaction-tile{grid-template-columns:30px minmax(0,1fr);gap:4px;padding:4px!important}
- body.tabletop-upgrade.game-running #modal .combat-shell .combat-reaction-art{width:30px!important;height:42px!important}
- body.tabletop-upgrade.game-running #modal .combat-shell .combat-reaction-use{font-size:10px!important;padding:3px 5px!important;min-height:24px!important}
 }

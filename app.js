@@ -3302,11 +3302,16 @@
     if(c.livingRune==='healAfter')c.livingRune='healOnce'; // saved fights from older builds
     if(combatHasEquipped(currentPlayer(),223)&&!c.livingRune){showLivingRuneChoice(c);return}
     if(c.isBoss&&state.boss){state.boss.fullyRevealed=true;renderBossInfo()}if(c.cardId===55&&!c.entryCheckDone){const p=currentPlayer(),d=rand(20),wis=effectiveStat(p,'wis');c.entryCheck={d,wis,total:d+wis,ok:d===20||(d!==1&&d+wis>=14)};c.phase='entry_check';showLichEntryCheck();renderCombat();return}activatePendingBattleEffects();c.phase=c.enemyWasFirst?'enemy_ready':'hero_turn';combatPush(c.enemyWasFirst?'Враг атакует первым.':'Герой атакует первым.');renderCombat()}
-  function requestCombatEscape(kind){
-    const c=state.combat;
-    if(!c||!localControlsCombat())return;
+  let combatEscapePromptPending=false;
+  async function requestCombatEscape(kind){
+    const c=state.combat;if(!c||!localControlsCombat()||combatEscapePromptPending)return;
     if(kind==='before'&&c.phase!=='pre'||kind==='during'&&c.phase!=='hero_turn')return;
-    c.escapeConfirmation=kind;renderCombat();
+    const key=x=>x&&[x.instanceId,x.heroId,x.round,x.phase,x.heroAttackCount].join(':');const stamp=key(c);
+    combatEscapePromptPending=true;
+    try{const yes=await window.RPGDialogs.confirm('Вы точно хотите попытаться сбежать?',{title:'Побег из боя',accept:'Да, сбежать',cancel:'Нет, остаться'});
+      if(!yes||key(state.combat)!==stamp||!localControlsCombat())return;
+      if(kind==='before')combatEscapeBefore();else combatEscapeDuring();
+    }finally{combatEscapePromptPending=false;}
   }
   function cancelCombatEscape(){if(!state.combat)return;state.combat.escapeConfirmation=null;renderCombat()}
   function confirmCombatEscape(){const c=state.combat,kind=c?.escapeConfirmation;
@@ -4055,7 +4060,7 @@
     // v0.6.83: the negative effects belong to the upper central area of the portrait,
     // while a spent class ability is crossed out on its OWN panel (not on the image).
     const portraitDetails=battleHeroMetrics(p)+battleV086HeroEffects(p,c);
-    return `<section class="combatant hero visual-combat-card tabletop-battle-card" style="--visual-accent:${p.color||'#4f85dc'}"><div class="tabletop-card-heading"><h3 title="${escapeCombatText(heroHeading)}">${escapeCombatText(heroHeading)}</h3></div>${combatCardStageHtml('hero','hero',p.id,p.name,c,combatHeroBackHtml(p,c),portraitDetails)}${battleV086HealthSegments(p.currentHp,p.maxHp)}<div class="tabletop-card-note ${c.heroAbilityUsed?'ability-used':''}"><small>СПОСОБНОСТЬ${c.heroAbilityLocked?' · ЗАПРЕЩЕНА':c.heroAbilityUsed?' · ИСПОЛЬЗОВАНА':''}</small><div class="combat-ability-row"><strong>${escapeCombatText(heroCombatInfo(p)?.ability||'—')}</strong>${combatAbilityButtonHtml(p)}</div></div></section>`;
+    return `<section class="combatant hero visual-combat-card tabletop-battle-card" style="--visual-accent:${p.color||'#4f85dc'}"><div class="tabletop-card-heading"><h3 title="${escapeCombatText(heroHeading)}">${escapeCombatText(heroHeading)}</h3></div>${combatCardStageHtml('hero','hero',p.id,p.name,c,combatHeroBackHtml(p,c),portraitDetails)}${battleV086HealthSegments(p.currentHp,p.maxHp)}<div class="tabletop-card-note ${c.heroAbilityUsed?'ability-used':''}"><div class="combat-ability-row"><strong>${escapeCombatText(heroCombatInfo(p)?.ability||'—')}</strong>${combatAbilityButtonHtml(p)}</div></div></section>`;
   }
   function combatEnemyVisualCard(e,c){
     const isBoss=e.id===281,rank=String(e.fields?.['Ранг']||(isBoss?'Босс':'—')).toUpperCase();
@@ -4121,7 +4126,6 @@
       else if(c.phase==='cleanse_choice')actions=(c.pendingCleanse?.options||[]).map((st,i)=>`<button data-cleanse-status="${i}" class="success">Снять: ${st}</button>`).join('');
       else if(c.phase==='victory'&&c.isBoss)actions=`<button id="combatFinishVictory" class="success">Завершить партию</button>`;
       else if(c.phase==='victory')actions=`<button id="combatPostVictory" class="success">Продолжить после победы</button>`;
-      if(c.escapeConfirmation){actions='<div class="combat-escape-confirm"><b>Вы точно хотите попытаться сбежать?</b><div class="combat-escape-buttons"><button id="combatEscapeYes" class="danger">Да</button><button id="combatEscapeNo" class="secondary">Нет</button></div></div>';reactions.length=0;}
       if(c.phase==='hero_damage')phaseHtml=`<div class="combat-pending damage-out"><b>Урон готов:</b> <b class="big">${c.pendingHeroDamage?.amount||0}</b>. До нажатия «Нанести урон» можно применить подходящие эффекты.</div>`;
       if(c.phase==='enemy_damage')phaseHtml=`<div class="combat-pending"><b>Входящий урон:</b> <b class="big">${c.pendingEnemyDamage?.amount||0}</b>. Игрок сам решает, тратить ли защитные эффекты.</div>`;
     }
