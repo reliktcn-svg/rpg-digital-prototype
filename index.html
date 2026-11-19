@@ -34,7 +34,7 @@
 <link rel="stylesheet" href="equipment-colors.css?v=6989690d40f07f34">
 <link rel="stylesheet" href="popup-bounds.css?v=cbd63237891e260a">
 <link rel="stylesheet" href="effect-help.css?v=6582b06335a188a5">
-<script id="rpg-build">window.RPG_CLIENT_BUILD={"id":"067668ae60bedc125b9adb0c60804e4652bf5a8d34bc389b2f028b6a5fee9e0b","version":"v0.7.1.08","protocol":2};</script>
+<script id="rpg-build">window.RPG_CLIENT_BUILD={"id":"79c02ed7c99b04eba9a1d0d439e660ae45febcfbb7d68434516e539db6a7914e","version":"v0.7.1.09","protocol":2};</script>
 <link rel="stylesheet" href="update-client.css?v=3cc719aaf3dd099e">
 <link rel="stylesheet" href="solo-saves.css?v=ad6b2b53e96c0684" />
 <link rel="stylesheet" href="mobile-input-v129.css?v=1487506075430a1f" />
@@ -59,6 +59,7 @@
 <link rel="stylesheet" href="orientation-layout.css?v=ada904c0bd1c4eed">
 <link rel="stylesheet" href="loot-offers.css?v=33798738ccca0dfb">
 <link rel="stylesheet" href="game-dialogs.css?v=f6e6d65f1f7a3234">
+<link rel="stylesheet" href="combat-interface.css?v=68d80a739e3c3fbe">
 </head>
 <body class="tabletop-upgrade">
   
@@ -66,7 +67,7 @@
     <div class="online-lobby-card">
       <div class="eyebrow">Сердце тьмы</div>
       <h2 id="networkHeading" hidden>Собери свой отряд</h2>
-<div id="heartFront" class="heart-front"><img src="assets/heart-of-darkness.png" alt="Знак Сердца тьмы: расколотое сердце в золотом шестиграннике"><h1>Сердце тьмы</h1><p class="hint">Настольная RPG в твоём телефоне</p><p>За последними огнями Королевства<br>начинается твоя история.</p><div class="heart-menu-actions"><button id="heartCompany" class="primary wide" type="button">Начать приключение в компании</button><button id="heartSolo" class="secondary wide" type="button">Начать приключение в соло</button><button class="ghost wide" type="button" data-author-support>ПОДДЕРЖКА АВТОРА</button></div><button id="heartParties" class="ghost wide" type="button" hidden>Мои партии</button><small>v0.7.1.08</small></div>
+<div id="heartFront" class="heart-front"><img src="assets/heart-of-darkness.png" alt="Знак Сердца тьмы: расколотое сердце в золотом шестиграннике"><h1>Сердце тьмы</h1><p class="hint">Настольная RPG в твоём телефоне</p><p>За последними огнями Королевства<br>начинается твоя история.</p><div class="heart-menu-actions"><button id="heartCompany" class="primary wide" type="button">Начать приключение в компании</button><button id="heartSolo" class="secondary wide" type="button">Начать приключение в соло</button><button class="ghost wide" type="button" data-author-support>ПОДДЕРЖКА АВТОРА</button></div><button id="heartParties" class="ghost wide" type="button" hidden>Мои партии</button><small>v0.7.1.09</small></div>
       <div id="partyLibraryPanel" hidden></div>
 <div id="onlineHome">
         <label class="net-label">Ваше имя<input id="netName" maxlength="24" placeholder="Игрок" /></label>
@@ -97,7 +98,7 @@
   <header class="topbar">
     <div>
       <div class="eyebrow">СЕРДЦЕ ТЬМЫ</div>
-      <h1>Сердце тьмы · v0.7.1.08</h1>
+      <h1>Сердце тьмы · v0.7.1.09</h1>
       <div class="header-tools">
         <button id="journalBtn" class="journal-top" type="button">Журнал</button>
       </div>
@@ -236,7 +237,7 @@
   </div>
 
   <script src="map-data.js?v=71a60e228c82df89"></script>
-  <script src="cards-data.js?v=3b3c2c18985a16d6"></script>
+  <script src="cards-data.js?v=e74ae426b967dfd7"></script>
   <script src="location-placement.js?v=ade32dbfbf90d5dd"></script>
   <script src="arcana/dice-motion.js?v=78812b4c0a665b33"></script>
   <script src="arcana/dice-skins.js?v=5e67da648f9c1dda"></script>
@@ -259,7 +260,8 @@
 <script src="safe-save.js?v=9a8c13c4251232e5"></script>
 <script src="party-library.js?v=009b8decd7750340"></script>
   <script src="game-dialogs.js?v=043458b183d48228"></script>
-<script src="app.js?v=c29b57a440dbd6cc"></script>
+<script src="item-windows.js?v=6e8d950a0ffbd57b"></script>
+<script src="app.js?v=214f6108efd15b25"></script>
   <script src="network-lobby.js?v=91863a71f3c86716"></script>
 <script src="update-client.js?v=266070fb6f255494" defer></script>
 <script src="rules-content.js?v=a1dd3c4f27acd7a4"></script><script src="rules-guide.js?v=eef1825c23ba76cc"></script>
